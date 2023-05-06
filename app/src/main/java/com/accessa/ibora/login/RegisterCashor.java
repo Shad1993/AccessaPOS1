@@ -1,7 +1,5 @@
 package com.accessa.ibora.login;
 
-
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -11,10 +9,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 
-public class login extends AppCompatActivity {
+public class RegisterCashor extends AppCompatActivity {
 
     private EditText editTextPIN;
     private StringBuilder enteredPIN;
@@ -24,7 +21,7 @@ public class login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login);
+        setContentView(R.layout.registor);
 
         // Initialize views
         editTextPIN = findViewById(R.id.editTextPIN);
@@ -65,13 +62,8 @@ public class login extends AppCompatActivity {
         if (cursor.moveToFirst()) {
             // PIN matched, login successful
             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-
             // Navigate to another activity
-            Intent intent = new Intent(login.this, MainActivity.class);
-            startActivity(intent);
-
-            // Finish the current activity
-            finish();
+            // ...
         } else {
             // PIN not found, login failed
             Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
@@ -80,6 +72,29 @@ public class login extends AppCompatActivity {
         cursor.close();
     }
 
+    public void onRegisterButtonClick(View view) {
+        String enteredPIN = editTextPIN.getText().toString();
+
+        // Check if the entered PIN is empty
+        if (enteredPIN.isEmpty()) {
+            Toast.makeText(this, "Please enter a PIN", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Query the database for the entered PIN
+        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
+
+        if (cursor.moveToFirst()) {
+            // PIN already exists, registration failed
+            Toast.makeText(this, "PIN already registered", Toast.LENGTH_SHORT).show();
+        } else {
+            // Insert the new PIN into the database
+            database.execSQL("INSERT INTO User (pin) VALUES (?)", new String[]{enteredPIN});
+            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+        }
+
+        cursor.close();
+    }
 
     @Override
     protected void onDestroy() {
