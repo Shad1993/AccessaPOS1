@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AccessaPOS"
+        tools:targetApi="31">
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".SelectLanguage" />
+        <activity android:name=".login.login" />
+        <activity android:name=".product.items.ModifyItemActivity" />
+        <activity android:name=".product.items.AddItemActivity" />
+        <activity android:name=".product.menu.Product" />
+        <activity android:name=".product.menu.MenuFragment"  android:theme="@style/Theme.AppCompat.Light" />
+    </application>
+    <uses-permission android:name="com.summi.permission.PRINT"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_CODEH93" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_CODE128" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_CODE39" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_EAN13" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_EAN8" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_QR" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA_SYMBOLOGY" />
+    <uses-permission android:name="com.sunmi.scanner.ACTION_DATA" />
+
+    <uses-feature android:name="sunmi.hardware.v2.barcode" android:required="false" />
+
+    <queries>
+        <package android:name="woyou.aidlservice.jiuiv5"/>
+    </queries>
+</manifest>
