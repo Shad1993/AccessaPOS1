@@ -40,7 +40,7 @@ public class SelectLanguage extends AppCompatActivity {
 
 
     public void openNewActivity(){
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
 

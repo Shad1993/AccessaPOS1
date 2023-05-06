@@ -3,32 +3,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/startScan"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp"
-        android:onClick="startScan"
-        android:text="start_scan" />
-
-
     <TextView
-        android:id="@+id/scan_result"
-
-        android:layout_below="@id/startScan"
+        android:id="@+id/textViewTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome to My App"
+        android:textSize="24sp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
-        android:text="scan_result"
-        android:visibility="gone"
-        android:layout_height="match_parent"
-        android:layout_width="wrap_content"/>
+        android:layout_marginBottom="24dp" />
 
-    <ListView
-        android:id="@+id/list_view"
+    <Button
+        android:id="@+id/buttonStart"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/scan_result" />
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:layout_below="@id/textViewTitle"
+        android:layout_marginTop="24dp" />
+
+
+
 </RelativeLayout>

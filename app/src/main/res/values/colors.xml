@@ -7,22 +7,9 @@
     <color name="BleuAccessaText">#1A2A55</color>
     <color name="OpaqueWhite">#FFFFFFFF</color>
     <color name="green">#0f0</color>
-    <color name="whiteTextColor">#fff</color>
+    <color name="colorAccent">#fff</color>
     <color name="primaryTextColor">#00a5ff</color>
+    <color name="whiteTextColor">#00a5ff</color>
 
 
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
-
-    <color name="background">#181a26</color>
-    <color name="text">#ff1b1b</color>
-    <color name="text2">#222222</color>
-    <color name="line">#19ffffff</color>
-
-    <color name="white1">#33ffffff</color>
-    <color name="gray">#7fffffff</color>
-    <color name="gray1">#dedede</color>
-
-    <color name="black1">#66000000</color>
 </resources>
