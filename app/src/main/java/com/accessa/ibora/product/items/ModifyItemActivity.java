@@ -5,6 +5,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -47,7 +48,8 @@ public class ModifyItemActivity extends Activity  {
         super.onCreate(savedInstanceState);
 
         setTitle("Modify Items");
-
+// Set the screen orientation to landscape
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_modify_record);
 
         dbManager = new DBManager(this);

@@ -7,7 +7,7 @@
     android:background="@drawable/iborabg">
 
     <Button
-        android:id="@+id/buttonEng"
+        android:id="@+id/buttonCashor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
@@ -16,19 +16,19 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:background="@drawable/button"
-        android:drawableLeft="@drawable/eng"
-        android:text="English"
+        android:drawableLeft="@drawable/cashier"
+        android:text="Cashier"
         android:textColor="@color/BleuAccessaText"
         android:textSize="20sp" />
 
     <Button
-        android:id="@+id/buttonFr"
+        android:id="@+id/buttonAdmin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="French"
+        android:text="Admin"
         android:textSize="20sp"
         android:textColor="@color/BleuAccessaText"
-        android:drawableLeft="@drawable/fr"
+        android:drawableLeft="@drawable/admin"
         android:background="@drawable/button"
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"

@@ -1,6 +1,7 @@
 package com.accessa.ibora.product.menu;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 import androidx.fragment.app.FragmentActivity;
@@ -15,6 +16,8 @@ public class Product  extends FragmentActivity implements MenuFragment.OnMenufra
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set the screen orientation to landscape
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.ac_main);
 
     }

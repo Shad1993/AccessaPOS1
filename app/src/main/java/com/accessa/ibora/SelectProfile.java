@@ -12,7 +12,7 @@ import com.accessa.ibora.login.RegistorCashor;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.menu.Product;
 
-public class SelectLanguage extends AppCompatActivity {
+public class SelectProfile extends AppCompatActivity {
     Button buttonEng, buttonFr;
 
     @Override
@@ -20,10 +20,10 @@ public class SelectLanguage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.selectlanguage);
+        setContentView(R.layout.selectprofile);
 
         // Eng language
-        buttonEng = (Button) findViewById(R.id.buttonEng);
+        buttonEng = (Button) findViewById(R.id.buttonCashor);
         buttonEng.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -32,11 +32,11 @@ public class SelectLanguage extends AppCompatActivity {
         });
 
         // Fr language
-        buttonFr = (Button) findViewById(R.id.buttonFr);
+        buttonFr = (Button) findViewById(R.id.buttonAdmin);
         buttonFr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v1) {
-                openNewActivityFr();
+                openNewActivityAdmin();
             }
         });
     }
@@ -44,12 +44,12 @@ public class SelectLanguage extends AppCompatActivity {
 
 
     public void openNewActivity(){
-        Intent intent = new Intent(this, SelectProfile.class);
+        Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
 
-    public void openNewActivityFr(){
-        Intent intent = new Intent(this, Product.class);
+    public void openNewActivityAdmin(){
+        Intent intent = new Intent(this, RegistorCashor.class);
         startActivity(intent);
     }
 }

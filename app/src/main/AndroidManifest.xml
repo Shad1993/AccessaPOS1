@@ -7,6 +7,7 @@
         android:required="false" />
     <application
         android:allowBackup="true"
+        android:screenOrientation="landscape"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -15,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AccessaPOS"
         tools:targetApi="31">
+
         <activity
             android:name=".SplashActivity"
             android:exported="true" >
@@ -32,6 +34,8 @@
         <activity android:name=".product.menu.Product" />
         <activity android:name=".product.menu.MenuFragment"  android:theme="@style/Theme.AppCompat.Light" />
         <activity android:name=".login.RegistorCashor" />
+        <activity android:name=".SelectProfile" />
+        <activity android:name=".welcome" />
 
     </application>
     <uses-permission android:name="com.summi.permission.PRINT"/>
