@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 
@@ -20,23 +21,56 @@ public class login extends AppCompatActivity {
     private StringBuilder enteredPIN;
 
     private SQLiteDatabase database;
-
+    String dbName = Constants.DB_NAME;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
+
         // Initialize views
         editTextPIN = findViewById(R.id.editTextPIN);
 
+
         // Create or open the database
-        database = openOrCreateDatabase("LoginDB", MODE_PRIVATE, null);
+        database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
         // Create the table if it doesn't exist
         database.execSQL("CREATE TABLE IF NOT EXISTS User (pin TEXT)");
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();
+        // Set click listener for Login button
+        Button buttonLogin = findViewById(R.id.buttonLogin);
+        buttonLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                login();
+            }
+        });
+    }
+
+    private void login() {
+        // Retrieve user input from EditText fields
+        String pin = editTextPIN.getText().toString();
+
+        String enteredPIN = editTextPIN.getText().toString();
+
+        // Query the database for a matching PIN
+        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
+
+        if (cursor.moveToFirst()) {
+            // PIN matched, login successful
+            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
+            // Navigate to another activity
+            Intent intent = new Intent(login.this, MainActivity.class);
+            startActivity(intent);
+        } else {
+            // PIN not found, login failed
+            Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+        }
+
+        cursor.close();
     }
 
     public void onNumberButtonClick(View view) {
@@ -56,29 +90,7 @@ public class login extends AppCompatActivity {
         editTextPIN.setText("");
     }
 
-    public void onLoginButtonClick(View view) {
-        String enteredPIN = editTextPIN.getText().toString();
 
-        // Query the database for a matching PIN
-        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
-
-        if (cursor.moveToFirst()) {
-            // PIN matched, login successful
-            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-
-            // Navigate to another activity
-            Intent intent = new Intent(login.this, MainActivity.class);
-            startActivity(intent);
-
-            // Finish the current activity
-            finish();
-        } else {
-            // PIN not found, login failed
-            Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
-        }
-
-        cursor.close();
-    }
 
 
     @Override

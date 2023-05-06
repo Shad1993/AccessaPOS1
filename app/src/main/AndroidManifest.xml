@@ -31,6 +31,8 @@
         <activity android:name=".product.items.AddItemActivity" />
         <activity android:name=".product.menu.Product" />
         <activity android:name=".product.menu.MenuFragment"  android:theme="@style/Theme.AppCompat.Light" />
+        <activity android:name=".login.RegistorCashor" />
+
     </application>
     <uses-permission android:name="com.summi.permission.PRINT"/>
     <uses-permission android:name="android.permission.INTERNET"/>

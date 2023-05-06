@@ -4,6 +4,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.accessa.ibora.Constants;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Table Name
@@ -26,7 +31,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     // Database Information
-    static final String DB_NAME = "Company_Name.DB";
+
+    private static final String DB_NAME = Constants.DB_NAME;
 
     // database version
     static final int DB_VERSION = 1;
@@ -61,6 +67,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         return db.query(TABLE_NAME, null, null, null, null, null, null);
+    }
+    public List<Item> getAllItems1() {
+        List<Item> itemList = new ArrayList<>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int itemId = cursor.getInt(cursor.getColumnIndex(_ID));
+                String itemName = cursor.getString(cursor.getColumnIndex(Name));
+                double itemPrice = cursor.getDouble(cursor.getColumnIndex(Price));
+
+                // Create an Item object and add it to the list
+                Item item = new Item(_ID, Name, Price);
+                itemList.add(item);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return itemList;
     }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();

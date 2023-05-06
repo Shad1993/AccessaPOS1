@@ -7,6 +7,7 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.login.RegistorCashor;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.menu.Product;
 
@@ -40,7 +41,7 @@ public class SelectLanguage extends AppCompatActivity {
 
 
     public void openNewActivity(){
-        Intent intent = new Intent(this, login.class);
+        Intent intent = new Intent(this, RegistorCashor.class);
         startActivity(intent);
     }
 

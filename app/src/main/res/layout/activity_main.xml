@@ -1,31 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="16dp"
-    android:paddingTop="16dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="16dp"
-    tools:context=".MainActivity">
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textViewTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome to My App"
-        android:textSize="24sp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp" />
-
-    <Button
-        android:id="@+id/buttonStart"
+    <!-- Header Section -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start"
-        android:layout_below="@id/textViewTitle"
-        android:layout_marginTop="24dp" />
+        android:padding="16dp"
+        android:background="@color/BleuAccessaText">
 
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/imageViewLogo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/accessalogo" />
 
+        <!-- Title -->
+        <TextView
+            android:id="@+id/textViewTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="iPOS"
+            android:textSize="24sp"
+            android:textColor="@color/white"
+            android:paddingStart="16dp"
+            android:textStyle="bold" />
 
-</RelativeLayout>
+    </LinearLayout>
+
+    <!-- Product List -->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
+
+    <TextView
+        android:id="@+id/empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="empty_list_text" />
+    <!-- Footer Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@color/BleuAccessaText">
+
+        <!-- Subtotal -->
+        <TextView
+            android:id="@+id/textViewSubtotal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Subtotal: $0.00"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+
+        <!-- Checkout Button -->
+        <Button
+            android:id="@+id/buttonCheckout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Checkout"
+            android:textColor="@color/white"
+            android:background="@drawable/button" />
+
+    </LinearLayout>
+
+</LinearLayout>
