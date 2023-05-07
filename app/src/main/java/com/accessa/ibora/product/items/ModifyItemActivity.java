@@ -81,8 +81,7 @@ public class ModifyItemActivity extends Activity  {
 
         mDatabaseHelper = new DatabaseHelper(this);
 
-        Cursor newCursor = mDatabaseHelper.searchID(String.valueOf(_id));
-        Toast.makeText(this, "=" + newCursor, Toast.LENGTH_SHORT).show();
+
 
 //displays it in a textview..
         _id = Long.parseLong(id);

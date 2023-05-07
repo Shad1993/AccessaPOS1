@@ -85,14 +85,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     public int getItemCount() {
         return mCursor.getCount();
     }
-    private List<Item> getItemList1() {
-        DatabaseHelper dbHelper = new DatabaseHelper(mContext);
-        // Query the SQLite table to retrieve the item data
-        List<Item> itemList = dbHelper.getAllItems1();
 
-        // Return the list of items
-        return itemList;
-    }
     public void swapCursor(Cursor newCursor) {
         if (mCursor != null) {
             mCursor.close();

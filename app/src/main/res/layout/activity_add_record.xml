@@ -25,7 +25,6 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-
                 <EditText
                     android:id="@+id/itemName_edittext"
                     style="@style/modifiedEditText"
@@ -33,7 +32,7 @@
                     android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8" />
+                    android:inputType="text" />
 
                 <EditText
                     android:id="@+id/IdBarcode_edittext"
@@ -42,7 +41,7 @@
                     android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8" />
+                    android:inputType="text" />
 
                 <EditText
                     android:id="@+id/Dept_edittext"
@@ -51,7 +50,7 @@
                     android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8" />
+                    android:inputType="text" />
 
                 <EditText
                     android:id="@+id/SubDept_edittext"
@@ -60,31 +59,31 @@
                     android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8" />
+                    android:inputType="text" />
 
                 <EditText
                     android:id="@+id/category_edittext"
                     style="@style/modifiedEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8"
+                    android:inputType="text"
                     android:hint="@string/category" />
 
                 <EditText
                     android:id="@+id/description_edittext"
                     style="@style/modifiedEditText"
-                    android:ems="8"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/Desc"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textMultiLine"
+                    android:hint="@string/Desc" />
+
 
                 <EditText
                     android:id="@+id/long_description_edittext"
                     style="@style/modifiedEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="8"
+                    android:inputType="text"
                     android:hint="@string/LongDesc" />
 
                 <EditText
@@ -92,45 +91,39 @@
                     style="@style/modifiedEditText"
                     android:hint="@string/price"
                     android:layout_width="match_parent"
-                    android:ems="8"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
-
+                    android:inputType="numberDecimal" />
                 <EditText
                     android:id="@+id/weight_edittext"
-                  style="@style/modifiedEditText"
+                    style="@style/modifiedEditText"
                     android:hint="@string/weight"
                     android:layout_width="match_parent"
-                    android:ems="8"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
+                    android:inputType="numberDecimal" />
 
                 <EditText
                     android:id="@+id/quantity_edittext"
                     style="@style/modifiedEditText"
                     android:hint="@string/quantity"
                     android:layout_width="match_parent"
-                    android:ems="8"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
+                    android:inputType="number" />
 
                 <EditText
                     android:id="@+id/expirydate_edittext"
                     style="@style/modifiedEditText"
                     android:hint="@string/expirydate"
                     android:layout_width="match_parent"
-                    android:ems="8"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
+                    android:inputType="date" />
 
                 <EditText
                     android:id="@+id/Vat_edittext"
                     style="@style/modifiedEditText"
                     android:hint="@string/Vat"
                     android:layout_width="match_parent"
-                    android:ems="8"
                     android:layout_height="wrap_content"
-                    android:inputType="phone" />
+                    android:inputType="numberDecimal" />
 
                 <Button
                     android:id="@+id/add_record"
@@ -145,4 +138,5 @@
         </androidx.cardview.widget.CardView>
     </androidx.core.widget.NestedScrollView>
 </ScrollView>
+
 

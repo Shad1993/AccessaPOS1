@@ -118,21 +118,7 @@ public class FirstFragment  extends Fragment   {
 
                         String id1 = idTextView.getText().toString();
 
-                        // retrieve
-                        DatabaseHelper dbHelper = new DatabaseHelper(view.getContext());
-                        Cursor cursor = dbHelper.getDataById(Long.parseLong(id1));
-                        if (cursor != null) {
-                            if (cursor.moveToFirst()) {
-                                String id = String.valueOf(cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
-                                String name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name));
-                               String description =cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
-                                Item data = new Item(id, name, description);
-                                Intent intent = new Intent(view.getContext(), ModifyItemActivity.class);
-                                intent.putExtra("data", (CharSequence) data);
-                                view.getContext().startActivity(intent);
-                            }
-                            cursor.close();
-                        }
+
 
                     }
 

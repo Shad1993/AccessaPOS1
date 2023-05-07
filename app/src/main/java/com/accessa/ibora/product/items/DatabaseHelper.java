@@ -45,8 +45,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     // Creating table query
-    private static final String CREATE_TABLE = "create table " + TABLE_NAME + "(" + _ID
-            + " INTEGER PRIMARY KEY AUTOINCREMENT, " + Name + " TEXT NOT NULL, " + DESC + " TEXT NOT NULL, " + Category + " NOT NULL , " + Quantity + " NOT NULL , "+ Department + " NOT NULL , " + Barcode+" NOT NULL , "+LongDescription + " NOT NULL, "+SubDepartment + " NOT NULL, " + Price + " TEXT NOT NULL ,"+ VAT + "  NOT NULL, " +ExpiryDate + " NOT NULL );";
+    private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" +
+            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            Barcode + " TEXT UNIQUE NOT NULL, " +
+            Name + " TEXT NOT NULL, " +
+            DESC + " TEXT NOT NULL, " +
+            Category + " TEXT NOT NULL, " +
+            Quantity + " INTEGER NOT NULL, " +
+            Department + " TEXT NOT NULL, " +
+            LongDescription + " TEXT NOT NULL, " +
+            SubDepartment + " TEXT NOT NULL, " +
+            Price + " FLOAT NOT NULL, " +
+            VAT + " FLOAT NOT NULL, " +
+            ExpiryDate + " DATE NOT NULL);";
+
+
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -68,29 +81,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
-    public List<Item> getAllItems1() {
-        List<Item> itemList = new ArrayList<>();
 
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                int itemId = cursor.getInt(cursor.getColumnIndex(_ID));
-                String itemName = cursor.getString(cursor.getColumnIndex(Name));
-                double itemPrice = cursor.getDouble(cursor.getColumnIndex(Price));
-
-                // Create an Item object and add it to the list
-                Item item = new Item(_ID, Name, Price);
-                itemList.add(item);
-            } while (cursor.moveToNext());
-        }
-
-        cursor.close();
-        db.close();
-
-        return itemList;
-    }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = { _ID, Name ,DESC,Category, Price};
@@ -100,25 +91,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor1 = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
         return cursor1;
     }
-    public Cursor searchID(String query) {
-        SQLiteDatabase db = getReadableDatabase();
-        String[] projection = { _ID, Name ,DESC,Category, Price,ExpiryDate,Department,SubDepartment,};
-        String selection = _ID + " LIKE ?";
-        String[] selectionArgs = { "%" + query + "%" };
 
-        Cursor cursor1 = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, null);
-        return cursor1;
-    }
-    public Cursor getDataById(long id) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String[] projection = { _ID, Name ,DESC, Category, Price,ExpiryDate,Department,SubDepartment};
-        String selection = _ID + " = ?";
-        String[] selectionArgs = {String.valueOf(id)};
-        Cursor cursor = db.query(TABLE_NAME, projection, selection, selectionArgs,
-                null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-        }
-        return cursor;
-    }
+
 };

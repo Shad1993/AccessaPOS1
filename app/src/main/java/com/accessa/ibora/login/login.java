@@ -1,6 +1,9 @@
 package com.accessa.ibora.login;
 
 
+import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_NAME;
+
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
@@ -10,6 +13,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Constants;
@@ -65,9 +70,24 @@ public class login extends AppCompatActivity {
         if (cursor.moveToFirst()) {
             // PIN matched, login successful
             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-            // Navigate to another activity
-            Intent intent = new Intent(login.this, MainActivity.class);
-            startActivity(intent);
+
+            // Get the cashor's name from the cursor
+            String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
+
+            // Create and show the AlertDialog with the welcome message and cashor's name
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Welcome");
+            builder.setMessage("Welcome, " + cashorName + "!");
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // Navigate to another activity
+                    Intent intent = new Intent(login.this, MainActivity.class);
+                    startActivity(intent);
+                }
+            });
+            builder.setCancelable(false);
+            builder.show();
         } else {
             // PIN not found, login failed
             Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();

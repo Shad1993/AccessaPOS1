@@ -19,6 +19,16 @@ import com.accessa.ibora.R;
 
 public class RegistorCashor extends AppCompatActivity {
 
+    private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_NAME = "User";
+
+    // Column names
+
+    private static final String COLUMN_CASHOR_id = "cashorid";
+    private static final String COLUMN_PIN = "pin";
+    private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
+    static final String COLUMN_CASHOR_NAME = "cashorname";
+    private static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
 
     private EditText editTextPIN,editTextLevel,editTextCashor,editTextName;
     private StringBuilder enteredPIN;
@@ -33,6 +43,9 @@ public class RegistorCashor extends AppCompatActivity {
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.registor);
+
+
+
 // Initialize EditText fields
         editTextPIN = findViewById(R.id.editTextPIN);
         editTextLevel = findViewById(R.id.editTextLevel);
@@ -62,8 +75,16 @@ public class RegistorCashor extends AppCompatActivity {
         // Create or open the database
         database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
-        // Create the table if it doesn't exist
-        database.execSQL("CREATE TABLE IF NOT EXISTS User (pin TEXT, level INTEGER, cashor TEXT, name TEXT)");
+        // Define the SQL statement for creating the table
+        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
+                + COLUMN_CASHOR_id + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_PIN + " TEXT, "
+                + COLUMN_CASHOR_LEVEL + " INTEGER, "
+                + COLUMN_CASHOR_NAME + " TEXT, "
+                + COLUMN_CASHOR_DEPARTMENT + " TEXT)";
+
+// Execute the create table query
+        database.execSQL(createTableQuery);
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();
@@ -131,13 +152,13 @@ public class RegistorCashor extends AppCompatActivity {
         } else {
             // Additional fields for registration
 
-            String level = editTextLevel.getText().toString();
-            String cashor = editTextCashor.getText().toString();
-            String name = editTextName.getText().toString();
+            String cashorlevel = editTextLevel.getText().toString();
+            String cashorname = editTextCashor.getText().toString();
+            String cashordepartment = editTextName.getText().toString();
 
             // Insert the new user into the database
-            database.execSQL("INSERT INTO User (pin, level, cashor, name) VALUES (?, ?, ?, ?)",
-                    new String[]{enteredPIN, String.valueOf(level), cashor, name});
+            database.execSQL("INSERT INTO User (pin, cashorlevel, cashorname, cashordepartment) VALUES (?, ?, ?, ?)",
+                    new String[]{enteredPIN, String.valueOf(cashorlevel), cashorname, cashordepartment});
 
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(RegistorCashor.this, login.class);
