@@ -7,16 +7,20 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.category.ModifyCategoryActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class FirstFragment  extends Fragment   {
@@ -56,7 +60,7 @@ public class FirstFragment  extends Fragment   {
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_first,container,false);
 
-        emptyView = (TextView) view.findViewById(R.id.empty);
+
         mRecyclerView = view.findViewById(R.id.recycler_view);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -68,18 +72,25 @@ public class FirstFragment  extends Fragment   {
         mRecyclerView.setAdapter(mAdapter);
 
 
-// display message if empty
+// Get a reference to the AppCompatImageView
+        AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
+
+// Load the GIF using Glide
+        Glide.with(getContext())
+                .asGif()
+                .load(R.drawable.folderwalk)
+                .into(imageView);
+
+// Find the empty FrameLayout
+        FrameLayout emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
 
         if (mAdapter.getItemCount() <= 0) {
             mRecyclerView.setVisibility(View.GONE);
-            emptyView.setVisibility(View.VISIBLE);
-        }
-        else {
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+        } else {
             mRecyclerView.setVisibility(View.VISIBLE);
-            emptyView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.GONE);
         }
-
-
         mSearchView = view.findViewById(R.id.search_view);
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -118,7 +129,16 @@ public class FirstFragment  extends Fragment   {
 
                         String id1 = idTextView.getText().toString();
 
+                        String id = idTextView.getText().toString();
+                        String title = subject_edittext.getText().toString();
+                        String LongDescription =Longdescription_edittext .getText().toString();
 
+                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyItemActivity.class);
+                        modify_intent.putExtra("title", title);
+                        modify_intent.putExtra("desc", LongDescription);
+                        modify_intent.putExtra("id", id);
+
+                        startActivity(modify_intent);
 
                     }
 

@@ -4,46 +4,43 @@
     tools:showIn="navigation_view">
 
     <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/accessalogo"
-        android:title="Home" />
+        android:id="@+id/Sales"
+        android:icon="@drawable/baseline_shopping_basket_24"
+        android:title="Sales" />
     <item
-        android:id="@+id/nav_message"
-        android:icon="@drawable/accessalogo"
-        android:title="Messages" />
+        android:id="@+id/Receipts"
+        android:icon="@drawable/receipt"
+        android:title="Receipts" />
     <item
-        android:id="@+id/synch"
-        android:icon="@drawable/accessalogo"
-        android:title="Synch" />
+        android:id="@+id/Shift"
+        android:icon="@drawable/shift"
+        android:title="Shift" />
     <item
-        android:id="@+id/trash"
-        android:icon="@drawable/accessalogo"
-        android:title="Trash" />
+        android:id="@+id/Items"
+        android:icon="@drawable/baseline_view_list_24"
+        android:title="Items" />
     <item
-        android:id="@+id/settings"
-        android:icon="@drawable/accessalogo"
+        android:id="@+id/Settings"
+        android:icon="@drawable/baseline_settings_suggest_24"
         android:title="Settings" />
+    <item
+        android:id="@+id/Help"
+        android:icon="@drawable/baseline_live_help_24"
+        android:title="Help" />
 
 
     <item android:title="Profile">
         <menu>
             <item
-                android:id="@+id/nav_login"
-                android:icon="@drawable/accessalogo"
-                android:title="Login" />
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/logout"
+                android:title="Logout" />
+            <item
+                android:id="@+id/nav_Admin"
+                android:icon="@drawable/baseline_admin_panel_settings_24"
+                android:title="Admin" />
         </menu>
     </item>
 
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/accessalogo"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_rate"
-                android:icon="@drawable/accessalogo"
-                android:title="Rate us" />
-        </menu>
-    </item>
+
 </menu>

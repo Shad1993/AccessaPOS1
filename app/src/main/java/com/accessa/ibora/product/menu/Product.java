@@ -1,45 +1,112 @@
 package com.accessa.ibora.product.menu;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.login.login;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.navigation.NavigationView;
 
+public class Product extends FragmentActivity implements MenuFragment.OnMenufragListener {
 
-// main activity (FragmentActivity provides fragment compatibility pre-HC)
-public class Product  extends FragmentActivity implements MenuFragment.OnMenufragListener {
+    private boolean doubleBackToExitPressedOnce = false;
 
-    // called when the activity is first created
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.ac_main);
 
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar);
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.navigation_view);
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @SuppressLint("NonConstantResourceId")
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                drawerLayout.closeDrawer(GravityCompat.START);
+
+                if(id==R.id.Sales){
+                    Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Product.this, MainActivity.class);
+                    startActivity(intent);
+                } else if (id==R.id.Receipts) {
+                    Toast.makeText(getApplicationContext(), "Receipts is Clicked",Toast.LENGTH_SHORT).show();
+                }else if (id==R.id.Shift) {
+                    Toast.makeText(getApplicationContext(), "Shift is Clicked",Toast.LENGTH_SHORT).show();
+                }else if (id == R.id.Items) {
+                    Toast.makeText(getApplicationContext(), "Items is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Product.this, Product.class);
+                    startActivity(intent);
+                    return true;
+                }else if (id==R.id.Settings) {
+                    Toast.makeText(getApplicationContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
+                }
+                else if (id==R.id.nav_logout) {
+                    Toast.makeText(getApplicationContext(), "login is Clicked",Toast.LENGTH_SHORT).show();
+                }else if (id==R.id.Help) {
+                    Toast.makeText(getApplicationContext(), "Help is Clicked",Toast.LENGTH_SHORT).show();
+                }else if (id==R.id.nav_Admin) {
+                    Toast.makeText(getApplicationContext(), "Admin is Clicked",Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+        });
     }
 
-    // MenuFragment listener
     @Override
     public void onMenufrag(String s) {
-
-        // get body fragment (native method is getFragmentManager)
         BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
-
-        // if fragment is not null and in layout, set text, else launch BodyActivity
-        if ((fragment1!=null)&&fragment1.isInLayout()) {
+        if (fragment1 != null && fragment1.isInLayout()) {
             fragment1.setText(s);
         } else {
             Intent intent = new Intent(this, BodyActivity.class);
-            intent.putExtra("value",s);
+            intent.putExtra("value", s);
             startActivity(intent);
         }
-
     }
 
-    //extended from compatibility Fragment for pre-HC fragment support
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
+        }
 
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, 2000); // Wait for 2 seconds before resetting the double back press flag
+
+        // Replace the code below with the intent to navigate to the login screen
+        Intent intent = new Intent(this, login.class);
+        startActivity(intent);
+    }
 }

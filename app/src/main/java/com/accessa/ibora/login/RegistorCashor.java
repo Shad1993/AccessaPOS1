@@ -24,7 +24,7 @@ public class RegistorCashor extends AppCompatActivity {
 
     // Column names
 
-    private static final String COLUMN_CASHOR_id = "cashorid";
+    static final String COLUMN_CASHOR_id = "cashorid";
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
     static final String COLUMN_CASHOR_NAME = "cashorname";

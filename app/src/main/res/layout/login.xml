@@ -4,13 +4,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:screenOrientation="landscape"
-    android:background="@drawable/iborabg">
+    android:background="@color/BleuAccessaText"
+    >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/iboralogo"
+        android:layout_gravity="center"
+        android:layout_marginBottom="24dp" />
+
 
         <TextView
             android:layout_width="wrap_content"
@@ -43,60 +52,70 @@
             android:columnOrderPreserved="false"
             android:useDefaultMargins="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="24dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp">
 
             <Button
                 android:text="1"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="2"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="3"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="4"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="5"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="6"
-                android:textSize="20sp"
+                android:textSize="24sp"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/BleuAccessaText"
+                android:onClick="onNumberButtonClick" />
+
+            <Button
+                android:text="7"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="8"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
             <Button
                 android:text="9"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
@@ -108,31 +127,46 @@
 
             <Button
                 android:text="0"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
                 android:onClick="onNumberButtonClick" />
 
-            <Button
-                android:text="Clear"
-                android:textSize="20sp"
-                android:textColor="@android:color/white"
-                android:backgroundTint="@color/BleuAccessaText"
-                android:onClick="onClearButtonClick" />
+
 
         </GridLayout>
 
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:rowCount="1"
+            android:alignmentMode="alignMargins"
+            android:columnOrderPreserved="false"
+            android:useDefaultMargins="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp">
+        <Button
+            android:text="Clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:onClick="onClearButtonClick" />
         <Button
             android:id="@+id/buttonLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Login"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/BleuAccessaText"
             android:layout_gravity="center" />
-
+        </GridLayout>
     </LinearLayout>
 
 </ScrollView>
-

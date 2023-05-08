@@ -83,6 +83,11 @@ public class MenuFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fr_menu,container,false);
 
+
+
+
+
+
 //menu items
         simpleList = (ListView) view.findViewById(R.id.simpleListView);
         CustomAdapter customAdapter = new CustomAdapter(getContext(), Menulist, icons);
@@ -133,51 +138,7 @@ public class MenuFragment extends Fragment {
 
 
 
-        //toolbar
-        MaterialToolbar toolbar = view.findViewById(R.id.topAppBar);
-        DrawerLayout drawerLayout = view.findViewById(R.id.drawer_layout);
-        NavigationView navigationView = view.findViewById(R.id.navigation_view);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-                drawerLayout.openDrawer(GravityCompat.START);
-
-            }
-        });
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @SuppressLint("NonConstantResourceId")
-            @Override
-            public boolean onNavigationItemSelected(@NonNull @org.jetbrains.annotations.NotNull MenuItem item) {
-
-                int id = item.getItemId();
-                drawerLayout.closeDrawer(GravityCompat.START);
-
-                if(id==R.id.nav_home){
-                    Toast.makeText(getContext(), "Home is Clicked", Toast.LENGTH_SHORT).show();
-                } else if (id==R.id.nav_message) {
-                    Toast.makeText(getContext(), "Message is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.synch) {
-                    Toast.makeText(getContext(), "Synch is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.trash) {
-                    Toast.makeText(getContext(), "Trash is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.settings) {
-                    Toast.makeText(getContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
-                }
-                else if (id==R.id.nav_login) {
-                    Toast.makeText(getContext(), "login is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.nav_share) {
-                    Toast.makeText(getContext(), "share is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.settings) {
-                    Toast.makeText(getContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.nav_rate) {
-                    Toast.makeText(getContext(), "rate is Clicked",Toast.LENGTH_SHORT).show();
-                }
-
-
-                return true;
-            }
-        });
 
 
         return view;

@@ -13,7 +13,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/BleuAccessaText"
             app:titleTextColor="@color/white"
             >
 
@@ -48,13 +48,31 @@
             android:layout_height="match_parent"
             android:layout_below="@id/bar"/>
 
-
-    <TextView
-        android:id="@+id/empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <FrameLayout
+        android:id="@+id/empty_frame_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
         android:layout_centerInParent="true"
-        android:text="empty_list_text" />
+        android:gravity="center">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/empty_image_view"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No item found!"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"

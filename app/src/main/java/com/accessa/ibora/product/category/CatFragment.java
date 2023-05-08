@@ -56,7 +56,7 @@ public class CatFragment  extends Fragment   {
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_first,container,false);
 
-        emptyView = (TextView) view.findViewById(R.id.empty);
+
         mRecyclerView = view.findViewById(R.id.recycler_view);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
