@@ -26,7 +26,8 @@
             android:layout_height="wrap_content"
             android:text="Enter PIN"
             android:textSize="24sp"
-            android:textColor="@android:color/white"
+
+            android:textColor="@color/BleuAccessaText"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="24dp" />
 
@@ -38,7 +39,7 @@
             android:maxLength="4"
             android:textSize="20sp"
             android:textColor="@android:color/black"
-            android:background="@android:color/white"
+            android:background="@color/BleuAccessaText"
             android:gravity="center"
             android:layout_gravity="center"
             android:layout_marginBottom="24dp" />
