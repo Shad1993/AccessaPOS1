@@ -3,4 +3,5 @@
         android:startColor="@color/BleuAccessaText"
         android:endColor="@color/white"
         android:angle="270" />
+    <solid android:drawable="@drawable/bgaccessa1" />
 </shape>

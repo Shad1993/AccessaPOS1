@@ -7,100 +7,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity">
 
-
-
-
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:screenOrientation="landscape"
-    android:orientation="vertical">
-
-
-    <com.google.android.material.appbar.AppBarLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="match_parent">
 
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/topAppBar"
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Sales"
-            android:background="@color/BleuAccessaText"
-            app:titleTextColor="@color/white"
-            app:navigationIcon="@drawable/baseline_menu_24"
+            android:layout_height="wrap_content">
 
-            />
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/topAppBar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:title="Sales"
+                android:background="@color/BleuAccessaText"
+                app:titleTextColor="@color/white"
+                app:navigationIcon="@drawable/baseline_menu_24" />
 
-    </com.google.android.material.appbar.AppBarLayout>
-    <!-- Product List -->
+        </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@null"
-        android:dividerHeight="0dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:orientation="horizontal">
 
-    <FrameLayout
-        android:id="@+id/empty_frame_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:layout_centerInParent="true"
-        android:gravity="center">
+            <fragment
+                android:id="@+id/sales_fragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.7"
+                class="com.accessa.ibora.sales.salesFragment" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/empty_image_view"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center" />
+            <fragment
+                android:id="@+id/TicketFragment"
+                android:name="com.accessa.ibora.sales.TicketsFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No item found!"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="16dp"
-            android:layout_gravity="center" />
+        </LinearLayout>
 
-    </FrameLayout>
-    <!-- Footer Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:background="@color/BleuAccessaText">
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        <!-- Subtotal -->
-        <TextView
-            android:id="@+id/textViewSubtotal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Subtotal: $0.00"
-            android:textSize="18sp"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
-
-        <!-- Checkout Button -->
-        <Button
-            android:id="@+id/buttonCheckout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Checkout"
-            android:textColor="@color/white"
-            android:background="@drawable/button" />
-
-    </LinearLayout>
-</LinearLayout>
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
         android:layout_width="wrap_content"
@@ -108,5 +59,6 @@
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/my_navigation_items"
-        android:visibility="visible"/>
+        android:visibility="visible" />
+
 </androidx.drawerlayout.widget.DrawerLayout>

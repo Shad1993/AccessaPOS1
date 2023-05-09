@@ -82,8 +82,13 @@ public class login extends AppCompatActivity {
 
             // Create and show the AlertDialog with the welcome message and cashor's name
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Welcome"+ cashorId);
+            builder.setTitle("Welcome to Ibora");
             builder.setMessage("Welcome, " + cashorName + "!");
+
+
+
+
+
 
             // Inflate the custom view for the AlertDialog
             View view = LayoutInflater.from(this).inflate(R.layout.custom_dialog_layout, null);
@@ -111,8 +116,10 @@ public class login extends AppCompatActivity {
             alertDialog = builder.create();
             alertDialog.show();
 
-            final Intent intent = new Intent(this, MainActivity.class);
 
+            final Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("cashorName", cashorName); // Pass cashorName to MainActivity
+            intent.putExtra("cashorId", cashorId); // Pass cashorId to MainActivity
             // Use a Handler to delay the redirection
             new Handler().postDelayed(new Runnable() {
                 @Override

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:screenOrientation="landscape"
     android:layout_height="match_parent"
-    android:background="@drawable/bgaccessa">
+    android:background="@color/BleuAccessaText">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/profilepic"
@@ -21,10 +21,10 @@
         android:layout_height="wrap_content"
         android:text="Name"
         android:layout_below="@id/profilepic"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:layout_marginTop="10dp"
         android:textStyle="bold"
-        android:textSize="16dp"
+        android:textSize="20dp"
         android:layout_marginLeft="16dp"/>
 
     <TextView
@@ -33,18 +33,18 @@
         android:layout_height="wrap_content"
         android:text="CashorId"
         android:layout_below="@id/name"
-        android:textColor="@color/BleuAccessaText"
-        android:textSize="12dp"
+        android:textColor="@color/white"
+        android:textSize="16dp"
         android:layout_marginLeft="16dp"/>
 
 
 
     <TextView
-        android:id="@+id/Cashor_Id"
+        android:id="@+id/Company_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Company name"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:layout_below="@id/CashorId"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="16dp"
@@ -52,7 +52,7 @@
 
 
     <View
-        android:layout_below="@+id/Cashor_Id"
+        android:layout_below="@+id/Company_name"
         android:layout_width="match_parent"
         style="@style/line"/>
 </RelativeLayout>

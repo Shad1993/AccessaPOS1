@@ -21,7 +21,7 @@ public class welcome extends AppCompatActivity {
         setContentView(R.layout.welcome);
 
         welcomeButton = findViewById(R.id.buttonGetStarted);
-        welcomeButton.setBackgroundResource(R.drawable.welcome_button_background);
+
         welcomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -46,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ItemAdapter itemAdapter;
     private DatabaseHelper dbHelper;
-
+    private TextView name;
+    private TextView CashorId;
     private ItemAdapter mAdapter;
     private TextView emptyView;
     private RecyclerView mRecyclerView;
@@ -63,43 +64,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        mRecyclerView = findViewById(R.id.recycler_view);
-
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        mDatabaseHelper = new DatabaseHelper(this);
-
-        Cursor cursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(this, cursor);
-        mRecyclerView.setAdapter(mAdapter);
-
-
-// Get a reference to the AppCompatImageView
-        AppCompatImageView imageView = findViewById(R.id.empty_image_view);
-
-// Load the GIF using Glide
-        Glide.with(this)
-                .asGif()
-                .load(R.drawable.folderwalk)
-                .into(imageView);
-
-// Find the empty FrameLayout
-        FrameLayout emptyFrameLayout = findViewById(R.id.empty_frame_layout);
-
-        if (mAdapter.getItemCount() <= 0) {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
-        } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
-        }
-
-
-
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.navigation_view);
+
+
+        // Get the header view from the NavigationView
+        View headerView = navigationView.getHeaderView(0);
+
+        // Find the TextView within the header view
+        name = headerView.findViewById(R.id.name);
+        CashorId = headerView.findViewById(R.id.CashorId);
+
+
+
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,7 +112,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
                 }
                 else if (id==R.id.nav_logout) {
-                    Toast.makeText(getApplicationContext(), "login is Clicked",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
+                    logout();
+                    return true;
+
                 }else if (id==R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked",Toast.LENGTH_SHORT).show();
                 }else if (id==R.id.nav_Admin) {
@@ -146,7 +128,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+    private void logout() {
+        // Perform any necessary cleanup or logout actions here
+        // For example, you can clear session data, close database connections, etc.
 
+        // Redirect to the login activity
+        Intent intent = new Intent(this, login.class);
+        startActivity(intent);
+        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+    }
     @Override
     public void onBackPressed() {
         if (doubleBackToExitPressedOnce) {
@@ -168,4 +158,5 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
+
 }

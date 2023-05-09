@@ -1,39 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:screenOrientation="landscape"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/iborabg">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/buttonEng"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerInParent="true"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/button"
-        android:drawableLeft="@drawable/eng"
-        android:text="English"
-        android:textColor="@color/BleuAccessaText"
-        android:textSize="20sp" />
+        android:background="@drawable/welcome_background">
 
-    <Button
-        android:id="@+id/buttonFr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="French"
-        android:textSize="20sp"
-        android:textColor="@color/BleuAccessaText"
-        android:drawableLeft="@drawable/fr"
-        android:background="@drawable/button"
-        android:layout_centerVertical="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="32dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
 
-</RelativeLayout>
+        <ImageView
+            android:id="@+id/imageLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="150dp"
+
+            android:layout_centerInParent="true"
+            android:src="@drawable/iboralogos" />
+        <Button
+            android:id="@+id/buttonFr"
+            android:text="Francais"
+            android:drawableRight="@drawable/fr"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/imageLogo"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+        <Button
+            android:id="@+id/buttonEng"
+            android:text="English"
+            android:drawableRight="@drawable/eng"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/buttonFr"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+
+
+
+
+    </RelativeLayout>
+</ScrollView>
+
