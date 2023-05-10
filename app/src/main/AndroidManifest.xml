@@ -36,6 +36,7 @@
         <activity android:name=".login.RegistorCashor" />
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />
+        <activity android:name=".product.category.AddCategoryActivity" />
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".scanner.BarcodeReader" />
 
