@@ -1,8 +1,10 @@
-package com.accessa.ibora;
+package com.accessa.ibora.scanner;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
+import com.accessa.ibora.MainActivity;
 
 public class ScannerReceiver extends BroadcastReceiver {
     private static final String ACTION_SCANNER_RECEIVED = "com.sunmi.scanner.ACTION_DATA";

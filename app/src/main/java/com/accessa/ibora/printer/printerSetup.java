@@ -1,11 +1,11 @@
-package com.accessa.ibora;
+package com.accessa.ibora.printer;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.R;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;

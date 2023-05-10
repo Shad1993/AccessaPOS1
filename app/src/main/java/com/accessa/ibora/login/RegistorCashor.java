@@ -20,7 +20,7 @@ import com.accessa.ibora.R;
 public class RegistorCashor extends AppCompatActivity {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_NAME = "User";
+    private static final String TABLE_NAME = "Users";
 
     // Column names
 
@@ -107,7 +107,7 @@ public class RegistorCashor extends AppCompatActivity {
             String enteredPIN = editTextPIN.getText().toString();
 
             // Query the database for a matching PIN
-            Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
+            Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
 
             if (cursor.moveToFirst()) {
                 // PIN matched, login successful
@@ -144,7 +144,7 @@ public class RegistorCashor extends AppCompatActivity {
         }
 
         // Query the database for the entered PIN
-        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
+        Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
 
         if (cursor.moveToFirst()) {
             // PIN already exists, registration failed
@@ -157,8 +157,8 @@ public class RegistorCashor extends AppCompatActivity {
             String cashordepartment = editTextName.getText().toString();
 
             // Insert the new user into the database
-            database.execSQL("INSERT INTO User (pin, cashorlevel, cashorname, cashordepartment) VALUES (?, ?, ?, ?)",
-                    new String[]{enteredPIN, String.valueOf(cashorlevel), cashorname, cashordepartment});
+            database.execSQL("INSERT INTO Users (pin, cashorlevel, cashorname, cashordepartment) VALUES (?, ?, ?, ?)",
+                    new String[]{enteredPIN, cashorlevel, cashorname, cashordepartment});
 
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(RegistorCashor.this, login.class);

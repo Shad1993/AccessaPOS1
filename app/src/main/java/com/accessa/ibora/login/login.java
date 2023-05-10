@@ -52,7 +52,7 @@ public class login extends AppCompatActivity {
         database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
         // Create the table if it doesn't exist
-        database.execSQL("CREATE TABLE IF NOT EXISTS User (pin TEXT)");
+        database.execSQL("CREATE TABLE IF NOT EXISTS Users (pin TEXT)");
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();
@@ -72,7 +72,7 @@ public class login extends AppCompatActivity {
         String enteredPIN = editTextPIN.getText().toString();
 
         // Query the database for a matching PIN
-        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE pin = ?", new String[]{enteredPIN});
+        Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
 
         if (cursor.moveToFirst()) {
             // PIN matched, login successfull
@@ -175,6 +175,7 @@ public class login extends AppCompatActivity {
                     // For example, you can close the dialog or retry the login process
                     alertDialog.dismiss(); // Dismiss the dialog
                     // Add your desired actions here
+                    onClearButtonClick(view);
                 }
             });
 

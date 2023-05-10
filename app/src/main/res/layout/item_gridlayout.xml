@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="5dp">
+    <!--
+    items for a single row of RecyclerView
+    -->
+
+    <LinearLayout
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/desp" />
+            <TextView
+                android:id="@+id/id_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="10dp"
+                android:text="Id"
+                android:textColor="@color/BleuAccessaText"
+                android:textSize="20sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Text"
+                android:textSize="0sp"
+                android:textColor="#FFFFFF"
+                android:layout_centerInParent="true"
+                android:id="@+id/Longdescription_text_view" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Text"
+                android:textSize="0sp"
+                android:textColor="#FFFFFF"
+                android:layout_centerInParent="true"
+                android:id="@+id/blank" />
+
+            <TextView
+                android:id="@+id/name_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/blank"
+                android:layout_centerInParent="true"
+                android:text="Name"
+                android:textColor="@color/BleuAccessaText"
+                android:textSize="20sp" />
+            <TextView
+                android:id="@+id/price_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/name_text_view"
+                android:layout_centerInParent="true"
+                android:text="Price"
+                android:textColor="@color/BleuAccessaText"
+                android:textSize="20sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#80000000"
+                android:layout_below="@id/blank" />
+
+        </RelativeLayout>
+
+        <!-- Additional content below the overlapping image and text -->
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
+
+

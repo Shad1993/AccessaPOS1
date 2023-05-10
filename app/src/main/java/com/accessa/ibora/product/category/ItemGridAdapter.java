@@ -17,59 +17,61 @@ import com.accessa.ibora.R;
 
 import java.util.List;
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
+public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
 
     private Context mContext;
     private Cursor mCursor;
 
-    public CategoryAdapter(Context context, Cursor cursor) {
+    public ItemGridAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
     }
 
-    public CategoryAdapter(List<Category> items) {
+    public ItemGridAdapter(List<Item> items) {
     }
 
-    public class CategoryViewHolder extends RecyclerView.ViewHolder {
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView CatNameTextView;
-        public TextView ColorTextView;
-
+        public TextView nameTextView;
+        public TextView descriptionTextView;
         public TextView IdTextView;
-        public CategoryViewHolder(View itemView) {
+        public TextView priceTextView;
+
+        public ItemViewHolder(View itemView) {
             super(itemView);
             IdTextView = itemView.findViewById(R.id.id_text_view);
-            CatNameTextView = itemView.findViewById(R.id.name_text_view);
-            ColorTextView = itemView.findViewById(R.id.Longdescription_text_view);
-
+            nameTextView = itemView.findViewById(R.id.name_text_view);
+            descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
+            priceTextView = itemView.findViewById(R.id.price_text_view);
         }
     }
 
     @NonNull
     @Override
-    public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
-        View view = inflater.inflate(R.layout.itemlayout, parent, false);
-        return new CategoryViewHolder(view);
+        View view = inflater.inflate(R.layout.item_gridlayout, parent, false);
+        return new ItemViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         if (!mCursor.moveToPosition(position)) {
             return;
         }
 
-        String CatName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
+        String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id1 = mCursor.getString(mCursor.getColumnIndex(_ID));
-        String Color = mCursor.getString(mCursor.getColumnIndex(Color));
+        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
+        String Longdescription = mCursor.getString(mCursor.getColumnIndex(LongDescription));
         long id = mCursor.getLong(mCursor.getColumnIndex(_ID));
 
 
 
         holder.IdTextView.setText(id1);
-        holder.CatNameTextView.setText(CatName);
-        holder.Color.setText(Color);
-
+        holder.nameTextView.setText(name);
+        holder.descriptionTextView.setText(Longdescription);
+        holder.priceTextView.setText(price);
         holder.itemView.setTag(id);
     }
 
@@ -77,7 +79,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
 
 
     @Override
-    public int getCategoryCount() {
+    public int getItemCount() {
         return mCursor.getCount();
     }
 

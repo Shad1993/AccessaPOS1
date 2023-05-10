@@ -172,6 +172,7 @@
         printing needs to adapt the printing content and locate the label printing position through the positioning interface</string>
         <string name="sunmi_font">Sunmi monospace</string>
         <string name="custom_font">Custom typeface</string>
+    <string name="AddCat">Add category</string>
 
         <!--instruction-->
         <string name="toast_1">Transaction print,use the AIDL mode!</string>

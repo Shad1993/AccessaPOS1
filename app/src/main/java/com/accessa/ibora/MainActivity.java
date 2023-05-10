@@ -12,6 +12,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ItemAdapter itemAdapter;
     private DatabaseHelper dbHelper;
+
     private TextView name;
     private TextView CashorId;
     private ItemAdapter mAdapter;
@@ -63,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_main);
 
+        // Initialize the StringBuilder for entered PIN
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
@@ -128,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
     private void logout() {
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.

@@ -36,6 +36,8 @@
         <activity android:name=".login.RegistorCashor" />
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />
+        <activity android:name=".printer.printerSetup" />
+        <activity android:name=".scanner.BarcodeReader" />
 
     </application>
     <uses-permission android:name="com.summi.permission.PRINT"/>

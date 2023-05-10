@@ -7,34 +7,37 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
+import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class CatFragment  extends Fragment   {
+public class FirstFragment  extends Fragment   {
 
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
-    private CatDBManager dbManager;
-    private CategoryAdaptor mAdapter;
+    private DBManager dbManager;
+    private ItemAdapter mAdapter;
     private TextView emptyView;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
 
-    private CatDatabaseHelper mDatabaseHelper;
+    private DatabaseHelper mDatabaseHelper;
 
-    final String[] from = new String[] { CatDatabaseHelper._ID,
-            CatDatabaseHelper.SUBJECT, CatDatabaseHelper.DESC };
+    final String[] from = new String[] { DatabaseHelper._ID,
+            DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.Price };
 
-    final int[] to = new int[] { R.id.id, R.id.title, R.id.desc };
+    final int[] to = new int[] { R.id.id, R.id.title, R.id.desc , R.id.price};
     Toolbar mActionBarToolbar;
 
     // onCreate
@@ -61,25 +64,32 @@ public class CatFragment  extends Fragment   {
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        mDatabaseHelper = new CatDatabaseHelper(getContext());
+        mDatabaseHelper = new DatabaseHelper(getContext());
 
         Cursor cursor = mDatabaseHelper.getAllItems();
-        mAdapter = new CategoryAdaptor(getActivity(), cursor);
+        mAdapter = new ItemAdapter(getActivity(), cursor);
         mRecyclerView.setAdapter(mAdapter);
 
 
-// display message if empty
+// Get a reference to the AppCompatImageView
+        AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
+
+// Load the GIF using Glide
+        Glide.with(getContext())
+                .asGif()
+                .load(R.drawable.folderwalk)
+                .into(imageView);
+
+// Find the empty FrameLayout
+        FrameLayout emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
 
         if (mAdapter.getItemCount() <= 0) {
             mRecyclerView.setVisibility(View.GONE);
-            emptyView.setVisibility(View.VISIBLE);
-        }
-        else {
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+        } else {
             mRecyclerView.setVisibility(View.VISIBLE);
-            emptyView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.GONE);
         }
-
-
         mSearchView = view.findViewById(R.id.search_view);
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -96,7 +106,7 @@ public class CatFragment  extends Fragment   {
         });
 
 
-        dbManager = new CatDBManager(getContext());
+        dbManager = new DBManager(getContext());
         dbManager.open();
         Cursor cursor1 = dbManager.fetch();
         mAddFab = view.findViewById(R.id.add_fab);
@@ -112,19 +122,23 @@ public class CatFragment  extends Fragment   {
                     @Override public void onItemClick(View view, int position) {
                         TextView idTextView = (TextView) view.findViewById(R.id.id_text_view);
                         TextView subject_edittext = (TextView) view.findViewById(R.id.name_text_view);
-                        TextView LongDesc = (TextView) view.findViewById(R.id.Longdescription_text_view);
-                        // TextView descTextView = (TextView) view.findViewById(R.id.desc);
+                        TextView Longdescription_edittext = (TextView) view.findViewById(R.id.Longdescription_text_view);
+                        TextView priceTextView = (TextView) view.findViewById(R.id.price_text_view);
+
+
+                        String id1 = idTextView.getText().toString();
 
                         String id = idTextView.getText().toString();
                         String title = subject_edittext.getText().toString();
-                        String LongDescription =LongDesc .getText().toString();
+                        String LongDescription =Longdescription_edittext .getText().toString();
 
-                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyCategoryActivity.class);
+                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyItemActivity.class);
                         modify_intent.putExtra("title", title);
                         modify_intent.putExtra("desc", LongDescription);
                         modify_intent.putExtra("id", id);
 
                         startActivity(modify_intent);
+
                     }
 
                     @Override public void onLongItemClick(View view, int position) {
@@ -151,7 +165,7 @@ public class CatFragment  extends Fragment   {
 
 
     public void openNewActivity(){
-        Intent intent = new Intent(getContext(), AddCategoryActivity.class);
+        Intent intent = new Intent(getContext(), AddItemActivity.class);
         startActivity(intent);
     }
 

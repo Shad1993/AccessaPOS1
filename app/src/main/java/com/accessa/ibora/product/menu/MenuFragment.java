@@ -1,11 +1,8 @@
 package com.accessa.ibora.product.menu;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,18 +10,12 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.FirstFragment;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.navigation.NavigationView;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class MenuFragment extends Fragment {
@@ -114,7 +105,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
                 } else if (position==3) {
 
-                    Fragment newFragment = new FirstFragment();
+                    Fragment newFragment = new CatFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment

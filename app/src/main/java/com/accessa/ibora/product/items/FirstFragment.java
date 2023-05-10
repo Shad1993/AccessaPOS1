@@ -18,9 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.category.ModifyCategoryActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class FirstFragment  extends Fragment   {

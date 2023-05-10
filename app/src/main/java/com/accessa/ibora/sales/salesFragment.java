@@ -21,13 +21,15 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.ItemAdapter;
+
+import com.accessa.ibora.product.items.ItemGridAdapter;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -38,11 +40,11 @@ public class salesFragment  extends Fragment {
 
     private boolean doubleBackToExitPressedOnce = false;
     private RecyclerView recyclerView;
-    private ItemAdapter itemAdapter;
+    private ItemGridAdapter itemAdapter;
     private DatabaseHelper dbHelper;
     private TextView name;
     private TextView CashorId;
-    private ItemAdapter mAdapter;
+    private ItemGridAdapter mAdapter;
     private TextView emptyView;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
@@ -57,16 +59,17 @@ public class salesFragment  extends Fragment {
         // Set the screen orientation to landscape
 
 
+        int numberOfColumns = 6;
 
+        mRecyclerView = view.findViewById(R.id.recycler_view1);
 
-        mRecyclerView = view.findViewById(R.id.recycler_view);
-
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        //mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
 
         mDatabaseHelper = new DatabaseHelper(getContext());
 
         Cursor cursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getContext(), cursor);
+        mAdapter = new ItemGridAdapter(getContext(), cursor);
         mRecyclerView.setAdapter(mAdapter);
 
 

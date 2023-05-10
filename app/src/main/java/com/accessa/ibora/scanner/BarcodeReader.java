@@ -1,4 +1,4 @@
-package com.accessa.ibora;
+package com.accessa.ibora.scanner;
 
 
 import android.content.Intent;
@@ -8,6 +8,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.R;
 
 
 public class BarcodeReader extends AppCompatActivity {
