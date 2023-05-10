@@ -22,20 +22,20 @@ import com.accessa.ibora.R;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class FirstFragment  extends Fragment   {
+public class CategoryFragment  extends Fragment   {
 
-    FloatingActionButton mAddFab;
-    private SearchView mSearchView;
-    private DBManager dbManager;
-    private ItemAdapter mAdapter;
+    FloatingActionButton CatAddFab;
+    private SearchView CatSearchView;
+    private CategoryDBManager CatManager;
+    private CategoryAdaptor CatAdapter;
     private TextView emptyView;
-    private RecyclerView mRecyclerView;
-    private SimpleCursorAdapter adapter;
+    private RecyclerView CatRecyclerView;
+    private SimpleCursorAdapter Catadapter;
 
-    private DatabaseHelper mDatabaseHelper;
+    private CategoryDatabaseHelper CatDatabaseHelper;
 
-    final String[] from = new String[] { DatabaseHelper._ID,
-            DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.Price };
+    final String[] from = new String[] { CategoryDatabaseHelper._ID,
+            CategoryDatabaseHelper.CatName, CategoryDatabaseHelper.Color };
 
     final int[] to = new int[] { R.id.id, R.id.title, R.id.desc , R.id.price};
     Toolbar mActionBarToolbar;
@@ -57,18 +57,22 @@ public class FirstFragment  extends Fragment   {
     // onCreateView
     @Override
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_first,container,false);
+        View view = inflater.inflate(R.layout.cat_fragment,container,false);
 
 
-        mRecyclerView = view.findViewById(R.id.recycler_view);
+        CatRecyclerView = view.findViewById(R.id.recycler_view);
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        CatRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        mDatabaseHelper = new DatabaseHelper(getContext());
+        CatDatabaseHelper = new CategoryDatabaseHelper(getContext());
 
-        Cursor cursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getActivity(), cursor);
-        mRecyclerView.setAdapter(mAdapter);
+        Cursor cursor = CatDatabaseHelper.getAllCategory();
+
+        CatRecyclerView.setAdapter(CatAdapter);
+
+
+        CatAdapter = new CategoryAdaptor(getActivity(), cursor);
+        CatRecyclerView.setAdapter(CatAdapter);
 
 
 // Get a reference to the AppCompatImageView
@@ -83,15 +87,15 @@ public class FirstFragment  extends Fragment   {
 // Find the empty FrameLayout
         FrameLayout emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
 
-        if (mAdapter.getItemCount() <= 0) {
-            mRecyclerView.setVisibility(View.GONE);
+        if (CatAdapter.getItemCount() <= 0) {
+            CatRecyclerView.setVisibility(View.GONE);
             emptyFrameLayout.setVisibility(View.VISIBLE);
         } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
+            CatRecyclerView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
         }
-        mSearchView = view.findViewById(R.id.search_view);
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        CatSearchView = view.findViewById(R.id.search_view);
+        CatSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
@@ -99,26 +103,26 @@ public class FirstFragment  extends Fragment   {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchItems(newText);
-                mAdapter.swapCursor(newCursor);
+                Cursor newCursor = CatDatabaseHelper.searchCategory(newText);
+                CatAdapter.swapCursor(newCursor);
                 return true;
             }
         });
 
 
-        dbManager = new DBManager(getContext());
-        dbManager.open();
-        Cursor cursor1 = dbManager.fetch();
-        mAddFab = view.findViewById(R.id.add_fab);
+        CatManager = new CategoryDBManager(getContext());
+        CatManager.open();
+        Cursor cursor1 = CatManager.fetch();
+        CatAddFab = view.findViewById(R.id.add_fab);
 
 
-        adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, from, to, 0);
-        adapter.notifyDataSetChanged();
+        Catadapter = new SimpleCursorAdapter(getContext(), R.layout.viewcategory_activity, cursor1, from, to, 0);
+        Catadapter.notifyDataSetChanged();
 
 
 
-        mRecyclerView.addOnItemTouchListener(
-                new RecyclerItemClickListener(getContext(), mRecyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
+        CatRecyclerView.addOnItemTouchListener(
+                new RecyclerCategoryClickListener(getContext(), CatRecyclerView ,new RecyclerCategoryClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
                         TextView idTextView = (TextView) view.findViewById(R.id.id_text_view);
                         TextView subject_edittext = (TextView) view.findViewById(R.id.name_text_view);
@@ -132,7 +136,7 @@ public class FirstFragment  extends Fragment   {
                         String title = subject_edittext.getText().toString();
                         String LongDescription =Longdescription_edittext .getText().toString();
 
-                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyItemActivity.class);
+                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyCategoryActivity.class);
                         modify_intent.putExtra("title", title);
                         modify_intent.putExtra("desc", LongDescription);
                         modify_intent.putExtra("id", id);
@@ -153,7 +157,7 @@ public class FirstFragment  extends Fragment   {
 
         ;
 
-        mAddFab.setOnClickListener(new View.OnClickListener() {
+        CatAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v1) {
                 openNewActivity();
@@ -165,7 +169,7 @@ public class FirstFragment  extends Fragment   {
 
 
     public void openNewActivity(){
-        Intent intent = new Intent(getContext(), AddItemActivity.class);
+        Intent intent = new Intent(getContext(), AddCategoryActivity.class);
         startActivity(intent);
     }
 

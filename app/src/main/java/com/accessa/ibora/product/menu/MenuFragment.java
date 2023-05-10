@@ -15,6 +15,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 
 // extended from compatibility Fragment for pre-HC fragment support
@@ -105,7 +106,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
                 } else if (position==3) {
 
-                    Fragment newFragment = new CatFragment();
+                    Fragment newFragment = new CategoryFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment

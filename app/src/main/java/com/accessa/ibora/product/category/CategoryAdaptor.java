@@ -1,8 +1,5 @@
 package com.accessa.ibora.product.category;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
-import static com.accessa.ibora.product.items.DatabaseHelper._ID;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.view.LayoutInflater;
@@ -15,32 +12,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
 
-import java.util.List;
+public class CategoryAdaptor extends RecyclerView.Adapter<CategoryAdaptor.CategoryViewHolder> {
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
+    private Context context;
+    private Cursor cursor;
 
-    private Context mContext;
-    private Cursor mCursor;
-
-    public CategoryAdapter(Context context, Cursor cursor) {
-        mContext = context;
-        mCursor = cursor;
-    }
-
-    public CategoryAdapter(List<Category> items) {
+    public CategoryAdaptor(Context context, Cursor cursor) {
+        this.context = context;
+        this.cursor = cursor;
     }
 
     public class CategoryViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView CatNameTextView;
-        public TextView ColorTextView;
+        public TextView idTextView;
+        public TextView catNameTextView;
+        public TextView colorTextView;
 
-        public TextView IdTextView;
         public CategoryViewHolder(View itemView) {
             super(itemView);
-            IdTextView = itemView.findViewById(R.id.id_text_view);
-            CatNameTextView = itemView.findViewById(R.id.name_text_view);
-            ColorTextView = itemView.findViewById(R.id.Longdescription_text_view);
+            idTextView = itemView.findViewById(R.id.id_text_view);
+            catNameTextView = itemView.findViewById(R.id.name_text_view);
 
         }
     }
@@ -48,48 +39,41 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
     @NonNull
     @Override
     public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        View view = inflater.inflate(R.layout.itemlayout, parent, false);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View view = inflater.inflate(R.layout.cat_fragment, parent, false);
         return new CategoryViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
-        if (!mCursor.moveToPosition(position)) {
+        if (!cursor.moveToPosition(position)) {
             return;
         }
 
-        String CatName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
-        String id1 = mCursor.getString(mCursor.getColumnIndex(_ID));
-        String Color = mCursor.getString(mCursor.getColumnIndex(Color));
-        long id = mCursor.getLong(mCursor.getColumnIndex(_ID));
+        long id = cursor.getLong(cursor.getColumnIndex(CategoryDatabaseHelper._ID));
+        String catName = cursor.getString(cursor.getColumnIndex(CategoryDatabaseHelper.CatName));
+        String color = cursor.getString(cursor.getColumnIndex(CategoryDatabaseHelper.Color));
 
-
-
-        holder.IdTextView.setText(id1);
-        holder.CatNameTextView.setText(CatName);
-        holder.Color.setText(Color);
+        holder.idTextView.setText(String.valueOf(id));
+        holder.catNameTextView.setText(catName);
+        holder.colorTextView.setText(color);
 
         holder.itemView.setTag(id);
     }
 
-
-
-
     @Override
-    public int getCategoryCount() {
-        return mCursor.getCount();
+    public int getItemCount() {
+        return cursor.getCount();
     }
 
     public void swapCursor(Cursor newCursor) {
-        if (mCursor != null) {
-            mCursor.close();
+        if (cursor != null) {
+            cursor.close();
         }
-        mCursor = newCursor;
+        cursor = newCursor;
 
         if (newCursor != null) {
             notifyDataSetChanged();
         }
     }
 }
-
