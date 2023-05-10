@@ -23,15 +23,10 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
     // database version
     static final int DB_VERSION = 1;
 
-
-
-
-
-
-
+    
 
     // Creating table query
-    private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" +
+    private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             CatName + " TEXT UNIQUE NOT NULL, " +
             Color + " TEXT NOT NULL);";
@@ -44,6 +39,7 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        
         db.execSQL(CREATE_TABLE);
     }
 
@@ -55,6 +51,8 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getAllCategory() {
         SQLiteDatabase db = this.getReadableDatabase();
+         db.execSQL(CREATE_TABLE);
+
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
 
