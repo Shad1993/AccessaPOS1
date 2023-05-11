@@ -9,37 +9,51 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/BleuAccessaText"
-            app:titleTextColor="@color/white"
-            >
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize">
+                android:layout_height="?attr/actionBarSize"
+                android:orientation="horizontal"
+                android:gravity="start|center_vertical">
 
-                <androidx.appcompat.widget.SearchView
-                    android:id="@+id/search_view"
-                    android:gravity="right"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginRight="11.4dp"
-                    app:iconifiedByDefault="true"
-                    android:animateLayoutChanges="true"
-                    app:queryHint="@string/search_hint"
-                    app:queryBackground="@android:color/transparent"
-                    app:searchHintIcon="@drawable/baseline_pageview_24"
-                    app:closeIcon="@drawable/baseline_close_24"
-                    app:searchIcon="@drawable/baseline_search_24"
-                    />
+                    android:text="Category"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.appcompat.widget.SearchView
+                        android:id="@+id/search_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="11.4dp"
+                        app:iconifiedByDefault="true"
+                        android:animateLayoutChanges="true"
+                        app:queryHint="@string/search_hint"
+                        app:queryBackground="@android:color/transparent"
+                        app:searchHintIcon="@drawable/baseline_pageview_24"
+                        app:closeIcon="@drawable/baseline_close_24"
+                        app:searchIcon="@drawable/baseline_search_24" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
+        </com.google.android.material.appbar.MaterialToolbar>
 
 
-            </RelativeLayout>
-        </androidx.appcompat.widget.Toolbar>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.recyclerview.widget.RecyclerView

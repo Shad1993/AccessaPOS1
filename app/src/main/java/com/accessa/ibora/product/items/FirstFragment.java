@@ -5,14 +5,17 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -58,7 +61,22 @@ public class FirstFragment  extends Fragment   {
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_first,container,false);
 
+        // Inflate the menu
+        androidx.appcompat.widget.Toolbar toolbar = view.findViewById(R.id.toolbar);
+        toolbar.inflateMenu(R.menu.menu_dropdown);
 
+
+// Get the dropdown item from the menu
+        MenuItem dropdownItem = toolbar.getMenu().findItem(R.id.action_dropdown);
+
+// Get the Spinner view from the action view
+        AppCompatSpinner spinner = (AppCompatSpinner) dropdownItem.getActionView();
+
+;
+
+
+// Set the adapter for the Spinner
+        spinner.setAdapter(adapter);
         mRecyclerView = view.findViewById(R.id.recycler_view);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -69,7 +87,10 @@ public class FirstFragment  extends Fragment   {
         mAdapter = new ItemAdapter(getActivity(), cursor);
         mRecyclerView.setAdapter(mAdapter);
 
-
+        String[] from = new String[]{DatabaseHelper._ID, DatabaseHelper.Name};
+        int[] to = new int[]{android.R.id.text1};
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getContext(),
+                android.R.layout.simple_spinner_dropdown_item, cursor, from, to, 0);
 // Get a reference to the AppCompatImageView
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
 
@@ -100,6 +121,15 @@ public class FirstFragment  extends Fragment   {
             public boolean onQueryTextChange(String newText) {
                 Cursor newCursor = mDatabaseHelper.searchItems(newText);
                 mAdapter.swapCursor(newCursor);
+                if (newText.isEmpty()) {
+                    // Set default text color
+                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+                    searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                } else {
+                    // Set custom text color
+                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+                    searchEditText.setTextColor(getResources().getColor(R.color.white));
+                }
                 return true;
             }
         });

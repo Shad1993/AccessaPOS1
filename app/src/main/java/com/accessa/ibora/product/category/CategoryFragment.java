@@ -8,11 +8,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toolbar;
+
 import android.graphics.Color;
+import androidx.appcompat.widget.Toolbar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -46,6 +49,7 @@ public class CategoryFragment  extends Fragment   {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         CategoryColor=0;
     }
 
@@ -61,6 +65,8 @@ public class CategoryFragment  extends Fragment   {
         View view = inflater.inflate(R.layout.cat_fragment,container,false);
 
 
+
+        //RecyclerView
         CatRecyclerView = view.findViewById(R.id.recycler_view);
 
         CatRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -106,6 +112,15 @@ public class CategoryFragment  extends Fragment   {
             public boolean onQueryTextChange(String newText) {
                 Cursor newCursor = CatDatabaseHelper.searchCategory(newText);
                 CatAdapter.swapCursor(newCursor);
+                if (newText.isEmpty()) {
+                    // Set default text color
+                    EditText searchEditText = CatSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+                    searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                } else {
+                    // Set custom text color
+                    EditText searchEditText = CatSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+                    searchEditText.setTextColor(getResources().getColor(R.color.white));
+                }
                 return true;
             }
         });
