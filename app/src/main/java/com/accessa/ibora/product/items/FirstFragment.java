@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
@@ -86,6 +87,20 @@ public class FirstFragment  extends Fragment   {
         Cursor cursor = mDatabaseHelper.getAllItems();
         mAdapter = new ItemAdapter(getActivity(), cursor);
         mRecyclerView.setAdapter(mAdapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Handle the selected item here
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                String itemName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name));
+                // Perform any actions with the selected item
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
 
         String[] from = new String[]{DatabaseHelper._ID, DatabaseHelper.Name};
         int[] to = new int[]{android.R.id.text1};
