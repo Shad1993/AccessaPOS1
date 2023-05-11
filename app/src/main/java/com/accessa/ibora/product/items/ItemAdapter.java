@@ -71,7 +71,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
 
 
 
-        holder.IdTextView.setText(id1);
+       holder.IdTextView.setText(id1);
         holder.nameTextView.setText(name);
         holder.descriptionTextView.setText(Longdescription);
         holder.priceTextView.setText(price);

@@ -37,6 +37,7 @@
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />
         <activity android:name=".product.category.AddCategoryActivity" />
+        <activity android:name=".product.category.ModifyCategoryActivity" />
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".scanner.BarcodeReader" />
 

@@ -12,11 +12,15 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
+import com.accessa.ibora.product.category.CategoryFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -33,7 +37,23 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.navigation_view);
+        // Get the intent extra
+        String fragmentKey = getIntent().getStringExtra("fragment");
 
+        // Check if the intent contains the desired fragment key
+        if (fragmentKey != null && fragmentKey.equals("Category_fragment")) {
+            Fragment newFragment = new CategoryFragment();
+            // create a FragmentManager
+            FragmentManager fm = getSupportFragmentManager();
+
+            // create a FragmentTransaction to begin the transaction and replace the Fragment
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            // replace the FrameLayout with new Fragment
+            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+            fragmentTransaction.addToBackStack(newFragment.toString());
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.commit();
+        }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
