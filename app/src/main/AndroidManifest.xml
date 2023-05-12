@@ -31,8 +31,9 @@
         <activity android:name=".login.login" />
         <activity android:name=".product.items.ModifyItemActivity" />
         <activity android:name=".product.items.AddItemActivity" />
-        <activity android:name=".product.menu.Product" />
-        <activity android:name=".product.menu.MenuFragment"  android:theme="@style/Theme.AppCompat.Light" />
+        <activity android:name=".product.menu.Product"  />
+        <activity android:name=".product.items.FirstFragment" android:theme="@style/Widget.AppCompat.Spinner" />
+
         <activity android:name=".login.RegistorCashor" />
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />

@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 
 // MainActivity.java
 
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,18 +75,12 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
-
-
-
-
-
         // Initialize the StringBuilder for entered PIN
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.navigation_view);
-
 
         // Get the header view from the NavigationView
         View headerView = navigationView.getHeaderView(0);
@@ -93,58 +89,47 @@ public class MainActivity extends AppCompatActivity {
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
 
-
-
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 drawerLayout.openDrawer(GravityCompat.START);
-
             }
         });
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @SuppressLint("NonConstantResourceId")
             @Override
-            public boolean onNavigationItemSelected(@NonNull @org.jetbrains.annotations.NotNull MenuItem item) {
-
+            public boolean onNavigationItemSelected(@NonNull @NotNull MenuItem item) {
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
-                if(id==R.id.Sales){
+                if (id == R.id.Sales) {
                     Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, MainActivity.class);
                     startActivity(intent);
-                } else if (id==R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id == R.id.Items) {
+                } else if (id == R.id.Receipts) {
+                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Shift) {
+                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Items) {
                     Toast.makeText(getApplicationContext(), "Items is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, Product.class);
                     startActivity(intent);
                     return true;
-                }else if (id==R.id.Settings) {
-                    Toast.makeText(getApplicationContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
-                }
-                else if (id==R.id.nav_logout) {
+                } else if (id == R.id.Settings) {
+                    Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_logout) {
                     Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
                     logout();
                     return true;
-
-                }else if (id==R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.nav_Admin) {
-                    Toast.makeText(getApplicationContext(), "Admin is Clicked",Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Help) {
+                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_Admin) {
+                    Toast.makeText(getApplicationContext(), "Admin is Clicked", Toast.LENGTH_SHORT).show();
                 }
-
-
                 return true;
             }
         });
-
     }
-
 
     private void logout() {
         // Perform any necessary cleanup or logout actions here
@@ -155,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
     }
+
     @Override
     public void onBackPressed() {
         if (doubleBackToExitPressedOnce) {
@@ -176,5 +162,4 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
-
 }

@@ -7,4 +7,5 @@
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="newsMoreTextSize">12sp</dimen>
     <dimen name="form_app_bar_height">250dp</dimen>
+    <dimen name="spinner_dropdown_width">600dp</dimen>
 </resources>

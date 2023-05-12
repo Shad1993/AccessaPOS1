@@ -45,9 +45,14 @@
     <string name="weight">Weight</string>
     <string name="quantity">Weight</string>
     <string name="expirydate">Expiry Date</string>
+<string name="spinner_prompt">itemqqs</string>
 
-
-   
+    <string-array name="spinner_items">
+        <item>Item 1</item>
+        <item>Item 2</item>
+        <item>Item 3</item>
+        <!-- Add more items as needed -->
+    </string-array>
 
         <!--funtion list-->
         <string name="function_all">Comprehensive Test</string>

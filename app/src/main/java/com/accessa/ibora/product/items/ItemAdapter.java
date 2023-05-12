@@ -1,12 +1,6 @@
 package com.accessa.ibora.product.items;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
-import static com.accessa.ibora.product.items.DatabaseHelper.Name;
-import static com.accessa.ibora.product.items.DatabaseHelper.Price;
-import static com.accessa.ibora.product.items.DatabaseHelper._ID;
-
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,8 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
 
-import java.util.List;
-
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
 
     private Context mContext;
@@ -30,19 +22,16 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         mCursor = cursor;
     }
 
-    public ItemAdapter(List<Item> items) {
-    }
-
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView nameTextView;
         public TextView descriptionTextView;
-        public TextView IdTextView;
+        public TextView idTextView;
         public TextView priceTextView;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
-            IdTextView = itemView.findViewById(R.id.id_text_view);
+            idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
             priceTextView = itemView.findViewById(R.id.price_text_view);
@@ -59,31 +48,25 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        if (!mCursor.moveToPosition(position)) {
+        if (mCursor == null || !mCursor.moveToPosition(position)) {
             return;
         }
 
+        String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
-        String id1 = mCursor.getString(mCursor.getColumnIndex(_ID));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
-        String Longdescription = mCursor.getString(mCursor.getColumnIndex(LongDescription));
-        long id = mCursor.getLong(mCursor.getColumnIndex(_ID));
+        String longDescription = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
 
-
-
-       holder.IdTextView.setText(id1);
+        holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
-        holder.descriptionTextView.setText(Longdescription);
+        holder.descriptionTextView.setText(longDescription);
         holder.priceTextView.setText(price);
         holder.itemView.setTag(id);
     }
 
-
-
-
     @Override
     public int getItemCount() {
-        return mCursor.getCount();
+        return (mCursor != null) ? mCursor.getCount() : 0;
     }
 
     public void swapCursor(Cursor newCursor) {
@@ -97,4 +80,3 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         }
     }
 }
-
