@@ -85,9 +85,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = { _ID, Name ,LongDescription,Category, Price};
-        String selection = LongDescription + " LIKE ?";
+        String selection = Name + " LIKE ?";
         String[] selectionArgs = { "%" + query + "%" };
-        String sortOrder = LongDescription + " ASC";
+        String sortOrder = Name + " ASC";
         Cursor cursor1 = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
         return cursor1;
     }

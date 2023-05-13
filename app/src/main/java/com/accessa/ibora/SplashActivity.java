@@ -15,12 +15,15 @@ import android.widget.ProgressBar;
 public class SplashActivity extends Activity {
 
     private static final long SPLASH_DURATION = 3000; // Splash screen duration in milliseconds
+    private static final int PROGRESS_MAX = 100; // Maximum progress value for the loading bar
+    private static final long PROGRESS_DURATION = 1500; // Duration of the progress animation in milliseconds
 
     private ImageView logoImageView;
     private ProgressBar loadingBar;
     private Handler handler;
     private Runnable navigateToNextScreenRunnable;
     private MediaPlayer mediaPlayer;
+    private int progress = 0; // Current progress value for the loading bar
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +52,33 @@ public class SplashActivity extends Activity {
             }
         };
 
+        // Update loading bar progress with animation
+        animateLoadingBarProgress();
+
         // Delay transition to the next screen
         handler.postDelayed(navigateToNextScreenRunnable, SPLASH_DURATION);
+    }
+
+    private void animateLoadingBarProgress() {
+        loadingBar.setProgress(0); // Set the initial progress to 0
+
+        // Calculate the progress increment for each animation frame
+        final float progressIncrement = (float) PROGRESS_MAX / (PROGRESS_DURATION / 16);
+
+        // Animate the progress until it reaches the maximum
+        final Runnable progressUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (progress < PROGRESS_MAX) {
+                    progress += progressIncrement;
+                    loadingBar.setProgress(progress);
+                    handler.postDelayed(this, 16); // 16ms delay for 60fps animation
+                }
+            }
+        };
+
+        // Start the progress animation
+        handler.post(progressUpdateRunnable);
     }
 
     private void navigateToNextScreen() {

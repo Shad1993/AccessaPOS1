@@ -57,6 +57,7 @@
                     android:layout_marginRight="11.4dp"
                     app:iconifiedByDefault="true"
                     android:animateLayoutChanges="true"
+                    android:textColorHint="@color/white"
                     app:queryHint="@string/search_hint"
                     app:queryBackground="@android:color/transparent"
                     app:searchHintIcon="@drawable/baseline_pageview_24"
