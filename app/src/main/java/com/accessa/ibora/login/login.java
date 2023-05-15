@@ -52,7 +52,7 @@ public class login extends AppCompatActivity {
         database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
         // Create the table if it doesn't exist
-        database.execSQL("CREATE TABLE IF NOT EXISTS Users (pin TEXT)");
+        database.execSQL("CREATE TABLE IF NOT EXISTS Users (pin TEXT,cashorid TEXT,cashorlevel INT,cashorname TEXT,cashorDepartment TEXT)");
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();

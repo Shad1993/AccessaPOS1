@@ -77,7 +77,7 @@ public class FirstFragment extends Fragment {
         items.add("All Items");
         if (cursor.moveToFirst()) {
             do {
-                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name));
+                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
                 items.add(item);
             } while (cursor.moveToNext());
         }

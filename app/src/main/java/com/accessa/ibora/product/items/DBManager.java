@@ -28,7 +28,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode,String Department,String SubDepartment,String LongDescription,String Quantity,String ExpiryDate,String VAT) {
+    public void insert(String name, String desc, String price, String Category, String Barcode,String Department,String SubDepartment,String LongDescription,String Quantity,String ExpiryDate,String VAT, String AvailableForSale,String SoldBy, String Image) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
         contentValue.put(DatabaseHelper.DESC, desc);
@@ -41,6 +41,9 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Quantity, Quantity);
         contentValue.put(DatabaseHelper.ExpiryDate, ExpiryDate);
         contentValue.put(DatabaseHelper.VAT, VAT);
+        contentValue.put(DatabaseHelper.AvailableForSale, AvailableForSale);
+        contentValue.put(DatabaseHelper.SoldBy, SoldBy);
+        contentValue.put(DatabaseHelper.Image, Image);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
     }
 
