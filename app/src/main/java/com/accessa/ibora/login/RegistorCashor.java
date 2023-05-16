@@ -20,11 +20,11 @@ import com.accessa.ibora.R;
 public class RegistorCashor extends AppCompatActivity {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_NAME = "Users";
+    public static final String TABLE_NAME_Users = "Users";
 
     // Column names
 
-    static final String COLUMN_CASHOR_id = "cashorid";
+    public static final String COLUMN_CASHOR_id = "cashorid";
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
     static final String COLUMN_CASHOR_NAME = "cashorname";
@@ -76,7 +76,7 @@ public class RegistorCashor extends AppCompatActivity {
         database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
         // Define the SQL statement for creating the table
-        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
+        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
                 + COLUMN_CASHOR_id + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_PIN + " TEXT, "
                 + COLUMN_CASHOR_LEVEL + " INTEGER, "

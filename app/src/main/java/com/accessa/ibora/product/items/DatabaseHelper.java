@@ -1,5 +1,8 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
+import static com.accessa.ibora.login.RegistorCashor.TABLE_NAME_Users;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -19,6 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String _ID = "_id";
 
     // Items table columns
+    // Items table columns
     public static final String Name = "name";
     public static final String Category = "category";
     public static final String DESC = "description";
@@ -33,6 +37,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String AvailableForSale = "AvailableForSale";
     public static final String SoldBy = "SoldBy";
     public static final String Image = "Image";
+    public static final String SKU = "SKU";
+    public static final String Cost = "Cost";
+    public static final String Variant = "Variant";
 
     // Tax table columns
     public static final String VATValue = "VATValue";
@@ -46,7 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Cost table columns
     public static final String CostID = "ID";
     public static final String SKUCost = "SKU";
-    public static final String Cost = "Cost";
+
 
     // Database Information
     private static final String DB_NAME = Constants.DB_NAME;
@@ -72,38 +79,62 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             DEPARTMENT_CODE + " TEXT UNIQUE NOT NULL, " +
             DEPARTMENT_NAME + " TEXT NOT NULL, " +
             DEPARTMENT_LAST_MODIFIED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-            DEPARTMENT_CASHIER_ID + " INTEGER NOT NULL);";
+            COLUMN_CASHOR_id + " INTEGER, " +
+            "FOREIGN KEY (" + COLUMN_CASHOR_id + ") REFERENCES " +
+            TABLE_NAME + "(" + COLUMN_CASHOR_id + "));";
+
+
 
     // Creating Subdepartment table query
     private static final String CREATE_SUBDEPARTMENT_TABLE = "CREATE TABLE " + SUBDEPARTMENT_TABLE_NAME + "(" +
             SUBDEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             SUBDEPARTMENT_NAME + " TEXT NOT NULL, " +
             SUBDEPARTMENT_DEPARTMENT_ID + " INTEGER NOT NULL, " +
+            DEPARTMENT_CODE + " TEXT NOT NULL, " +
+            DEPARTMENT_CASHIER_ID + " INTEGER NOT NULL, " +
             "FOREIGN KEY (" + SUBDEPARTMENT_DEPARTMENT_ID + ") REFERENCES " +
-            DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_ID + "));";
+            DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_ID + "), " +
+            "FOREIGN KEY (" + DEPARTMENT_CODE + ") REFERENCES " +
+            DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_CODE + "), " +
+            "FOREIGN KEY (" + DEPARTMENT_CASHIER_ID + ") REFERENCES " +
+            TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
+
+
+
+    // VAT options enum
+    public enum VATOption {
+        VAT_0,
+        VAT_Exempted,
+        VAT_15
+    }
 
     // Creating Items table query
-    private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + "(" +
-            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            Barcode + " TEXT(20) UNIQUE NOT NULL, " +
-            Name + " TEXT NOT NULL, " +
-            DESC + " TEXT NOT NULL, " +
-            Category + " TEXT NOT NULL, " +
-            Quantity + " INTEGER NOT NULL, " +
-            Department + " TEXT NOT NULL, " +
-            LongDescription + " TEXT NOT NULL, " +
-            SubDepartment + " TEXT NOT NULL, " +
-            Price + " DECIMAL(10, 2) NOT NULL, " +
-            VAT + " ENUM(15, 0) NOT NULL, " +
-            ExpiryDate + " DATE NOT NULL, " +
-            AvailableForSale + " INTEGER NOT NULL DEFAULT 1, " +
-            SoldBy + " TEXT NOT NULL CHECK(SoldBy IN ('Each', 'Volume')), " +
-            Image + " TEXT);";
+    private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
+            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + Barcode + " TEXT(20) UNIQUE NOT NULL, "
+            + Name + " TEXT NOT NULL, "
+            + DESC + " TEXT NOT NULL, "
+            + Category + " TEXT NOT NULL, "
+            + Quantity + " INTEGER NOT NULL, "
+            + Department + " TEXT NOT NULL, "
+            + LongDescription + " TEXT NOT NULL, "
+            + SubDepartment + " TEXT NOT NULL, "
+            + Price + " DECIMAL(10, 2) NOT NULL, "
+            + VAT + " TEXT NOT NULL CHECK(" + VAT + " IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
+            + ExpiryDate + " DATE NOT NULL, "
+            + AvailableForSale + " INTEGER NOT NULL DEFAULT 1, "
+            + SoldBy + " TEXT NOT NULL CHECK(SoldBy IN ('Each', 'Volume')), "
+            + Image + " TEXT, "
+            + SKU + " TEXT NOT NULL, "
+            + Variant + " TEXT NOT NULL, "
+            + Cost + " DECIMAL(10, 2) NOT NULL, "
+            + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
+            + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
+            + "FOREIGN KEY (" + Barcode + ") REFERENCES "
+            + COST_TABLE_NAME + "(" + Barcode + "));";
 
-    // Creating Tax table query
-    private static final String CREATE_TAX_TABLE = "CREATE TABLE " + TAX_TABLE_NAME + "(" +
-            VATValue + " ENUM(15, 0) PRIMARY KEY, " +
-            Title + " TEXT NOT NULL);";
+
+
 
     // Creating Vendor table query
     private static final String CREATE_VENDOR_TABLE = "CREATE TABLE " + VENDOR_TABLE_NAME + "(" +
@@ -129,7 +160,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_ITEMS_TABLE);
-        db.execSQL(CREATE_TAX_TABLE);
         db.execSQL(CREATE_VENDOR_TABLE);
         db.execSQL(CREATE_COST_TABLE);
         db.execSQL(CREATE_DEPARTMENT_TABLE);

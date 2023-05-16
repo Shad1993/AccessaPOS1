@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/welcome_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/ItemsCard"
+                style="@style/centreLocatorCardDesign"
+                app:cardCornerRadius="16dp"
+                android:layout_width="match_parent"
+                android:layout_marginStart="200dp"
+                android:layout_marginEnd="200dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:focusableInTouchMode="false"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/name" />
+
+                    <EditText
+                        android:id="@+id/itemName_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/name"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/Barcode" />
+
+                    <EditText
+                        android:id="@+id/IdBarcode_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/Barcode"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                    <!-- Add this code within the LinearLayout that contains other fields -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/SoldBy" />
+
+                    <RadioGroup
+                        android:id="@+id/soldBy_radioGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/soldBy_each_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/soldBy_each" />
+
+                        <RadioButton
+                            android:id="@+id/soldBy_volume_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/soldBy_volume" />
+                    </RadioGroup>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:visibility="gone"
+                        android:text="@string/weight" />
+
+                    <EditText
+                        android:id="@+id/weight_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/weight"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:visibility="gone"
+                        android:text="@string/quantity" />
+
+                    <EditText
+                        android:id="@+id/quantity_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/quantity"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/Department" />
+
+
+
+                    <Spinner
+                        android:id="@+id/Dept_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/SubDept" />
+
+
+                    <Spinner
+                        android:id="@+id/SubDept_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/category" />
+
+                    <Spinner
+                        android:id="@+id/category_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/Desc" />
+
+                    <EditText
+                        android:id="@+id/description_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="@string/Desc" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/price" />
+
+                    <EditText
+                        android:id="@+id/price_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/LongDesc" />
+
+                    <EditText
+                        android:id="@+id/long_description_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:hint="@string/LongDesc" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/expirydate" />
+
+                    <!-- Replace the EditText with a DatePicker -->
+                    <DatePicker
+                        android:id="@+id/expirydate_picker"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/Vat" />
+
+                    <EditText
+                        android:id="@+id/Vat_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/Vat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:paddingStart="200dp"
+            android:paddingEnd="200dp">
+
+            <Button
+                android:id="@+id/add_record"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="@string/send"
+                android:textSize="10sp"
+                android:drawableLeft="@drawable/baseline_add_24"
+                android:background="@drawable/button_bleu_accessa"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_below="@id/preview_selected_color"
+                android:backgroundTint="@color/BleuAccessaText"
+                android:layout_gravity="center" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
+

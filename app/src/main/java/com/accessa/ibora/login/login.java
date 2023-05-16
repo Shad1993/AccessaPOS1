@@ -28,7 +28,16 @@ import com.accessa.ibora.R;
 import com.bumptech.glide.Glide;
 
 public class login extends AppCompatActivity {
+    private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_NAME_Users = "Users";
 
+    // Column names
+
+    static final String COLUMN_CASHOR_id = "cashorid";
+    private static final String COLUMN_PIN = "pin";
+    private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
+    static final String COLUMN_CASHOR_NAME = "cashorname";
+    private static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
     private AlertDialog alertDialog;
     private EditText editTextPIN;
     private StringBuilder enteredPIN;
@@ -52,7 +61,12 @@ public class login extends AppCompatActivity {
         database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
         // Create the table if it doesn't exist
-        database.execSQL("CREATE TABLE IF NOT EXISTS Users (pin TEXT,cashorid TEXT,cashorlevel INT,cashorname TEXT,cashorDepartment TEXT)");
+        database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
+                + COLUMN_CASHOR_id  + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_PIN + " TEXT, "
+                + COLUMN_CASHOR_LEVEL + " INTEGER, "
+                + COLUMN_CASHOR_NAME + " TEXT, "
+                + COLUMN_CASHOR_DEPARTMENT + " TEXT);");
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();

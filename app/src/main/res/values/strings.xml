@@ -13,7 +13,7 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="keyword">keyword</string>
-    <string name="hello">Hello World, SearchViewActivity!</string>
+
 
     <string name="search_label">Customers</string>
     <string name="search_hint">Search product</string>
@@ -28,6 +28,9 @@
     <string name="SoldBy">Sold By</string>
     <string name="soldBy_each">Each</string>
     <string name="soldBy_volume">Volume</string>
+    <string name="cost">cost</string>
+    <string name="sku">SKU:Recomanded Price</string>
+    <string name="variant">Variants</string>
 
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
@@ -48,6 +51,16 @@
     <string name="weight">Weight</string>
     <string name="quantity">Quantity</string>
     <string name="expirydate">Expiry Date</string>
+
+    <string name="VAT_0">VAT 0%</string>
+    <string name="VAT_Exempted">VAT Exempted</string>
+    <string name="VAT_15">VAT 15%</string>
+    <string name="Select_Image">Select Image</string>
+
+
+
+
+
 <string name="spinner_prompt">itemqqs</string>
 
     <string-array name="spinner_items">
