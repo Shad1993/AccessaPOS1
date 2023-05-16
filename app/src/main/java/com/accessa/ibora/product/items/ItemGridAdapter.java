@@ -1,10 +1,12 @@
 package com.accessa.ibora.product.items;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.Environment;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,18 +16,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.items.DatabaseHelper;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-import com.bumptech.glide.request.RequestOptions;
+
 import java.io.File;
 
 public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
+
+    private static final int PERMISSION_REQUEST_CODE = 123;
 
     private Context mContext;
     private Cursor mCursor;
@@ -71,24 +73,27 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
-        String productImageName = id; // Use the ID as the image name
+        String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.descriptionTextView.setText(description);
         holder.priceTextView.setText(price);
 
-        // Load image from mipmaps
-        int resId = mContext.getResources().getIdentifier(productImageName, "mipmap", mContext.getPackageName());
-        if (resId != 0) {
+        if (isWebLink(productImageName)) {
+            // Load image from web link
             Glide.with(mContext)
-                    .load(resId)
-                    .apply(new RequestOptions()
-                            .placeholder(R.drawable.emptybasket)
-                            .error(R.drawable.emptybasket))
+                    .load(productImageName)
+                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .error(R.drawable.iboralogos1)
                     .into(holder.productImage);
         } else {
-            holder.productImage.setImageResource(R.drawable.emptybasket);
+            // Load image from local storage
+            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            } else {
+                loadLocalImage(holder.productImage, productImageName);
+            }
         }
 
         holder.itemView.setTag(id);
@@ -112,5 +117,29 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
     private boolean isWebLink(String url) {
         return URLUtil.isValidUrl(url);
+    }
+
+
+    private void loadLocalImage(ImageView imageView, String imageLocation) {
+        File imageFile = new File(imageLocation);
+        if (imageFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            imageView.setImageBitmap(bitmap);
+        } else {
+            imageView.setImageResource(R.drawable.emptybasket);
+        }
+    }
+
+    // Handle the permission request response
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, reload the image
+                notifyDataSetChanged();
+            } else {
+                // Permission denied, handle accordingly (e.g., show a message or use a placeholder image)
+                Toast.makeText(mContext, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
