@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DBManager;
@@ -42,7 +43,7 @@ import java.util.Locale;
 public class AddItemActivity extends Activity {
     private static final int REQUEST_IMAGE_GALLERY = 1;
     private String imagePath;
-
+    private static final String DB_NAME = Constants.DB_NAME;
     private CategoryDatabaseHelper catDatabaseHelper;
     private DatabaseHelper mDatabaseHelper;
     private EditText subjectEditText;
@@ -128,7 +129,7 @@ public class AddItemActivity extends Activity {
 
         catDatabaseHelper = new CategoryDatabaseHelper(this);
         mDatabaseHelper = new DatabaseHelper(this);
-        database = openOrCreateDatabase("your_database_name.db", MODE_PRIVATE, null);
+        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
         Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
