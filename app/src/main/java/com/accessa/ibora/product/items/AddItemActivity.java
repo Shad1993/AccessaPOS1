@@ -82,7 +82,7 @@ public class AddItemActivity extends Activity {
         mDatabaseHelper=new DatabaseHelper(this);
         Cursor cursor = CatDatabaseHelper.getAllCategory();
         Cursor cursor1 = mDatabaseHelper.getAllDepartment();
-        Cursor cursor2 = mDatabaseHelper.getAllDepartment();
+        Cursor cursor2 = mDatabaseHelper.getAllSubDepartment();
 
         List<String> categories = new ArrayList<>();
         categories.add("All Category");
@@ -94,29 +94,31 @@ public class AddItemActivity extends Activity {
         }
         cursor.close();
         List<String> departments = new ArrayList<>();
-        categories.add("All Departments");
+        departments.add("All Departments");
         if (cursor1.moveToFirst()) {
             do {
                 String department = cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
-                categories.add(department);
+                departments.add(department);
             } while (cursor1.moveToNext());
         }
         cursor.close();
         List<String> subdepartments = new ArrayList<>();
-        categories.add("All sub Departments");
+        subdepartments.add("All sub Departments");
         if (cursor2.moveToFirst()) {
             do {
                 String subdepartment = cursor2.getString(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
-                categories.add(subdepartment);
+                subdepartments.add(subdepartment);
             } while (cursor2.moveToNext());
         }
         cursor.close();
         // Create an ArrayAdapter for the spinner with the custom layout
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
+        ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subdepartments);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         CategorySpinner.setAdapter(spinnerAdapter);
-        DepartmentSpinner.setAdapter(spinnerAdapter);
-        SubDepartmentSpinner.setAdapter(spinnerAdapter);
+        DepartmentSpinner.setAdapter(spinnerAdapterDept);
+        SubDepartmentSpinner.setAdapter(spinnerAdapterSubDept);
 
         // Set a listener for item selection
         CategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -182,9 +184,9 @@ public class AddItemActivity extends Activity {
         String desc = descEditText.getText().toString().trim();
         String category = CategorySpinner.getSelectedItem().toString().trim();
         String quantity = QuantityEditText.getText().toString().trim();
-        String department = DepartmentSpinner.getText().toString().trim();
+        String department = DepartmentSpinner.getSelectedItem().toString().trim();
         String longDescription = LongDescEditText.getText().toString().trim();
-        String subDepartment = SubDepartmentSpinner.getText().toString().trim();
+        String subDepartment = SubDepartmentSpinner.getSelectedItem().toString().trim();
         String price = PriceEditText.getText().toString().trim();
         String vat = VATEditText.getText().toString().trim();
         String expiryDate = formattedDate;
@@ -219,8 +221,8 @@ public class AddItemActivity extends Activity {
 
         // Reset spinners to default selection
         CategorySpinner.setSelection(0);
-        DepartmentSpinner.setText("");
-        SubDepartmentSpinner.setText("");
+        DepartmentSpinner.setSelection(0);
+        SubDepartmentSpinner.setSelection(0);
 
         // Redirect to the Product activity
         Intent intent = new Intent(AddItemActivity.this, Product.class);
