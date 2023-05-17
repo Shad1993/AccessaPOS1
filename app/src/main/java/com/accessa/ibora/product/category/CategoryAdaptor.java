@@ -1,7 +1,11 @@
 package com.accessa.ibora.product.category;
 
+import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
+import static com.accessa.ibora.product.category.CategoryDatabaseHelper.TABLE_NAME;
+
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -17,6 +21,9 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CategoryAdaptor extends RecyclerView.Adapter<CategoryAdaptor.CategoryViewHolder> {
 

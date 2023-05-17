@@ -24,17 +24,34 @@ import com.accessa.ibora.R;
 import com.bumptech.glide.Glide;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
 
-    private static final int PERMISSION_REQUEST_CODE = 123;
+    static final int PERMISSION_REQUEST_CODE = 123;
 
     private Context mContext;
     private Cursor mCursor;
+    private List<Integer> availableItemsIndices;
 
     public ItemGridAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
+        updateAvailableItemsIndices();
+    }
+
+    private void updateAvailableItemsIndices() {
+        availableItemsIndices = new ArrayList<>();
+        mCursor.moveToPosition(-1); // Move cursor to the beginning
+        int position = 0;
+        while (mCursor.moveToNext()) {
+            String availableForSale = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.AvailableForSale));
+            if (availableForSale.equals("true")) {
+                availableItemsIndices.add(position);
+            }
+            position++;
+        }
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
@@ -45,6 +62,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         public TextView priceTextView;
         public ImageView productImage;
 
+
         public ItemViewHolder(View itemView) {
             super(itemView);
             idTextView = itemView.findViewById(R.id.id_text_view);
@@ -52,6 +70,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
             priceTextView = itemView.findViewById(R.id.price_text_view);
             productImage = itemView.findViewById(R.id.ProductImage);
+
         }
     }
 
@@ -65,7 +84,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
     @Override
     public void onBindViewHolder(@NonNull final ItemViewHolder holder, int position) {
-        if (!mCursor.moveToPosition(position)) {
+        if (!mCursor.moveToPosition(getRealPosition(position))) {
             return;
         }
 
@@ -101,7 +120,11 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
     @Override
     public int getItemCount() {
-        return mCursor.getCount();
+        return availableItemsIndices.size();
+    }
+
+    private int getRealPosition(int position) {
+        return availableItemsIndices.get(position);
     }
 
     public void swapCursor(Cursor newCursor) {
@@ -109,8 +132,10 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             mCursor.close();
         }
         mCursor = newCursor;
+        updateAvailableItemsIndices();
 
         if (newCursor != null) {
+            updateAvailableItemsIndices();
             notifyDataSetChanged();
         }
     }
@@ -118,7 +143,6 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
     private boolean isWebLink(String url) {
         return URLUtil.isValidUrl(url);
     }
-
 
     private void loadLocalImage(ImageView imageView, String imageLocation) {
         File imageFile = new File(imageLocation);

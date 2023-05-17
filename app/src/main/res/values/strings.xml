@@ -56,7 +56,8 @@
     <string name="VAT_Exempted">VAT Exempted</string>
     <string name="VAT_15">VAT 15%</string>
     <string name="Select_Image">Select Image</string>
-
+    <string name="toggle_button_text">Available for sale?</string>
+    <string name="Perishable">Does this have an expiry date?</string>
 
 
 

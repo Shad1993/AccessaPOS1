@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.accessa.ibora.Constants;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CategoryDatabaseHelper extends SQLiteOpenHelper {
 
     // Table Name

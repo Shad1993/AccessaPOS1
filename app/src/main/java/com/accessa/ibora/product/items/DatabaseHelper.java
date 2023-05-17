@@ -40,6 +40,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String SKU = "SKU";
     public static final String Cost = "Cost";
     public static final String Variant = "Variant";
+    public static final String Weight = "Weight";
 
     // Tax table columns
     public static final String VATValue = "VATValue";
@@ -101,12 +102,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
-    // VAT options enum
-    public enum VATOption {
-        VAT_0,
-        VAT_Exempted,
-        VAT_15
-    }
 
     // Creating Items table query
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
@@ -115,23 +110,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Name + " TEXT NOT NULL, "
             + DESC + " TEXT NOT NULL, "
             + Category + " TEXT NOT NULL, "
-            + Quantity + " INTEGER NOT NULL, "
+            + Quantity + " INTEGER, " // Allow NULL values for Quantity
             + Department + " TEXT NOT NULL, "
             + LongDescription + " TEXT NOT NULL, "
             + SubDepartment + " TEXT NOT NULL, "
             + Price + " DECIMAL(10, 2) NOT NULL, "
             + VAT + " TEXT NOT NULL CHECK(" + VAT + " IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
-            + ExpiryDate + " DATE NOT NULL, "
-            + AvailableForSale + " INTEGER NOT NULL DEFAULT 1, "
+            + ExpiryDate + " DATE, " // Allow NULL values for ExpiryDate
+            + AvailableForSale + " BOOLEAN NOT NULL DEFAULT 1, "
             + SoldBy + " TEXT NOT NULL CHECK(SoldBy IN ('Each', 'Volume')), "
             + Image + " TEXT, "
             + SKU + " TEXT NOT NULL, "
             + Variant + " TEXT NOT NULL, "
             + Cost + " DECIMAL(10, 2) NOT NULL, "
+            + Weight + " DECIMAL(10, 2), " // Allow NULL values for Weight
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
             + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
             + "FOREIGN KEY (" + Barcode + ") REFERENCES "
             + COST_TABLE_NAME + "(" + Barcode + "));";
+
 
 
 

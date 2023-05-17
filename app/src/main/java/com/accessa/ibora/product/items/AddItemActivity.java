@@ -1,19 +1,27 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
+
+import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.view.View;
+import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -21,9 +29,15 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
@@ -33,6 +47,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,7 +56,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class AddItemActivity extends Activity {
-    private static final int REQUEST_IMAGE_GALLERY = 1;
+    static final int REQUEST_IMAGE_GALLERY = 1;
+    private static final int PERMISSION_REQUEST_CODE = 123;
     private String imagePath;
     private static final String DB_NAME = Constants.DB_NAME;
     private CategoryDatabaseHelper catDatabaseHelper;
@@ -63,6 +79,10 @@ public class AddItemActivity extends Activity {
     private RadioGroup soldByRadioGroup;
     private RadioGroup vatRadioGroup;
     private SQLiteDatabase database;
+    private SwitchCompat Available4Sale;
+    private SwitchCompat ExpirydateSwitch;
+    private boolean isAvailableForSale;
+    private TextView ExpiryDateText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +108,9 @@ public class AddItemActivity extends Activity {
         expiryDatePicker = findViewById(R.id.expirydate_picker);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
-
+        Available4Sale = findViewById(R.id.Avail4Sale_switch);
+        ExpirydateSwitch = findViewById(R.id.perishable_switch);
+        ExpiryDateText= findViewById(R.id.ExpiryText);
         // Image selection button
         Button imageButton = findViewById(R.id.image_button);
         imageButton.setOnClickListener(new View.OnClickListener() {
@@ -101,7 +123,34 @@ public class AddItemActivity extends Activity {
 
 
 
+        Available4Sale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isAvailableForSale = isChecked;
 
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(AddItemActivity.this, "Item Available For Sale", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(AddItemActivity.this, "Item Not Available For Sale", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        ExpirydateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    ExpiryDateText.setVisibility(View.VISIBLE);
+                    expiryDatePicker.setVisibility(View.VISIBLE);
+                } else {
+                    // Toggle button is unchecked
+                    ExpiryDateText.setVisibility(View.GONE);
+                    expiryDatePicker.setVisibility(View.GONE);
+                }
+            }
+        });
 
         soldByRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -125,8 +174,18 @@ public class AddItemActivity extends Activity {
         int year = expiryDatePicker.getYear();
         int month = expiryDatePicker.getMonth() + 1;
         int dayOfMonth = expiryDatePicker.getDayOfMonth();
-        formattedDate = String.format("%02d/%02d/%04d", dayOfMonth, month, year);
 
+        expiryDatePicker.init(year, month, dayOfMonth, new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                // Update the formattedDate variable with the new selected date
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(year, monthOfYear, dayOfMonth);
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                formattedDate = dateFormat.format(calendar.getTime());
+            }
+        });
         catDatabaseHelper = new CategoryDatabaseHelper(this);
         mDatabaseHelper = new DatabaseHelper(this);
         database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
@@ -283,7 +342,25 @@ public class AddItemActivity extends Activity {
         }
     }
     private void displaySelectedImage(Uri imageUri) {
-        // Update the ImageView or perform any required image handling
+        ImageView imageView = findViewById(R.id.image_view);
+
+
+        if (isWebLink(String.valueOf(imageUri))) {
+            // Load image from web link
+            Glide.with(this)
+                    .load(imageUri)
+                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .error(R.drawable.iboralogos1)
+                    .into(imageView);
+            imageView.setVisibility(View.VISIBLE);
+        } else {
+            // Load image from local storage
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            } else {
+                loadLocalImage(imageView, String.valueOf(imageUri));
+            }
+        }
     }
     private String getPathFromUri(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
@@ -320,6 +397,9 @@ public class AddItemActivity extends Activity {
         String desc = descEditText.getText().toString().trim();
         String category = categorySpinner.getSelectedItem().toString().trim();
         String quantity = quantityEditText.getText().toString().trim();
+        if (quantity.isEmpty()) {
+            quantity = "0"; // Assign a default value of 0 if the quantity is empty
+        }
         String department = departmentSpinner.getSelectedItem().toString().trim();
         String longDescription = longDescEditText.getText().toString().trim();
         String subDepartment = subDepartmentSpinner.getSelectedItem().toString().trim();
@@ -328,8 +408,12 @@ public class AddItemActivity extends Activity {
         String variant = variantEditText.getText().toString().trim();
         String sku = skuEditText.getText().toString().trim();
         String cost = costEditText.getText().toString().trim();
+        String weight = weightEditText.getText().toString().trim();
+        if (weight.isEmpty()) {
+            weight = "0"; // Assign a default value of 0 if the weight is empty
+        }
         String expiryDate = formattedDate;
-        String availableForSale = formattedDate;
+        String availableForSale = String.valueOf(isAvailableForSale);
         String soldBy = selectedSoldBy;
         String image = imagePath;
         if (image == null || image.isEmpty()) {
@@ -348,7 +432,7 @@ public class AddItemActivity extends Activity {
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
-        dbManager.insert(name, desc, price, category, barcode, department,
+        dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale, soldBy, image, variant, sku, cost);
         dbManager.close();
@@ -375,7 +459,36 @@ public class AddItemActivity extends Activity {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
+    //  retrieve the value of isAvailableForSale
+    private boolean getIsAvailableForSale() {
+        return isAvailableForSale;
+    }
+    private boolean isWebLink(String url) {
+        return URLUtil.isValidUrl(url);
+    }
 
+    private void loadLocalImage(ImageView imageView, String imageLocation) {
+        File imageFile = new File(imageLocation);
+        if (imageFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            imageView.setImageBitmap(bitmap);
+        } else {
+            imageView.setImageResource(R.drawable.emptybasket);
+        }
+    }
+
+    // Handle the permission request response
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, reload the image
+
+            } else {
+                // Permission denied, handle accordingly (e.g., show a message or use a placeholder image)
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

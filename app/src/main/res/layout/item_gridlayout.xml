@@ -35,7 +35,6 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Text"
                 android:textSize="0sp"
                 android:textColor="#FFFFFF"
                 android:layout_centerInParent="true"
@@ -43,12 +42,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Text"
                 android:textSize="0sp"
                 android:textColor="#FFFFFF"
                 android:layout_centerInParent="true"
                 android:id="@+id/blank" />
-
             <TextView
                 android:id="@+id/name_text_view"
                 android:layout_width="wrap_content"
@@ -56,7 +53,7 @@
                 android:layout_below="@id/blank"
                 android:layout_centerInParent="true"
                 android:text="Name"
-                android:textColor="@color/BleuAccessaText"
+                android:textColor="#002244"
                 android:textSize="20sp" />
             <TextView
                 android:id="@+id/price_text_view"
@@ -65,14 +62,15 @@
                 android:layout_below="@id/name_text_view"
                 android:layout_centerInParent="true"
                 android:text="Price"
-                android:textColor="@color/BleuAccessaText"
+                android:textColor="#002244"
                 android:textSize="20sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#80000000"
-                android:layout_below="@id/blank" />
+                android:background="#80FFFFFF"
+                android:layout_below="@id/blank"
+                />
 
         </RelativeLayout>
 

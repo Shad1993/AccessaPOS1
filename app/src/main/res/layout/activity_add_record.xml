@@ -273,24 +273,6 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:hint="@string/variant" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/expirydate" />
-
-                <!-- Replace the EditText with a DatePicker -->
-                <DatePicker
-                    android:id="@+id/expirydate_picker"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -329,6 +311,38 @@
                     android:layout_height="1dp"
                     android:background="@color/whiteTextColor" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/perishable_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Perishable"
+                    android:checked="false"
+                    android:textSize="18sp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:layout_gravity="center" />
+
+                <TextView
+                    android:id="@+id/ExpiryText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:visibility="gone"
+                    android:textSize="18sp"
+                    android:text="@string/expirydate" />
+
+
+                <DatePicker
+                    android:id="@+id/expirydate_picker"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/whiteTextColor" />
+
                 <Button
                     android:id="@+id/image_button"
                     android:layout_width="200dp"
@@ -358,6 +372,17 @@
                     android:layout_height="wrap_content"
                     android:text="Image Path: "
                     android:visibility="gone" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/Avail4Sale_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/toggle_button_text"
+                android:checked="false"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center" />
 
             </LinearLayout>
 

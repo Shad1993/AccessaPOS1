@@ -28,13 +28,14 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         public TextView descriptionTextView;
         public TextView idTextView;
         public TextView priceTextView;
-
+        public TextView Available;
         public ItemViewHolder(View itemView) {
             super(itemView);
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
             priceTextView = itemView.findViewById(R.id.price_text_view);
+            Available= itemView.findViewById(R.id.Available_text_view);
         }
     }
 
@@ -56,7 +57,13 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
         String longDescription = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
+        String availableForSale = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.AvailableForSale));
 
+        if (availableForSale.equals("true")) {
+            holder.Available.setText("Available");
+        }else{
+            holder.Available.setText("Not Available");
+        }
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.descriptionTextView.setText(longDescription);

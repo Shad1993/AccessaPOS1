@@ -1,150 +1,590 @@
 package com.accessa.ibora.product.items;
-import static android.icu.text.MessagePattern.ArgType.SELECT;
-import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
+import static com.accessa.ibora.product.items.AddItemActivity.REQUEST_IMAGE_GALLERY;
+import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
+
+import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.InputType;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.webkit.URLUtil;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.product.category.Category;
+import com.accessa.ibora.product.category.CategoryDatabaseHelper;
+import com.accessa.ibora.product.items.DatabaseHelper;
+import com.bumptech.glide.Glide;
 
-public class ModifyItemActivity extends Activity  {
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
+public class ModifyItemActivity extends Activity {
+    private static final int REQUEST_IMAGE_GALLERY = 1;
+    private String formattedDate;
+    private String imagePath;
     private EditText NameText;
-    private Button buttonupdate, buttondelete;
     private EditText descText;
-
-    private long _id;
-
-    private Cursor CursorUpdate;
-    private DBManager dbManager;
     private EditText PriceEditText;
     private EditText WeightEditText;
     private EditText BarcodeEditText;
-    private EditText DepartmentEditText;
-    private EditText SubDepartmentEditText;
-    private EditText ExpirydateEditText;
-    private EditText VATEditText;
-    private EditText DeptEditText;
+    private EditText SKUEditText;
+    private Spinner DepartmentSpinner;
+    private Spinner SubDepartmentSpinner;
+    private Spinner CategorySpinner;
     private EditText LongDescEditText;
     private EditText QuantityEditText;
+    private EditText VariantEditText;
 
+    private EditText CostEditText;
+    private DatePicker ExpiryDates;
+    private RadioGroup soldByRadioGroup;
+    private RadioGroup vatRadioGroup;
+    private Button buttonUpdate;
+    private Button buttonDelete;
+    private SwitchCompat Available4Sale;
+    private SwitchCompat ExpirydateSwitch;
+    private boolean isAvailableForSale;
+    private TextView ExpiryDateText;
+    private DBManager dbManager;
+    private long _id;
     private DatabaseHelper mDatabaseHelper;
-    private EditText CategoryEditText;
+    private CategoryDatabaseHelper catDatabaseHelper;
+private ImageView image_view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setTitle("Modify Items");
-// Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_modify_record);
 
+        catDatabaseHelper = new CategoryDatabaseHelper(this);
+
+        mDatabaseHelper = new DatabaseHelper(this);
         dbManager = new DBManager(this);
         dbManager.open();
 
-        NameText = (EditText) findViewById(R.id.name_edittext);
-        descText = (EditText) findViewById(R.id.description_edittext);
-        PriceEditText = (EditText) findViewById(R.id.price_edittext);
-        CategoryEditText = (EditText) findViewById(R.id.category_edittext);
-        BarcodeEditText = (EditText) findViewById(R.id.Barcode_edittext) ;
-        DeptEditText = (EditText) findViewById(R.id.department_edittext) ;
-        SubDepartmentEditText =(EditText) findViewById(R.id.SubDept_edittext) ;
-        LongDescEditText=(EditText) findViewById(R.id.Longdescription_edittext);
-        WeightEditText= (EditText) findViewById(R.id.Weight_edittext);
-        QuantityEditText = (EditText) findViewById(R.id.quantity_edittext);
-        ExpirydateEditText= (EditText) findViewById(R.id.Expiry_edittext);
-        VATEditText= (EditText)findViewById(R.id.Vat_edittext);
+        NameText = findViewById(R.id.itemName_edittext);
+        descText = findViewById(R.id.description_edittext);
+        PriceEditText = findViewById(R.id.price_edittext);
+        BarcodeEditText = findViewById(R.id.IdBarcode_edittext);
+        DepartmentSpinner = findViewById(R.id.Dept_spinner);
+        SubDepartmentSpinner = findViewById(R.id.SubDept_spinner);
+        CategorySpinner = findViewById(R.id.category_spinner);
+        SKUEditText = findViewById(R.id.sku_edittext);
+        LongDescEditText = findViewById(R.id.long_description_edittext);
+        QuantityEditText = findViewById(R.id.quantity_edittext);
+        ExpiryDates = findViewById(R.id.expirydate_picker);
+        VariantEditText = findViewById(R.id.variant_edittext);
+        WeightEditText = findViewById(R.id.weight_edittext);
+        CostEditText = findViewById(R.id.cost_edittext);
+        soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
+        vatRadioGroup = findViewById(R.id.VAT_radioGroup);
+        soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
+        Available4Sale = findViewById(R.id.Avail4Sale_switch);
+        ExpirydateSwitch = findViewById(R.id.perishable_switch);
+        ExpiryDateText= findViewById(R.id.ExpiryText);
 
-//gets you the contents of edit text
+
+
+
+
+        // Image selection button
+        Button imageButton = findViewById(R.id.image_button);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openImageOptionsDialog();
+            }
+        });
+
+
+
+
+        Available4Sale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isAvailableForSale = isChecked;
+
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(ModifyItemActivity.this, "Item Available For Sale", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(ModifyItemActivity.this, "Item Not Available For Sale", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        ExpirydateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    ExpiryDateText.setVisibility(View.VISIBLE);
+                    ExpiryDates.setVisibility(View.VISIBLE);
+                } else {
+                    // Toggle button is unchecked
+                    ExpiryDateText.setVisibility(View.GONE);
+                    ExpiryDates.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        soldByRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton selectedRadioButton = findViewById(checkedId);
+
+                if (selectedRadioButton != null) {
+                    String selectedOption = selectedRadioButton.getText().toString();
+
+                    if (selectedOption.equals(getString(R.string.soldBy_each))) {
+                        WeightEditText.setVisibility(View.GONE);
+                        QuantityEditText.setVisibility(View.VISIBLE);
+                    } else if (selectedOption.equals(getString(R.string.soldBy_volume))) {
+                        WeightEditText.setVisibility(View.VISIBLE);
+                        QuantityEditText.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
+
+        int year = ExpiryDates.getYear();
+        int month = ExpiryDates.getMonth() + 1;
+        int dayOfMonth = ExpiryDates.getDayOfMonth();
+
+        ExpiryDates.init(year, month, dayOfMonth, new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                // Update the formattedDate variable with the new selected date
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(year, monthOfYear, dayOfMonth);
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                formattedDate = dateFormat.format(calendar.getTime());
+            }
+        });
+
         Intent intent = getIntent();
         String id = intent.getStringExtra("id");
-        String name = intent.getStringExtra("title");
-        String desc = intent.getStringExtra("desc");
-        String longDesc = intent.getStringExtra("Longdesc");
-        String Barcode = intent.getStringExtra("Barcode");
-        String ExpiryDate = intent.getStringExtra("ExpiryDate");
-        String price = intent.getStringExtra("price");
-        String Category = intent.getStringExtra("Category");
 
-        mDatabaseHelper = new DatabaseHelper(this);
+        Item item = dbManager.getItemById(id);
+        if (item != null) {
+            NameText.setText(item.getName());
+            descText.setText(item.getDescription());
+            PriceEditText.setText(String.valueOf(item.getPrice()));
+            BarcodeEditText.setText(item.getBarcode());
+            DepartmentSpinner.setSelection(getSpinnerIndex(DepartmentSpinner, item.getDepartment()));
+            SubDepartmentSpinner.setSelection(getSpinnerIndex(SubDepartmentSpinner, item.getSubDepartment()));
+            CategorySpinner.setSelection(getSpinnerIndex(CategorySpinner, item.getCategory()));
+            LongDescEditText.setText(item.getLongDescription());
+            WeightEditText.setText(String.valueOf(item.getWeight()));
+            QuantityEditText.setText(String.valueOf(item.getQuantity()));
+            SKUEditText.setText(item.getSKU());
+            setDateOnDatePicker(item.getExpiryDate());
 
+            if (item.getSoldBy() != null && item.getSoldBy().equals("Each")) {
+                soldByRadioGroup.check(R.id.soldBy_each_radio);
+            } else if (item.getSoldBy() != null && item.getSoldBy().equals("Volume")) {
+                soldByRadioGroup.check(R.id.soldBy_volume_radio);
+            }
 
+            if (item.getVAT() != null) {
+                if (item.getVAT().equals("VAT 0%")) {
+                    vatRadioGroup.check(R.id.VAT_0_radio);
+                } else if (item.getVAT().equals("VAT Exempted")) {
+                    vatRadioGroup.check(R.id.VAT_Exempted_radio);
+                } else if (item.getVAT().equals("VAT 15%")) {
+                    vatRadioGroup.check(R.id.VAT_15_radio);
+                }
+            }
+        }
 
-//displays it in a textview..
-        _id = Long.parseLong(id);
-        NameText.setText(name);
-        descText.setText(desc);
-        PriceEditText.setText(price);
-        CategoryEditText.setText(Category);
-        LongDescEditText.setText(longDesc);
-        BarcodeEditText.setText(Barcode);
-        ExpirydateEditText.setText(ExpiryDate);
-        // update
-        buttonupdate = (Button) findViewById(R.id.btn_update);
-        buttonupdate.setOnClickListener(new OnClickListener() {
+        Cursor categoryCursor = catDatabaseHelper.getAllCategory();
+        Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
+        Cursor subDepartmentCursor = mDatabaseHelper.getAllSubDepartment();
+
+        List<String> categories = new ArrayList<>();
+        categories.add("All Category");
+        if (categoryCursor.moveToFirst()) {
+            do {
+                String category = categoryCursor.getString(categoryCursor.getColumnIndex(CategoryDatabaseHelper.CatName));
+                categories.add(category);
+            } while (categoryCursor.moveToNext());
+        }
+        categoryCursor.close();
+
+        List<String> departments = new ArrayList<>();
+        departments.add("All Departments");
+        if (departmentCursor.moveToFirst()) {
+            do {
+                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
+                departments.add(department);
+            } while (departmentCursor.moveToNext());
+        }
+        departmentCursor.close();
+
+        List<String> subDepartments = new ArrayList<>();
+        subDepartments.add("All Sub Departments");
+        if (subDepartmentCursor.moveToFirst()) {
+            do {
+                String subDepartment = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
+                subDepartments.add(subDepartment);
+            } while (subDepartmentCursor.moveToNext());
+        }
+        subDepartmentCursor.close();
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
+        ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subDepartments);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        CategorySpinner.setAdapter(spinnerAdapter);
+        DepartmentSpinner.setAdapter(spinnerAdapterDept);
+        SubDepartmentSpinner.setAdapter(spinnerAdapterSubDept);
+
+        CategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v1) {
-                openNewActivity();
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedItem = parent.getItemAtPosition(position).toString();
+                // Handle the selected item here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
             }
         });
 
-        // delete
-        buttondelete = (Button) findViewById(R.id.btn_delete);
-        buttondelete.setOnClickListener(new OnClickListener() {
+        DepartmentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v1) {
-                openNewActivityDel();
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedItem = parent.getItemAtPosition(position).toString();
+                // Handle the selected item here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
+        SubDepartmentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedItem = parent.getItemAtPosition(position).toString();
+                // Handle the selected item here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
+        buttonUpdate = findViewById(R.id.btn_update);
+        buttonUpdate.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateItem();
+            }
+        });
+        buttonDelete = findViewById(R.id.btn_delete);
+        buttonDelete.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteItem();
             }
         });
     }
-    public void openNewActivity(){
-        String title = NameText.getText().toString();
-        String desc = descText.getText().toString();
+    private void openImageOptionsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Image Source");
+        builder.setItems(new CharSequence[]{"Web Link", "Device Memory"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // Web Link
+                        openWebImageDialog();
+                        break;
+                    case 1: // Device Memory
+                        openDeviceImagePicker();
+                        break;
+                }
+            }
+        });
+        builder.show();
+    }
 
-         String price = PriceEditText.getText().toString();
-         String category = CategoryEditText.getText().toString();
-         String Barcode = BarcodeEditText.getText().toString();
-         String Department = DeptEditText.getText().toString();
-         String SubDepartment = SubDepartmentEditText.getText().toString();
-         String LongDescription = LongDescEditText.getText().toString();
-         String Quantity = QuantityEditText.getText().toString();
-         String ExpiryDate = ExpirydateEditText.getText().toString();
-         String VAT = VATEditText.getText().toString();
+    private void openWebImageDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter Image URL");
+
+        final EditText urlEditText = new EditText(this);
+        urlEditText.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.setMargins(48, 0, 48, 0);
+        urlEditText.setLayoutParams(layoutParams);
+
+        builder.setView(urlEditText);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String imageUrl = urlEditText.getText().toString().trim();
+                loadImageFromUrl(imageUrl);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void openDeviceImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_IMAGE_GALLERY);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_GALLERY) {
+                Uri selectedImageUri = data.getData();
+                imagePath = getPathFromUri(selectedImageUri);
+                displaySelectedImage(selectedImageUri);
+            }
+        }
+    }
+    private void displaySelectedImage(Uri imageUri) {
+        ImageView imageView = findViewById(R.id.image_view);
 
 
-        Toast.makeText(getApplicationContext(), "Item MODIFIED", Toast.LENGTH_LONG).show();
-        dbManager.update(_id, title, desc,price,Barcode, category,Department,SubDepartment,LongDescription,Quantity,ExpiryDate,VAT);
-        this.returnHome();
+        if (isWebLink(String.valueOf(imageUri))) {
+            // Load image from web link
+            Glide.with(this)
+                    .load(imageUri)
+                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .error(R.drawable.iboralogos1)
+                    .into(imageView);
+            imageView.setVisibility(View.VISIBLE);
+        } else {
+            // Load image from local storage
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            } else {
+                loadLocalImage(imageView, String.valueOf(imageUri));
+            }
+        }
+    }
+    private String getPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String imagePath = cursor.getString(columnIndex);
+            cursor.close();
+            return imagePath;
+        }
+        return null;
+    }
+    private boolean getIsAvailableForSale() {
+        return isAvailableForSale;
+    }
+    private boolean isWebLink(String url) {
+        return URLUtil.isValidUrl(url);
+    }
+    private void loadLocalImage(ImageView imageView, String imageLocation) {
+        File imageFile = new File(imageLocation);
+        if (imageFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            imageView.setImageBitmap(bitmap);
+        } else {
+            imageView.setImageResource(R.drawable.emptybasket);
+        }
+    }
+    private void loadImageFromUrl(String imageUrl) {
+        // Implement code to load image from URL
+        imagePath = imageUrl;
+        // You can also display the selected image here if needed
+        ImageView imageView = findViewById(R.id.image_view);
+        Glide.with(this).load(imageUrl).into(imageView);
+    }
+    private void updateItem() {
+        String name = NameText.getText().toString().trim();
+        String description = descText.getText().toString().trim();
+        String priceString = PriceEditText.getText().toString().trim();
+        String barcode = BarcodeEditText.getText().toString().trim();
+        String department = DepartmentSpinner.getSelectedItem().toString();
+        String subDepartment = SubDepartmentSpinner.getSelectedItem().toString();
+        String Category = CategorySpinner.getSelectedItem().toString();
+        String sku = SKUEditText.getText().toString().trim();
+        String variant = VariantEditText.getText().toString().trim();
+        String cost = CostEditText.getText().toString().trim();
+        String weight = WeightEditText.getText().toString().trim();
+        String longDescription = LongDescEditText.getText().toString().trim();
+        String quantityString = QuantityEditText.getText().toString().trim();
+        String expiryDate = getDateFromDatePicker(ExpiryDates);
+        String soldBy = getSelectedRadioButtonText(soldByRadioGroup);
+        String vat = getSelectedRadioButtonText(vatRadioGroup);
+        String image = "/storage/emulated/0/Download/640x640.jpg";
+
+        if (name.isEmpty() || description.isEmpty() || priceString.isEmpty() || barcode.isEmpty() || department.isEmpty()
+                || subDepartment.isEmpty() || longDescription.isEmpty() || quantityString.isEmpty() || expiryDate.isEmpty()
+                || soldBy.isEmpty() || vat.isEmpty()) {
+            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        float price = Float.parseFloat(priceString);
+        float quantity = Float.parseFloat(quantityString);
+
+        boolean isUpdated = dbManager.updateItem((int) _id, name, description, price, longDescription, quantity, Category, department, subDepartment,
+                barcode, Float.parseFloat(weight), expiryDate, vat, image, soldBy,sku,variant, Float.parseFloat(cost));
+
+        if (isUpdated) {
+            Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            Toast.makeText(this, "Failed to update item", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteItem() {
+        boolean isDeleted = dbManager.deleteItem(_id);
+
+        if (isDeleted) {
+            Toast.makeText(this, "Item deleted successfully", Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            Toast.makeText(this, "Failed to delete item", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private int getSpinnerIndex(Spinner spinner, String value) {
+        // Retrieve categories from the database
+        CategoryDatabaseHelper databaseHelper = new CategoryDatabaseHelper(spinner.getContext());
+        Cursor categoryCursor = databaseHelper.getAllCategory();
+
+        List<String> categories = new ArrayList<>();
+
+        // Iterate through the cursor and add categories to the list
+        if (categoryCursor.moveToFirst()) {
+            do {
+                String category = categoryCursor.getString(categoryCursor.getColumnIndex("category_name"));
+                categories.add(category);
+            } while (categoryCursor.moveToNext());
+        }
+
+        // Create an ArrayAdapter and populate it with the retrieved data
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, categories);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+
+        // Find the index of the selected value in the spinner
+        int index = categories.indexOf(value);
+        if (index != -1) {
+            // Set the spinner selection to the found index
+            spinner.setSelection(index);
+            return index;
+        }
+
+        // If the selected value is not found in categories, default to the first item
+        spinner.setSelection(0);
+        return 0; // Default index
     }
 
 
-    public void openNewActivityDel(){
-        dbManager.delete(_id);
-        this.returnHome();
-        Toast.makeText(getApplicationContext(), "Item Deleted", Toast.LENGTH_LONG).show();
+
+    private String getDateFromDatePicker(DatePicker datePicker) {
+        int day = datePicker.getDayOfMonth();
+        int month = datePicker.getMonth();
+        int year = datePicker.getYear();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, day);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        return dateFormat.format(calendar.getTime());
     }
 
+    private void setDateOnDatePicker(String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        try {
+            Date parsedDate = dateFormat.parse(date);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(parsedDate);
 
-    public void returnHome() {
-        Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(home_intent1);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            int month = calendar.get(Calendar.MONTH);
+            int year = calendar.get(Calendar.YEAR);
 
-
+            ExpiryDates.init(year, month, day, null);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, reload the image
 
-
+            } else {
+                // Permission denied, handle accordingly (e.g., show a message or use a placeholder image)
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    private String getSelectedRadioButtonText(RadioGroup radioGroup) {
+        int checkedRadioButtonId = radioGroup.getCheckedRadioButtonId();
+        if (checkedRadioButtonId != -1) {
+            RadioButton radioButton = findViewById(checkedRadioButtonId);
+            return radioButton.getText().toString();
+        }
+        return "";
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        catDatabaseHelper.close();
+        mDatabaseHelper.close();
+    }
 }

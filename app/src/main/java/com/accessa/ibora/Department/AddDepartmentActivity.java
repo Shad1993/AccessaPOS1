@@ -49,7 +49,7 @@ public class AddDepartmentActivity extends Activity {
     private String formattedDate;
     private RadioGroup soldBy_radioGroup;
 
-
+    private EditText weightEditText ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +74,9 @@ public class AddDepartmentActivity extends Activity {
         CostEditText = findViewById(R.id.cost_edittext);
         QuantityEditText = findViewById(R.id.quantity_edittext);
         expirydate_picker = findViewById(R.id.expirydate_picker);
-        VATEditText = findViewById(R.id.Vat_edittext);
-        soldBy_radioGroup = findViewById(R.id.soldBy_radioGroup);
 
+        soldBy_radioGroup = findViewById(R.id.soldBy_radioGroup);
+        weightEditText = findViewById(R.id.weight_edittext);
 
         soldBy_radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -223,6 +223,7 @@ public class AddDepartmentActivity extends Activity {
         String Variant = VariantEditText.getText().toString().trim();
         String SKU = SKUEditText.getText().toString().trim();
         String Cost = CostEditText.getText().toString().trim();
+        String weight = weightEditText.getText().toString().trim();
         String expiryDate = formattedDate;
         String availableForSale = formattedDate;
         String soldBy = selectedSoldBy;
@@ -238,7 +239,7 @@ public class AddDepartmentActivity extends Activity {
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
-        dbManager.insert(name, desc, price, category, barcode, department,
+        dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight),department,
                 subDepartment, longDescription, quantity, expiryDate, vat, availableForSale, soldBy, image, Variant,SKU,Cost);
         dbManager.close();
 

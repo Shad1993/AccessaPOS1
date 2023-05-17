@@ -9,9 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 public class DBManager {
 
     private DatabaseHelper dbHelper;
-
     private Context context;
-
     private SQLiteDatabase database;
 
     public DBManager(Context c) {
@@ -28,7 +26,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode,String Department,String SubDepartment,String LongDescription,String Quantity,String ExpiryDate,String VAT, String AvailableForSale,String SoldBy, String Image,String Variant,String SKU, String Cost) {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
         contentValue.put(DatabaseHelper.DESC, desc);
@@ -41,6 +39,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Quantity, Quantity);
         contentValue.put(DatabaseHelper.ExpiryDate, ExpiryDate);
         contentValue.put(DatabaseHelper.VAT, VAT);
+        contentValue.put(DatabaseHelper.Weight, weight);
         contentValue.put(DatabaseHelper.AvailableForSale, AvailableForSale);
         contentValue.put(DatabaseHelper.SoldBy, SoldBy);
         contentValue.put(DatabaseHelper.Image, Image);
@@ -51,7 +50,7 @@ public class DBManager {
     }
 
     public Cursor fetch() {
-        String[] columns = new String[] { DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC , DatabaseHelper.LongDescription, DatabaseHelper.Barcode, String.valueOf(DatabaseHelper.Price)};
+        String[] columns = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -59,28 +58,104 @@ public class DBManager {
         return cursor;
     }
 
-    public int update(long _id, String name,  String desc, String Price, String Category, String Barcode,String Department,String SubDepartment,String LongDescription,String Quantity,String ExpiryDate,String VAT) {
+    public boolean updateItem(long id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String vat, String soldBy, String image, String sku, String variant, float cost) {
         ContentValues contentValues = new ContentValues();
-
         contentValues.put(DatabaseHelper.Name, name);
-        contentValues.put(DatabaseHelper.DESC, desc);
-        contentValues.put(DatabaseHelper.Price, Price);
-        contentValues.put(DatabaseHelper.Category, Category);
-        contentValues.put(DatabaseHelper.Barcode, Barcode);
-        contentValues.put(DatabaseHelper.Department, Department);
-        contentValues.put(DatabaseHelper.SubDepartment, SubDepartment);
-        contentValues.put(DatabaseHelper.LongDescription, LongDescription);
-        contentValues.put(DatabaseHelper.Quantity, Quantity);
-        contentValues.put(DatabaseHelper.ExpiryDate, ExpiryDate);
-        contentValues.put(DatabaseHelper.VAT, VAT);
-        contentValues.put(String.valueOf(DatabaseHelper.Price), 0);
-        int i = database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + _id, null);
+        contentValues.put(DatabaseHelper.DESC, description);
+        contentValues.put(DatabaseHelper.Price, price);
+        contentValues.put(DatabaseHelper.LongDescription, longDescription);
+        contentValues.put(DatabaseHelper.Quantity, quantity);
+        contentValues.put(DatabaseHelper.Category, category);
+        contentValues.put(DatabaseHelper.Department, department);
+        contentValues.put(DatabaseHelper.SubDepartment, subDepartment);
+        contentValues.put(DatabaseHelper.Barcode, barcode);
+        contentValues.put(DatabaseHelper.Weight, weight);
+        contentValues.put(DatabaseHelper.ExpiryDate, expiryDate);
+        contentValues.put(DatabaseHelper.VAT, vat);
+        contentValues.put(DatabaseHelper.SoldBy, soldBy);
+        contentValues.put(DatabaseHelper.Image, image);
+        contentValues.put(DatabaseHelper.SKU, sku);
+        contentValues.put(DatabaseHelper.Variant, variant);
+        contentValues.put(DatabaseHelper.Cost, cost);
 
-        return i;
+        database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
+        return true;
     }
 
-    public void delete(long _id) {
+    public boolean deleteItem(long _id) {
         database.delete(DatabaseHelper.TABLE_NAME, DatabaseHelper._ID + "=" + _id, null);
+        return true;
     }
 
+    public Item getItemById(String id) {
+        Item item = null;
+        String[] columns = new String[]{
+                DatabaseHelper._ID,
+                DatabaseHelper.Name,
+                DatabaseHelper.DESC,
+                DatabaseHelper.Price,
+                DatabaseHelper.Category,
+                DatabaseHelper.Barcode,
+                DatabaseHelper.Department,
+                DatabaseHelper.SubDepartment,
+                DatabaseHelper.LongDescription,
+                DatabaseHelper.Quantity,
+                DatabaseHelper.ExpiryDate,
+                DatabaseHelper.VAT,
+                DatabaseHelper.SoldBy,
+                DatabaseHelper.Weight,
+                DatabaseHelper.Cost,
+                DatabaseHelper.SKU,
+                DatabaseHelper.Variant,
+                DatabaseHelper.Image
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper._ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            item = new Item();
+            item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
+            item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
+            item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
+
+            // Handle empty strings or invalid numbers for Price, Quantity, and Cost
+            String priceString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
+            item.setPrice(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString));
+
+            String quantityString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Quantity));
+            item.setQuantity(quantityString.isEmpty() ? 0 : Float.parseFloat(quantityString));
+
+            String costString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Cost));
+            item.setCost(costString.isEmpty() ? 0.0f : Float.parseFloat(costString));
+
+            String WeightString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Weight));
+            item.setWeight(WeightString.isEmpty() ? 0.0f : Float.parseFloat(WeightString));
+
+            item.setCategory(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category)));
+            item.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Barcode)));
+            item.setDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Department)));
+            item.setSubDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SubDepartment)));
+            item.setLongDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription)));
+            item.setExpiryDate(cursor.getString(cursor.getColumnIndex(DatabaseHelper.ExpiryDate)));
+
+            // Extract the VAT value from the cursor and remove non-numeric characters
+            String vatString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT));
+            vatString = vatString.replaceAll("[^0-9.]", "");
+            item.setVAT(vatString);
+
+            item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
+
+            item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
+            item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
+            item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
+            // Set other properties of the item
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return item;
+    }
 }
