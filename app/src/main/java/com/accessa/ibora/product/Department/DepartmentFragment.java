@@ -209,18 +209,18 @@ public class DepartmentFragment extends Fragment {
                     @Override
                     public void onItemClick(View view, int position) {
                         TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                        TextView priceTextView = view.findViewById(R.id.price_text_view);
+                        TextView DeptNameEditText = view.findViewById(R.id.name_text_view);
+                        TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
+                        TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
 
                         String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+                        String name = DeptNameEditText.getText().toString();
+                        String DeptCode = DeptCodeEditText.getText().toString();
 
                         Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyDepartmentActivity.class);
-                        modifyIntent.putExtra("title", title);
-                        modifyIntent.putExtra("desc", longDescription);
+                        modifyIntent.putExtra("title", name);
+                        modifyIntent.putExtra("desc", DeptCode);
                         modifyIntent.putExtra("id", id);
 
                         startActivity(modifyIntent);
