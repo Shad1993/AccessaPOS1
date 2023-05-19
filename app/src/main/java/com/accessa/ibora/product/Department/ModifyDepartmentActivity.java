@@ -53,7 +53,7 @@ public class ModifyDepartmentActivity extends Activity {
         _id = Long.parseLong(id);
 
 
-        Item item = dbManager.getItemById(id);
+        Item item = dbManager.getDepartmentById(id);
         if (item != null) {
             DeptName_Edittext.setText(item.getName());
             LastModified_Edittext.setText(item.getDescription());
