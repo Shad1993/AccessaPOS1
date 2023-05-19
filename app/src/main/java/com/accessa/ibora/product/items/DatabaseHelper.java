@@ -115,7 +115,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + LongDescription + " TEXT NOT NULL, "
             + SubDepartment + " TEXT NOT NULL, "
             + Price + " DECIMAL(10, 2) NOT NULL, "
-            + VAT + " TEXT NOT NULL CHECK(" + VAT + " IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
+            + VAT + " TEXT NOT NULL CHECK(VAT IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
             + ExpiryDate + " DATE, " // Allow NULL values for ExpiryDate
             + AvailableForSale + " BOOLEAN NOT NULL DEFAULT 1, "
             + SoldBy + " TEXT NOT NULL CHECK(SoldBy IN ('Each', 'Volume')), "
@@ -149,6 +149,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME + "(" + Barcode + ", " + SKUCost + "), " +
             "FOREIGN KEY (" + CodeFournisseur + ") REFERENCES " +
             VENDOR_TABLE_NAME + "(" + CodeFournisseur + "));";
+
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -193,5 +194,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LongDescription + " ASC";
         return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+    public Cursor searchCategory(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {DEPARTMENT_ID, DEPARTMENT_CODE, DEPARTMENT_NAME, DEPARTMENT_LAST_MODIFIED, COLUMN_CASHOR_id};
+        String selection = DEPARTMENT_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = DEPARTMENT_NAME + " ASC";
+        return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 }

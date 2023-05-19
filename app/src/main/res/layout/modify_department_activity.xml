@@ -31,65 +31,72 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <!-- Category name TextView and EditText -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="Category name" />
+                        android:text="@string/Deptname" />
 
                     <EditText
-                        android:id="@+id/CatName_edittext"
+                        android:id="@+id/DeptName_edittext"
                         style="@style/modifiedEditText"
-                        android:hint="@string/name"
+                        android:hint="@string/Deptname"
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
 
-                    <!-- Color EditText -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/LastModified" />
+
                     <EditText
-                        android:id="@+id/Color_edittext"
+                        android:id="@+id/LastModified_edittext"
                         style="@style/modifiedEditText"
+                        android:hint="@string/LastModified"
                         android:singleLine="true"
-                        android:visibility="invisible"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
 
-                    <!-- Pick Color TextView and Button -->
-                    <LinearLayout
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/userid" />
+
+                    <EditText
+                        android:id="@+id/userid_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/userid"
+                        android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:orientation="horizontal">
+                        android:inputType="text" />
 
-                        <TextView
-                            android:layout_marginTop="10dp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pick Color" />
 
-                        <Button
-                            android:id="@+id/pick_color_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:drawableLeft="@drawable/palette"
-                            android:textSize="10sp"
-                            android:textColor="@android:color/white"
-                            android:background="@android:color/transparent"
-                            android:layout_gravity="center" />
-                    </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/DepartmentCode" />
 
-                    <!-- Preview color View -->
-                    <View
-                        android:id="@+id/preview_selected_color"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:background="@android:color/darker_gray"
-                        android:layout_marginTop="8dp" />
+
+                    <EditText
+                        android:id="@+id/deptcode_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/DepartmentCode"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
 
 
 

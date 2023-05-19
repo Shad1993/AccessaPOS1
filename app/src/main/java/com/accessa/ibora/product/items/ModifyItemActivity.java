@@ -1,5 +1,6 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.AddItemActivity.REQUEST_IMAGE_GALLERY;
 import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
@@ -43,6 +44,7 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.product.category.Category;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 
 import java.io.File;
@@ -71,9 +73,11 @@ public class ModifyItemActivity extends Activity {
     private EditText QuantityEditText;
     private EditText VariantEditText;
 
+
     private EditText CostEditText;
     private DatePicker ExpiryDates;
     private RadioGroup soldByRadioGroup;
+
     private RadioGroup vatRadioGroup;
     private Button buttonUpdate;
     private Button buttonDelete;
@@ -82,6 +86,7 @@ public class ModifyItemActivity extends Activity {
     private boolean isAvailableForSale;
     private TextView ExpiryDateText;
     private DBManager dbManager;
+    private String ImageLink;
     private long _id;
     private DatabaseHelper mDatabaseHelper;
     private CategoryDatabaseHelper catDatabaseHelper;
@@ -115,12 +120,11 @@ private ImageView image_view;
         CostEditText = findViewById(R.id.cost_edittext);
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
-        soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
-        ExpirydateSwitch = findViewById(R.id.perishable_switch);
+        ExpirydateSwitch = findViewById(R.id.expirydate_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
 
-
+        ImageView imageView = findViewById(R.id.image_view);
 
 
 
@@ -202,6 +206,8 @@ private ImageView image_view;
 
         Intent intent = getIntent();
         String id = intent.getStringExtra("id");
+        _id = Long.parseLong(id);
+
 
         Item item = dbManager.getItemById(id);
         if (item != null) {
@@ -212,27 +218,33 @@ private ImageView image_view;
             DepartmentSpinner.setSelection(getSpinnerIndex(DepartmentSpinner, item.getDepartment()));
             SubDepartmentSpinner.setSelection(getSpinnerIndex(SubDepartmentSpinner, item.getSubDepartment()));
             CategorySpinner.setSelection(getSpinnerIndex(CategorySpinner, item.getCategory()));
+            CostEditText.setText(String.valueOf(item.getPrice()));
+            VariantEditText.setText(item.getVariant());
+             ImageLink= item.getImage();
+
+            Glide.with(this).load(ImageLink).into(imageView);
+
             LongDescEditText.setText(item.getLongDescription());
             WeightEditText.setText(String.valueOf(item.getWeight()));
             QuantityEditText.setText(String.valueOf(item.getQuantity()));
             SKUEditText.setText(item.getSKU());
-            setDateOnDatePicker(item.getExpiryDate());
+            if(item.getExpiryDate() != null) {
+                setDateOnDatePicker(item.getExpiryDate());
+                // Check the specific condition
+                boolean isConditionMet = true;
 
-            if (item.getSoldBy() != null && item.getSoldBy().equals("Each")) {
-                soldByRadioGroup.check(R.id.soldBy_each_radio);
-            } else if (item.getSoldBy() != null && item.getSoldBy().equals("Volume")) {
-                soldByRadioGroup.check(R.id.soldBy_volume_radio);
-            }
-
-            if (item.getVAT() != null) {
-                if (item.getVAT().equals("VAT 0%")) {
-                    vatRadioGroup.check(R.id.VAT_0_radio);
-                } else if (item.getVAT().equals("VAT Exempted")) {
-                    vatRadioGroup.check(R.id.VAT_Exempted_radio);
-                } else if (item.getVAT().equals("VAT 15%")) {
-                    vatRadioGroup.check(R.id.VAT_15_radio);
+            // Set the switch as true if the condition is met
+                if (isConditionMet) {
+                    ExpirydateSwitch.setChecked(true);
                 }
             }
+            // set switch as true if available for sale
+            Boolean isConditionMet =item.getAvailableForSale();
+
+            if (Boolean.TRUE.equals(isConditionMet)) {
+                Available4Sale.setChecked(true);
+            }
+
         }
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
@@ -243,7 +255,7 @@ private ImageView image_view;
         categories.add("All Category");
         if (categoryCursor.moveToFirst()) {
             do {
-                String category = categoryCursor.getString(categoryCursor.getColumnIndex(CategoryDatabaseHelper.CatName));
+                String category = categoryCursor.getString(categoryCursor.getColumnIndex(CatName));
                 categories.add(category);
             } while (categoryCursor.moveToNext());
         }
@@ -289,6 +301,39 @@ private ImageView image_view;
                 // Handle the case when nothing is selected
             }
         });
+// Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
+        String existingCategory = item.getCategory();
+
+// Get the index of the existing category value in the spinner's data source
+        int categoryIndex = spinnerAdapter.getPosition(existingCategory);
+
+// Set the selected item of the CategorySpinner to the existing category value
+        CategorySpinner.setSelection(categoryIndex);
+
+        // Retrieve the existing soldBy value from the database (replace item.getSoldBy() with the correct method)
+        String existingSoldBy = item.getSoldBy();
+
+// Find the radio button corresponding to the existing soldBy value and set it as checked
+        if (existingSoldBy != null && existingSoldBy.equals("Each")) {
+            soldByRadioGroup.check(R.id.soldBy_each_radio);
+        } else if (existingSoldBy != null && existingSoldBy.equals("Volume")) {
+            soldByRadioGroup.check(R.id.soldBy_volume_radio);
+        }
+
+// Retrieve the existing VAT value from the database (replace item.getVAT() with the correct method)
+        String existingVAT = item.getVAT();
+
+// Check the radio button based on the value
+        if (existingVAT != null && existingVAT.equals("VAT 0%")) {
+            vatRadioGroup.check(R.id.VAT_0_radio);
+        } else if (existingVAT != null && existingVAT.equals("VAT Exempted")) {
+            vatRadioGroup.check(R.id.VAT_Exempted_radio);
+        } else if (existingVAT != null && existingVAT.equals("VAT 15%")) {
+            vatRadioGroup.check(R.id.VAT_15_radio);
+        }
+
+
+        // Expiry date switch
 
         DepartmentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -426,9 +471,7 @@ private ImageView image_view;
         }
         return null;
     }
-    private boolean getIsAvailableForSale() {
-        return isAvailableForSale;
-    }
+
     private boolean isWebLink(String url) {
         return URLUtil.isValidUrl(url);
     }
@@ -450,36 +493,47 @@ private ImageView image_view;
     }
     private void updateItem() {
         String name = NameText.getText().toString().trim();
-        String description = descText.getText().toString().trim();
-        String priceString = PriceEditText.getText().toString().trim();
+        String desc = descText.getText().toString().trim();
+        String price = PriceEditText.getText().toString().trim();
         String barcode = BarcodeEditText.getText().toString().trim();
         String department = DepartmentSpinner.getSelectedItem().toString();
         String subDepartment = SubDepartmentSpinner.getSelectedItem().toString();
-        String Category = CategorySpinner.getSelectedItem().toString();
+        String category = CategorySpinner.getSelectedItem().toString();
         String sku = SKUEditText.getText().toString().trim();
         String variant = VariantEditText.getText().toString().trim();
         String cost = CostEditText.getText().toString().trim();
         String weight = WeightEditText.getText().toString().trim();
         String longDescription = LongDescEditText.getText().toString().trim();
-        String quantityString = QuantityEditText.getText().toString().trim();
+        String quantity = QuantityEditText.getText().toString().trim();
         String expiryDate = getDateFromDatePicker(ExpiryDates);
         String soldBy = getSelectedRadioButtonText(soldByRadioGroup);
         String vat = getSelectedRadioButtonText(vatRadioGroup);
-        String image = "/storage/emulated/0/Download/640x640.jpg";
+        String availableForSale =String.valueOf(isAvailableForSale);
 
-        if (name.isEmpty() || description.isEmpty() || priceString.isEmpty() || barcode.isEmpty() || department.isEmpty()
-                || subDepartment.isEmpty() || longDescription.isEmpty() || quantityString.isEmpty() || expiryDate.isEmpty()
+        String image ;
+        if( imagePath== null) {
+            image=  ImageLink;
+
+        } else{
+            image=  imagePath;
+
+        }
+
+
+        if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || barcode.isEmpty() || department.isEmpty()
+                || subDepartment.isEmpty() || longDescription.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()
                 || soldBy.isEmpty() || vat.isEmpty()) {
             Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        float price = Float.parseFloat(priceString);
-        float quantity = Float.parseFloat(quantityString);
 
-        boolean isUpdated = dbManager.updateItem((int) _id, name, description, price, longDescription, quantity, Category, department, subDepartment,
-                barcode, Float.parseFloat(weight), expiryDate, vat, image, soldBy,sku,variant, Float.parseFloat(cost));
 
+
+        boolean isUpdated = dbManager.updateItem( _id,name, desc, price, category, barcode, Float.parseFloat(weight), department,
+                subDepartment, longDescription, quantity, expiryDate, vat,
+                availableForSale, soldBy, image, variant, sku, cost);
+        returnHome();
         if (isUpdated) {
             Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
             finish();
@@ -490,7 +544,7 @@ private ImageView image_view;
 
     private void deleteItem() {
         boolean isDeleted = dbManager.deleteItem(_id);
-
+        returnHome();
         if (isDeleted) {
             Toast.makeText(this, "Item deleted successfully", Toast.LENGTH_SHORT).show();
             finish();
@@ -498,7 +552,12 @@ private ImageView image_view;
             Toast.makeText(this, "Failed to delete item", Toast.LENGTH_SHORT).show();
         }
     }
-
+    public void returnHome() {
+        Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "Item_fragment");
+        startActivity(home_intent1);
+    }
     private int getSpinnerIndex(Spinner spinner, String value) {
         // Retrieve categories from the database
         CategoryDatabaseHelper databaseHelper = new CategoryDatabaseHelper(spinner.getContext());
@@ -509,7 +568,7 @@ private ImageView image_view;
         // Iterate through the cursor and add categories to the list
         if (categoryCursor.moveToFirst()) {
             do {
-                String category = categoryCursor.getString(categoryCursor.getColumnIndex("category_name"));
+                String category = categoryCursor.getString(categoryCursor.getColumnIndex(CatName));
                 categories.add(category);
             } while (categoryCursor.moveToNext());
         }
@@ -547,20 +606,23 @@ private ImageView image_view;
     }
 
     private void setDateOnDatePicker(String date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-        try {
-            Date parsedDate = dateFormat.parse(date);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(parsedDate);
 
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int month = calendar.get(Calendar.MONTH);
-            int year = calendar.get(Calendar.YEAR);
 
-            ExpiryDates.init(year, month, day, null);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+            try {
+                Date parsedDate = dateFormat.parse(date);
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(parsedDate);
+
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                int month = calendar.get(Calendar.MONTH);
+                int year = calendar.get(Calendar.YEAR);
+
+                ExpiryDates.init(year, month, day, null);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
     }
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_CODE) {

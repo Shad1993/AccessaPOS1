@@ -312,7 +312,7 @@
                         android:background="@color/whiteTextColor" />
 
                     <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/perishable_switch"
+                        android:id="@+id/expirydate_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/Perishable"

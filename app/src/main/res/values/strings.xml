@@ -51,13 +51,19 @@
     <string name="weight">Weight</string>
     <string name="quantity">Quantity</string>
     <string name="expirydate">Expiry Date</string>
+    <string name="modDept">Update Department</string>
 
     <string name="VAT_0">VAT 0%</string>
     <string name="VAT_Exempted">VAT Exempted</string>
     <string name="VAT_15">VAT 15%</string>
+    <string name="Deptname">Department Name</string>
+    <string name="LastModified">Last Modified</string>
+    <string name="userid">Modified By</string>
+    <string name="DepartmentCode">Department Code</string>
     <string name="Select_Image">Select Image</string>
     <string name="toggle_button_text">Available for sale?</string>
     <string name="Perishable">Does this have an expiry date?</string>
+    <string name="addDept">Add Department</string>
 
 
 

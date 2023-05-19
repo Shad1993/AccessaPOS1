@@ -19,8 +19,9 @@ public class Item {
     private String SKU;
     private String variant;
     private float cost;
+    private boolean AvailableForSale;
 
-    public Item(int id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String VAT, String soldBy) {
+    public Item(int id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String VAT, String soldBy, Boolean AvailableForSale) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -35,6 +36,7 @@ public class Item {
         this.expiryDate = expiryDate;
         this.VAT = VAT;
         this.soldBy = soldBy;
+        this.AvailableForSale = AvailableForSale;
     }
 
     public Item(String title, String description, int quantity) {
@@ -58,7 +60,7 @@ public class Item {
         this.expiryDate=expiryDate;
         this.VAT = VAT;
         this.soldBy = soldBy;
-
+        this.AvailableForSale = AvailableForSale;
     }
 
 
@@ -68,7 +70,12 @@ public class Item {
     public int getId() {
         return id;
     }
-
+    public boolean getAvailableForSale() {
+        return AvailableForSale;
+    }
+    public void setAvailableForSale(boolean AvailableForSale) {
+        this.AvailableForSale = AvailableForSale;
+    }
     public void setId(int id) {
         this.id = id;
     }

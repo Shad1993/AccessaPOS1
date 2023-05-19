@@ -5,7 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.Toast;
 
+import com.accessa.ibora.login.RegistorCashor;
+import com.accessa.ibora.product.category.CategoryDatabaseHelper;
+import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
 public class DBManager {
 
     private DatabaseHelper dbHelper;
@@ -58,34 +62,38 @@ public class DBManager {
         return cursor;
     }
 
-    public boolean updateItem(long id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String vat, String soldBy, String image, String sku, String variant, float cost) {
+    public boolean updateItem(long id,String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.Name, name);
-        contentValues.put(DatabaseHelper.DESC, description);
+        contentValues.put(DatabaseHelper.DESC, desc);
         contentValues.put(DatabaseHelper.Price, price);
-        contentValues.put(DatabaseHelper.LongDescription, longDescription);
-        contentValues.put(DatabaseHelper.Quantity, quantity);
-        contentValues.put(DatabaseHelper.Category, category);
-        contentValues.put(DatabaseHelper.Department, department);
-        contentValues.put(DatabaseHelper.SubDepartment, subDepartment);
-        contentValues.put(DatabaseHelper.Barcode, barcode);
+        contentValues.put(DatabaseHelper.LongDescription, LongDescription);
+        contentValues.put(DatabaseHelper.Quantity, Quantity);
+        contentValues.put(DatabaseHelper.Category, Category);
+        contentValues.put(DatabaseHelper.Department, Department);
+        contentValues.put(DatabaseHelper.SubDepartment, SubDepartment);
+        contentValues.put(DatabaseHelper.Barcode, Barcode);
         contentValues.put(DatabaseHelper.Weight, weight);
-        contentValues.put(DatabaseHelper.ExpiryDate, expiryDate);
-        contentValues.put(DatabaseHelper.VAT, vat);
-        contentValues.put(DatabaseHelper.SoldBy, soldBy);
-        contentValues.put(DatabaseHelper.Image, image);
-        contentValues.put(DatabaseHelper.SKU, sku);
-        contentValues.put(DatabaseHelper.Variant, variant);
-        contentValues.put(DatabaseHelper.Cost, cost);
+        contentValues.put(DatabaseHelper.ExpiryDate, ExpiryDate);
+        contentValues.put(DatabaseHelper.VAT, VAT);
+        contentValues.put(DatabaseHelper.SoldBy, SoldBy);
+        contentValues.put(DatabaseHelper.Image, Image);
+        contentValues.put(DatabaseHelper.SKU, SKU);
+        contentValues.put(DatabaseHelper.Variant, Variant);
+        contentValues.put(DatabaseHelper.Cost, Cost);
+        contentValues.put(DatabaseHelper.AvailableForSale,AvailableForSale);
 
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
     }
 
     public boolean deleteItem(long _id) {
-        database.delete(DatabaseHelper.TABLE_NAME, DatabaseHelper._ID + "=" + _id, null);
+        String selection = DatabaseHelper._ID + "=?";
+        String[] selectionArgs = { String.valueOf(_id) };
+        database.delete(DatabaseHelper.TABLE_NAME, selection, selectionArgs);
         return true;
     }
+
 
     public Item getItemById(String id) {
         Item item = null;
@@ -106,6 +114,7 @@ public class DBManager {
                 DatabaseHelper.Weight,
                 DatabaseHelper.Cost,
                 DatabaseHelper.SKU,
+                DatabaseHelper.AvailableForSale,
                 DatabaseHelper.Variant,
                 DatabaseHelper.Image
                 // Add other columns as needed
@@ -141,13 +150,10 @@ public class DBManager {
             item.setLongDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription)));
             item.setExpiryDate(cursor.getString(cursor.getColumnIndex(DatabaseHelper.ExpiryDate)));
 
-            // Extract the VAT value from the cursor and remove non-numeric characters
-            String vatString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT));
-            vatString = vatString.replaceAll("[^0-9.]", "");
-            item.setVAT(vatString);
+            item.setVAT(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT)));
 
             item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
-
+            item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
             item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
             item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
@@ -157,5 +163,34 @@ public class DBManager {
             cursor.close();
         }
         return item;
+    }
+
+    public void insertDept(String deptName, String lastModified, String userId, String deptCode) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
+        contentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
+        contentValue.put(RegistorCashor.COLUMN_CASHOR_id, userId);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+
+        database.insert(DatabaseHelper.DEPARTMENT_TABLE_NAME, null, contentValue);
+    }
+
+    public boolean updateDept(long id, String name, String lastmodified, String userId, String deptCode) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseHelper.DEPARTMENT_NAME, name);
+        contentValues.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastmodified);
+        contentValues.put(RegistorCashor.COLUMN_CASHOR_id, userId);
+        contentValues.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+
+
+        database.update(DatabaseHelper.DEPARTMENT_TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
+        return true;
+    }
+
+    public boolean deleteDept(long _id) {
+        String selection = DatabaseHelper._ID + "=?";
+        String[] selectionArgs = { String.valueOf(_id) };
+        database.delete(DatabaseHelper.DEPARTMENT_TABLE_NAME, selection, selectionArgs);
+        return true;
     }
 }

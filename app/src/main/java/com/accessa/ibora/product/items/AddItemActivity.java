@@ -415,15 +415,19 @@ public class AddItemActivity extends Activity {
         String expiryDate = formattedDate;
         String availableForSale = String.valueOf(isAvailableForSale);
         String soldBy = selectedSoldBy;
-        String image = imagePath;
-        if (image == null || image.isEmpty()) {
-            Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
-            return;
+        String image ;
+        if( imagePath== null) {
+            image=  null;
+
+        } else{
+            image=  imagePath;
+
         }
+
         // Check if all required fields are filled
         if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || barcode.isEmpty()
                 || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty()
-                || availableForSale.isEmpty() || image.isEmpty()
+                || availableForSale.isEmpty()
                 || variant.isEmpty() || sku.isEmpty() || cost.isEmpty()) {
             Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
             return;

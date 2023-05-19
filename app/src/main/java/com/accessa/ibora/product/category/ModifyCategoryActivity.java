@@ -121,6 +121,10 @@ public class ModifyCategoryActivity extends Activity {
         String colorValue = ColorText.getText().toString();
 
         Toast.makeText(getApplicationContext(), "Category MODIFIED", Toast.LENGTH_LONG).show();
+        if (CatName.isEmpty() ) {
+            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
         CatdbManager.update(_id, CatName, colorValue);
         returnHome();
     }

@@ -34,7 +34,7 @@
         <activity android:name=".product.items.AddItemActivity" />
         <activity android:name=".product.menu.Product"  />
         <activity android:name=".product.items.FirstFragment" android:theme="@style/Widget.AppCompat.Spinner" />
-
+        <activity android:name=".product.Department.AddDepartmentActivity"  />
         <activity android:name=".login.RegistorCashor" />
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />

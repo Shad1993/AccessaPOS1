@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -14,17 +13,18 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class MenuFragment extends Fragment {
     ListView simpleList;
-    String Menulist[] = {"Items", "Department", "Sub department","Category", "Discount"};
-    int icons[] = {R.drawable.cart, R.drawable.department, R.drawable.department, R.drawable.category, R.drawable.baseline_discount_24};
-    // views
-    Button btn1,btn2;
+    String Menulist[] = {"Items", "Department", "Sub department","Category", "Vendor", "Discount"};
+    int icons[] = {R.drawable.cart, R.drawable.department, R.drawable.department, R.drawable.category,R.drawable.vendor, R.drawable.baseline_discount_24};
+
 
     // activity listener
     private OnMenufragListener menufragListener;
@@ -120,9 +120,28 @@ public class MenuFragment extends Fragment {
                 }else if (position==4) {
                     Toast.makeText(getContext(), "soon coming for discounts" + position, Toast.LENGTH_SHORT).show();
                 }else if (position==1) {
-                    Toast.makeText(getContext(), "soon coming for department" + position, Toast.LENGTH_SHORT).show();
+                    Fragment newFragment = new DepartmentFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
+
                 }else if (position==2) {
-                    Toast.makeText(getContext(), "soon coming for sub department" + position, Toast.LENGTH_SHORT).show();
+                    Fragment newFragment = new SubDepartmentFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
                 }
             }
         });

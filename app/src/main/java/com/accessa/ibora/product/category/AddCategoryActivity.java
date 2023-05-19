@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
 import top.defaults.colorpicker.ColorPickerPopup;
 
 import com.accessa.ibora.R;
@@ -157,7 +159,10 @@ public class AddCategoryActivity extends Activity {
     public void openNewActivity() {
         final String CatName = CatNameEditText.getText().toString();
         final String Color = ColorEditText.getText().toString();
-
+        if (CatName.isEmpty() ) {
+            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
         CatdbManager.insert(CatName, Color);
 
         // Create an Intent to navigate to the desired Fragment

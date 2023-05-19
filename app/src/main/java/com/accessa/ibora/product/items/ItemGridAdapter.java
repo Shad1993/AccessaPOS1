@@ -29,7 +29,7 @@ import java.util.List;
 
 public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
 
-    static final int PERMISSION_REQUEST_CODE = 123;
+    public static final int PERMISSION_REQUEST_CODE = 123;
 
     private Context mContext;
     private Cursor mCursor;
@@ -145,14 +145,19 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
     }
 
     private void loadLocalImage(ImageView imageView, String imageLocation) {
-        File imageFile = new File(imageLocation);
-        if (imageFile.exists()) {
-            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            imageView.setImageBitmap(bitmap);
+        if (imageLocation != null && !imageLocation.isEmpty()) {
+            File imageFile = new File(imageLocation);
+            if (imageFile.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                imageView.setImageBitmap(bitmap);
+            } else {
+                imageView.setImageResource(R.drawable.emptybasket);
+            }
         } else {
             imageView.setImageResource(R.drawable.emptybasket);
         }
     }
+
 
     // Handle the permission request response
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

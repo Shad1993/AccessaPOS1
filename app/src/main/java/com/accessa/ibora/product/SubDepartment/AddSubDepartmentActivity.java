@@ -1,7 +1,6 @@
-package com.accessa.ibora.product.items;
+package com.accessa.ibora.product.SubDepartment;
 
 import android.app.Activity;
-import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
@@ -18,18 +17,15 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.category.Category;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
+import com.accessa.ibora.product.items.DBManager;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-public class AddDepartmentActivity extends Activity {
+public class AddSubDepartmentActivity extends Activity {
     private CategoryDatabaseHelper CatDatabaseHelper;
     private DatabaseHelper mDatabaseHelper;
     private EditText subjectEditText;
@@ -58,7 +54,7 @@ public class AddDepartmentActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Record");
 
-        setContentView(R.layout.activity_add_record);
+        setContentView(R.layout.add_department_activity);
 
         subjectEditText = findViewById(R.id.itemName_edittext);
         descEditText = findViewById(R.id.description_edittext);
@@ -260,7 +256,7 @@ public class AddDepartmentActivity extends Activity {
         SubDepartmentSpinner.setSelection(0);
 
         // Redirect to the Product activity
-        Intent intent = new Intent(AddDepartmentActivity.this, Product.class);
+        Intent intent = new Intent(AddSubDepartmentActivity.this, Product.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
