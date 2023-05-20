@@ -53,12 +53,12 @@ public class ModifyDepartmentActivity extends Activity {
         _id = Long.parseLong(id);
 
 
-        Item item = dbManager.getDepartmentById(id);
-        if (item != null) {
-            DeptName_Edittext.setText(item.getName());
-            LastModified_Edittext.setText(item.getDescription());
-            Userid_Edittext.setText(String.valueOf(item.getPrice()));
-            Deptcode_Edittext.setText(item.getBarcode());
+        Department department = dbManager.getDepartmentById(id);
+        if (department != null) {
+            DeptName_Edittext.setText(department.getName());
+            LastModified_Edittext.setText(department.getLastModified());
+            Userid_Edittext.setText(String.valueOf(department.getCashierID()));
+            Deptcode_Edittext.setText(department.getDepartmentCode());
 
         }
 

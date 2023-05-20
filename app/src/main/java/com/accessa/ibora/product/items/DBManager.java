@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.widget.Toast;
 
 import com.accessa.ibora.login.RegistorCashor;
+import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
 public class DBManager {
@@ -194,8 +195,8 @@ public class DBManager {
         return true;
     }
 
-    public Item getDepartmentById(String id) {
-        Item item = null;
+    public Department getDepartmentById(String id) {
+        Department department = null;
         String[] columns = new String[]{
                 DatabaseHelper._ID,
                 DatabaseHelper.DEPARTMENT_ID,
@@ -210,45 +211,21 @@ public class DBManager {
         String selection = DatabaseHelper._ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
-        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(DatabaseHelper.DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
-            item = new Item();
-            item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
-            item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
-            item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
+            department = new Department();
+            department.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID)));
+            department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
+            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
+            department.setCashierID(cursor.getString(cursor.getColumnIndex(RegistorCashor.COLUMN_CASHOR_id)));
 
-            // Handle empty strings or invalid numbers for Price, Quantity, and Cost
-            String priceString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
-            item.setPrice(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString));
 
-            String quantityString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Quantity));
-            item.setQuantity(quantityString.isEmpty() ? 0 : Float.parseFloat(quantityString));
 
-            String costString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Cost));
-            item.setCost(costString.isEmpty() ? 0.0f : Float.parseFloat(costString));
-
-            String WeightString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Weight));
-            item.setWeight(WeightString.isEmpty() ? 0.0f : Float.parseFloat(WeightString));
-
-            item.setCategory(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category)));
-            item.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Barcode)));
-            item.setDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Department)));
-            item.setSubDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SubDepartment)));
-            item.setLongDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription)));
-            item.setExpiryDate(cursor.getString(cursor.getColumnIndex(DatabaseHelper.ExpiryDate)));
-
-            item.setVAT(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT)));
-
-            item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
-            item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
-            item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
-            item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
-            item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
-            // Set other properties of the item
         }
         if (cursor != null) {
             cursor.close();
         }
-        return item;
+        return department;
     }
 }
