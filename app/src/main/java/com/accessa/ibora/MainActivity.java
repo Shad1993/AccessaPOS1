@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
+    private String cashorId;
+    private String cashorName;
 
     private SharedPreferences sharedPreferences;
     @Override
@@ -80,8 +82,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Retrieve the shared preferences
-         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-        // Initialize the StringBuilder for entered PIN
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
@@ -95,6 +102,9 @@ public class MainActivity extends AppCompatActivity {
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
 
+        // Set the user ID and name in the TextViews
+        CashorId.setText(cashorId);
+        name.setText(cashorName);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -117,14 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
-                    Toast.makeText(getApplicationContext(), "Items is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, Product.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
                     Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_logout) {
-                    Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
                     logout();
                     return true;
                 } else if (id == R.id.Help) {

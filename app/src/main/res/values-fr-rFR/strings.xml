@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AccessaPOS</string>
+    <string name="Accessa">Accessa</string>
+    <string name="heading">Deux fragments dans une activité</string>
+    <string name="fragment1_button">Afficher le premier fragment</string>
+    <string name="fragment2_button">Afficher le deuxiè\me fragment</string>
+    <string name="fragment1_text1">Affichage du contenu du premier fragment</string>
+    <string name="fragment2_text1">Affichage du contenu du deuxiè\me fragment</string>
+    <string name="title_activity_poduct">produit</string>
+    <!-- Chaînes utilisées pour les fragments pour la navigation -->
+    <string name="first_fragment_label">Premier fragment</string>
+    <string name="second_fragment_label">Deuxiè\me fragment</string>
+    <string name="next">Suivant</string>
+    <string name="previous">Pré\cé\dent</string>
+    <string name="keyword">mot-clé\</string>
+
+
+    <string name="search_label">Clients</string>
+    <string name="search_hint">Rechercher un produit</string>
+    <string name="settings_description">Liste des clients</string>
+    <string name="title_activity_product_drawer">ProductDrawer</string>
+    <string name="navigation_drawer_open">Ouvrir le menu de navigation</string>
+    <string name="navigation_drawer_close">Fermer le menu de navigation</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">En tete de navigation</string>
+    <string name="action_settings">Paramètres</string>
+    <string name="SoldBy">Vendu par</string>
+    <string name="soldBy_each">Chaque</string>
+    <string name="soldBy_volume">Volume</string>
+    <string name="cost">coût</string>
+    <string name="sku">SKU : Prix recommandé</string>
+    <string name="variant">Variantes</string>
+
+    <string name="menu_home">Accueil</string>
+    <string name="menu_gallery">Galerie</string>
+    <string name="menu_slideshow">Diaporama</string>
+    <string name="nav_open">Ouvrir</string>
+    <string name="nav_close">Fermer</string>
+    <string name="message">Message</string>
+    <string name="send">Ajouter un produit</string>
+    <string name="Desc">Description de l\'article</string>
+    <string name="LongDesc">Description longue de l\'article</string>
+    <string name="name">Nom de l\'article</string>
+    <string name="price">Prix en Rs</string>
+    <string name="category">Caté\gorie</string>
+    <string name="Vat">TVA</string>
+    <string name="Barcode">Code-barres</string>
+    <string name="Department">Dé\partement</string>
+    <string name="SubDept">Sous-département</string>
+    <string name="weight">Poids</string>
+    <string name="quantity">Quantité</string>
+    <string name="expirydate">Date d\'expiration</string>
+    <string name="modDept">Mettre à jour le département</string>
+
+    <string name="VAT_0">TVA 0%</string>
+    <string name="VAT_Exempted">TVA Exonérée</string>
+    <string name="VAT_15">TVA 15%</string>
+    <string name="Deptname">Nom du dé\partement</string>
+    <string name="LastModified">Derniè\re modification</string>
+    <string name="userid">Modifié\ par</string>
+    <string name="DepartmentCode">Code du département</string>
+    <string name="Select_Image">Sélectionner une image</string>
+    <string name="toggle_button_text">Disponible à la vente ?</string>
+    <string name="Perishable">Possède une date d\'expiration ?</string>
+    <string name="addDept">Ajouter un département</string>
+
+    <string name="spinner_prompt">Articles</string>
+    <string-array name="spinner_items">
+        <item>Article 1</item>
+        <item>Article 2</item>
+        <item>Article 3</item>
+        <!-- Ajouter plus d'articles si nécessaire -->
+    </string-array>
+
+    <!--liste des fonctions-->
+    <!--function list-->
+    <string name="function_all">Test complet</string>
+    <string name="function_qrcode">Code QR</string>
+    <string name="function_barcode">Code-barres</string>
+    <string name="function_text">Texte</string>
+    <string name="function_tab">Formulaire</string>
+    <string name="function_pic">Image</string>
+    <string name="function_multi">Multithreading</string>
+    <string name="function_threeline">Avance papier</string>
+    <string name="function_buffer">Impression de transaction</string>
+    <string name="function_blackline">Étiquette noire</string>
+    <string name="function_cash">Test de trésorerie</string>
+    <string name="function_lcd">Test d\'é\cran LCD</string>
+    <string name="function_status">État</string>
+    <string name="function_label">Test d\'é\tiquettes</string>
+
+    <!--titles-->
+    <string name="setting_title">Paramètres</string>
+    <string name="info_title">Informations sur l\'\imprimante</string>
+    <string name="qr_title">Test QR Code</string>
+    <string name="barcode_title">Test code-barres</string>
+    <string name="text_title">Test texte</string>
+    <string name="bitmap_title">Test image</string>
+    <string name="tab_title">Test formulaire</string>
+    <string name="all_title">Test complet</string>
+    <string name="buffer_title">Test de transaction</string>
+    <string name="blackline_title">Test é\tiquette noire</string>
+    <string name="lcd_title">Test é\cran LCD</string>
+    <string name="label_title">Test d\'é\tiquettes</string>
+
+    <!--text-->
+    <string name="printer_serial_num">Numéro de série</string>
+    <string name="printer_model">Modèle de l\'imprimante</string>
+    <string name="printer_head">Tête d\'impression</string>
+    <string name="printer_firmware">Version du firmware de l\'imprimante</string>
+    <string name="printer_head_size">Taille de la tête d\'impression</string>
+    <string name="printer_distance">Distance imprimé\e</string>
+    <string name="printer_version">Version de service</string>
+    <string name="printer_dev_version">Version de dé\veloppement</string>
+    <string name="enter_work">Entrer la transaction</string>
+    <string name="exit_work">Quitter la transaction</string>
+    <string name="start_work">Dé\marrer la transaction</string>
+    <string name="start_work_low">Dé\marrer l\'impression</string>
+    <string name="over_work">Terminer la transaction</string>
+    <string name="error_work">Une erreur s\'est produite</string>
+    <string name="print_baidu_ticket">Imprimer un ticket Baidu</string>
+    <string name="print_meituan_ticket">Imprimer un ticket Meituan</string>
+    <string name="print_eleme_ticket">Imprimer un ticket Eleme</string>
+    <string name="print_koubei_ticket">Imprimer un ticket Koubei</string>
+    <string name="print_interval_black">Imprimer intervalle noir</string>
+    <string name="print_black">Imprimer noir</string>
+    <string name="print">Imprimer</string>
+    <string name="printing">Impression en cours~~~</string>
+    <string name="input_barcode">Veuillez saisir le contenu du code-barres</string>
+    <string name="content_barcode">Code-barres</string>
+    <string name="encode_barcode">Encodage du code-barres</string>
+    <string name="no_print">Texte vide</string>
+    <string name="barcode_up">Au-dessus du code-barres</string>
+    <string name="barcode_down">Sous le code-barres</string>
+    <string name="barcode_updown">Au-dessus et en dessous</string>
+    <string name="text_position">Position du texte HRI</string>
+    <string name="barcode_height">Hauteur du code-barres</string>
+    <string name="barcode_width">Largeur du code-barres</string>
+    <string name="content_qrcode">Contenu du code QR</string>
+    <string name="input_qrcode">Veuillez saisir le contenu du code QR</string>
+    <string name="size_qrcode">Taille du code QR</string>
+    <string name="error_qrcode">Niveau de correction d\'erreur</string>
+    <string name="upload_info">Té\lé\charger les informations de l\'imprimante</string>
+    <string name="characterset">Jeu de caractères</string>
+    <string name="connect_method">Mé\thode de connexion</string>
+    <string name="size_paper">Taille du papier</string>
+    <string name="size_text">Taille du texte</string>
+    <string name="type_text">Police du texte</string>
+    <string name="bold_text">Gras</string>
+    <string name="underline_text">Souligné\</string>
+    <string name="print_density">Densité\ d\'impression</string>
+    <string name="add_line">Ajouter une ligne</string>
+    <string name="content_form">Contenu</string>
+    <string name="weight_form">Poids en %</string>
+    <string name="align_form">Alignement</string>
+    <string name="align_left">Gauche</string>
+    <string name="align_mid">Milieu</string>
+    <string name="align_right">Droite</string>
+    <string name="confirm">Confirmer</string>
+    <string name="cancel">Annuler</string>
+    <string name="about">À propos</string>
+    <string name="single">Simple</string>
+    <string name="twice">Double</string>
+    <string name="connect_service">Connecter</string>
+    <string name="disconnect_service">Dé\connecter</string>
+    <string name="input_order">Saisir la commande Epson :</string>
+    <string name="multithread">Multithreading</string>
+    <string name="multithread_stop">Arrêter</string>
+    <string name="pic_pos">Mode d\'agencement de l\'image</string>
+    <string name="pic_hor">Transversal</string>
+    <string name="pic_ver">Vertical</string>
+    <string name="pic_mode">Mé\thode d\'impression de l\'image</string>
+    <string name="pic_mode1">Bitmap raster</string>
+    <string name="pic_mode2">8 points densité simple</string>
+    <string name="pic_mode3">8 points densité double</string>
+    <string name="pic_mode4">24 points densité simple</string>
+    <string name="pic_mode5">24 points densité double</string>
+    <string name="style_width">Largeur d\'é\paisseur</string>
+    <string name="style_height">Hauteur d\'é\paisseur</string>
+    <string name="buffer_info1">Event Print: Controls the print of each order for print status\nIn the process of printing a single transaction, if there is an out-of-paper abnormalities, after the paper state is restored, you can choose to reprint a single.</string>
+    <string name="buffer_info2">Step1:start event print model\nStep2:add an event\nStep3:quit event print model</string>
+    <string name="bl_info1">Exigences de couleur : la réflectivité ne doit pas dépasser 6 %, la longueur d\'onde infrarouge doit être comprise entre 700 et 1000 nm.</string>
+    <string name="bl_info2">Exigences de position : l\'é\tiquette noire doit se trouver au milieu du capteur de niveau du papier pour pouvoir ê\tre dé\tecté\e.</string>
+    <string name="bl_info3">Dé\tection de l\'é\tiquette noire : l\'imprimante avancera le papier (jusqu\'à 600 mm) pour dé\tecter l\'é\tiquette noire.</string>
+    <string name="bl_set">Réglage de l\'é\tiquette noire</string>
+    <string name="bl_check">Vé\rification de l\'é\tiquette noire</string>
+    <string name="bl_sample">É\chantillon d\'é\tiquette noire</string>
+    <string name="display_text">Afficher une ligne</string>
+    <string name="display_texts">Afficher des lignes</string>
+    <string name="display_pic">Afficher une image</string>
+    <string name="label_print_one">Imprimer une seule é\tiquette</string>
+    <string name="label_print_more">Imprimer plusieurs étiquettes</string>
+    <string name="label_info">La fonction d\'impression d\'é\tiquettes Sunmi prend actuellement uniquement en charge les appareils portables V2 et V2Pro. Veuillez consulter le fournisseur avant utilisation !</string>
+    <string name="sunmi_font">Police Sunmi à espacement fixe</string>
+    <string name="custom_font">Police personnalisé\e</string>
+    <string name="AddCat">Ajouter une caté\gorie</string>
+
+    <!--instruction-->
+    <string name="toast_1">Impression de transaction, utilisez le mode AIDL !</string>
+    <string name="toast_2">Le service a é\té\ dé\connecté !</string>
+    <string name="toast_3">Le pé\riphé\rique Bluetooth n\'est pas disponible</string>
+    <string name="toast_4">Pé\riphé\rique Bluetooth non dé\tecté\. Veuillez activer le Bluetooth !</string>
+    <string name="toast_5">Non trouvé InnerPrinter !</string>
+    <string name="toast_6">É\chec de la connexion Bluetooth !</string>
+    <string name="toast_7">Seulement un seul code QR est imprimé\ pour le mode AIDL</string>
+    <string name="toast_8">La taille du code QR doit être infé\rieure à 7 !</string>
+    <string name="toast_9">Type ou contenu du code-barres incorrect !</string>
+    <string name="toast_10">Veuillez configurer l\'imprimante en mode é\tiquette noire !</string>
+    <string name="toast_11">Paramè\tres -> Systè\me -> Avancé\ -> Imprimante inté\gré\e -> activer la fonction d\'é\tiquette noire</string>
+    <string name="toast_12">Veuillez configurer \'imprimante en mode é\tiquette !</string>
+    <string name="cashier_fr">Caissier</string>
+    <string name="admin_fr">Administrateur</string>
+
+</resources>

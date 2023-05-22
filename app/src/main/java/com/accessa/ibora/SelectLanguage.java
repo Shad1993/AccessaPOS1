@@ -51,5 +51,7 @@ public class SelectLanguage extends AppCompatActivity {
 
     public void openNewActivityFr(){
         Toast.makeText(getApplicationContext(), "FRENCH Language Soon coming !",Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, SelectProfile.class); // Assuming SelectProfileFr is the translated version of SelectProfile
+        startActivity(intent);
     }
 }

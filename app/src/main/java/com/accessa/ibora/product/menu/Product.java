@@ -1,12 +1,15 @@
 package com.accessa.ibora.product.menu;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,16 +32,44 @@ import com.google.android.material.navigation.NavigationView;
 public class Product extends FragmentActivity implements MenuFragment.OnMenufragListener {
 
     private boolean doubleBackToExitPressedOnce = false;
-
+    private String cashorId;
+    private String cashorName;
+    private TextView name;
+    private TextView CashorId;
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.ac_main);
 
+        // Retrieve the shared preferences
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
+
+
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.navigation_view);
+
+        // Get the header view from the NavigationView
+        View headerView = navigationView.getHeaderView(0);
+
+        // Find the TextView within the header view
+        name = headerView.findViewById(R.id.name);
+        CashorId = headerView.findViewById(R.id.CashorId);
+
+
+        // Set the user ID and name in the TextViews
+        CashorId.setText(cashorId);
+        name.setText(cashorName);
+
+
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
 

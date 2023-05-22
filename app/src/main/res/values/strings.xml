@@ -196,8 +196,7 @@
         <string name="label_print_more">print multi label</string>
         <string name="label_info">Sunmi label printing function now only supports handheld V2 and v2pro
         devices. Please consult the supplier before use！</string>
-        <string name="label_info2">Usage: different from the standard label instruction, Sunmi label
-        printing needs to adapt the printing content and locate the label printing position through the positioning interface</string>
+
         <string name="sunmi_font">Sunmi monospace</string>
         <string name="custom_font">Custom typeface</string>
     <string name="AddCat">Add category</string>
@@ -216,21 +215,8 @@
         <string name="toast_11">Settings->System->Advanced->InnerPrinter-> set black mark
         function</string>
         <string name="toast_12">Please set the printer to label mode!</string>
-
-        <!--about content-->
-        <string name="about_content">PrinterHelper is suitable for the sunmi series. \nPrinterHelper integrate two connection type: AIDL and BLUETOOTH. It also provide a series of printing testing module, which help the developer to connect with the sunmi printing function faster. \n upload the information that need to be printed, which allows sunmi to better locate the issues. \n official site: http://www.sunmi.com. \n developer documentation: http://docs.sunmi.com</string>
-
-
-        <!--function explain-->
-        <string name="text_instruction"> specification: The typeface of sunmi is monospaced font. Expect for supporting the font structure set by normal instruction set, it can also use AIDL interface interchange to directly set the font size. However, the testing demo only could use AIDL interface interchange to do it. Developers could look up relative Epson instruction set, then set the font by themselves. \n notice: the setting of the character set only has influence on the order printing, not affecting AIDL printing characters. Printing Single-Byte Character set should set the Single-Byte mode at first. Howerver, the default of sunmi services is double byte mode.  </string>
-        <!--print content-->
-        <string name="text_print">欢迎光临(Simplified Chinese)\n歡迎光臨（traditional chinese）\nWelcome(English)\n어서 오세요.(Korean)\nいらっしゃいませ(Japanese)\nWillkommen in der(Germany)\nSouhaits de bienvenue(France)\nยินดีต้อนรับสู่(Thai)\nДобро пожаловать(Russian)\nBenvenuti a(Italian)\nvítejte v(Czech)\nBEM - vindo Ao(Portutuese)\nمرحبا بكم في(Arabic)\n</string>
-        <!--table explain-->
-        <string name="table_instruction">specifications: Bluetooth printing table could only provide examples and printing test. Specific methods could refer to Epson instruction set.  </string>
-
-
-
-
+    <string name="cashier_fr">Cashior</string>
+    <string name="admin_fr">Admin</string>
 
 
 </resources>

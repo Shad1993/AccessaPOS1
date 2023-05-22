@@ -108,6 +108,7 @@ public class login extends AppCompatActivity {
             // Get the cashor's name from the cursor
             String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
             String cashorId = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id));
+            String cashorlevel = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
 
             // Create and show the AlertDialog with the welcome message and cashor's name
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -117,6 +118,7 @@ public class login extends AppCompatActivity {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("cashorName", cashorName); // Store cashor's name
             editor.putString("cashorId", cashorId); // Store cashor's ID
+            editor.putString("cashorlevel", cashorlevel); // Store cashor's level
             editor.apply();
 
             // Inflate the custom view for the AlertDialog

@@ -22,8 +22,8 @@ public class SelectProfile extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.selectprofile);
 
-        // Eng language
-        buttonEng = (Button) findViewById(R.id.buttonCashor);
+        // Eng cashor
+        buttonEng = findViewById(R.id.buttonCashor);
         buttonEng.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -31,25 +31,28 @@ public class SelectProfile extends AppCompatActivity {
             }
         });
 
-        // Fr language
-        buttonFr = (Button) findViewById(R.id.buttonAdmin);
+        // Fr admin
+        buttonFr = findViewById(R.id.buttonAdmin);
         buttonFr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v1) {
                 openNewActivityAdmin();
             }
         });
+
+        // Set button labels from French string resources
+        buttonEng.setText(getResources().getString(R.string.cashier_fr));
+        buttonFr.setText(getResources().getString(R.string.admin_fr));
     }
 
-
-
-    public void openNewActivity(){
+    public void openNewActivity() {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
 
-    public void openNewActivityAdmin(){
+    public void openNewActivityAdmin() {
         Intent intent = new Intent(this, RegistorCashor.class);
         startActivity(intent);
     }
+
 }
