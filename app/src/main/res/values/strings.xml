@@ -6,7 +6,7 @@
     <string name="fragment2_button">Display Second Fragment</string>
     <string name="fragment1_text1">Displaying contents of the First Fragment</string>
     <string name="fragment2_text1">Displaying contents of the Second Fragment</string>
-    <string name="title_activity_poduct">poduct</string>
+    <string name="title_activity_poduct">product</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>

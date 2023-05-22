@@ -101,6 +101,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             SUBDEPARTMENT_NAME + " TEXT NOT NULL, " +
             SUBDEPARTMENT_DEPARTMENT_ID + " INTEGER NOT NULL, " +
             DEPARTMENT_CODE + " TEXT NOT NULL, " +
+             LastModified + " DATETIME NOT NULL, " +
             DEPARTMENT_CASHIER_ID + " INTEGER NOT NULL, " +
             "FOREIGN KEY (" + SUBDEPARTMENT_DEPARTMENT_ID + ") REFERENCES " +
             DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_ID + "), " +

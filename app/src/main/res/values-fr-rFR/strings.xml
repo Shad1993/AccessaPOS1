@@ -19,7 +19,7 @@
     <string name="search_label">Clients</string>
     <string name="search_hint">Rechercher un produit</string>
     <string name="settings_description">Liste des clients</string>
-    <string name="title_activity_product_drawer">ProductDrawer</string>
+    <string name="title_activity_product_drawer">Tirroir produit</string>
     <string name="navigation_drawer_open">Ouvrir le menu de navigation</string>
     <string name="navigation_drawer_close">Fermer le menu de navigation</string>
     <string name="nav_header_title">Android Studio</string>
