@@ -16,25 +16,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DBManager;
+import com.accessa.ibora.product.items.DatabaseHelper;
 
 public class RegistorCashor extends AppCompatActivity {
 
     private static final int DATABASE_VERSION = 1;
     public static final String TABLE_NAME_Users = "Users";
 
-    // Column names
-
-    public static final String COLUMN_CASHOR_id = "cashorid";
-    private static final String COLUMN_PIN = "pin";
-    private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
-    static final String COLUMN_CASHOR_NAME = "cashorname";
-    private static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
 
     private EditText editTextPIN,editTextLevel,editTextCashor,editTextName;
     private StringBuilder enteredPIN;
-
+    private DBManager dbManager;
     String dbName = Constants.DB_NAME;
-
+    private DatabaseHelper mDatabaseHelper;
     private SQLiteDatabase database;
 
     @Override
@@ -72,22 +67,15 @@ public class RegistorCashor extends AppCompatActivity {
         // Initialize views
         editTextPIN = findViewById(R.id.editTextPIN);
 
-        // Create or open the database
-        database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
 
-        // Define the SQL statement for creating the table
-        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
-                + COLUMN_CASHOR_id + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_PIN + " TEXT, "
-                + COLUMN_CASHOR_LEVEL + " INTEGER, "
-                + COLUMN_CASHOR_NAME + " TEXT, "
-                + COLUMN_CASHOR_DEPARTMENT + " TEXT)";
 
-// Execute the create table query
-        database.execSQL(createTableQuery);
+
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();
+        // Initialize the DatabaseHelper
+        mDatabaseHelper = new DatabaseHelper(this);
+        database = mDatabaseHelper.getReadableDatabase();
     }
 
     public void onNumberButtonClick(View view) {
@@ -107,7 +95,7 @@ public class RegistorCashor extends AppCompatActivity {
             String enteredPIN = editTextPIN.getText().toString();
 
             // Query the database for a matching PIN
-            Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
+        Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
 
             if (cursor.moveToFirst()) {
                 // PIN matched, login successful
@@ -144,7 +132,7 @@ public class RegistorCashor extends AppCompatActivity {
         }
 
         // Query the database for the entered PIN
-        Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
+        Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
 
         if (cursor.moveToFirst()) {
             // PIN already exists, registration failed
@@ -155,10 +143,10 @@ public class RegistorCashor extends AppCompatActivity {
             String cashorlevel = editTextLevel.getText().toString();
             String cashorname = editTextCashor.getText().toString();
             String cashordepartment = editTextName.getText().toString();
+            dbManager = new DBManager(getApplicationContext());
+            dbManager.open();
+            Cursor cursor1 = dbManager.Registor(pin, cashorlevel, cashorname, cashordepartment );
 
-            // Insert the new user into the database
-            database.execSQL("INSERT INTO Users (pin, cashorlevel, cashorname, cashordepartment) VALUES (?, ?, ?, ?)",
-                    new String[]{enteredPIN, cashorlevel, cashorname, cashordepartment});
 
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(RegistorCashor.this, login.class);

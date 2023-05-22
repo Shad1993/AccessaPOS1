@@ -1,7 +1,9 @@
 package com.accessa.ibora.product.SubDepartment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -22,7 +24,9 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AddSubDepartmentActivity extends Activity {
@@ -46,13 +50,22 @@ public class AddSubDepartmentActivity extends Activity {
     private RadioGroup soldBy_radioGroup;
 
     private EditText weightEditText ;
-
+    private String cashorId;
+    private SharedPreferences sharedPreferences;
+    private EditText Userid_Edittext;
+    private EditText LastModified_Edittext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Record");
+
+
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
         setContentView(R.layout.add_department_activity);
 
@@ -199,6 +212,12 @@ public class AddSubDepartmentActivity extends Activity {
 
 
     }private void addRecord() {
+
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String LastModified = dateFormat.format(new Date(currentTimeMillis));
+
+        String UserId = cashorId;
         soldBy_radioGroup = (RadioGroup) findViewById(R.id.soldBy_radioGroup);
 
         int selectedId = soldBy_radioGroup.getCheckedRadioButtonId();
@@ -236,7 +255,7 @@ public class AddSubDepartmentActivity extends Activity {
         DBManager dbManager = new DBManager(this);
         dbManager.open();
         dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight),department,
-                subDepartment, longDescription, quantity, expiryDate, vat, availableForSale, soldBy, image, Variant,SKU,Cost);
+                subDepartment, longDescription, quantity, expiryDate, vat, availableForSale, soldBy, image, Variant,SKU,Cost,UserId,LastModified);
         dbManager.close();
 
         // Clear the input

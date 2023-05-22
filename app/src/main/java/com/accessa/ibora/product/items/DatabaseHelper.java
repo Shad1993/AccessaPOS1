@@ -1,7 +1,6 @@
 package com.accessa.ibora.product.items;
 
-import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
-import static com.accessa.ibora.login.RegistorCashor.TABLE_NAME_Users;
+
 
 import android.content.Context;
 import android.database.Cursor;
@@ -41,6 +40,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String Cost = "Cost";
     public static final String Variant = "Variant";
     public static final String Weight = "Weight";
+    public static final String UserId = "UserId";
+    public static final String LastModified = "LastModified";
 
     // Tax table columns
     public static final String VATValue = "VATValue";
@@ -54,8 +55,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Cost table columns
     public static final String CostID = "ID";
     public static final String SKUCost = "SKU";
+//UsersTable
+    public static final String TABLE_NAME_Users = "Users";
 
+    // Column names
 
+    public static final String COLUMN_CASHOR_id = "cashorid";
+    private static final String COLUMN_PIN = "pin";
+    private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
+    static final String COLUMN_CASHOR_NAME = "cashorname";
+    private static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
     // Database Information
     private static final String DB_NAME = Constants.DB_NAME;
     private static final int DB_VERSION = 1;
@@ -103,7 +112,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
-    // Creating Items table query
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -124,13 +132,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Variant + " TEXT NOT NULL, "
             + Cost + " DECIMAL(10, 2) NOT NULL, "
             + Weight + " DECIMAL(10, 2), " // Allow NULL values for Weight
+            + UserId + " INTEGER NOT NULL, "
+            + LastModified + " DATETIME NOT NULL, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
             + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
+            + "FOREIGN KEY (" + UserId + ") REFERENCES "
+            + TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "), "
             + "FOREIGN KEY (" + Barcode + ") REFERENCES "
             + COST_TABLE_NAME + "(" + Barcode + "));";
 
 
-
+    // Creating Users table query
+    private static final String CREATE_USERS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
+            + COLUMN_CASHOR_id + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_PIN + " TEXT, "
+            + COLUMN_CASHOR_LEVEL + " INTEGER, "
+            + COLUMN_CASHOR_NAME + " TEXT, "
+            + COLUMN_CASHOR_DEPARTMENT + " TEXT)";
 
 
     // Creating Vendor table query
@@ -162,6 +180,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_COST_TABLE);
         db.execSQL(CREATE_DEPARTMENT_TABLE);
         db.execSQL(CREATE_SUBDEPARTMENT_TABLE);
+        db.execSQL(CREATE_USERS_TABLE);
     }
 
     @Override
@@ -187,6 +206,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+    public Cursor login() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
+    }
+    public Cursor getUserByPIN(String enteredPIN) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] selectionArgs = { enteredPIN };
+        String query = "SELECT * FROM " + TABLE_NAME_Users + " WHERE pin = ?";
+        return db.rawQuery(query, selectionArgs);
+    }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription, Category, Price};
@@ -203,4 +232,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = DEPARTMENT_NAME + " ASC";
         return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
+
 }

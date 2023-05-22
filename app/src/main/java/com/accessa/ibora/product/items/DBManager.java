@@ -5,12 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.widget.Toast;
 
-import com.accessa.ibora.login.RegistorCashor;
 import com.accessa.ibora.product.Department.Department;
-import com.accessa.ibora.product.category.CategoryDatabaseHelper;
-import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
+
 public class DBManager {
 
     private DatabaseHelper dbHelper;
@@ -31,7 +28,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost) {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,String LastModified)  {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
         contentValue.put(DatabaseHelper.DESC, desc);
@@ -51,9 +48,20 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Variant, Variant);
         contentValue.put(DatabaseHelper.SKU, SKU);
         contentValue.put(DatabaseHelper.Cost, Cost);
+        contentValue.put(DatabaseHelper.LastModified, LastModified);
+        contentValue.put(DatabaseHelper.UserId, UserId);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
     }
+    public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment) {
+        ContentValues values = new ContentValues();
+        values.put("pin", enteredPIN);
+        values.put("cashorlevel", cashorlevel);
+        values.put("cashorname", cashorname);
+        values.put("cashordepartment", cashordepartment);
 
+        database.insert(DatabaseHelper.TABLE_NAME_Users, null, values);
+        return null;
+    }
     public Cursor fetch() {
         String[] columns = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
@@ -170,7 +178,7 @@ public class DBManager {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
         contentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
-        contentValue.put(RegistorCashor.COLUMN_CASHOR_id, userId);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
         contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
 
         database.insert(DatabaseHelper.DEPARTMENT_TABLE_NAME, null, contentValue);
@@ -180,7 +188,7 @@ public class DBManager {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.DEPARTMENT_NAME, name);
         contentValues.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastmodified);
-        contentValues.put(RegistorCashor.COLUMN_CASHOR_id, userId);
+        contentValues.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
         contentValues.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
 
 
@@ -203,7 +211,7 @@ public class DBManager {
                 DatabaseHelper.DEPARTMENT_CODE,
                 DatabaseHelper.DEPARTMENT_NAME,
                 DatabaseHelper.DEPARTMENT_LAST_MODIFIED,
-                RegistorCashor.COLUMN_CASHOR_id,
+                DatabaseHelper.COLUMN_CASHOR_id,
 
                 // Add other columns as needed
         };
@@ -218,7 +226,7 @@ public class DBManager {
             department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
             department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
             department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
-            department.setCashierID(cursor.getString(cursor.getColumnIndex(RegistorCashor.COLUMN_CASHOR_id)));
+            department.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
 
 
 

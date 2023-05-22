@@ -1,11 +1,12 @@
 package com.accessa.ibora.login;
 
-import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_NAME;
-import static com.accessa.ibora.login.RegistorCashor.COLUMN_CASHOR_id;
 
 
+
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -25,6 +26,8 @@ import androidx.appcompat.widget.AppCompatImageView;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DBManager;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.bumptech.glide.Glide;
 
 public class login extends AppCompatActivity {
@@ -44,6 +47,13 @@ public class login extends AppCompatActivity {
 
     private SQLiteDatabase database;
     String dbName = Constants.DB_NAME;
+    private DBManager dbManager;
+    private DatabaseHelper mDatabaseHelper;
+
+    //sharedpreferences
+
+    private SharedPreferences sharedPreferences;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,23 +63,22 @@ public class login extends AppCompatActivity {
         // remove onscreen Keyboard
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.login);
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
 
         // Initialize views
         editTextPIN = findViewById(R.id.editTextPIN);
 
-        // Create or open the database
-        database = openOrCreateDatabase(dbName, MODE_PRIVATE, null);
-
-        // Create the table if it doesn't exist
-        database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
-                + COLUMN_CASHOR_id  + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_PIN + " TEXT, "
-                + COLUMN_CASHOR_LEVEL + " INTEGER, "
-                + COLUMN_CASHOR_NAME + " TEXT, "
-                + COLUMN_CASHOR_DEPARTMENT + " TEXT);");
 
         // Initialize the StringBuilder for entered PIN
         enteredPIN = new StringBuilder();
+        // Initialize the DatabaseHelper
+        mDatabaseHelper = new DatabaseHelper(this);
+        database = mDatabaseHelper.getReadableDatabase();
+
+
+
+
 
         // Set click listener for Login button
         Button buttonLogin = findViewById(R.id.buttonLogin);
@@ -85,10 +94,16 @@ public class login extends AppCompatActivity {
         // Retrieve user input from EditText fields
         String enteredPIN = editTextPIN.getText().toString();
 
-        // Query the database for a matching PIN
-        Cursor cursor = database.rawQuery("SELECT * FROM Users WHERE pin = ?", new String[]{enteredPIN});
+        // Query the database for the entered PIN
+        Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
+
+
 
         if (cursor.moveToFirst()) {
+
+
+
+
             // PIN matched, login successfull
             // Get the cashor's name from the cursor
             String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
@@ -99,10 +114,10 @@ public class login extends AppCompatActivity {
             builder.setTitle("Welcome to Ibora");
             builder.setMessage("Welcome, " + cashorName + "!");
 
-
-
-
-
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("cashorName", cashorName); // Store cashor's name
+            editor.putString("cashorId", cashorId); // Store cashor's ID
+            editor.apply();
 
             // Inflate the custom view for the AlertDialog
             View view = LayoutInflater.from(this).inflate(R.layout.custom_dialog_layout, null);
@@ -147,6 +162,15 @@ public class login extends AppCompatActivity {
             builder.setCancelable(false);
 
         } else {
+
+            // Create an editor to modify the preferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+// Clear all the stored values
+            editor.clear();
+
+// Apply the changes
+            editor.apply();
             // PIN not found, login failed
             Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
 

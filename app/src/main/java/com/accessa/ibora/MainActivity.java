@@ -2,9 +2,11 @@ package com.accessa.ibora;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
 
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
+
+        // Retrieve the shared preferences
+         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
         // Initialize the StringBuilder for entered PIN
 
         //toolbar
@@ -134,9 +140,16 @@ public class MainActivity extends AppCompatActivity {
     private void logout() {
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
+// Create an editor to modify the preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
+// Clear all the stored values
+        editor.clear();
+
+// Apply the changes
+        editor.apply();
         // Redirect to the login activity
-        Intent intent = new Intent(this, login.class);
+        Intent intent = new Intent(this, com.accessa.ibora.login.login.class);
         startActivity(intent);
         finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
     }

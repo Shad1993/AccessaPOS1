@@ -1,11 +1,14 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
 import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -83,12 +86,23 @@ public class AddItemActivity extends Activity {
     private SwitchCompat ExpirydateSwitch;
     private boolean isAvailableForSale;
     private TextView ExpiryDateText;
-
+    private String cashorId;
+    private SharedPreferences sharedPreferences;
+    private EditText Userid_Edittext;
+    private EditText LastModified_Edittext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Record");
+
+
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+
+
 
         setContentView(R.layout.activity_add_record);
 
@@ -111,6 +125,8 @@ public class AddItemActivity extends Activity {
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
         ExpirydateSwitch = findViewById(R.id.perishable_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
+
+        Userid_Edittext = findViewById(R.id.userid_edittext);
         // Image selection button
         Button imageButton = findViewById(R.id.image_button);
         imageButton.setOnClickListener(new View.OnClickListener() {
@@ -278,6 +294,9 @@ public class AddItemActivity extends Activity {
                 addRecord();
             }
         });
+
+        //set userid and last Modified
+        Userid_Edittext.setText(String.valueOf(cashorId));
     }
     private void openImageOptionsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -382,6 +401,11 @@ public class AddItemActivity extends Activity {
         Glide.with(this).load(imageUrl).into(imageView);
     }
     private void addRecord() {
+
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String LastModified = dateFormat.format(new Date(currentTimeMillis));
+
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         int selectedId = soldByRadioGroup.getCheckedRadioButtonId();
         RadioButton selectedRadioButton = findViewById(selectedId);
@@ -415,6 +439,8 @@ public class AddItemActivity extends Activity {
         String expiryDate = formattedDate;
         String availableForSale = String.valueOf(isAvailableForSale);
         String soldBy = selectedSoldBy;
+
+        String UserId = cashorId;
         String image ;
         if( imagePath== null) {
             image=  null;
@@ -438,7 +464,7 @@ public class AddItemActivity extends Activity {
         dbManager.open();
         dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost);
+                availableForSale, soldBy, image, variant, sku, cost,UserId,LastModified);
         dbManager.close();
 
         // Clear the input fields

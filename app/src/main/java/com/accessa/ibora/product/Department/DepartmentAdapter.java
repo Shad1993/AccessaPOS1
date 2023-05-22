@@ -60,7 +60,7 @@ public class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.It
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
         String lastModified = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED));
         String DepartmentCode = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE));
-        String UserID = mCursor.getString(mCursor.getColumnIndex(RegistorCashor.COLUMN_CASHOR_id));
+        String UserID = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id));
 
 
         holder.idTextView.setText(id);

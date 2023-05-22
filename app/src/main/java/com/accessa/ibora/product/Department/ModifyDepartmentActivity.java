@@ -1,7 +1,9 @@
 package com.accessa.ibora.product.Department;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +17,10 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class ModifyDepartmentActivity extends Activity {
 
     private Button buttonUpdate;
@@ -29,6 +35,10 @@ public class ModifyDepartmentActivity extends Activity {
     private long _id;
     private DatabaseHelper mDatabaseHelper;
     private CategoryDatabaseHelper catDatabaseHelper;
+    private SharedPreferences sharedPreferences;
+
+    private String cashorId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +46,13 @@ public class ModifyDepartmentActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.modify_department_activity);
 
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+        String cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+
+
+        Toast.makeText(this, "User ID: " + cashorId, Toast.LENGTH_SHORT).show();
         catDatabaseHelper = new CategoryDatabaseHelper(this);
 
         mDatabaseHelper = new DatabaseHelper(this);
@@ -57,11 +74,10 @@ public class ModifyDepartmentActivity extends Activity {
         if (department != null) {
             DeptName_Edittext.setText(department.getName());
             LastModified_Edittext.setText(department.getLastModified());
-            Userid_Edittext.setText(String.valueOf(department.getCashierID()));
             Deptcode_Edittext.setText(department.getDepartmentCode());
 
         }
-
+        Userid_Edittext.setText(String.valueOf(cashorId));
 
         buttonUpdate = findViewById(R.id.btn_update);
         buttonUpdate.setOnClickListener(new OnClickListener() {
@@ -77,16 +93,25 @@ public class ModifyDepartmentActivity extends Activity {
                 deleteItem();
             }
         });
+
+        //set userid and last Modified
+        Userid_Edittext.setText(String.valueOf(cashorId));
+
     }
 
 
     private void updateDept() {
         String name = DeptName_Edittext.getText().toString().trim();
-        String lastmodified = LastModified_Edittext.getText().toString().trim();
-        String UserId = Userid_Edittext.getText().toString().trim();
+
+        // Get the current timestamp
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String DeptName = DeptName_Edittext.getText().toString().trim();
+        String lastmodified = dateFormat.format(new Date(currentTimeMillis));
+        String UserId = cashorId;
         String DeptCode = Deptcode_Edittext.getText().toString().trim();
 
-        if (name.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
+        if (DeptName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
             Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
             return;
         }

@@ -1,7 +1,9 @@
 package com.accessa.ibora.product.Department;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
@@ -10,8 +12,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
-import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class AddDepartmentActivity extends Activity {
 
@@ -20,12 +23,24 @@ public class AddDepartmentActivity extends Activity {
     private EditText LastModified_Edittext;
     private EditText Userid_Edittext;
     private EditText Deptcode_Edittext;
+
+    private String cashorId;
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Department");
+
+
+        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+
+
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+
+
+
 
         setContentView(R.layout.add_department_activity);
 
@@ -44,18 +59,20 @@ public class AddDepartmentActivity extends Activity {
                     }
                 });
 
-
+        //set userid and last Modified
+        Userid_Edittext.setText(String.valueOf(cashorId));
 
     }private void addRecord() {
 
-
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         String DeptName = DeptName_Edittext.getText().toString().trim();
-        String LastModified = LastModified_Edittext.getText().toString().trim();
-        String UserId = Userid_Edittext.getText().toString().trim();
+        String LastModified = dateFormat.format(new Date(currentTimeMillis));
+        String UserId = cashorId;
         String DeptCode = Deptcode_Edittext.getText().toString().trim();
 
         // Check if all required fields are filled
-        if (DeptName.isEmpty() || LastModified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty()
+        if (DeptName.isEmpty() ||  DeptCode.isEmpty()
                 ) {
             Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
             return;
@@ -73,14 +90,17 @@ public class AddDepartmentActivity extends Activity {
         Userid_Edittext.setText("");
         Deptcode_Edittext.setText("");
 
+        returnHome();
 
-        // Redirect to the Product activity
-        Intent intent = new Intent(AddDepartmentActivity.this, Product.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
+
     }
 
-
+    public void returnHome() {
+        Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "Dept_fragment");
+        startActivity(home_intent1);
+    }
 
     @Override
     protected void onDestroy() {

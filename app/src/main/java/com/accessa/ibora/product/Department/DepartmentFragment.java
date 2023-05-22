@@ -24,12 +24,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class DepartmentFragment extends Fragment {
 
