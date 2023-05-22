@@ -47,8 +47,6 @@ public class SelectProfile extends AppCompatActivity {
         // Set button labels from French string resources
         updateButtonLabels();
 
-        // Set the initial locale based on the device's default language
-        setLocale(Locale.getDefault());
     }
 
     public void openNewActivity() {
