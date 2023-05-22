@@ -2,16 +2,20 @@ package com.accessa.ibora;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.R;
+import com.accessa.ibora.SelectProfile;
 import com.accessa.ibora.login.RegistorCashor;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.menu.Product;
+
+import java.util.Locale;
 
 public class SelectLanguage extends AppCompatActivity {
     Button buttonEng, buttonFr;
@@ -24,34 +28,35 @@ public class SelectLanguage extends AppCompatActivity {
         setContentView(R.layout.selectlanguage);
 
         // Eng language
-        buttonEng = (Button) findViewById(R.id.buttonEng);
+        buttonEng = findViewById(R.id.buttonEng);
         buttonEng.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                openNewActivity(Locale.ENGLISH);
             }
         });
 
         // Fr language
-        buttonFr = (Button) findViewById(R.id.buttonFr);
+        buttonFr = findViewById(R.id.buttonFr);
         buttonFr.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v1) {
-                openNewActivityFr();
+            public void onClick(View v) {
+                openNewActivity(Locale.FRENCH);
             }
         });
     }
 
+    public void openNewActivity(Locale locale) {
+        // Set the app's locale to the selected language
+        Locale.setDefault(locale);
 
+        // Update the configuration to reflect the new locale
+        Configuration configuration = getResources().getConfiguration();
+        configuration.setLocale(locale);
+        getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
 
-    public void openNewActivity(){
+        // Start the SelectProfile activity
         Intent intent = new Intent(this, SelectProfile.class);
-        startActivity(intent);
-    }
-
-    public void openNewActivityFr(){
-        Toast.makeText(getApplicationContext(), "FRENCH Language Soon coming !",Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(this, SelectProfile.class); // Assuming SelectProfileFr is the translated version of SelectProfile
         startActivity(intent);
     }
 }

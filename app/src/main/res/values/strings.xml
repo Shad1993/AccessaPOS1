@@ -215,8 +215,8 @@
         <string name="toast_11">Settings->System->Advanced->InnerPrinter-> set black mark
         function</string>
         <string name="toast_12">Please set the printer to label mode!</string>
-    <string name="cashier_fr">Cashior</string>
-    <string name="admin_fr">Admin</string>
+    <string name="cashier">Cashior</string>
+    <string name="admin">Admin</string>
 
 
 </resources>

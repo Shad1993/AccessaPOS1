@@ -25,8 +25,6 @@ public class welcome extends AppCompatActivity {
         welcomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Perform any desired action here
-                // For example, navigate to another activity using an Intent
                 Intent intent = new Intent(welcome.this, SelectLanguage.class);
                 startActivity(intent);
             }

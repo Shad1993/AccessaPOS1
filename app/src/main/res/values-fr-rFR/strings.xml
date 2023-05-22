@@ -210,7 +210,7 @@
     <string name="toast_10">Veuillez configurer l\'imprimante en mode é\tiquette noire !</string>
     <string name="toast_11">Paramè\tres -> Systè\me -> Avancé\ -> Imprimante inté\gré\e -> activer la fonction d\'é\tiquette noire</string>
     <string name="toast_12">Veuillez configurer \'imprimante en mode é\tiquette !</string>
-    <string name="cashier_fr">Caissier</string>
-    <string name="admin_fr">Administrateur</string>
+    <string name="cashier">Caissier</string>
+    <string name="admin">Administrateur</string>
 
 </resources>
