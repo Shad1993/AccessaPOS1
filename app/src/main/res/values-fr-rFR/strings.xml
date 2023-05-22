@@ -212,5 +212,7 @@
     <string name="toast_12">Veuillez configurer \'imprimante en mode é\tiquette !</string>
     <string name="cashier">Caissier</string>
     <string name="admin">Administrateur</string>
+    <string name="welcome">Bienvenue sur iBora</string>
+    <string name="get_started">Commencer</string>
 
 </resources>

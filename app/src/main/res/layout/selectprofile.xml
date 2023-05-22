@@ -19,7 +19,7 @@
             android:src="@drawable/iboralogos" />
         <Button
             android:id="@+id/buttonAdmin"
-            android:text="Admin"
+            android:text="@string/admin"
             android:textSize="18sp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
@@ -33,7 +33,7 @@
 
         <Button
             android:id="@+id/buttonCashor"
-            android:text="Cashier"
+            android:text="@string/cashier"
             android:textSize="18sp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
