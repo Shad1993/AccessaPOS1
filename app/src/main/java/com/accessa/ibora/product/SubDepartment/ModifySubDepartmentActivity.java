@@ -2,6 +2,7 @@ package com.accessa.ibora.product.SubDepartment;
 
 import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
 
 import android.app.Activity;
 import android.content.Context;
@@ -108,12 +109,13 @@ public class ModifySubDepartmentActivity extends Activity {
 
 
         Cursor SubdepartmentCodeCursor = mDatabaseHelper.getAllSubDepartment();
+        Cursor departmentCodeCursor = mDatabaseHelper.getAllDepartment();
         List<String> subDepartments = new ArrayList<>();
         subDepartments.add(getString(R.string.AllDepartments));
         if (SubdepartmentCodeCursor.moveToFirst()) {
             do {
                 String departmentCode = SubdepartmentCodeCursor.getString(SubdepartmentCodeCursor.getColumnIndex(DEPARTMENT_CODE));
-                String deptName = SubdepartmentCodeCursor.getString(SubdepartmentCodeCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
+                String deptName = departmentCodeCursor.getString(departmentCodeCursor.getColumnIndex(DEPARTMENT_NAME));
                 String combinedString = departmentCode + " - " + deptName;
                 subDepartments.add(combinedString );
 
@@ -207,22 +209,21 @@ public class ModifySubDepartmentActivity extends Activity {
         // Retrieve department codes and names from the database
         DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
         Cursor subDepartmentCursor = databaseHelper.getAllSubDepartment();
+        Cursor departmentCursor = databaseHelper.getAllDepartment();
 
         List<String> subDepartments = new ArrayList<>();
         List<String> departmentNames = new ArrayList<>(); // List to store department names
 
         // Iterate through the cursor and add department codes and names to the lists
-     
-        if (subDepartmentCursor.moveToFirst()) {
+        if (subDepartmentCursor.moveToFirst() && departmentCursor.moveToFirst()) {
             do {
                 String departmentCode = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE));
-                String deptName = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
+                String deptName = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
                 String combinedString = departmentCode + " - " + deptName;
                 subDepartments.add(combinedString);
-                departmentNames.add(deptName); // Add the deptName to the departmentNames list
-            } while (subDepartmentCursor.moveToNext());
+                departmentNames.add(deptName);
+            } while (subDepartmentCursor.moveToNext() && departmentCursor.moveToNext());
         }
-
 
         // Create an ArrayAdapter and populate it with the retrieved data
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, subDepartments);
@@ -234,24 +235,19 @@ public class ModifySubDepartmentActivity extends Activity {
         if (index != -1) {
             // Set the spinner selection to the found index
             spinner.setSelection(index);
-
-            // Retrieve the corresponding department name from the departmentNames list
-            String deptName = departmentNames.get(index);
-
-            // Use the retrieved deptName as needed
-            // For example, you can assign it to a variable or use it in your code logic
-
-            return index;
+        } else {
+            // If the selected value is not found in subDepartments, default to the first item
+            spinner.setSelection(0);
+            index = 0; // Default index
         }
 
         // Toast the index, department code, and department name
-        Toast.makeText(this, "Index: " + index, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Index: " + index + ", Department Code: " + value + ", Department Name: " + departmentNames.get(index), Toast.LENGTH_SHORT).show();
 
-        // If the selected value is not found in subDepartments, default to the first item
-        spinner.setSelection(0);
-
-        return 0; // Default index
+        // Return the index
+        return index;
     }
+
 
 
 
