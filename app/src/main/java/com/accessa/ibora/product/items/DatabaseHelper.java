@@ -100,7 +100,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             SUBDEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             SUBDEPARTMENT_NAME + " TEXT NOT NULL, " +
             SUBDEPARTMENT_DEPARTMENT_ID + " INTEGER NOT NULL, " +
-            DEPARTMENT_CODE + " TEXT NOT NULL, " +
+            DEPARTMENT_CODE+ " INTEGER NOT NULL, " +
              LastModified + " DATETIME NOT NULL, " +
             DEPARTMENT_CASHIER_ID + " INTEGER NOT NULL, " +
             "FOREIGN KEY (" + SUBDEPARTMENT_DEPARTMENT_ID + ") REFERENCES " +

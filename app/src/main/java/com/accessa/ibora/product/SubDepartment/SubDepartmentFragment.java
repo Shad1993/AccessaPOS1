@@ -24,24 +24,25 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.items.AddItemActivity;
+import com.accessa.ibora.product.Department.AddDepartmentActivity;
+import com.accessa.ibora.product.Department.DepartmentAdapter;
+import com.accessa.ibora.product.Department.ModifyDepartmentActivity;
+import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.ItemAdapter;
-import com.accessa.ibora.product.items.ModifyItemActivity;
-import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class SubDepartmentFragment extends Fragment {
 
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
-    private ItemAdapter mAdapter;
+    private SubDepartmentAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
     private Spinner spinner;
@@ -61,7 +62,7 @@ public class SubDepartmentFragment extends Fragment {
     // onCreateView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_first, container, false);
+        View view = inflater.inflate(R.layout.sub_department_fragment, container, false);
 
         // Spinner
         spinner = view.findViewById(R.id.spinner);
@@ -70,20 +71,21 @@ public class SubDepartmentFragment extends Fragment {
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor = mDatabaseHelper.getAllItems();
+        Cursor cursor = mDatabaseHelper.getAllSubDepartment();
 
-        List<String> items = new ArrayList<>();
-        items.add("All Items");
+        List<String> Subdepartments = new ArrayList<>();
+        Subdepartments.add(getString(R.string.AllSubDepartments));
+
         if (cursor.moveToFirst()) {
             do {
-                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
-                items.add(item);
+                String Subdepartment = cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
+                Subdepartments.add(Subdepartment);
             } while (cursor.moveToNext());
         }
         cursor.close();
 
         // Create an ArrayAdapter for the spinner with the custom layout
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(requireContext(), 0, items) {
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(requireContext(), 0, Subdepartments) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -158,8 +160,8 @@ public class SubDepartmentFragment extends Fragment {
 
         mDatabaseHelper = new DatabaseHelper(getContext());
 
-        Cursor itemCursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getActivity(), itemCursor);
+        Cursor SubDepartmentCursor = mDatabaseHelper.getAllSubDepartment();
+        mAdapter = new SubDepartmentAdapter(getActivity(), SubDepartmentCursor);
         mRecyclerView.setAdapter(mAdapter);
         // Empty state
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
@@ -186,7 +188,7 @@ public class SubDepartmentFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchItems(newText);
+                Cursor newCursor = mDatabaseHelper.searchCategory(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
                     EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
@@ -209,22 +211,23 @@ public class SubDepartmentFragment extends Fragment {
         adapter.notifyDataSetChanged();
         // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
-                new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
+                new RecyclerDepartmentClickListener(getContext(), mRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
+
                     @Override
                     public void onItemClick(View view, int position) {
                         TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                        TextView priceTextView = view.findViewById(R.id.price_text_view);
+                        TextView DeptNameEditText = view.findViewById(R.id.name_text_view);
+                        TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
+                        TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
 
                         String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+                        String name = DeptNameEditText.getText().toString();
+                        String DeptCode = DeptCodeEditText.getText().toString();
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
-                        modifyIntent.putExtra("title", title);
-                        modifyIntent.putExtra("desc", longDescription);
+                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifySubDepartmentActivity.class);
+                        modifyIntent.putExtra("title", name);
+                        modifyIntent.putExtra("desc", DeptCode);
                         modifyIntent.putExtra("id", id);
 
                         startActivity(modifyIntent);
@@ -249,10 +252,10 @@ public class SubDepartmentFragment extends Fragment {
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals("All Items")) {
-            filteredCursor = mDatabaseHelper.getAllItems();
+        if (selectedItem == null || selectedItem.equals(getString(R.string.AllSubDepartments))) {
+            filteredCursor = mDatabaseHelper.getAllSubDepartment();
         } else {
-            filteredCursor = mDatabaseHelper.searchItems(selectedItem);
+            filteredCursor = mDatabaseHelper.searchCategory(selectedItem);
         }
         mAdapter.swapCursor(filteredCursor);
 
@@ -276,7 +279,7 @@ public class SubDepartmentFragment extends Fragment {
         }
     }
     public void openNewActivity() {
-        Intent intent = new Intent(requireContext(), AddItemActivity.class);
+        Intent intent = new Intent(requireContext(), AddSubDepartmentActivity.class);
         startActivity(intent);
     }
 }

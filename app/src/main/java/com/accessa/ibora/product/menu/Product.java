@@ -24,6 +24,7 @@ import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
+import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -110,7 +111,22 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
             fragmentTransaction.addToBackStack(newFragment.toString());
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.commit();
+        }else if (fragmentKey != null && fragmentKey.equals("SUBDept_fragment")) {
+            Fragment newFragment = new SubDepartmentFragment();
+            // create a FragmentManager
+            FragmentManager fm = getSupportFragmentManager();
+
+            // create a FragmentTransaction to begin the transaction and replace the Fragment
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            // replace the FrameLayout with new Fragment
+            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+            fragmentTransaction.addToBackStack(newFragment.toString());
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.commit();
         }
+
+
+
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

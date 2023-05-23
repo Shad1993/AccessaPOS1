@@ -25,7 +25,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter PIN"
+            android:text="@string/EnterPIN"
             android:textSize="24sp"
 
             android:textColor="@color/BleuAccessaText"
@@ -153,7 +153,7 @@
             android:layout_marginRight="16dp"
             android:layout_marginTop="16dp">
         <Button
-            android:text="Clear"
+            android:text="@string/Clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="24sp"
@@ -164,7 +164,7 @@
             android:id="@+id/buttonLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Login"
+            android:text="@string/Login"
             android:textSize="24sp"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/BleuAccessaText"

@@ -134,7 +134,7 @@
 
             <Button
                 android:id="@+id/buttonComma"
-                android:text=","
+                android:text="@string/point"
                 android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/BleuAccessaText"
@@ -142,7 +142,7 @@
 
             <Button
                 android:id="@+id/buttonClear"
-                android:text="CL/"
+                android:text="@string/CL"
                 android:textSize="24sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/OrangeAccessa"
@@ -150,16 +150,16 @@
 
             <Button
                 android:id="@+id/buttonScan"
-                android:text="Scan"
-                android:textSize="20sp"
+                android:text="@string/Scan"
+                android:textSize="15sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/OrangeAccessa"
                 android:onClick="onClearButtonClick" />
 
             <Button
                 android:id="@+id/buttonPrint"
-                android:text="Print"
-                android:textSize="24sp"
+                android:text="@string/Print"
+                android:textSize="15sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/OrangeAccessa"
                 android:onClick="onClearButtonClick" />

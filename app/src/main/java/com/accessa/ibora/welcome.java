@@ -25,7 +25,7 @@ public class welcome extends AppCompatActivity {
         welcomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(welcome.this, SelectLanguage.class);
+                Intent intent = new Intent(welcome.this, SelectProfile.class);
                 startActivity(intent);
             }
         });

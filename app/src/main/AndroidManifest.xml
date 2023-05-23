@@ -30,7 +30,8 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".SelectLanguage" />
         <activity android:name=".login.login" />
-        <activity android:name=".Department.Department" />
+        <activity android:name=".product.SubDepartment.AddSubDepartmentActivity" />
+        <activity android:name=".product.SubDepartment.ModifySubDepartmentActivity" />
         <activity android:name=".product.items.ModifyItemActivity" />
         <activity android:name=".product.items.AddItemActivity" />
         <activity android:name=".product.menu.Product"  />

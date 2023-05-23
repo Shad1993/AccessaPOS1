@@ -7,6 +7,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.accessa.ibora.product.Department.Department;
+import com.accessa.ibora.product.SubDepartment.SubDepartment;
 
 public class DBManager {
 
@@ -174,6 +175,8 @@ public class DBManager {
         return item;
     }
 
+
+
     public void insertDept(String deptName, String lastModified, String userId, String deptCode) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
@@ -235,5 +238,51 @@ public class DBManager {
             cursor.close();
         }
         return department;
+    }
+
+    public void insertSubDept(String subDeptName, String lastModified, String userId, String deptCode, int departmentId) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, subDeptName);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, departmentId);
+        database.insert(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, null, contentValue);
+    }
+
+
+    public SubDepartment getSubDepartmentById(String id) {
+        SubDepartment Subdepartment = null;
+        String[] columns = new String[]{
+                DatabaseHelper._ID,
+                DatabaseHelper.SUBDEPARTMENT_ID,
+                DatabaseHelper.DEPARTMENT_CODE,
+                DatabaseHelper.SUBDEPARTMENT_NAME,
+                DatabaseHelper.LastModified,
+                DatabaseHelper.DEPARTMENT_CASHIER_ID,
+
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper._ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            Subdepartment = new SubDepartment();
+            Subdepartment.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_ID)));
+            Subdepartment.setSubName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME)));
+            Subdepartment.setSubDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            Subdepartment.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
+            Subdepartment.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CASHIER_ID)));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return Subdepartment;
     }
 }

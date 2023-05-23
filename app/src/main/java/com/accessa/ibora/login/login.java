@@ -112,8 +112,9 @@ public class login extends AppCompatActivity {
 
             // Create and show the AlertDialog with the welcome message and cashor's name
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Welcome to Ibora");
-            builder.setMessage("Welcome, " + cashorName + "!");
+            builder.setTitle(R.string.welcome);
+            builder.setMessage(getString(R.string.welcomes) + " " + cashorName + "!");
+
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("cashorName", cashorName); // Store cashor's name

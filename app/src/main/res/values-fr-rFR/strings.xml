@@ -65,6 +65,7 @@
     <string name="toggle_button_text">Disponible à la vente ?</string>
     <string name="Perishable">Possède une date d\'expiration ?</string>
     <string name="addDept">Ajouter un département</string>
+    <string name="addSubDept">Ajouter un sous-département</string>
 
     <string name="spinner_prompt">Articles</string>
     <string-array name="spinner_items">
@@ -214,5 +215,26 @@
     <string name="admin">Administrateur</string>
     <string name="welcome">Bienvenue sur iBora</string>
     <string name="get_started">Commencer</string>
-
+    <string name="Login">Connexion</string>
+    <string name="Clear">Effacer</string>
+    <string name="EnterPIN">Entrer le code PIN</string>
+    <string name="welcomes">Bienvenue</string>
+    <string name="Sales">Ventes</string>
+    <string name="CL">CL/</string>
+    <string name="Scan">Scanner</string>
+    <string name="Print">Imprimer</string>
+    <string name="point">,</string>
+    <string name="Tickets">Billets</string>
+    <string name="Subtotal">Total : Rs 0.00</string>
+    <string name="Checkout">Passer à la caisse</string>
+    <string name="Items">Articles</string>
+    <string name="Shift">Shift</string>
+    <string name="Settings">Paramètres</string>
+    <string name="Help">Aide</string>
+    <string name="Profile">Profil</string>
+    <string name="Logout">Déconnexion</string>
+    <string name="Receipts">Reçus</string>
+    <string name="AllDepartments">Tous les départements</string>
+    <string name="AllSubDepartments">Tous les sous-départements</string>
+    <string name="SubDeptname">Nom du sous-département</string>
 </resources>

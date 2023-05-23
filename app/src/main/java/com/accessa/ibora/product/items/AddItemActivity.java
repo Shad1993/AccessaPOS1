@@ -62,7 +62,7 @@ public class AddItemActivity extends Activity {
     static final int REQUEST_IMAGE_GALLERY = 1;
     private static final int PERMISSION_REQUEST_CODE = 123;
     private String imagePath;
-    private static final String DB_NAME = Constants.DB_NAME;
+
     private CategoryDatabaseHelper catDatabaseHelper;
     private DatabaseHelper mDatabaseHelper;
     private EditText subjectEditText;
@@ -204,7 +204,7 @@ public class AddItemActivity extends Activity {
         });
         catDatabaseHelper = new CategoryDatabaseHelper(this);
         mDatabaseHelper = new DatabaseHelper(this);
-        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
         Cursor departmentCursor = mDatabaseHelper.getAllDepartment();

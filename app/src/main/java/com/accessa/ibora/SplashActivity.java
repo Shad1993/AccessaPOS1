@@ -83,7 +83,7 @@ public class SplashActivity extends Activity {
 
     private void navigateToNextScreen() {
         // Start the next activity (e.g., main activity)
-        Intent intent = new Intent(this, welcome.class);
+        Intent intent = new Intent(this, SelectLanguage.class);
         startActivity(intent);
         finish();
     }

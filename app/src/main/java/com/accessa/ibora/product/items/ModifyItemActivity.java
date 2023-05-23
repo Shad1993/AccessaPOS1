@@ -2,6 +2,8 @@ package com.accessa.ibora.product.items;
 
 import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.AddItemActivity.REQUEST_IMAGE_GALLERY;
+import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUBDEPARTMENT_NAME;
 import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
 import android.Manifest;
@@ -41,6 +43,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.category.Category;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -209,14 +212,16 @@ private ImageView image_view;
         _id = Long.parseLong(id);
 
 
+
+
         Item item = dbManager.getItemById(id);
         if (item != null) {
             NameText.setText(item.getName());
             descText.setText(item.getDescription());
             PriceEditText.setText(String.valueOf(item.getPrice()));
             BarcodeEditText.setText(item.getBarcode());
-            DepartmentSpinner.setSelection(getSpinnerIndex(DepartmentSpinner, item.getDepartment()));
-            SubDepartmentSpinner.setSelection(getSpinnerIndex(SubDepartmentSpinner, item.getSubDepartment()));
+            DepartmentSpinner.setSelection(getSpinnerIndex1(DepartmentSpinner, item.getDepartment()));
+            SubDepartmentSpinner.setSelection(getSpinnerIndex2(SubDepartmentSpinner, item.getSubDepartment()));
             CategorySpinner.setSelection(getSpinnerIndex(CategorySpinner, item.getCategory()));
             CostEditText.setText(String.valueOf(item.getPrice()));
             VariantEditText.setText(item.getVariant());
@@ -265,7 +270,7 @@ private ImageView image_view;
         departments.add("All Departments");
         if (departmentCursor.moveToFirst()) {
             do {
-                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
+                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DEPARTMENT_NAME));
                 departments.add(department);
             } while (departmentCursor.moveToNext());
         }
@@ -275,7 +280,7 @@ private ImageView image_view;
         subDepartments.add("All Sub Departments");
         if (subDepartmentCursor.moveToFirst()) {
             do {
-                String subDepartment = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
+                String subDepartment = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(SUBDEPARTMENT_NAME));
                 subDepartments.add(subDepartment);
             } while (subDepartmentCursor.moveToNext());
         }
@@ -285,6 +290,8 @@ private ImageView image_view;
         ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
         ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subDepartments);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAdapterSubDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         CategorySpinner.setAdapter(spinnerAdapter);
         DepartmentSpinner.setAdapter(spinnerAdapterDept);
         SubDepartmentSpinner.setAdapter(spinnerAdapterSubDept);
@@ -303,12 +310,21 @@ private ImageView image_view;
         });
 // Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
         String existingCategory = item.getCategory();
-
+        String existingDepartment = item.getDepartment();
+        String existingSubDepartment = item.getSubDepartment();
 // Get the index of the existing category value in the spinner's data source
         int categoryIndex = spinnerAdapter.getPosition(existingCategory);
+        int DeptIndex = spinnerAdapterDept.getPosition(existingDepartment);
+        int SubDeptIndex = spinnerAdapterSubDept.getPosition(existingSubDepartment);
 
 // Set the selected item of the CategorySpinner to the existing category value
         CategorySpinner.setSelection(categoryIndex);
+
+        // Set the selected item of the CategorySpinner to the existing category value
+        DepartmentSpinner.setSelection(DeptIndex);
+
+        // Set the selected item of the CategorySpinner to the existing category value
+        SubDepartmentSpinner.setSelection(SubDeptIndex);
 
         // Retrieve the existing soldBy value from the database (replace item.getSoldBy() with the correct method)
         String existingSoldBy = item.getSoldBy();
@@ -557,6 +573,76 @@ private ImageView image_view;
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         home_intent1.putExtra("fragment", "Item_fragment");
         startActivity(home_intent1);
+    }
+
+    private int getSpinnerIndex1(Spinner spinner, String value) {
+        // Retrieve departments from the database
+        DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
+        Cursor departmentCursor = databaseHelper.getAllDepartment();
+
+        List<String> departments = new ArrayList<>();
+
+        // Iterate through the cursor and add department names to the list
+        if (departmentCursor.moveToFirst()) {
+            do {
+                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DEPARTMENT_NAME));
+                departments.add(department);
+            } while (departmentCursor.moveToNext());
+        }
+
+        // Create an ArrayAdapter and populate it with the retrieved data
+        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, departments);
+        spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapterDept);
+
+        // Find the index of the selected value in the spinner
+        int index = departments.indexOf(value);
+        if (index != -1) {
+            // Set the spinner selection to the found index
+            spinner.setSelection(index);
+            Toast.makeText(spinner.getContext(), "Index: " + index, Toast.LENGTH_SHORT).show();
+            return index;
+        }
+
+        // If the selected value is not found, default to the first item
+        spinner.setSelection(0);
+        Toast.makeText(spinner.getContext(), "Index: 0", Toast.LENGTH_SHORT).show();
+        return 0; // Default index
+    }
+
+
+
+    private int getSpinnerIndex2(Spinner spinner, String value) {
+        // Retrieve categories from the database
+        DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
+        Cursor subDepartmentCursor = databaseHelper.getAllSubDepartment();
+
+        List<String> subdepartment = new ArrayList<>();
+
+        // Iterate through the cursor and add categories to the list
+        if (subDepartmentCursor.moveToFirst()) {
+            do {
+                String category = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(SUBDEPARTMENT_NAME));
+                subdepartment.add(category);
+            } while (subDepartmentCursor.moveToNext());
+        }
+
+        // Create an ArrayAdapter and populate it with the retrieved data
+        ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, subdepartment);
+        spinnerAdapterSubDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapterSubDept);
+
+        // Find the index of the selected value in the spinner
+        int index = subdepartment.indexOf(value);
+        if (index != -1) {
+            // Set the spinner selection to the found index
+            spinner.setSelection(index);
+            return index;
+        }
+
+        // If the selected value is not found in categories, default to the first item
+        spinner.setSelection(0);
+        return 0; // Default index
     }
     private int getSpinnerIndex(Spinner spinner, String value) {
         // Retrieve categories from the database

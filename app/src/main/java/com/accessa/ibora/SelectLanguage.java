@@ -56,7 +56,7 @@ public class SelectLanguage extends AppCompatActivity {
         getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
 
         // Start the SelectProfile activity
-        Intent intent = new Intent(this, SelectProfile.class);
+        Intent intent = new Intent(this, welcome.class);
         startActivity(intent);
     }
 }
