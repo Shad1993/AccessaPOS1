@@ -1,4 +1,4 @@
-package com.accessa.ibora.product.SubDepartment;
+package com.accessa.ibora.product.Vendor;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.Department.Department;
+import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -31,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ModifySubDepartmentActivity extends Activity {
+public class ModifyVendorActivity extends Activity {
 
     private Button buttonUpdate;
     private Button buttonDelete;

@@ -237,4 +237,10 @@
     <string name="AllDepartments">Tous les départements</string>
     <string name="AllSubDepartments">Tous les sous-départements</string>
     <string name="SubDeptname">Nom du sous-département</string>
+    <string name="AllVendors">Tous les fournisseurs</string>
+    <string name="Vendorcode">Code fournisseur</string>
+    <string name="Vendorname">Nom du fournisseur</string>
+    <string name="addVend">Ajouter un fournisseur</string>
+
+
 </resources>

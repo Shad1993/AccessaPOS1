@@ -76,4 +76,15 @@
         android:layout_marginLeft="10dp"
         android:ellipsize="end"
         android:layout_below="@id/ExpiryDate"/>
+
+    <TextView android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:visibility="visible"
+        android:padding="3dp"
+        android:id="@+id/deptcode_text_view"
+        android:maxLines="2"
+        android:layout_toRightOf="@id/id"
+        android:layout_marginLeft="10dp"
+        android:ellipsize="end"
+        android:layout_below="@id/Category"/>
 </RelativeLayout>

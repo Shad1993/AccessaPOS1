@@ -155,6 +155,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Creating Vendor table query
     private static final String CREATE_VENDOR_TABLE = "CREATE TABLE " + VENDOR_TABLE_NAME + "(" +
             VendorID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            LastModified + " DATETIME NOT NULL, " +
+            UserId + " INTEGER NOT NULL, " +
             CodeFournisseur + " TEXT NOT NULL, " +
             NomFournisseur + " TEXT NOT NULL);";
     // Creating Cost table query
@@ -163,7 +165,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Barcode + " TEXT(20) NOT NULL, " +
             SKUCost + " DECIMAL(10, 2) NOT NULL, " +
             Cost + " DECIMAL(10, 2) NOT NULL, " +
-            CodeFournisseur + " TEXT NOT NULL, " +
+            LastModified + " DATETIME NOT NULL, " +
+            UserId + " INTEGER NOT NULL, " +
+            CodeFournisseur + " TEXT , " +
             "FOREIGN KEY (" + Barcode + ", " + SKUCost + ") REFERENCES " +
             TABLE_NAME + "(" + Barcode + ", " + SKUCost + "), " +
             "FOREIGN KEY (" + CodeFournisseur + ") REFERENCES " +
@@ -203,9 +207,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(DEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+
+
+
     public Cursor getAllSubDepartment() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+
+        public Cursor getDepartmentName(String departmentCode) {
+            SQLiteDatabase db = getReadableDatabase();
+            String[] columns = {DEPARTMENT_NAME};
+            String selection = DEPARTMENT_CODE+" = ?";
+            String[] selectionArgs = {departmentCode};
+            return db.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
     }
     public Cursor login() {
         SQLiteDatabase db = getReadableDatabase();
@@ -234,4 +250,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
+    public Cursor getAllVendor() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(VENDOR_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+    public Cursor searchVendor(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {VendorID, NomFournisseur, CodeFournisseur};
+        String selection = NomFournisseur + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = NomFournisseur + " ASC";
+        return db.query(VENDOR_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
 }

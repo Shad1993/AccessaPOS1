@@ -123,6 +123,18 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
             fragmentTransaction.addToBackStack(newFragment.toString());
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.commit();
+        }else if (fragmentKey != null && fragmentKey.equals("Vend_fragment")) {
+            Fragment newFragment = new SubDepartmentFragment();
+            // create a FragmentManager
+            FragmentManager fm = getSupportFragmentManager();
+
+            // create a FragmentTransaction to begin the transaction and replace the Fragment
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            // replace the FrameLayout with new Fragment
+            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+            fragmentTransaction.addToBackStack(newFragment.toString());
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.commit();
         }
 
 

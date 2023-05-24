@@ -1,18 +1,19 @@
-package com.accessa.ibora.product.Department;
+package com.accessa.ibora.product.Vendor;
 
-public class Department {
+public class Vendor {
     private int id;
-    private String DepartmentName;
-    private String DepartmentCode;
+    private String CodeFournisseur;
+    private String NomFournisseur;
+
     private String LastModified;
     private String CashierID;
 
 
 
-    public Department() {
+    public Vendor() {
         this.id = id;
-        this.DepartmentName = DepartmentName;
-        this.DepartmentCode = DepartmentCode;
+        this.CodeFournisseur = CodeFournisseur;
+        this.NomFournisseur = NomFournisseur;
         this.LastModified = LastModified;
         this.CashierID = CashierID;
 
@@ -21,22 +22,22 @@ public class Department {
     public int getId() {
         return id;
     }
-    public String getDepartmentCode() {
-        return DepartmentCode;
+    public String getCodeFournisseur() {
+        return CodeFournisseur;
     }
-    public void setDepartmentCode(String DepartmentCode) {
-        this.DepartmentCode = DepartmentCode;
+    public void setCodeFournisseur(String CodeFournisseur) {
+        this.CodeFournisseur = CodeFournisseur;
     }
     public void setId(int id) {
         this.id = id;
     }
 
-    public  String getName() {
-        return DepartmentName;
+    public String getNomFournisseur() {
+        return NomFournisseur;
     }
 
-    public void setName(String DepartmentName) {
-        this.DepartmentName = DepartmentName;
+    public void setNomFournisseur(String SubDepartmentName) {
+        this.NomFournisseur = NomFournisseur;
     }
 
     public String getLastModified() {

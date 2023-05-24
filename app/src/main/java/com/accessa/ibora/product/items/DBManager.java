@@ -29,7 +29,8 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,String LastModified)  {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String LastModified) {
+        // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
         contentValue.put(DatabaseHelper.DESC, desc);
@@ -52,7 +53,17 @@ public class DBManager {
         contentValue.put(DatabaseHelper.LastModified, LastModified);
         contentValue.put(DatabaseHelper.UserId, UserId);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
+
+        // Insert duplicates into the cost table
+        ContentValues costContentValue = new ContentValues();
+        costContentValue.put(DatabaseHelper.Barcode, Barcode);
+        costContentValue.put(DatabaseHelper.SKU, SKU);
+        costContentValue.put(DatabaseHelper.UserId, UserId);
+        costContentValue.put(DatabaseHelper.LastModified, LastModified);
+        costContentValue.put(DatabaseHelper.Cost, Cost);
+        database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
+
     public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment) {
         ContentValues values = new ContentValues();
         values.put("pin", enteredPIN);
@@ -239,7 +250,40 @@ public class DBManager {
         }
         return department;
     }
+    public Department getDepartmentByCode(String id) {
+        Department department = null;
+        String[] columns = new String[]{
+                DatabaseHelper.DEPARTMENT_CODE,
+                DatabaseHelper._ID,
+                DatabaseHelper.DEPARTMENT_ID,
 
+                DatabaseHelper.DEPARTMENT_NAME,
+                DatabaseHelper.DEPARTMENT_LAST_MODIFIED,
+                DatabaseHelper.COLUMN_CASHOR_id,
+
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper.DEPARTMENT_CODE + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            department = new Department();
+            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            department.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID)));
+            department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
+            department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
+            department.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return department;
+    }
     public void insertSubDept(String subDeptName, String lastModified, String userId, String deptCode, int departmentId) {
 
         ContentValues contentValue = new ContentValues();
@@ -284,5 +328,36 @@ public class DBManager {
             cursor.close();
         }
         return Subdepartment;
+    }
+
+    public boolean updateSubDept(long id, String name, String lastmodified, String userId, String deptCode) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, name);
+        contentValue.put(DatabaseHelper.LastModified, lastmodified);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
+        database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
+        return true;
+    }
+
+
+    public boolean deleteSubDept(long id) {
+
+        String selection = DatabaseHelper._ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
+    public void insertVendor(String vendorName, String lastModified, String userId, String vendCode) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.NomFournisseur, vendorName);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.UserId, userId);
+        contentValue.put(DatabaseHelper.CodeFournisseur, vendCode);
+        database.insert(DatabaseHelper.VENDOR_TABLE_NAME, null, contentValue);
     }
 }

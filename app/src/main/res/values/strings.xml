@@ -242,7 +242,10 @@
     <string name="AllDepartments">All Departments</string>
     <string name="AllSubDepartments">All Sub Departments</string>
     <string name="SubDeptname">Sub Department Name</string>
-
+    <string name="AllVendors">All Vendors</string>
+    <string name="Vendorcode">Vendor Code</string>
+    <string name="Vendorname">Vendor Name</string>
+    <string name="addVend">Add Vendor</string>
 
 
 </resources>
