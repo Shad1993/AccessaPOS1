@@ -5,14 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,21 +18,28 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class AddVendorActivity extends Activity {
     private DatabaseHelper mDatabaseHelper;
     private TextView VendorCode;
-      private EditText DeptName_Edittext;
+    private EditText DeptName_Edittext;
     private EditText LastModified_Edittext;
     private EditText Userid_Edittext;
-   private  String selectedDepartmentCode;
+    private EditText PhoneNumber_Edittext;
+    private EditText Street_Edittext;
+    private EditText Town_Edittext;
+    private EditText PostalCode_Edittext;
+    private EditText Email_Edittext;
+    private EditText InternalCode_Edittext;
+    private EditText Salesmen_Edittext;
 
-   private String departmentid;
+    private String selectedDepartmentCode;
+
+    private String departmentid;
     private String cashorId;
     private SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,51 +47,55 @@ public class AddVendorActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Department");
 
-
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-
-
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
-
-
-
 
         setContentView(R.layout.add_vendor_activity);
 
         DeptName_Edittext = findViewById(R.id.DeptName_edittext);
         LastModified_Edittext = findViewById(R.id.LastModified_edittext);
         Userid_Edittext = findViewById(R.id.userid_edittext);
-       VendorCode= findViewById(R.id.VendCode_edittext);
+        VendorCode = findViewById(R.id.VendCode_edittext);
+        PhoneNumber_Edittext = findViewById(R.id.PhoneNumber_edittext);
+        Street_Edittext = findViewById(R.id.Street_edittext);
+        Town_Edittext = findViewById(R.id.Town_edittext);
+        PostalCode_Edittext = findViewById(R.id.PostalCode_edittext);
+        Email_Edittext = findViewById(R.id.Email_edittext);
+        InternalCode_Edittext = findViewById(R.id.InternalCode_edittext);
+        Salesmen_Edittext = findViewById(R.id.Salesmen_edittext);
+
         // Add Record
         Button addButton = findViewById(R.id.add_record);
-        addButton.setOnClickListener
-                (new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        addRecord();
-                    }
-                });
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addRecord();
+            }
+        });
 
-        //set userid and last Modified
+        // Set userid and last Modified
         Userid_Edittext.setText(String.valueOf(cashorId));
-
-
-
     }
 
-
     private void addRecord() {
-
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         String VendorName = DeptName_Edittext.getText().toString().trim();
         String LastModified = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
         String VendCode = VendorCode.getText().toString().trim();
+        String PhoneNumber = PhoneNumber_Edittext.getText().toString().trim();
+        String Street = Street_Edittext.getText().toString().trim();
+        String Town = Town_Edittext.getText().toString().trim();
+        String PostalCode = PostalCode_Edittext.getText().toString().trim();
+        String Email = Email_Edittext.getText().toString().trim();
+        String InternalCode = InternalCode_Edittext.getText().toString().trim();
+        String Salesmen = Salesmen_Edittext.getText().toString().trim();
 
         // Check if all required fields are filled
-        if (VendorName.isEmpty() || VendCode.isEmpty()
-                ) {
+        if (VendorName.isEmpty() || VendCode.isEmpty() || PhoneNumber.isEmpty() ||
+                Street.isEmpty() || Town.isEmpty() || PostalCode.isEmpty() ||
+                Email.isEmpty() || InternalCode.isEmpty() || Salesmen.isEmpty()) {
             Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -96,18 +103,24 @@ public class AddVendorActivity extends Activity {
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
-        dbManager.insertVendor(VendorName, LastModified, UserId, VendCode);
+        dbManager.insertVendor(VendorName, LastModified, UserId, VendCode, PhoneNumber, Street,
+                Town, PostalCode, Email, InternalCode, Salesmen);
         dbManager.close();
 
         // Clear the input
         DeptName_Edittext.setText("");
         LastModified_Edittext.setText("");
         Userid_Edittext.setText("");
-
+        VendorCode.setText("");
+        PhoneNumber_Edittext.setText("");
+        Street_Edittext.setText("");
+        Town_Edittext.setText("");
+        PostalCode_Edittext.setText("");
+        Email_Edittext.setText("");
+        InternalCode_Edittext.setText("");
+        Salesmen_Edittext.setText("");
 
         returnHome();
-
-
     }
 
     public void returnHome() {
@@ -120,6 +133,5 @@ public class AddVendorActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 }

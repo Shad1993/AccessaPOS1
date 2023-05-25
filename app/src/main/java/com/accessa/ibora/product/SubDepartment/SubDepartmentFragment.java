@@ -188,11 +188,11 @@ public class SubDepartmentFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchCategory(newText);
+                Cursor newCursor = mDatabaseHelper.searchSubDepartment(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
                     EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-                    searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                    searchEditText.setTextColor(getResources().getColor(android.R.color.white));
                 } else {
                     EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
@@ -255,7 +255,7 @@ public class SubDepartmentFragment extends Fragment {
         if (selectedItem == null || selectedItem.equals(getString(R.string.AllSubDepartments))) {
             filteredCursor = mDatabaseHelper.getAllSubDepartment();
         } else {
-            filteredCursor = mDatabaseHelper.searchCategory(selectedItem);
+            filteredCursor = mDatabaseHelper.searchSubDepartment(selectedItem);
         }
         mAdapter.swapCursor(filteredCursor);
 

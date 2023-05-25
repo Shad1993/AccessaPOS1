@@ -246,6 +246,24 @@
     <string name="Vendorcode">Vendor Code</string>
     <string name="Vendorname">Vendor Name</string>
     <string name="addVend">Add Vendor</string>
+    <string name="please_fill_in_all_fields">Please fill in all the fields</string>
+    <string name="subdepartment_updated_successfully">SubDepartment updated successfully</string>
+    <string name="failed_to_update_department">Failed to update Department</string>
+    <string name="subdepartment_deleted_successfully">SubDepartment deleted successfully</string>
+    <string name="failed_to_delete_subdepartment">Failed to delete SubDepartment</string>
+    <string name="vendor_updated_successfully">Vendor updated successfully</string>
+    <string name="failed_to_update_vendor">Failed to update Vendor</string>
+    <string name="vendor_deleted_successfully">Vendor deleted successfully</string>
+    <string name="failed_to_delete_vendor">Failed to delete Vendor</string>
+    <string name="PhoneNumber">Phone Number</string>
+    <string name="Street">Street</string>
+    <string name="Town">Town</string>
+    <string name="PostalCode">Postal Code</string>
+    <string name="Email">Email</string>
+    <string name="InternalCode">Internal Code</string>
+    <string name="Salesmen">Salesmen</string>
+    <string name="address_title">Address</string>
+    <string name="Address">Address</string>
 
 
 </resources>

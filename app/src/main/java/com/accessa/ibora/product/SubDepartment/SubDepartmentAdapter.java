@@ -51,11 +51,13 @@ public class SubDepartmentAdapter extends RecyclerView.Adapter<SubDepartmentAdap
 
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        if (mCursor == null || !mCursor.moveToPosition(position)) {
+        // Check if the Cursor is null or if it has not been moved to the first row.
+        if (mCursor == null || !mCursor.moveToFirst()) {
             return;
         }
-
-        String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
+        // Move the cursor to the specified position.
+        mCursor.moveToPosition(position);
+        String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_ID));
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
         String lastModified = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LastModified));
         String DepartmentCode = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE));

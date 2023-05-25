@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
+import com.accessa.ibora.product.Vendor.Vendor;
 
 public class DBManager {
 
@@ -330,17 +331,7 @@ public class DBManager {
         return Subdepartment;
     }
 
-    public boolean updateSubDept(long id, String name, String lastmodified, String userId, String deptCode) {
 
-        ContentValues contentValue = new ContentValues();
-        contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, name);
-        contentValue.put(DatabaseHelper.LastModified, lastmodified);
-        contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
-        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
-        contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
-        database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
-        return true;
-    }
 
 
     public boolean deleteSubDept(long id) {
@@ -351,13 +342,96 @@ public class DBManager {
         return true;
     }
 
-    public void insertVendor(String vendorName, String lastModified, String userId, String vendCode) {
 
+
+    public Vendor getVendorById(String id) {
+
+        Vendor vendor = null;
+        String[] columns = new String[]{
+                DatabaseHelper.VendorID,
+                DatabaseHelper.NomFournisseur,
+                DatabaseHelper.CodeFournisseur,
+                DatabaseHelper.LastModified,
+                DatabaseHelper.UserId,
+
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper.VendorID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.VENDOR_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            vendor = new Vendor();
+            vendor.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VendorID)));
+            vendor.setNomFournisseur(cursor.getString(cursor.getColumnIndex(DatabaseHelper.NomFournisseur)));
+            vendor.setCodeFournisseur(cursor.getString(cursor.getColumnIndex(DatabaseHelper.CodeFournisseur)));
+            vendor.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
+            vendor.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.UserId)));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return vendor;
+    }
+
+    public boolean deleteVendor(long id) {
+        String selection = DatabaseHelper.VendorID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.VENDOR_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
+
+
+    public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.NomFournisseur, vendorName);
         contentValue.put(DatabaseHelper.LastModified, lastModified);
         contentValue.put(DatabaseHelper.UserId, userId);
         contentValue.put(DatabaseHelper.CodeFournisseur, vendCode);
+        contentValue.put(DatabaseHelper.PhoneNumber, phoneNumber);
+        contentValue.put(DatabaseHelper.Street, street);
+        contentValue.put(DatabaseHelper.Town, town);
+        contentValue.put(DatabaseHelper.PostalCode, postalCode);
+        contentValue.put(DatabaseHelper.Email, email);
+        contentValue.put(DatabaseHelper.InternalCode, internalCode);
+        contentValue.put(DatabaseHelper.Salesmen, salesmen);
         database.insert(DatabaseHelper.VENDOR_TABLE_NAME, null, contentValue);
+    }
+
+    public boolean updateVendor(long id, String vendName, String lastModified, String vendCode,
+                                String updatedPhoneNumber, String updatedStreet, String updatedTown,
+                                String updatedPostalCode, String updatedEmail, String updatedInternalCode,
+                                String updatedSalesmen, String UserId) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseHelper.NomFournisseur, vendName);
+        contentValues.put(DatabaseHelper.LastModified, lastModified);
+        contentValues.put(DatabaseHelper.CodeFournisseur, vendCode);
+        contentValues.put(DatabaseHelper.PhoneNumber, updatedPhoneNumber);
+        contentValues.put(DatabaseHelper.Street, updatedStreet);
+        contentValues.put(DatabaseHelper.Town, updatedTown);
+        contentValues.put(DatabaseHelper.PostalCode, updatedPostalCode);
+        contentValues.put(DatabaseHelper.Email, updatedEmail);
+        contentValues.put(DatabaseHelper.InternalCode, updatedInternalCode);
+        contentValues.put(DatabaseHelper.Salesmen, updatedSalesmen);
+        contentValues.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, UserId);
+
+        database.update(DatabaseHelper.VENDOR_TABLE_NAME, contentValues, DatabaseHelper.VendorID + " = " + id, null);
+        return true;
+    }
+    public boolean updateSubDept(long id, String name, String lastmodified, String userId, String deptCode) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, name);
+        contentValue.put(DatabaseHelper.LastModified, lastmodified);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
+        database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
+        return true;
     }
 }

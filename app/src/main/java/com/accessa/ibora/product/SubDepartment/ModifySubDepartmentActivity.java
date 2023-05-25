@@ -202,17 +202,20 @@ public class ModifySubDepartmentActivity extends Activity {
 
 
         if (DeptName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
-            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
 
         boolean isUpdated = dbManager.updateSubDept( _id,name, lastmodified, UserId, DeptCode);
         returnHome();
         if (isUpdated) {
-            Toast.makeText(this, "SubDepartment updated successfully", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(this, R.string.subdepartment_updated_successfully, Toast.LENGTH_SHORT).show();
+
             finish();
         } else {
-            Toast.makeText(this, "Failed to update Department", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.failed_to_update_department, Toast.LENGTH_SHORT).show();
+
         }
     }
 
@@ -220,10 +223,10 @@ public class ModifySubDepartmentActivity extends Activity {
         boolean isDeleted = dbManager.deleteSubDept(_id);
         returnHome();
         if (isDeleted) {
-            Toast.makeText(this, "SubDepartment deleted successfully", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.subdepartment_deleted_successfully, Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Failed to delete SubDepartment", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.failed_to_delete_subdepartment, Toast.LENGTH_SHORT).show();
         }
     }
     public void returnHome() {

@@ -25,6 +25,7 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
+import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -124,7 +125,7 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.commit();
         }else if (fragmentKey != null && fragmentKey.equals("Vend_fragment")) {
-            Fragment newFragment = new SubDepartmentFragment();
+            Fragment newFragment = new VendorFragment();
             // create a FragmentManager
             FragmentManager fm = getSupportFragmentManager();
 

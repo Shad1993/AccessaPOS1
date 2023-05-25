@@ -1,14 +1,12 @@
 package com.accessa.ibora.product.Vendor;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
-import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
+
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -37,27 +35,32 @@ public class ModifyVendorActivity extends Activity {
     private Button buttonUpdate;
     private Button buttonDelete;
 
-    private Spinner DepartmentCodeSpinner;
+private EditText VendorCode;
     private DBManager dbManager;
-    private EditText DeptName_Edittext;
+    private EditText VendName;
     private EditText LastModified_Edittext;
     private EditText Userid_Edittext;
-    private  String selectedDepartmentCode;
-    private String departmentid;
+    private EditText PhoneNumber_edittext;
+    private EditText Street_edittext;
+    private EditText Town_edittext;
+    private EditText PostalCode_edittext;
+    private EditText Email_edittext;
+    private EditText InternalCode_edittext;
+    private EditText Salesmen_edittext;
     private long _id;
     private DatabaseHelper mDatabaseHelper;
-    private CategoryDatabaseHelper catDatabaseHelper;
+
     private SharedPreferences sharedPreferences;
-    private  String departmentNames;
+
     private String cashorId;
-    private String departmentName;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("Modify Department");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.modify_sub_department_activity);
+        setContentView(R.layout.modify_vendor_activity);
 
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
@@ -65,27 +68,40 @@ public class ModifyVendorActivity extends Activity {
          cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
 
-        catDatabaseHelper = new CategoryDatabaseHelper(this);
 
         mDatabaseHelper = new DatabaseHelper(this);
         dbManager = new DBManager(this);
         dbManager.open();
 
-        DeptName_Edittext = findViewById(R.id.DeptName_edittext);
+        VendName = findViewById(R.id.DeptName_edittext);
         LastModified_Edittext = findViewById(R.id.LastModified_edittext);
         Userid_Edittext = findViewById(R.id.userid_edittext);
-        DepartmentCodeSpinner = findViewById(R.id.Dept_Code_spinner);
+        VendorCode = findViewById(R.id.VendCode_edittext);
+        PhoneNumber_edittext = findViewById(R.id.PhoneNumber_edittext);
+        Street_edittext = findViewById(R.id.Street_edittext);
+        Town_edittext = findViewById(R.id.Town_edittext);
+        PostalCode_edittext = findViewById(R.id.PostalCode_edittext);
+        Email_edittext = findViewById(R.id.Email_edittext);
+        InternalCode_edittext = findViewById(R.id.InternalCode_edittext);
+        Salesmen_edittext = findViewById(R.id.Salesmen_edittext);
 
         Intent intent = getIntent();
         String id = intent.getStringExtra("id");
         _id = Long.parseLong(id);
 
 
-        SubDepartment Subdepartment = dbManager.getSubDepartmentById(id);
-        if (Subdepartment != null) {
-            DeptName_Edittext.setText(Subdepartment.getSubName());
-            LastModified_Edittext.setText(Subdepartment.getLastModified());
-            DepartmentCodeSpinner.setSelection(getSpinnerIndex(DepartmentCodeSpinner, Subdepartment.getSubDepartmentCode()));
+        Vendor vendor = dbManager.getVendorById(id);
+        if (vendor != null) {
+            VendName.setText(vendor.getNomFournisseur());
+            LastModified_Edittext.setText(vendor.getLastModified());
+            VendorCode.setText(vendor.getCodeFournisseur());
+            PhoneNumber_edittext.setText(vendor.getPhoneNumber());
+            Street_edittext.setText(vendor.getStreet());
+            Town_edittext.setText(vendor.getTown());
+            PostalCode_edittext.setText(vendor.getPostalCode());
+            Email_edittext.setText(vendor.getEmail());
+            InternalCode_edittext.setText(vendor.getInternalCode());
+            Salesmen_edittext.setText(vendor.getSalesmen());
         }
 
 
@@ -97,7 +113,7 @@ public class ModifyVendorActivity extends Activity {
         buttonUpdate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDept();
+                updateVendor();
             }
         });
         buttonDelete = findViewById(R.id.btn_delete);
@@ -112,167 +128,69 @@ public class ModifyVendorActivity extends Activity {
 // department code spinner
         mDatabaseHelper = new DatabaseHelper(this);
 
-
-      //  Cursor SubdepartmentCodeCursor = mDatabaseHelper.getAllSubDepartment();
-        Cursor departmentCodeCursor = mDatabaseHelper.getAllDepartment();
-        List<String> subDepartments = new ArrayList<>();
-
-        subDepartments.add(getString(R.string.AllDepartments));
-
-        if (departmentCodeCursor != null && departmentCodeCursor != null &&
-                departmentCodeCursor.moveToFirst() && departmentCodeCursor.moveToFirst()) {
-            do {
-                String departmentCode = departmentCodeCursor.getString(departmentCodeCursor.getColumnIndex(DEPARTMENT_CODE));
-                String deptName = departmentCodeCursor.getString(departmentCodeCursor.getColumnIndex(DEPARTMENT_NAME));
-                // Get the department name from the department table.
-                Cursor departmentNameCursor = mDatabaseHelper.getDepartmentName(departmentCode);
-                if (departmentNameCursor != null && departmentNameCursor.moveToFirst()) {
-                    departmentName = departmentNameCursor.getString(departmentNameCursor.getColumnIndex(DEPARTMENT_NAME));
-                }
-
-                // Add the department code and department name to the list.
-                subDepartments.add(departmentCode + " - " + departmentName);
-            } while ( departmentCodeCursor.moveToNext());
-
-            departmentCodeCursor.close();
-        }
-
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subDepartments);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        DepartmentCodeSpinner.setAdapter(spinnerAdapter);
-
-
-        DepartmentCodeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedItem = parent.getItemAtPosition(position).toString();
-
-                // Handle the selected item here
-
-                // Extract the department code from the selected item
-                String[] parts = selectedItem.split(" - ");
-                selectedDepartmentCode = parts[0];
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Handle the case when nothing is selected
-            }
-        });
-
-
-        // Retrieve the existing Department and subdepartment value from the database (replace item.getCategory() with the correct method)
-
-        String existingDepartmentCode = Subdepartment.getSubDepartmentCode();
-
-
-        Department department = dbManager.getDepartmentByCode(existingDepartmentCode);
-        if (department != null) {
-            departmentName=department.getName();
-
-        }
-        String existingDepartmentName = departmentName;
-// Get the index of the existing category value in the spinner's data source
-        String combinedString = existingDepartmentCode + " - " + existingDepartmentName;
-
-        Toast.makeText(this, combinedString, Toast.LENGTH_SHORT).show();
-
-        int SubDeptIndex = spinnerAdapter.getPosition(combinedString);
-
-
-
-        // Set the selected item of the CategorySpinner to the existing category value
-        DepartmentCodeSpinner.setSelection(SubDeptIndex);
-
         //set userid and last Modified
         Userid_Edittext.setText(String.valueOf(cashorId));
 
     }
 
 
-    private void updateDept() {
-        String name = DeptName_Edittext.getText().toString().trim();
+    private void updateVendor() {
+        String name = VendName.getText().toString().trim();
 
         // Get the current timestamp
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        String DeptName = DeptName_Edittext.getText().toString().trim();
+        String VendName = name;
         String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
-        String DeptCode = selectedDepartmentCode;
+        String VendCode = VendorCode.getText().toString().trim();
+        String updatedPhoneNumber = PhoneNumber_edittext.getText().toString();
+        String updatedStreet = Street_edittext.getText().toString();
+        String updatedTown = Town_edittext.getText().toString();
+        String updatedPostalCode = PostalCode_edittext.getText().toString();
+        String updatedEmail = Email_edittext.getText().toString();
+        String updatedInternalCode = InternalCode_edittext.getText().toString();
+        String updatedSalesmen = Salesmen_edittext.getText().toString();
 
+        // Update the vendor record in the database
+        dbManager.updateVendor(_id, VendName, lastmodified, VendCode,
+                updatedPhoneNumber, updatedStreet, updatedTown, updatedPostalCode, updatedEmail,
+                updatedInternalCode, updatedSalesmen,UserId); {
 
-        if (DeptName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
-            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
+        boolean isUpdated = dbManager.updateVendor( _id, VendName, lastmodified, VendCode, updatedPhoneNumber, updatedStreet, updatedTown, updatedPostalCode, updatedEmail, updatedInternalCode, updatedSalesmen, UserId);
 
-        boolean isUpdated = dbManager.updateSubDept( _id,name, lastmodified, UserId, DeptCode);
         returnHome();
         if (isUpdated) {
-            Toast.makeText(this, "SubDepartment updated successfully", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.vendor_updated_successfully, Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Failed to update Department", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(this, R.string.failed_to_update_vendor, Toast.LENGTH_SHORT).show();
         }
     }
 
     private void deleteItem() {
-        boolean isDeleted = dbManager.deleteSubDept(_id);
+        boolean isDeleted = dbManager.deleteVendor(_id);
         returnHome();
         if (isDeleted) {
-            Toast.makeText(this, "SubDepartment deleted successfully", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(this, R.string.vendor_deleted_successfully, Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Failed to delete SubDepartment", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.failed_to_delete_vendor, Toast.LENGTH_SHORT).show();
         }
     }
     public void returnHome() {
         Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "SUBDept_fragment");
+        home_intent1.putExtra("fragment", "Vend_fragment");
         startActivity(home_intent1);
     }
 
 
-    private int getSpinnerIndex(Spinner spinner, String value) {
-        // Retrieve department codes and names from the database
-        DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
-        Cursor subDepartmentCursor = databaseHelper.getAllSubDepartment();
-        Cursor departmentCursor = databaseHelper.getAllDepartment();
-
-        List<String> subDepartments = new ArrayList<>();
-
-        // Iterate through the cursor and add department codes and names to the lists
-        if (subDepartmentCursor.moveToFirst() && departmentCursor.moveToFirst()) {
-            do {
-                String departmentCode = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE));
-                String deptName = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
-                String combinedString = departmentCode + " - " + deptName;
-                subDepartments.add(combinedString);
-            } while (subDepartmentCursor.moveToNext() && departmentCursor.moveToNext());
-            subDepartmentCursor.close();
-            departmentCursor.close();
-        }
-
-        // Find the index of the selected value in the spinner
-        int index = subDepartments.indexOf(value);
-
-
-        if (index != -1) {
-            // Set the spinner selection to the found index
-            spinner.setSelection(index);
-        } else {
-            // If the selected value is not found in subDepartments, default to the first item
-            spinner.setSelection(0);
-            index = 0; // Default index
-        }
-
-
-
-        // Return the index
-        return index;
-    }
 
 
 
@@ -280,7 +198,6 @@ public class ModifyVendorActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        catDatabaseHelper.close();
         mDatabaseHelper.close();
     }
 }

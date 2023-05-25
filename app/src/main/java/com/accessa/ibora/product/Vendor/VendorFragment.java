@@ -211,7 +211,7 @@ public class VendorFragment extends Fragment {
         adapter.notifyDataSetChanged();
         // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
-                new RecyclerDepartmentClickListener(getContext(), mRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
+                new RecyclerVendorClickListener(getContext(), mRecyclerView, new RecyclerVendorClickListener.OnItemClickListener() {
 
                     @Override
                     public void onItemClick(View view, int position) {
@@ -222,12 +222,11 @@ public class VendorFragment extends Fragment {
 
                         String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
-                        String Vendname = VendNameEditText.getText().toString();
-                        String VendCode = VendCodeEditText.getText().toString();
+
+
 
                         Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyVendorActivity.class);
-                        modifyIntent.putExtra("title", Vendname);
-                        modifyIntent.putExtra("desc", VendCode);
+
                         modifyIntent.putExtra("id", id);
 
                         startActivity(modifyIntent);

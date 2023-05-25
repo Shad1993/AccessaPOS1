@@ -241,6 +241,24 @@
     <string name="Vendorcode">Code fournisseur</string>
     <string name="Vendorname">Nom du fournisseur</string>
     <string name="addVend">Ajouter un fournisseur</string>
+    <string name="please_fill_in_all_fields">Veuillez remplir tous les champs</string>
+    <string name="subdepartment_updated_successfully">Sous-département mis à jour avec succès</string>
+    <string name="failed_to_update_department">Échec de la mise à jour du département</string>
+    <string name="subdepartment_deleted_successfully">Sous-département supprimé avec succès</string>
+    <string name="failed_to_delete_subdepartment">Échec de la suppression du sous-département</string>
+    <string name="vendor_updated_successfully">Fournisseur mis à jour avec succès</string>
+    <string name="failed_to_update_vendor">Échec de la mise à jour du fournisseur</string>
+    <string name="vendor_deleted_successfully">Fournisseur supprimé avec succès</string>
+    <string name="failed_to_delete_vendor">Échec de la suppression du fournisseur</string>
+    <string name="PhoneNumber">Numéro de téléphone</string>
+    <string name="Street">Rue</string>
+    <string name="Town">Ville</string>
+    <string name="PostalCode">Code postal</string>
+    <string name="Email">Email</string>
+    <string name="InternalCode">Code interne</string>
+    <string name="Salesmen">Vendeurs</string>
+    <string name="address_title">Address</string>
+    <string name="Address">Address</string>
 
 
 </resources>

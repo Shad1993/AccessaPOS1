@@ -43,14 +43,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String UserId = "UserId";
     public static final String LastModified = "LastModified";
 
-    // Tax table columns
-    public static final String VATValue = "VATValue";
-    public static final String Title = "Title";
 
     // Vendor table columns
     public static final String VendorID = "ID";
     public static final String CodeFournisseur = "CodeFournisseur";
     public static final String NomFournisseur = "NomFournisseur";
+    public static final String PhoneNumber = "PhoneNumber";
+    public static final String Street = "Street";
+    public static final String Town = "Town";
+    public static final String PostalCode = "PostalCode";
+    public static final String Email = "Email";
+    public static final String InternalCode = "InternalCode";
+    public static final String Salesmen = "Salesmen";
 
     // Cost table columns
     public static final String CostID = "ID";
@@ -158,7 +162,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             LastModified + " DATETIME NOT NULL, " +
             UserId + " INTEGER NOT NULL, " +
             CodeFournisseur + " TEXT NOT NULL, " +
-            NomFournisseur + " TEXT NOT NULL);";
+            NomFournisseur + " TEXT NOT NULL, " +
+            PhoneNumber + " TEXT, " +
+            Street + " TEXT, " +
+            Town + " TEXT, " +
+            PostalCode + " TEXT, " +
+            Email + " TEXT, " +
+            InternalCode + " TEXT, " +
+            Salesmen + " TEXT);";
+
     // Creating Cost table query
     private static final String CREATE_COST_TABLE = "CREATE TABLE " + COST_TABLE_NAME + "(" +
             CostID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -257,10 +269,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchVendor(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {VendorID, NomFournisseur, CodeFournisseur};
+        String[] projection = {VendorID, NomFournisseur, CodeFournisseur,LastModified,UserId};
         String selection = NomFournisseur + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
-        String sortOrder = NomFournisseur + " ASC";
+        String sortOrder = LastModified + " DESC";
         return db.query(VENDOR_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+
+    public Cursor searchSubDepartment(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {SUBDEPARTMENT_ID,SUBDEPARTMENT_NAME,LastModified,DEPARTMENT_CASHIER_ID,DEPARTMENT_CODE};
+        String selection = SUBDEPARTMENT_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = LastModified + " DESC";
+        return db.query(SUBDEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+
+
+
+
     }
 }
