@@ -1,5 +1,7 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -7,6 +9,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.accessa.ibora.product.Department.Department;
+import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.Vendor.Vendor;
 
@@ -342,7 +345,37 @@ public class DBManager {
         return true;
     }
 
+    public Discount getDiscountById(String id) {
+        Discount discount = null;
+        String[] columns = new String[]{
+                DatabaseHelper.DISCOUNT_ID,
+                DatabaseHelper.DISCOUNT_NAME,
+                DatabaseHelper.DISCOUNT_VALUE,
+                DatabaseHelper.DISCOUNT_TIMESTAMP,
+                DatabaseHelper.DISCOUNT_USER_ID,
 
+        };
+
+        String selection = DatabaseHelper.DISCOUNT_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DISCOUNT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            discount = new Discount();
+            discount.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DISCOUNT_ID)));
+            discount.setDiscountName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DISCOUNT_NAME)));
+            discount.setDiscountValue(Integer.parseInt(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DISCOUNT_VALUE))));
+            discount.setDiscountTimestamp(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DISCOUNT_TIMESTAMP)));
+            discount.setUserId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DISCOUNT_USER_ID))));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return discount;
+    }
 
     public Vendor getVendorById(String id) {
 
@@ -353,6 +386,17 @@ public class DBManager {
                 DatabaseHelper.CodeFournisseur,
                 DatabaseHelper.LastModified,
                 DatabaseHelper.UserId,
+                DatabaseHelper.PhoneNumber,
+                DatabaseHelper.Street,
+                DatabaseHelper.Town,
+                DatabaseHelper.PostalCode,
+                DatabaseHelper.Email,
+                DatabaseHelper.InternalCode,
+                DatabaseHelper.Salesmen,
+
+
+
+
 
                 // Add other columns as needed
         };
@@ -368,7 +412,13 @@ public class DBManager {
             vendor.setCodeFournisseur(cursor.getString(cursor.getColumnIndex(DatabaseHelper.CodeFournisseur)));
             vendor.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
             vendor.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.UserId)));
-
+            vendor.setPhoneNumber(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PhoneNumber)));
+            vendor.setStreet(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Street)));
+            vendor.setTown(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Town)));
+            vendor.setPostalCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PostalCode)));
+            vendor.setEmail(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Email)));
+            vendor.setInternalCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.InternalCode)));
+            vendor.setSalesmen(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Salesmen)));
 
 
         }
@@ -385,7 +435,12 @@ public class DBManager {
         return true;
     }
 
-
+    public boolean deleteDisc(long id) {
+        String selection = DatabaseHelper.DISCOUNT_ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DISCOUNT_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
 
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();
@@ -418,8 +473,7 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Email, updatedEmail);
         contentValues.put(DatabaseHelper.InternalCode, updatedInternalCode);
         contentValues.put(DatabaseHelper.Salesmen, updatedSalesmen);
-        contentValues.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, UserId);
-
+        contentValues.put(DatabaseHelper.UserId, UserId);
         database.update(DatabaseHelper.VENDOR_TABLE_NAME, contentValues, DatabaseHelper.VendorID + " = " + id, null);
         return true;
     }
@@ -434,4 +488,50 @@ public class DBManager {
         database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
         return true;
     }
+
+    public boolean updateDisc(long id, String name, String lastmodified, String userId, String deptCode) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.DISCOUNT_NAME, name);
+        contentValue.put(DatabaseHelper.DISCOUNT_TIMESTAMP, lastmodified);
+        contentValue.put(DatabaseHelper.DISCOUNT_USER_ID, userId);
+        contentValue.put(DatabaseHelper.DISCOUNT_VALUE, deptCode);
+        database.update(DISCOUNT_TABLE_NAME, contentValue, DatabaseHelper.DISCOUNT_ID + " = " + id, null);
+        return true;
+    }
+    public boolean updateCost(long id, String lastmodified, String userId, String vendCode) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.LastModified, lastmodified);
+        contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
+        contentValue.put(DatabaseHelper.CodeFournisseur, vendCode);
+
+        database.update(DatabaseHelper.COST_TABLE_NAME, contentValue, DatabaseHelper.CostID + " = " + id, null);
+        return true;
+    }
+
+
+    // Method to retrieve the count of discounts
+    public int getDiscountCount() {
+        String query = "SELECT COUNT(*) FROM " + DISCOUNT_TABLE_NAME;
+        Cursor cursor = database.rawQuery(query, null);
+        int count = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count;
+    }
+
+    public void insertDisc(String discName, String lastModified, String userId, String discvalue) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.DISCOUNT_NAME, discName);
+        contentValue.put(DatabaseHelper.DISCOUNT_TIMESTAMP, lastModified);
+        contentValue.put(DatabaseHelper.DISCOUNT_USER_ID, userId);
+        contentValue.put(DatabaseHelper.DISCOUNT_VALUE, discvalue);
+        database.insert(DatabaseHelper.DISCOUNT_TABLE_NAME, null, contentValue);
+    }
+
+
+
 }

@@ -24,6 +24,7 @@ import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
+import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
@@ -136,8 +137,19 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
             fragmentTransaction.addToBackStack(newFragment.toString());
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.commit();
-        }
+        } else if (fragmentKey != null && fragmentKey.equals("Discount_fragment")) {
+            Fragment newFragment = new DiscountFragment();
+            // create a FragmentManager
+            FragmentManager fm = getSupportFragmentManager();
 
+            // create a FragmentTransaction to begin the transaction and replace the Fragment
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            // replace the FrameLayout with new Fragment
+            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+            fragmentTransaction.addToBackStack(newFragment.toString());
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.commit();
+        }
 
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {

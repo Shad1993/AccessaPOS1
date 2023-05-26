@@ -86,7 +86,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String SUBDEPARTMENT_ID = "_id";
     public static final String SUBDEPARTMENT_NAME = "SubDepartmentName";
     public static final String SUBDEPARTMENT_DEPARTMENT_ID = "DepartmentID";
-
+    // Discount table columns
+    public static final String DISCOUNT_TABLE_NAME = "Discount";
+    public static final String DISCOUNT_ID = "_id";
+    public static final String DISCOUNT_NAME = "Name";
+    public static final String DISCOUNT_VALUE = "DiscountValue";
+    public static final String DISCOUNT_TIMESTAMP = "Timestamp";
+    public static final String DISCOUNT_USER_ID = "UserID";
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -186,6 +192,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             VENDOR_TABLE_NAME + "(" + CodeFournisseur + "));";
 
 
+    // Creating Discount table query
+    private static final String CREATE_DISCOUNT_TABLE = "CREATE TABLE " + DISCOUNT_TABLE_NAME + "(" +
+            DISCOUNT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            DISCOUNT_NAME + " TEXT NOT NULL, " +
+            DISCOUNT_VALUE + " DECIMAL(10, 2) NOT NULL, " +
+            DISCOUNT_TIMESTAMP + " DATETIME NOT NULL, " +
+            DISCOUNT_USER_ID + " INTEGER NOT NULL, " +
+            "FOREIGN KEY (" + DISCOUNT_USER_ID + ") REFERENCES " +
+            TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -198,6 +214,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_DEPARTMENT_TABLE);
         db.execSQL(CREATE_SUBDEPARTMENT_TABLE);
         db.execSQL(CREATE_USERS_TABLE);
+        db.execSQL(CREATE_DISCOUNT_TABLE);
     }
 
     @Override
@@ -208,6 +225,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + COST_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DEPARTMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SUBDEPARTMENT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + DISCOUNT_TABLE_NAME);
         onCreate(db);
     }
 
@@ -220,7 +238,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(DEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
 
+    public Cursor getAllDiscounts() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(DISCOUNT_TABLE_NAME, null, null, null, null, null, null);
+    }
 
+    public Cursor searchDiscounts(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {DISCOUNT_ID, DISCOUNT_NAME, DISCOUNT_VALUE, DISCOUNT_TIMESTAMP};
+        String selection = DISCOUNT_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = DISCOUNT_TIMESTAMP + " DESC";
+        return db.query(DISCOUNT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
 
     public Cursor getAllSubDepartment() {
         SQLiteDatabase db = getReadableDatabase();
@@ -285,7 +315,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(SUBDEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
 
 
+    }
 
+    public Cursor getAllCosts() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(COST_TABLE_NAME, null, null, null, null, null, null);
+    }
 
+    public Cursor searchCost(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {Barcode,SKUCost,Cost,LastModified,UserId,CodeFournisseur};
+        String selection = Barcode + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = LastModified + " DESC";
+        return db.query(COST_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 }

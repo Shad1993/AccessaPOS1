@@ -257,8 +257,20 @@
     <string name="Email">Email</string>
     <string name="InternalCode">Code interne</string>
     <string name="Salesmen">Vendeurs</string>
-    <string name="address_title">Address</string>
-    <string name="Address">Address</string>
+    <string name="address_title">Adresse</string>
+    <string name="Address">Adresse</string>
+    <string name="AllCosts">Tous les coûts</string>
+    <string name="Barcodename">Numéro de code-barres</string>
+    <string name="AllDiscount">Tous les rabais</string>
+    <string name="Discname">Nom du rabais</string>
+    <string name="DiscountValue">Taux de rabais %</string>
+    <string name="MaxDis">Vous avez atteint la limite maximale de rabais.</string>
+    <string name="Dep">Département mis à jour avec succès</string>
+    <string name="Disc">Rabais mis à jour avec succès</string>
+    <string name="failDisc">Échec de la mise à jour du rabais</string>
+    <string name="DeleteDiscount">Rabais supprimé avec succès</string>
+    <string name="NotDeleteddiscount">Échec de la suppression du rabais</string>
+
 
 
 </resources>

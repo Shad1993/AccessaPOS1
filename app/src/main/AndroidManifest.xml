@@ -35,6 +35,9 @@
         <activity android:name=".product.items.ModifyItemActivity" />
         <activity android:name=".product.items.AddItemActivity" />
         <activity android:name=".product.menu.Product"  />
+        <activity android:name=".product.Cost.ModifyCostActivity" />
+        <activity android:name=".product.Discount.AddDiscontActivity"/>
+        <activity android:name=".product.Discount.ModifyDiscountActivity"/>
         <activity android:name=".product.items.FirstFragment" android:theme="@style/Widget.AppCompat.Spinner" />
         <activity android:name=".product.Department.AddDepartmentActivity"  />
         <activity android:name=".login.RegistorCashor" />

@@ -264,6 +264,17 @@
     <string name="Salesmen">Salesmen</string>
     <string name="address_title">Address</string>
     <string name="Address">Address</string>
+    <string name="AllCosts">All Costs</string>
+    <string name="Barcodename">Barcode Number</string>
+    <string name="AllDiscount">All Discounts</string>
+    <string name="Discname">Discount Name</string>
+    <string name="DiscountValue">Discount %</string>
+    <string name="MaxDis">You have reached the maximum limit of discounts.</string>
+    <string name="Dep">\"Department updated successfully\"</string>
+    <string name="Disc">Discount updated successfully</string>
+    <string name="failDisc">\"Failed to update Discount\"</string>
+    <string name="DeleteDiscount">\"Discount deleted successfully\"</string>
+    <string name="NotDeleteddiscount">\"Failed to delete Discount\"</string>
 
 
 </resources>
