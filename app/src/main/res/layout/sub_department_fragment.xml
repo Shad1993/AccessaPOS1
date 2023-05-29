@@ -57,7 +57,7 @@
                     app:iconifiedByDefault="true"
                     android:animateLayoutChanges="true"
                     android:textColorHint="@color/white"
-                    app:queryHint="@string/search_hint"
+                    app:queryHint="@string/search_hintSubDept"
                     app:queryBackground="@android:color/transparent"
                     app:searchHintIcon="@drawable/baseline_pageview_24"
                     app:closeIcon="@drawable/baseline_close_24"
@@ -92,7 +92,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No item found!"
+            android:text="@string/nosubdept"
             android:textSize="18sp"
             android:textColor="@color/black"
             android:layout_marginTop="16dp"

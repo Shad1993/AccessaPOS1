@@ -26,7 +26,6 @@
                     android:dropDownWidth="@dimen/spinner_dropdown_width"
                     android:spinnerMode="dropdown"
                     android:entries="@array/spinner_items"
-                    android:prompt="@string/spinner_prompt"
                     android:spinnerStyle="@style/CustomSpinnerStyle"
                     android:popupTheme="@style/MaterialAlertDialog.Material3"
                     android:popupBackground="@color/BleuAccessaText"
@@ -62,7 +61,9 @@
                     app:queryBackground="@android:color/transparent"
                     app:searchHintIcon="@drawable/baseline_pageview_24"
                     app:closeIcon="@drawable/baseline_close_24"
-                    app:searchIcon="@drawable/baseline_search_24" />
+                    app:searchIcon="@drawable/baseline_search_24"
+                    style="@style/CustomSearchViewStyle" />
+
 
 
 
@@ -93,7 +94,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No item found!"
+            android:text="@string/NoItemFound"
             android:textSize="18sp"
             android:textColor="@color/black"
             android:layout_marginTop="16dp"

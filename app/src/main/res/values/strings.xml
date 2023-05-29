@@ -275,6 +275,38 @@
     <string name="failDisc">\"Failed to update Discount\"</string>
     <string name="DeleteDiscount">\"Discount deleted successfully\"</string>
     <string name="NotDeleteddiscount">\"Failed to delete Discount\"</string>
+    <string name="Category">Category</string>
+    <string name="vendor">Vendor</string>
+    <string name="discount">Discount</string>
+    <string name="AllItems">All Items</string>
+    <string name="search_hintDept">Search department</string>
+    <string name="search_hintSubDept">Search Sub Department</string>
+    <string name="search_hintCat">Search Category</string>
+    <string name="search_hintVendor">Search Vendor</string>
+    <string name="search_hintcost">Search Cost</string>
+    <string name="search_hintdisc">Create discount</string>
+    <string name="NoItemFound">No item found!</string>
+    <string name="nodeptfound">No Department found!</string>
+    <string name="noDiscountFound">No Discount found!</string>
+    <string name="nocatfound">No category found!</string>
+    <string name="nosubdept">No Sub department found!</string>
+    <string name="novendor">No Vendor found!</string>
+    <string name="nocostfound">No cost found!</string>
+    <string name="itemavailable">\"Item Available For Sale\"</string>
+    <string name="itemnotavailable">\"Item Not Available For Sale\"</string>
+    <string name="AllCategory">All Categories</string>
+    <string name="wrongPin">Wrong Pin</string>
+    <string name="wrongpinget">Wrong PIN, Please Retry!</string>
+    <string name="pinfailed">Login failed</string>
+    <string name="deptcodeexists">Department code already exists</string>
+    <string name="barcodecodeexists">Barcode already exist</string>
+    <string name="emptySoldBy">Please select an option for Sold By</string>
+    <string name="emptyvat">Please select an option for VAT</string>
+    <string name="updateDept">Department updated successfully</string>
+    <string name="failedupdateDept">Failed to update Department</string>
+    <string name="deleteDept">Department deleted successfully</string>
+    <string name="failedDeleteDept">Failed to delete Department</string>
+    <string name="noticket">No Ticket Yet</string>
 
 
 </resources>

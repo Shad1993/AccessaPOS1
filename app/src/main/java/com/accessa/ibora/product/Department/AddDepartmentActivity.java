@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,19 +26,22 @@ public class AddDepartmentActivity extends Activity {
     private EditText Deptcode_Edittext;
 
     private String cashorId;
+    private String cashorName;
     private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setTitle("Add Department");
+        setTitle(getString(R.string.addDept));
 
 
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
 
 
 
@@ -74,13 +78,19 @@ public class AddDepartmentActivity extends Activity {
         // Check if all required fields are filled
         if (DeptName.isEmpty() ||  DeptCode.isEmpty()
                 ) {
-            Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
+        // Check if the department code already exists
+        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        if (databaseHelper.isDepartmentCodeExists(DeptCode)) {
+            Toast.makeText(this, getString(R.string.deptcodeexists), Toast.LENGTH_SHORT).show();
+            return;
+        }
         dbManager.insertDept(DeptName, LastModified, UserId, DeptCode);
         dbManager.close();
 

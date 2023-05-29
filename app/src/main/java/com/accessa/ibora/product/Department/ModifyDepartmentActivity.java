@@ -112,17 +112,26 @@ public class ModifyDepartmentActivity extends Activity {
         String DeptCode = Deptcode_Edittext.getText().toString().trim();
 
         if (DeptName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
-            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Retrieve the existing department details
+        Department existingDepartment = dbManager.getDepartmentById(String.valueOf(_id));
+
+        // Check if the department code already exists and is not the same as the existing code
+        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        if (databaseHelper.isDepartmentCodeExists(DeptCode) && !DeptCode.equals(existingDepartment.getDepartmentCode())) {
+            Toast.makeText(this, getString(R.string.deptcodeexists), Toast.LENGTH_SHORT).show();
             return;
         }
 
         boolean isUpdated = dbManager.updateDept( _id,name, lastmodified, UserId, DeptCode);
         returnHome();
         if (isUpdated) {
-            Toast.makeText(this, "Department updated successfully", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.updateDept), Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Failed to update Department", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.failedupdateDept), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -130,10 +139,10 @@ public class ModifyDepartmentActivity extends Activity {
         boolean isDeleted = dbManager.deleteDept(_id);
         returnHome();
         if (isDeleted) {
-            Toast.makeText(this, "Item deleted successfully", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.deleteDept), Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Failed to delete item", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.failedDeleteDept), Toast.LENGTH_SHORT).show();
         }
     }
     public void returnHome() {

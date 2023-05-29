@@ -1,4 +1,4 @@
-package com.accessa.ibora.sales;
+package com.accessa.ibora.sales.ticket;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -27,7 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.ItemAdapter;
+
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -38,11 +38,9 @@ public class TicketsFragment  extends Fragment {
 
     private boolean doubleBackToExitPressedOnce = false;
     private RecyclerView recyclerView;
-    private ItemAdapter itemAdapter;
-    private DatabaseHelper dbHelper;
-    private TextView name;
-    private TextView CashorId;
-    private ItemAdapter mAdapter;
+    private ticketAdapter TicketAdapter;
+
+    private ticketAdapter mAdapter;
     private TextView emptyView;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
@@ -66,7 +64,7 @@ public class TicketsFragment  extends Fragment {
         mDatabaseHelper = new DatabaseHelper(getContext());
 
         Cursor cursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getContext(), cursor);
+        mAdapter = new ticketAdapter(getContext(), cursor);
         mRecyclerView.setAdapter(mAdapter);
 
 

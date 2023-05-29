@@ -11,12 +11,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -32,14 +33,15 @@ import com.accessa.ibora.product.items.FirstFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
-public class Product extends FragmentActivity implements MenuFragment.OnMenufragListener {
-
+public class Product extends AppCompatActivity implements MenuFragment.OnMenufragListener {
+    private MaterialToolbar toolbar;
     private boolean doubleBackToExitPressedOnce = false;
     private String cashorId;
     private String cashorName;
     private TextView name;
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,14 +51,18 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
-
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
 
+        //toolbar
+        toolbar = findViewById(R.id.topAppBar);
+        toolbar.setTitle(R.string.Items);
+        setSupportActionBar(toolbar);
 
 
-        MaterialToolbar toolbar = findViewById(R.id.topAppBar);
+
+
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.navigation_view);
 
@@ -67,11 +73,9 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
 
-
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
@@ -79,78 +83,30 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
         // Check if the intent contains the desired fragment key
         if (fragmentKey != null && fragmentKey.equals("Category_fragment")) {
             Fragment newFragment = new CategoryFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
+            setToolbarTitle(getString(R.string.category)); // Set the toolbar title
 
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
-        }else if (fragmentKey != null && fragmentKey.equals("Item_fragment")) {
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("Item_fragment")) {
             Fragment newFragment = new FirstFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
-
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
-        }else if (fragmentKey != null && fragmentKey.equals("Dept_fragment")) {
+            setToolbarTitle(getString(R.string.Items)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("Dept_fragment")) {
             Fragment newFragment = new DepartmentFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
-
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
-        }else if (fragmentKey != null && fragmentKey.equals("SUBDept_fragment")) {
+            setToolbarTitle(getString(R.string.Department)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("SUBDept_fragment")) {
             Fragment newFragment = new SubDepartmentFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
-
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
-        }else if (fragmentKey != null && fragmentKey.equals("Vend_fragment")) {
+            setToolbarTitle(getString(R.string.SubDept)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("Vend_fragment")) {
             Fragment newFragment = new VendorFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
-
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
+            setToolbarTitle(getString(R.string.vendor)); // Set the toolbar title
+            replaceFragment(newFragment);
         } else if (fragmentKey != null && fragmentKey.equals("Discount_fragment")) {
             Fragment newFragment = new DiscountFragment();
-            // create a FragmentManager
-            FragmentManager fm = getSupportFragmentManager();
-
-            // create a FragmentTransaction to begin the transaction and replace the Fragment
-            FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            // replace the FrameLayout with new Fragment
-            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-            fragmentTransaction.addToBackStack(newFragment.toString());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.commit();
+            setToolbarTitle(getString(R.string.discount)); // Set the toolbar title
+            replaceFragment(newFragment);
         }
-
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -166,45 +122,34 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
-                if(id==R.id.Sales){
+                if (id == R.id.Sales) {
                     Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(Product.this, MainActivity.class);
                     startActivity(intent);
-                } else if (id==R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id == R.id.Items) {
+                } else if (id == R.id.Receipts) {
+                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Shift) {
+                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Items) {
                     Toast.makeText(getApplicationContext(), "Items is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(Product.this, Product.class);
                     startActivity(intent);
                     return true;
-                }else if (id==R.id.Settings) {
-                    Toast.makeText(getApplicationContext(), "settings is Clicked",Toast.LENGTH_SHORT).show();
-                }
-                else if (id==R.id.nav_logout) {
-                    Toast.makeText(getApplicationContext(), "login is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked",Toast.LENGTH_SHORT).show();
-                }else if (id==R.id.nav_Admin) {
-                    Toast.makeText(getApplicationContext(), "Admin is Clicked",Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Settings) {
+                    Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_logout) {
+                    Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Help) {
+                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_Admin) {
+                    Toast.makeText(getApplicationContext(), "Admin is Clicked", Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
         });
     }
 
-    @Override
-    public void onMenufrag(String s) {
-        BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
-        if (fragment1 != null && fragment1.isInLayout()) {
-            fragment1.setText(s);
-        } else {
-            Intent intent = new Intent(this, BodyActivity.class);
-            intent.putExtra("value", s);
-            startActivity(intent);
-        }
-    }
+
 
     @Override
     public void onBackPressed() {
@@ -226,5 +171,36 @@ public class Product extends FragmentActivity implements MenuFragment.OnMenufrag
         // Replace the code below with the intent to navigate to the login screen
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
+    }
+
+    private void setToolbarTitle(String title) {
+        toolbar.setTitle(title);
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        // create a FragmentManager
+        FragmentManager fm = getSupportFragmentManager();
+
+        // create a FragmentTransaction to begin the transaction and replace the Fragment
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        // replace the FrameLayout with new Fragment
+        fragmentTransaction.replace(R.id.bodyFragment, fragment);
+        fragmentTransaction.addToBackStack(fragment.toString());
+        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        fragmentTransaction.commit();
+    }
+
+
+    @Override
+    public void onMenufrag(String s) {
+        BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
+        if (fragment1 != null && fragment1.isInLayout()) {
+            fragment1.setText(s);
+        } else {
+            Intent intent = new Intent(this, BodyActivity.class);
+            intent.putExtra("value", s);
+            startActivity(intent);
+        }
+
     }
 }

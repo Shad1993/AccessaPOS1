@@ -38,7 +38,7 @@ import java.util.List;
 
 
 public class SubDepartmentFragment extends Fragment {
-
+    private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
@@ -179,7 +179,8 @@ public class SubDepartmentFragment extends Fragment {
 
         // SearchView
         mSearchView = view.findViewById(R.id.search_view);
-
+        searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -191,10 +192,9 @@ public class SubDepartmentFragment extends Fragment {
                 Cursor newCursor = mDatabaseHelper.searchSubDepartment(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-                    searchEditText.setTextColor(getResources().getColor(android.R.color.white));
+
+                    searchEditText.setTextColor(getResources().getColor(R.color.white));
                 } else {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
                 }
                 return true;

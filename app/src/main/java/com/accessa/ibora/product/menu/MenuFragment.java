@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -24,9 +25,13 @@ import com.accessa.ibora.product.items.FirstFragment;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class MenuFragment extends Fragment {
-    ListView simpleList;
-    String Menulist[] = {"Items", "Department", "Sub department","Category", "Vendor","Cost", "Discount"};
-    int icons[] = {R.drawable.cart, R.drawable.department, R.drawable.department, R.drawable.category,R.drawable.vendor,R.drawable.cost, R.drawable.baseline_discount_24};
+
+
+    private String toolbarTitle;
+    private ListView simpleList;
+    private String[] menuList;
+    private int[] icons;
+
 
 
     // activity listener
@@ -53,7 +58,28 @@ public class MenuFragment extends Fragment {
     // onCreate
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        toolbarTitle = getString(R.string.Items);
         super.onCreate(savedInstanceState);
+        toolbarTitle = getString(R.string.Items);
+        menuList = new String[]{
+                getString(R.string.Items),
+                getString(R.string.Department),
+                getString(R.string.SubDept),
+                getString(R.string.Category),
+                getString(R.string.vendor),
+                getString(R.string.cost),
+                getString(R.string.discount)
+        };
+        icons = new int[]{
+                R.drawable.cart,
+                R.drawable.department,
+                R.drawable.department,
+                R.drawable.category,
+                R.drawable.vendor,
+                R.drawable.cost,
+                R.drawable.baseline_discount_24
+        };
+
         setHasOptionsMenu(true);
         Fragment newFragment = new FirstFragment();
         // create a FragmentManager
@@ -85,7 +111,7 @@ public class MenuFragment extends Fragment {
 
 //menu items
         simpleList = (ListView) view.findViewById(R.id.simpleListView);
-        CustomAdapter customAdapter = new CustomAdapter(getContext(), Menulist, icons);
+        CustomAdapter customAdapter = new CustomAdapter(getContext(), menuList, icons);
         simpleList.setAdapter(customAdapter);
 
 
@@ -93,8 +119,11 @@ public class MenuFragment extends Fragment {
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View  view, int position, long id) {
+
+
                 if (position == 0) {
 
+                    toolbarTitle = getString(R.string.Items);
                     // Create new fragment and transaction
                     Fragment newFragment = new FirstFragment();
                     // create a FragmentManager
@@ -108,6 +137,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 1) {
+                    toolbarTitle = getString(R.string.Department);
                     Fragment newFragment = new DepartmentFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -120,6 +150,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 2) {
+                    toolbarTitle = getString(R.string.SubDept);
                     Fragment newFragment = new SubDepartmentFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -132,7 +163,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 3) {
-
+                    toolbarTitle = getString(R.string.Category);
                     Fragment newFragment = new CategoryFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -146,6 +177,7 @@ public class MenuFragment extends Fragment {
 
 
                 } else if (position == 4) {
+                    toolbarTitle = getString(R.string.vendor);
                     Fragment newFragment = new VendorFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -158,7 +190,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 5) {
-
+                    toolbarTitle = getString(R.string.cost);
                     Fragment newFragment = new CostFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -169,7 +201,8 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
-                }else if(position ==6){
+                } else if (position == 6) {
+                    toolbarTitle = getString(R.string.discount);
                     Fragment newFragment = new DiscountFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -180,7 +213,12 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
+                } else {
+                    toolbarTitle = getString(R.string.Items); // Set a default value if needed
                 }
+
+                // Set the toolbar title
+                ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(toolbarTitle);
             }
         });
 

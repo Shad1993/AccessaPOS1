@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (id == R.id.Sales) {
-                    Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {

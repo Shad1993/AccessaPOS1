@@ -270,7 +270,37 @@
     <string name="failDisc">Échec de la mise à jour du rabais</string>
     <string name="DeleteDiscount">Rabais supprimé avec succès</string>
     <string name="NotDeleteddiscount">Échec de la suppression du rabais</string>
-
-
+    <string name="Category">Catégorie</string>
+    <string name="vendor">Vendeur</string>
+    <string name="discount">Remise</string>
+    <string name="AllItems">Tous les articles</string>
+    <string name="search_hintDept">Rechercher un département</string>
+    <string name="search_hintSubDept">Rechercher un sous-département</string>
+    <string name="search_hintCat">Rechercher une catégorie</string>
+    <string name="search_hintVendor">Rechercher un fournisseur</string>
+    <string name="search_hintcost">Rechercher un coût</string>
+    <string name="search_hintdisc">Rechercher une remise</string>
+    <string name="NoItemFound">Aucun article trouvé !</string>
+    <string name="nodeptfound">Aucun département trouvé !</string>
+    <string name="noDiscountFound">Aucune remise trouvée !</string>
+    <string name="nocatfound">Aucune catégorie trouvée !</string>
+    <string name="nosubdept">Aucun sous-département trouvé !</string>
+    <string name="novendor">Aucun fournisseur trouvé !</string>
+    <string name="nocostfound">Aucun coût trouvé !</string>
+    <string name="itemavailable">"Article disponible à la vente"</string>
+    <string name="itemnotavailable">"Article non disponible à la vente"</string>
+    <string name="AllCategory">Toutes les catégories</string>
+    <string name="wrongPin">Code PIN incorrect</string>
+    <string name="wrongpinget">Code PIN incorrect, veuillez réessayer !</string>
+    <string name="pinfailed">Échec de la connexion</string>
+    <string name="deptcodeexists">Le code de département existe déjà</string>
+    <string name="barcodecodeexists">Le code-barres existe déjà</string>
+    <string name="emptySoldBy">Veuillez sélectionner une option pour \"Vendu par\"</string>
+    <string name="emptyvat">Veuillez sélectionner une option pour la TVA</string>
+    <string name="updateDept">Department updated successfully</string>
+    <string name="failedupdateDept">Failed to update Department</string>
+    <string name="deleteDept">Department deleted successfully</string>
+    <string name="failedDeleteDept">Failed to delete Department</string>
+    <string name="noticket">No Ticket Yet</string>
 
 </resources>

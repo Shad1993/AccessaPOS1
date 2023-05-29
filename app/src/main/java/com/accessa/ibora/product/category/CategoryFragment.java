@@ -27,6 +27,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class CategoryFragment  extends Fragment   {
+    private  EditText searchEditText;
     private int CategoryColor;
     FloatingActionButton CatAddFab;
     private SearchView CatSearchView;
@@ -102,6 +103,8 @@ public class CategoryFragment  extends Fragment   {
             emptyFrameLayout.setVisibility(View.GONE);
         }
         CatSearchView = view.findViewById(R.id.search_view);
+         searchEditText = CatSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
         CatSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -114,11 +117,13 @@ public class CategoryFragment  extends Fragment   {
                 CatAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
                     // Set default text color
-                    EditText searchEditText = CatSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+
                     searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+
+
                 } else {
                     // Set custom text color
-                    EditText searchEditText = CatSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
                 }
                 return true;

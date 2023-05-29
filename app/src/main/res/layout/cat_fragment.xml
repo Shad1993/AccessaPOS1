@@ -25,7 +25,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Category"
+                    android:text="@string/category"
                     android:textColor="@color/white"
                     android:textSize="18sp" />
 
@@ -41,7 +41,7 @@
                         android:layout_marginRight="11.4dp"
                         app:iconifiedByDefault="true"
                         android:animateLayoutChanges="true"
-                        app:queryHint="@string/search_hint"
+                        app:queryHint="@string/search_hintCat"
                         app:queryBackground="@android:color/transparent"
                         app:searchHintIcon="@drawable/baseline_pageview_24"
                         app:closeIcon="@drawable/baseline_close_24"
@@ -79,7 +79,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No item found!"
+            android:text="@string/nocatfound"
             android:textSize="18sp"
             android:textColor="@color/black"
             android:layout_marginTop="16dp"

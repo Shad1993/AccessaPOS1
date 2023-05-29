@@ -23,7 +23,6 @@
                 android:id="@+id/topAppBar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                app:title="@string/Items"
                 android:background="@color/BleuAccessaText"
                 app:titleTextColor="@color/white"
                 app:navigationIcon="@drawable/baseline_menu_24"

@@ -59,7 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Cost table columns
     public static final String CostID = "ID";
     public static final String SKUCost = "SKU";
-//UsersTable
+    //UsersTable
     public static final String TABLE_NAME_Users = "Users";
 
     // Column names
@@ -104,14 +104,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME + "(" + COLUMN_CASHOR_id + "));";
 
 
-
     // Creating Subdepartment table query
     private static final String CREATE_SUBDEPARTMENT_TABLE = "CREATE TABLE " + SUBDEPARTMENT_TABLE_NAME + "(" +
             SUBDEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             SUBDEPARTMENT_NAME + " TEXT NOT NULL, " +
             SUBDEPARTMENT_DEPARTMENT_ID + " INTEGER NOT NULL, " +
-            DEPARTMENT_CODE+ " INTEGER NOT NULL, " +
-             LastModified + " DATETIME NOT NULL, " +
+            DEPARTMENT_CODE + " INTEGER NOT NULL, " +
+            LastModified + " DATETIME NOT NULL, " +
             DEPARTMENT_CASHIER_ID + " INTEGER NOT NULL, " +
             "FOREIGN KEY (" + SUBDEPARTMENT_DEPARTMENT_ID + ") REFERENCES " +
             DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_ID + "), " +
@@ -119,8 +118,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             DEPARTMENT_TABLE_NAME + "(" + DEPARTMENT_CODE + "), " +
             "FOREIGN KEY (" + DEPARTMENT_CASHIER_ID + ") REFERENCES " +
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
-
-
 
 
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
@@ -233,6 +230,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor getAllDepartment() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(DEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
@@ -258,23 +256,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-        public Cursor getDepartmentName(String departmentCode) {
-            SQLiteDatabase db = getReadableDatabase();
-            String[] columns = {DEPARTMENT_NAME};
-            String selection = DEPARTMENT_CODE+" = ?";
-            String[] selectionArgs = {departmentCode};
-            return db.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+    public Cursor getDepartmentName(String departmentCode) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {DEPARTMENT_NAME};
+        String selection = DEPARTMENT_CODE + " = ?";
+        String[] selectionArgs = {departmentCode};
+        return db.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
     }
+
     public Cursor login() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor getUserByPIN(String enteredPIN) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] selectionArgs = { enteredPIN };
+        String[] selectionArgs = {enteredPIN};
         String query = "SELECT * FROM " + TABLE_NAME_Users + " WHERE pin = ?";
         return db.rawQuery(query, selectionArgs);
     }
+
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription, Category, Price};
@@ -283,6 +284,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = LongDescription + " ASC";
         return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
+
     public Cursor searchCategory(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {DEPARTMENT_ID, DEPARTMENT_CODE, DEPARTMENT_NAME, DEPARTMENT_LAST_MODIFIED, COLUMN_CASHOR_id};
@@ -299,7 +301,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchVendor(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {VendorID, NomFournisseur, CodeFournisseur,LastModified,UserId};
+        String[] projection = {VendorID, NomFournisseur, CodeFournisseur, LastModified, UserId};
         String selection = NomFournisseur + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LastModified + " DESC";
@@ -308,7 +310,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchSubDepartment(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {SUBDEPARTMENT_ID,SUBDEPARTMENT_NAME,LastModified,DEPARTMENT_CASHIER_ID,DEPARTMENT_CODE};
+        String[] projection = {SUBDEPARTMENT_ID, SUBDEPARTMENT_NAME, LastModified, DEPARTMENT_CASHIER_ID, DEPARTMENT_CODE};
         String selection = SUBDEPARTMENT_NAME + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LastModified + " DESC";
@@ -324,10 +326,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchCost(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {Barcode,SKUCost,Cost,LastModified,UserId,CodeFournisseur};
+        String[] projection = {Barcode, SKUCost, Cost, LastModified, UserId, CodeFournisseur};
         String selection = Barcode + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LastModified + " DESC";
         return db.query(COST_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
+
+    public Cursor getAllSubDepartmentby() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+    public boolean isDepartmentCodeExists(String DeptCode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(DEPARTMENT_TABLE_NAME, null, DEPARTMENT_CODE + "=?",
+                new String[]{DeptCode}, null, null, null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+    public boolean checkBarcodeExists(String barcode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, null, Barcode + "=?",
+                new String[]{barcode}, null, null, null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
 }
+
+

@@ -1,5 +1,7 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
 
 import android.content.ContentValues;
@@ -197,9 +199,9 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
         contentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
-        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DEPARTMENT_CODE, deptCode);
 
-        database.insert(DatabaseHelper.DEPARTMENT_TABLE_NAME, null, contentValue);
+        database.insert(DEPARTMENT_TABLE_NAME, null, contentValue);
     }
 
     public boolean updateDept(long id, String name, String lastmodified, String userId, String deptCode) {
@@ -207,17 +209,17 @@ public class DBManager {
         contentValues.put(DatabaseHelper.DEPARTMENT_NAME, name);
         contentValues.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastmodified);
         contentValues.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
-        contentValues.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValues.put(DEPARTMENT_CODE, deptCode);
 
 
-        database.update(DatabaseHelper.DEPARTMENT_TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
+        database.update(DEPARTMENT_TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
     }
 
     public boolean deleteDept(long _id) {
         String selection = DatabaseHelper._ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
-        database.delete(DatabaseHelper.DEPARTMENT_TABLE_NAME, selection, selectionArgs);
+        database.delete(DEPARTMENT_TABLE_NAME, selection, selectionArgs);
         return true;
     }
 
@@ -226,7 +228,7 @@ public class DBManager {
         String[] columns = new String[]{
                 DatabaseHelper._ID,
                 DatabaseHelper.DEPARTMENT_ID,
-                DatabaseHelper.DEPARTMENT_CODE,
+                DEPARTMENT_CODE,
                 DatabaseHelper.DEPARTMENT_NAME,
                 DatabaseHelper.DEPARTMENT_LAST_MODIFIED,
                 DatabaseHelper.COLUMN_CASHOR_id,
@@ -237,12 +239,12 @@ public class DBManager {
         String selection = DatabaseHelper._ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
-        Cursor cursor = database.query(DatabaseHelper.DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             department = new Department();
             department.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID)));
             department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
-            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DEPARTMENT_CODE)));
             department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
             department.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
 
@@ -257,7 +259,7 @@ public class DBManager {
     public Department getDepartmentByCode(String id) {
         Department department = null;
         String[] columns = new String[]{
-                DatabaseHelper.DEPARTMENT_CODE,
+                DEPARTMENT_CODE,
                 DatabaseHelper._ID,
                 DatabaseHelper.DEPARTMENT_ID,
 
@@ -268,13 +270,13 @@ public class DBManager {
                 // Add other columns as needed
         };
 
-        String selection = DatabaseHelper.DEPARTMENT_CODE + " = ?";
+        String selection = DEPARTMENT_CODE + " = ?";
         String[] selectionArgs = new String[]{id};
 
-        Cursor cursor = database.query(DatabaseHelper.DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = database.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             department = new Department();
-            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DEPARTMENT_CODE)));
             department.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID)));
             department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
             department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
@@ -294,7 +296,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, subDeptName);
         contentValue.put(DatabaseHelper.LastModified, lastModified);
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
-        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DEPARTMENT_CODE, deptCode);
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, departmentId);
         database.insert(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, null, contentValue);
     }
@@ -305,7 +307,7 @@ public class DBManager {
         String[] columns = new String[]{
                 DatabaseHelper._ID,
                 DatabaseHelper.SUBDEPARTMENT_ID,
-                DatabaseHelper.DEPARTMENT_CODE,
+                DEPARTMENT_CODE,
                 DatabaseHelper.SUBDEPARTMENT_NAME,
                 DatabaseHelper.LastModified,
                 DatabaseHelper.DEPARTMENT_CASHIER_ID,
@@ -321,7 +323,7 @@ public class DBManager {
             Subdepartment = new SubDepartment();
             Subdepartment.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_ID)));
             Subdepartment.setSubName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME)));
-            Subdepartment.setSubDepartmentCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE)));
+            Subdepartment.setSubDepartmentCode(cursor.getString(cursor.getColumnIndex(DEPARTMENT_CODE)));
             Subdepartment.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
             Subdepartment.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CASHIER_ID)));
 
@@ -483,7 +485,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, name);
         contentValue.put(DatabaseHelper.LastModified, lastmodified);
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
-        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, deptCode);
+        contentValue.put(DEPARTMENT_CODE, deptCode);
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
         database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
         return true;

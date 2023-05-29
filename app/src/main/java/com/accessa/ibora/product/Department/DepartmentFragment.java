@@ -34,7 +34,7 @@ import java.util.Date;
 
 
 public class DepartmentFragment extends Fragment {
-
+    private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
@@ -70,7 +70,7 @@ public class DepartmentFragment extends Fragment {
         Cursor cursor = mDatabaseHelper.getAllDepartment();
 
         List<String> departments = new ArrayList<>();
-        departments.add("All Departments");
+        departments.add(getString(R.string.AllDepartments));
         if (cursor.moveToFirst()) {
             do {
                 String department = cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
@@ -174,6 +174,8 @@ public class DepartmentFragment extends Fragment {
 
         // SearchView
         mSearchView = view.findViewById(R.id.search_view);
+        searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
 
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -186,11 +188,13 @@ public class DepartmentFragment extends Fragment {
                 Cursor newCursor = mDatabaseHelper.searchCategory(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+
                     searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+
                 } else {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
+
                 }
                 return true;
             }
@@ -247,7 +251,7 @@ public class DepartmentFragment extends Fragment {
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals("All Departments")) {
+        if (selectedItem == null || selectedItem.equals(getString(R.string.AllDepartments))) {
             filteredCursor = mDatabaseHelper.getAllDepartment();
         } else {
             filteredCursor = mDatabaseHelper.searchCategory(selectedItem);

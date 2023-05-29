@@ -193,9 +193,11 @@ public class CostFragment extends Fragment {
                 if (newText.isEmpty()) {
                     EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
                     searchEditText.setTextColor(getResources().getColor(android.R.color.white));
+                    searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
                 } else {
                     EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
+                    searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
                 }
                 return true;
             }

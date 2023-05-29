@@ -175,11 +175,11 @@ public class login extends AppCompatActivity {
 // Apply the changes
             editor.apply();
             // PIN not found, login failed
-            Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.pinfailed), Toast.LENGTH_SHORT).show();
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Wrong PIN");
-            builder.setMessage("Wrong PIN, Please Retry!");
+            builder.setTitle(getString(R.string.wrongPin));
+            builder.setMessage(getString(R.string.wrongpinget));
 
             // Inflate the custom view for the AlertDialog
             View view = LayoutInflater.from(this).inflate(R.layout.custom_dialog_layout, null);

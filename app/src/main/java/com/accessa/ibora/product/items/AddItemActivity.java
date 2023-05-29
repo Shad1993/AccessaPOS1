@@ -3,6 +3,8 @@ package com.accessa.ibora.product.items;
 import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
 import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
+import static java.util.Locale.FRENCH;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -87,6 +89,7 @@ public class AddItemActivity extends Activity {
     private boolean isAvailableForSale;
     private TextView ExpiryDateText;
     private String cashorId;
+    private String cashorName;
     private SharedPreferences sharedPreferences;
     private EditText Userid_Edittext;
     private EditText LastModified_Edittext;
@@ -94,11 +97,18 @@ public class AddItemActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setTitle("Add Record");
+
+        // Retrieve the locale value from intent extras
+        String locale = getIntent().getStringExtra("locale");
+        setTitle(getString(R.string.send));
+
+
+
 
 
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
@@ -146,10 +156,10 @@ public class AddItemActivity extends Activity {
 
                 if (isChecked) {
                     // Switch is checked
-                    Toast.makeText(AddItemActivity.this, "Item Available For Sale", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddItemActivity.this, R.string.itemavailable, Toast.LENGTH_SHORT).show();
                 } else {
                     // Switch is unchecked
-                    Toast.makeText(AddItemActivity.this, "Item Not Available For Sale", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddItemActivity.this, R.string.itemnotavailable, Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -208,10 +218,10 @@ public class AddItemActivity extends Activity {
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
         Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
-        Cursor subDepartmentCursor = mDatabaseHelper.getAllSubDepartment();
+        Cursor subDepartmentCursor = mDatabaseHelper.getAllSubDepartmentby();
 
         List<String> categories = new ArrayList<>();
-        categories.add("All Category");
+        categories.add(getString(R.string.AllCategory));
         if (categoryCursor.moveToFirst()) {
             do {
                 String category = categoryCursor.getString(categoryCursor.getColumnIndex(CategoryDatabaseHelper.CatName));
@@ -221,7 +231,7 @@ public class AddItemActivity extends Activity {
         categoryCursor.close();
 
         List<String> departments = new ArrayList<>();
-        departments.add("All Departments");
+        departments.add(getString(R.string.AllDepartments));
         if (departmentCursor.moveToFirst()) {
             do {
                 String department = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
@@ -231,7 +241,7 @@ public class AddItemActivity extends Activity {
         departmentCursor.close();
 
         List<String> subDepartments = new ArrayList<>();
-        subDepartments.add("All Sub Departments");
+        subDepartments.add(getString(R.string.AllSubDepartments));
         if (subDepartmentCursor.moveToFirst()) {
             do {
                 String subDepartment = subDepartmentCursor.getString(subDepartmentCursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME));
@@ -408,11 +418,21 @@ public class AddItemActivity extends Activity {
 
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         int selectedId = soldByRadioGroup.getCheckedRadioButtonId();
+        if (selectedId == -1) {
+            // No radio button is selected
+            Toast.makeText(this, getString(R.string.emptySoldBy), Toast.LENGTH_SHORT).show();
+            return;
+        }
         RadioButton selectedRadioButton = findViewById(selectedId);
         String selectedSoldBy = selectedRadioButton.getText().toString();
 
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
         int selectedId1 = vatRadioGroup.getCheckedRadioButtonId();
+        if (selectedId1 == -1) {
+            // No radio button is selected
+            Toast.makeText(this, getString(R.string.emptyvat), Toast.LENGTH_SHORT).show();
+            return;
+        }
         RadioButton selectedRadioButton1 = findViewById(selectedId1);
         String selectedVat = selectedRadioButton1.getText().toString();
 
@@ -453,15 +473,26 @@ public class AddItemActivity extends Activity {
         // Check if all required fields are filled
         if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || barcode.isEmpty()
                 || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty()
-                || availableForSale.isEmpty()
+                || availableForSale.isEmpty() || longDescription.isEmpty()
                 || variant.isEmpty() || sku.isEmpty() || cost.isEmpty()) {
-            Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
+
+// Check if the barcode is already present in the database
+
 
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
+
+        // Check if the department code already exists
+        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        if (databaseHelper.checkBarcodeExists(barcode)) {
+            Toast.makeText(this, getString(R.string.barcodecodeexists), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale, soldBy, image, variant, sku, cost,UserId,LastModified);

@@ -1,6 +1,8 @@
 package com.accessa.ibora.product.items;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,9 +39,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class FirstFragment extends Fragment {
-
+private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
@@ -56,6 +60,7 @@ public class FirstFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setHasOptionsMenu(true);
     }
 
@@ -63,6 +68,7 @@ public class FirstFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_first, container, false);
+        // Get the current locale
 
         // Spinner
         spinner = view.findViewById(R.id.spinner);
@@ -74,7 +80,7 @@ public class FirstFragment extends Fragment {
         Cursor cursor = mDatabaseHelper.getAllItems();
 
         List<String> items = new ArrayList<>();
-        items.add("All Items");
+        items.add(String.valueOf(getString(R.string.AllItems)));
         if (cursor.moveToFirst()) {
             do {
                 String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
@@ -178,7 +184,9 @@ public class FirstFragment extends Fragment {
 
         // SearchView
         mSearchView = view.findViewById(R.id.search_view);
-
+         searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setTextColor(getResources().getColor(android.R.color.white));
+        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -190,11 +198,13 @@ public class FirstFragment extends Fragment {
                 Cursor newCursor = mDatabaseHelper.searchItems(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-                    searchEditText.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+
+                    searchEditText.setTextColor(getResources().getColor(android.R.color.white));
+
                 } else {
-                    EditText searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
+
                     searchEditText.setTextColor(getResources().getColor(R.color.white));
+
                 }
                 return true;
             }
@@ -250,7 +260,7 @@ public class FirstFragment extends Fragment {
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals("All Items")) {
+        if (selectedItem == null || selectedItem.equals(getString(R.string.AllItems))) {
             filteredCursor = mDatabaseHelper.getAllItems();
         } else {
             filteredCursor = mDatabaseHelper.searchItems(selectedItem);
@@ -277,7 +287,16 @@ public class FirstFragment extends Fragment {
         }
     }
     public void openNewActivity() {
+        Configuration configuration = getResources().getConfiguration();
+        Locale currentLocale = configuration.locale;
+
+
+        // Start the AddItemActivity
         Intent intent = new Intent(requireContext(), AddItemActivity.class);
+        intent.putExtra("locale", currentLocale.toString());
         startActivity(intent);
     }
+
+
+
 }

@@ -51,15 +51,17 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_gravity="end"
+            android:layout_marginLeft="1000dp">
+
             <fragment
                 android:id="@+id/TicketFragment"
-                class="com.accessa.ibora.sales.TicketsFragment"
+                class="com.accessa.ibora.sales.ticket.TicketsFragment"
                 android:layout_width="0dp"
-                android:layout_marginLeft="1000dip"
                 android:layout_height="fill_parent"
                 android:layout_weight="0.3"
-                 />
+                />
         </LinearLayout>
 
 

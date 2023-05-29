@@ -54,4 +54,8 @@
         <item name="android:layout_marginRight">5dp</item>
         <item name="android:layout_gravity">center</item>
     </style>
+    <style name="CustomSearchViewStyle" parent="Widget.AppCompat.SearchView">
+        <!-- Other attributes for the style -->
+        <item name="android:textColorHint">@color/white</item>
+    </style>
 </resources>
