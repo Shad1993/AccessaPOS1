@@ -119,7 +119,9 @@ public class SalesFragment extends Fragment  {
                             mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice);
                         } else {
                             // Item not selected, insert a new transaction with quantity 1 and total price
+
                             mDatabaseHelper.insertTransaction(itemId, transactionDate, 1, totalPrice, Double.parseDouble(vat), longDescription);
+
                         }
 
                         if (cursor != null) {
@@ -139,16 +141,11 @@ public class SalesFragment extends Fragment  {
 
 
         return view;
-        returnHome();
+
     }
 
 
-    public void returnHome() {
-        Intent home_intent1 = new Intent(requireContext().getApplicationContext(), MainActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "sales_fragment");
-        startActivity(home_intent1);
-    }
+
 
     private String getCurrentDateTime() {
         // Get the current date and time in the desired format

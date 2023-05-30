@@ -80,14 +80,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
-        // Get the intent extra
-        String fragmentKey = getIntent().getStringExtra("fragment");
 
-        // Check if the intent contains the desired fragment key
-        if (fragmentKey != null && fragmentKey.equals("sales_fragment")) {
-            Fragment newFragment = new CategoryFragment();
-
-        }
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
