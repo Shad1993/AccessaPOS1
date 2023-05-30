@@ -1,4 +1,4 @@
-package com.accessa.ibora.product.items;
+package com.accessa.ibora.sales.Sales;
 
 import android.Manifest;
 import android.app.Activity;
@@ -21,6 +21,9 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DatabaseHelper;
+
+import com.accessa.ibora.product.items.Item;
 import com.bumptech.glide.Glide;
 
 import java.io.File;
@@ -34,11 +37,28 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
     private Context mContext;
     private Cursor mCursor;
     private List<Integer> availableItemsIndices;
+    private ItemClickListener itemClickListener;
 
+    public void setItemClickListener(ItemClickListener listener) {
+        this.itemClickListener = listener;
+    }
     public ItemGridAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
         updateAvailableItemsIndices();
+    }
+
+    public Item getItem(int childAdapterPosition) {
+        int realPosition = getRealPosition(childAdapterPosition);
+        if (mCursor.moveToPosition(realPosition)) {
+            return getItemFromCursor(mCursor);
+        }
+        return null;
+    }
+
+
+    public interface ItemClickListener {
+        void onItemClick(Item item);
     }
 
     private void updateAvailableItemsIndices() {
@@ -65,6 +85,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
         public ItemViewHolder(View itemView) {
             super(itemView);
+
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
@@ -157,7 +178,18 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             imageView.setImageResource(R.drawable.emptybasket);
         }
     }
+    private Item getItemFromCursor(Cursor cursor) {
+        // Retrieve the item data from the cursor and create an Item object
+        // Modify this code based on your cursor structure and item class
+        String name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name));
+        String id = cursor.getString(cursor.getColumnIndex(DatabaseHelper._ID));
+        String price = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
+        String description = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
+        String productImageName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image));
 
+        Item item = new Item(name, id, price, description, productImageName);
+        return item;
+    }
 
     // Handle the permission request response
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

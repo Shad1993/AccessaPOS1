@@ -2,12 +2,17 @@ package com.accessa.ibora.product.items;
 
 
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.accessa.ibora.Constants;
+import com.accessa.ibora.sales.ticket.Ticket;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -16,6 +21,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TAX_TABLE_NAME = "Tax";
     public static final String VENDOR_TABLE_NAME = "Vendor";
     public static final String COST_TABLE_NAME = "Cost";
+    public static final String TRANSACTION_TABLE_NAME = "Transactions";
 
     // Common column names
     public static final String _ID = "_id";
@@ -93,6 +99,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DISCOUNT_VALUE = "DiscountValue";
     public static final String DISCOUNT_TIMESTAMP = "Timestamp";
     public static final String DISCOUNT_USER_ID = "UserID";
+
+
+    // Transaction table columns
+    public static final String TRANSACTION_ID = "_id";
+    public static final String ITEM_ID = "ItemId";
+    public static final String TRANSACTION_DATE = "TransactionDate";
+
+    public static final String QUANTITY = "Quantity";
+    public static final String TOTAL_PRICE = "TotalPrice";
+
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -199,9 +215,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "FOREIGN KEY (" + DISCOUNT_USER_ID + ") REFERENCES " +
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
+
+    // Creating Transaction table query
+    private static final String CREATE_TRANSACTION_TABLE = "CREATE TABLE " + TRANSACTION_TABLE_NAME + "(" +
+            TRANSACTION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            ITEM_ID + " INTEGER NOT NULL, " +
+            TRANSACTION_DATE + " DATETIME NOT NULL, " +
+            QUANTITY + " INTEGER NOT NULL, " +
+            TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
+            VAT + " DECIMAL(10, 2) NOT NULL, " +
+            LongDescription + " TEXT NOT NULL, " +
+            "FOREIGN KEY (" + ITEM_ID + ") REFERENCES " +
+            TABLE_NAME + "(" + _ID + "));";
+
+
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
+
+
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -212,6 +245,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_SUBDEPARTMENT_TABLE);
         db.execSQL(CREATE_USERS_TABLE);
         db.execSQL(CREATE_DISCOUNT_TABLE);
+        db.execSQL(CREATE_TRANSACTION_TABLE);
     }
 
     @Override
@@ -222,9 +256,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + COST_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DEPARTMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SUBDEPARTMENT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DISCOUNT_TABLE_NAME);
+
         onCreate(db);
     }
+
+    public long insertTransaction(int itemId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ITEM_ID, itemId);
+        values.put(TRANSACTION_DATE, transactionDate);
+        values.put(QUANTITY, quantity);
+        values.put(TOTAL_PRICE, totalPrice);
+        values.put(VAT, vat);
+        values.put(LongDescription, longDescription); // Add long description
+        return db.insert(TRANSACTION_TABLE_NAME, null, values);
+    }
+
+    public Cursor getAllTransactions() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(TRANSACTION_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+
+
+
 
     public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
@@ -354,6 +411,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return exists;
     }
+
+
+    public Cursor getTransactionByItemId(int itemId) {
+        SQLiteDatabase db = getReadableDatabase();
+        String selection = ITEM_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+        return db.query(TRANSACTION_TABLE_NAME, null, selection, selectionArgs, null, null, null);
+    }
+
+
+    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(QUANTITY, newQuantity);
+        values.put(TOTAL_PRICE, newTotalPrice);
+
+        String selection = ITEM_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+
+        db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
+    }
+
 }
 
 

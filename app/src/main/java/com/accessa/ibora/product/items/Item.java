@@ -63,6 +63,8 @@ public class Item {
         this.AvailableForSale = AvailableForSale;
     }
 
+    public Item(String name, String id, String price, String description, String productImageName) {
+    }
 
 
     // Getter and Setter methods for all fields

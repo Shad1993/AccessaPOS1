@@ -307,6 +307,7 @@
     <string name="deleteDept">Department deleted successfully</string>
     <string name="failedDeleteDept">Failed to delete Department</string>
     <string name="noticket">No Ticket Yet</string>
+    <string name="tax">Tax</string>
 
 
 </resources>

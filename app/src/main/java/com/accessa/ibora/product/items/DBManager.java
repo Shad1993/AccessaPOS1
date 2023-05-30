@@ -192,7 +192,23 @@ public class DBManager {
         return item;
     }
 
+    public String getVATById(String id) {
+        String vatValue = null;
+        String[] columns = new String[]{DatabaseHelper.VAT}; // Specify the VAT column
 
+        String selection = DatabaseHelper._ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            vatValue = cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT));
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        return vatValue;
+    }
 
     public void insertDept(String deptName, String lastModified, String userId, String deptCode) {
         ContentValues contentValue = new ContentValues();

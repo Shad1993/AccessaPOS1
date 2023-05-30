@@ -1,10 +1,5 @@
 package com.accessa.ibora.product.items;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
-import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
-
-import static java.util.Locale.FRENCH;
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -36,7 +31,6 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -44,11 +38,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
-import com.accessa.ibora.product.items.DBManager;
-import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 

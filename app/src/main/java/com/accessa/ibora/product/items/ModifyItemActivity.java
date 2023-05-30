@@ -1,10 +1,9 @@
 package com.accessa.ibora.product.items;
 
 import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
-import static com.accessa.ibora.product.items.AddItemActivity.REQUEST_IMAGE_GALLERY;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SUBDEPARTMENT_NAME;
-import static com.accessa.ibora.product.items.ItemGridAdapter.PERMISSION_REQUEST_CODE;
+import static com.accessa.ibora.sales.Sales.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
 import android.Manifest;
 import android.app.Activity;
@@ -43,10 +42,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.Department.Department;
-import com.accessa.ibora.product.category.Category;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
-import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 

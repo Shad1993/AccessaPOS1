@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
 
+import java.text.DecimalFormat;
+
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
 
     private Context mContext;
@@ -90,7 +92,16 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.descriptionTextView.setText(longDescription);
-        holder.priceTextView.setText(price);
+
+
+        // Format the price to two decimal places
+        double formattedPrice = Double.parseDouble(price);
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+        String formattedPriceString = decimalFormat.format(formattedPrice);
+
+
+        holder.priceTextView.setText(formattedPriceString);
+
         holder.itemView.setTag(id);
     }
 
