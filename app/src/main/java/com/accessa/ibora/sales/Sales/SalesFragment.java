@@ -19,6 +19,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DBManager;
@@ -26,6 +27,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.ModifyItemActivity;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 
@@ -129,16 +131,24 @@ public class SalesFragment extends Fragment  {
                     public void onLongItemClick(View view, int position) {
                         // Do whatever you want on long item click
                     }
+
                 })
+
         );
 
 
 
         return view;
+        returnHome();
     }
 
 
-
+    public void returnHome() {
+        Intent home_intent1 = new Intent(requireContext().getApplicationContext(), MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "sales_fragment");
+        startActivity(home_intent1);
+    }
 
     private String getCurrentDateTime() {
         // Get the current date and time in the desired format
