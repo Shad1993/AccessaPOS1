@@ -3,6 +3,10 @@ package com.accessa.ibora.product.items;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -88,8 +92,17 @@ public class DBManager {
         }
         return cursor;
     }
+    public boolean updateTransItem(long id,String quantity,String price,  String longDesc, String lastModified) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseHelper.QUANTITY, quantity);
+        contentValues.put(DatabaseHelper.TOTAL_PRICE, price);
+        contentValues.put(DatabaseHelper.TRANSACTION_DATE, lastModified);
+        contentValues.put(DatabaseHelper.LongDescription, longDesc);
+        database.update(TRANSACTION_TABLE_NAME, contentValues, ITEM_ID + " = " + id, null);
+        return true;
+    }
 
-    public boolean updateItem(long id,String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost) {
+    public boolean updateItem(long id,String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost,String lastmodified) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.Name, name);
         contentValues.put(DatabaseHelper.DESC, desc);
@@ -109,6 +122,7 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Variant, Variant);
         contentValues.put(DatabaseHelper.Cost, Cost);
         contentValues.put(DatabaseHelper.AvailableForSale,AvailableForSale);
+        contentValues.put(DatabaseHelper.LastModified,lastmodified);
 
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
@@ -219,6 +233,8 @@ public class DBManager {
 
         database.insert(DEPARTMENT_TABLE_NAME, null, contentValue);
     }
+
+
 
     public boolean updateDept(long id, String name, String lastmodified, String userId, String deptCode) {
         ContentValues contentValues = new ContentValues();
@@ -355,13 +371,7 @@ public class DBManager {
 
 
 
-    public boolean deleteSubDept(long id) {
 
-        String selection = DatabaseHelper._ID + "=?";
-        String[] selectionArgs = { String.valueOf(id) };
-        database.delete(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, selection, selectionArgs);
-        return true;
-    }
 
     public Discount getDiscountById(String id) {
         Discount discount = null;
@@ -412,11 +422,6 @@ public class DBManager {
                 DatabaseHelper.InternalCode,
                 DatabaseHelper.Salesmen,
 
-
-
-
-
-                // Add other columns as needed
         };
 
         String selection = DatabaseHelper.VendorID + " = ?";
@@ -459,6 +464,22 @@ public class DBManager {
         database.delete(DISCOUNT_TABLE_NAME, selection, selectionArgs);
         return true;
     }
+
+    public boolean deleteSubDept(long id) {
+
+        String selection = DatabaseHelper._ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+    public boolean deleteTransacItem(long itemId) {
+
+        String selection = ITEM_ID + "=?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+       database.delete(DatabaseHelper.TRANSACTION_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
 
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();
@@ -549,6 +570,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DISCOUNT_VALUE, discvalue);
         database.insert(DatabaseHelper.DISCOUNT_TABLE_NAME, null, contentValue);
     }
+
 
 
 

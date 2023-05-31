@@ -9,10 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.accessa.ibora.Constants;
-import com.accessa.ibora.sales.ticket.Ticket;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -71,6 +67,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Column names
 
     public static final String COLUMN_CASHOR_id = "cashorid";
+    public static final String TRANSACTION_STATUS_COMPLETED ="Completed" ;
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
     static final String COLUMN_CASHOR_NAME = "cashorname";
@@ -102,10 +99,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     // Transaction table columns
-    public static final String TRANSACTION_ID = "_id";
+    public static final String TRANSACTION_ID = "TranscationId";
     public static final String ITEM_ID = "ItemId";
     public static final String TRANSACTION_DATE = "TransactionDate";
-
+    private static final String TRANSACTION_STATUS_IN_PROGRESS = "InProgress";
+    public static final String TRANSACTION_STATUS="TransactionStatus";
+;
     public static final String QUANTITY = "Quantity";
     public static final String TOTAL_PRICE = "TotalPrice";
 
@@ -218,13 +217,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Creating Transaction table query
     private static final String CREATE_TRANSACTION_TABLE = "CREATE TABLE " + TRANSACTION_TABLE_NAME + "(" +
-            TRANSACTION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            TRANSACTION_ID + " INTEGER NOT NULL, " +
             ITEM_ID + " INTEGER NOT NULL, " +
             TRANSACTION_DATE + " DATETIME NOT NULL, " +
             QUANTITY + " INTEGER NOT NULL, " +
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             LongDescription + " TEXT NOT NULL, " +
+            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Started', 'InProgress', 'Completed')), "+
             "FOREIGN KEY (" + ITEM_ID + ") REFERENCES " +
             TABLE_NAME + "(" + _ID + "));";
 
@@ -262,21 +263,56 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public long insertTransaction(int itemId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription) {
+    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
+        values.put(TRANSACTION_ID, transactionId);
         values.put(TRANSACTION_DATE, transactionDate);
         values.put(QUANTITY, quantity);
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
         values.put(LongDescription, longDescription); // Add long description
+        values.put(TRANSACTION_STATUS, TransactionStatus); // Add long description
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
 
+
+
+    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(QUANTITY, newQuantity);
+        values.put(TOTAL_PRICE, newTotalPrice);
+
+        String selection = ITEM_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+
+        db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
+    }
+    public void updateAllTransactionsStatus(String newStatus) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_STATUS, newStatus);
+
+        // Update the status of all in-progress transactions to the new status
+        String whereClause = TRANSACTION_STATUS + " = ?";
+        String[] whereArgs = {TRANSACTION_STATUS_IN_PROGRESS};
+        db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+    }
     public Cursor getAllTransactions() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TRANSACTION_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+    public Cursor getAllInProgressTransactions() {
+        SQLiteDatabase db = getReadableDatabase();
+        String selection = TRANSACTION_STATUS + "=?";
+        String[] selectionArgs = { "InProgress" };
+
+        return db.query(TRANSACTION_TABLE_NAME, null, selection, selectionArgs, null, null, null);
     }
 
 
@@ -325,14 +361,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+    public Cursor getAllCosts() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(COST_TABLE_NAME, null, null, null, null, null, null);
+    }
 
+    public Cursor getAllSubDepartmentby() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
+    }
     public Cursor getUserByPIN(String enteredPIN) {
         SQLiteDatabase db = getReadableDatabase();
         String[] selectionArgs = {enteredPIN};
         String query = "SELECT * FROM " + TABLE_NAME_Users + " WHERE pin = ?";
         return db.rawQuery(query, selectionArgs);
     }
-
+    public Cursor getAllVendor() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(VENDOR_TABLE_NAME, null, null, null, null, null, null);
+    }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription, Category, Price};
@@ -351,10 +398,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
-    public Cursor getAllVendor() {
-        SQLiteDatabase db = getReadableDatabase();
-        return db.query(VENDOR_TABLE_NAME, null, null, null, null, null, null);
-    }
+
 
     public Cursor searchVendor(String query) {
         SQLiteDatabase db = getReadableDatabase();
@@ -376,10 +420,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public Cursor getAllCosts() {
-        SQLiteDatabase db = getReadableDatabase();
-        return db.query(COST_TABLE_NAME, null, null, null, null, null, null);
-    }
 
     public Cursor searchCost(String query) {
         SQLiteDatabase db = getReadableDatabase();
@@ -390,10 +430,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(COST_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
-    public Cursor getAllSubDepartmentby() {
-        SQLiteDatabase db = getReadableDatabase();
-        return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
-    }
 
     public boolean isDepartmentCodeExists(String DeptCode) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -421,18 +457,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(QUANTITY, newQuantity);
-        values.put(TOTAL_PRICE, newTotalPrice);
-
-        String selection = ITEM_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(itemId) };
-
-        db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
-    }
 
 }
 

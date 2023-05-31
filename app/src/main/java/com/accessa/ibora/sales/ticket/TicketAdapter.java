@@ -30,16 +30,20 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
 
         public TextView idTextView;
         public TextView nameTextView;
-        public TextView TaxTextView;
+        public TextView PriceTextView;
         public TextView QuantityTextView;
+        private TextView ItemIdTextView;
+
+        private TextView TVATextView;
 
 
         public ItemViewHolder(View itemView) {
             super(itemView);
-
+            ItemIdTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
-            TaxTextView = itemView.findViewById(R.id.price_text_view);
+            PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
+            TVATextView = itemView.findViewById(R.id.Tax_text_view);
 
         }
     }
@@ -57,10 +61,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         if (mCursor == null || !mCursor.moveToPosition(position)) {
             return;
         }
-
+        String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
-        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
+        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+        String TVA = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.VAT));
 
         // Format the price to two decimal places
         double formattedPrice = Double.parseDouble(price);
@@ -68,18 +73,16 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String formattedPriceString = decimalFormat.format(formattedPrice);
 
         int quantityValue = Integer.parseInt(quantity);
-        double totalPrice = formattedPrice * quantityValue;
+        double totalPrice = formattedPrice ;
         String totalPriceString = decimalFormat.format(totalPrice);
 
+
+        holder.ItemIdTextView.setText(id);
         holder.nameTextView.setText(description);
         holder.QuantityTextView.setText("x  " + quantity ); // Add a multiplication sign after the quantity value
-        holder.TaxTextView.setText("Rs " + totalPriceString);
+        holder.PriceTextView.setText("Rs " + totalPriceString);
+        holder.TVATextView.setText(TVA);
     }
-
-
-
-
-
 
 
     @Override

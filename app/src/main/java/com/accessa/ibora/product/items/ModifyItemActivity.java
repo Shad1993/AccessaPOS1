@@ -504,6 +504,9 @@ private ImageView image_view;
         Glide.with(this).load(imageUrl).into(imageView);
     }
     private void updateItem() {
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String name = NameText.getText().toString().trim();
         String desc = descText.getText().toString().trim();
         String price = PriceEditText.getText().toString().trim();
@@ -544,7 +547,7 @@ private ImageView image_view;
 
         boolean isUpdated = dbManager.updateItem( _id,name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost);
+                availableForSale, soldBy, image, variant, sku, cost,lastmodified);
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
