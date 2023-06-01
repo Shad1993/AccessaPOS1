@@ -18,6 +18,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String VENDOR_TABLE_NAME = "Vendor";
     public static final String COST_TABLE_NAME = "Cost";
     public static final String TRANSACTION_TABLE_NAME = "Transactions";
+    public static final String TRANSACTION_HEADER_TABLE_NAME = "TransactionHeader";
+    public static final String TRANSACTION_STATUS_IN_PROGRESS ="InProgress";
+    public static final String TRANSACTION_UNIT_PRICE = "UnitPrice";
+
+
+    private static final String INVOICE_SETTLEMENT_TABLE_NAME = "InvoiceSettlement";
 
     // Common column names
     public static final String _ID = "_id";
@@ -102,11 +108,81 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_ID = "TranscationId";
     public static final String ITEM_ID = "ItemId";
     public static final String TRANSACTION_DATE = "TransactionDate";
-    private static final String TRANSACTION_STATUS_IN_PROGRESS = "InProgress";
+
     public static final String TRANSACTION_STATUS="TransactionStatus";
 ;
     public static final String QUANTITY = "Quantity";
     public static final String TOTAL_PRICE = "TotalPrice";
+
+    private static final String TRANSACTION_SHOP_NO = "ShopNo";
+    private static final String TRANSACTION_TERMINAL_NO = "TerminalNo";
+    private static final String TRANSACTION_DATE_CREATED = "DateCreated";
+    private static final String TRANSACTION_DATE_MODIFIED = "DateModified";
+    private static final String TRANSACTION_TIME_CREATED = "TimeCreated";
+    private static final String TRANSACTION_TIME_MODIFIED = "TimeModified";
+    private static final String TRANSACTION_CODE = "Code";
+    private static final String TRANSACTION_DESCRIPTION = "Description";
+
+    private static final String TRANSACTION_QUANTITY = "Qte";
+    private static final String TRANSACTION_DISCOUNT = "Discount";
+    private static final String TRANSACTION_VAT_BEFORE_DISC = "VAT_Before_Disc";
+    private static final String TRANSACTION_VAT_AFTER_DISC = "VAT_After_Disc";
+    private static final String TRANSACTION_TOTAL_HT_A = "TotalHT_A";
+    private static final String TRANSACTION_TOTAL_TTC = "TotalTTC";
+    private static final String TRANSACTION_IS_TAXABLE = "IsTaxable";
+    private static final String TRANSACTION_DATE_TRANSACTION = "DateTransaction";
+    private static final String TRANSACTION_TIME_TRANSACTION = "TimeTransaction";
+    private static final String TRANSACTION_BARCODE = "Barcode";
+    private static final String TRANSACTION_WEIGHTS = "Weights";
+    private static final String TRANSACTION_TOTAL_HT_B = "TotalHT_B";
+    private static final String TRANSACTION_TYPE_TAX = "TYPETAX";
+    private static final String TRANSACTION_RAYON = "Rayon";
+    private static final String TRANSACTION_FAMILLE = "Famille";
+    private static final String TRANSACTION_ID_SALES_D = "IDSalesD";
+    private static final String TRANSACTION_TOTALIZER = "Totalizer";
+
+    // Header fields
+
+    private static final String TRANSACTION_MEMBER_CARD = "MemberCard";
+    private static final String TRANSACTION_SUB_TOTAL = "SubTotal";
+    private static final String TRANSACTION_CASHIER_CODE = "CashierCode";
+
+    private static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
+    private static final String TRANSACTION_TOTAL_TX_2 = "Total_Tx_2";
+    private static final String TRANSACTION_TOTAL_TX_3 = "Total_Tx_3";
+    private static final String TRANSACTION_TOTAL_DISCOUNT = "TotalDisc";
+    private static final String TRANSACTION_ITEM_QUANTITY = "QtyItem";
+
+    private static final String TRANSACTION_CLIENT_NAME = "ClientName";
+    private static final String TRANSACTION_CLIENT_OTHER_NAME = "ClientOtherName";
+    private static final String TRANSACTION_CLIENT_ADR1 = "ClientAdr1";
+    private static final String TRANSACTION_CLIENT_ADR2 = "ClientAdr2";
+    private static final String TRANSACTION_CLIENT_VAT_REG_NO = "ClientVATRegNo";
+    private static final String TRANSACTION_CLIENT_BRN = "ClientBRN";
+    private static final String TRANSACTION_CLIENT_TEL = "ClientTel";
+    private static final String TRANSACTION_INVOICE_REF = "InvoiceRef";
+    private static final String TRANSACTION_IS_CASH_CREDIT = "IsCash_Credit";
+    private static final String TRANSACTION_ID_SALESH = "IDSalesH";
+    private static final String TRANSACTION_CLIENT_CODE = "ClientCode";
+    private static final String TRANSACTION_LOYALTY = "Loyalty";
+    private static final String TRANSACTION_TICKET_NO="TranscationId";
+
+
+    // Invoice Settlement table columns
+    public static final String SETTLEMENT_ID = "SettlementId";
+    public static final String SETTLEMENT_SHOP_NO = "ShopNo";
+    public static final String SETTLEMENT_TERMINAL_NO = "TerminalNo";
+    public static final String SETTLEMENT_DATE_TRANSACTION = "DateTransaction";
+    public static final String SETTLEMENT_PAYMENT_CODE = "CodeModeDePaiement";
+    public static final String SETTLEMENT_AMOUNT = "Amount";
+    public static final String SETTLEMENT_TOTAL_AMOUNT = "TotalAmount";
+    public static final String SETTLEMENT_GIFT_VOUCHER_NO = "GiftVoucherNo";
+    public static final String SETTLEMENT_INVOICE_ID = "IDInvoiceSettlement";
+    public static final String SETTLEMENT_REMARK = "Remark";
+    public static final String SETTLEMENT_DATE_CREATED = "DateCreated";
+    public static final String SETTLEMENT_PAYMENT_NAME = "PaymentName";
+    public static final String SETTLEMENT_CHEQUE_NO = "ChequeNo";
+
 
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
@@ -135,6 +211,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+    private static final String UNIT_PRICE ="UnitPrice" ;
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -225,11 +302,93 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             LongDescription + " TEXT NOT NULL, " +
-            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Started', 'InProgress', 'Completed')), "+
+            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Started', 'InProgress', 'Completed')), " +
+            TRANSACTION_SHOP_NO + " TEXT, " +
+            TRANSACTION_TERMINAL_NO + " TEXT, " +
+            TRANSACTION_DATE_CREATED + " TEXT, " +
+            TRANSACTION_DATE_MODIFIED + " TEXT, " +
+            TRANSACTION_TIME_CREATED + " TEXT, " +
+            TRANSACTION_TIME_MODIFIED + " TEXT, " +
+            TRANSACTION_CODE + " TEXT, " +
+            TRANSACTION_DESCRIPTION + " TEXT, " +
+            TRANSACTION_UNIT_PRICE + " DECIMAL(10, 2), " +
+            TRANSACTION_QUANTITY + " INTEGER, " +
+            TRANSACTION_DISCOUNT + " DECIMAL(10, 2), " +
+            TRANSACTION_VAT_BEFORE_DISC + " DECIMAL(10, 2), " +
+            TRANSACTION_VAT_AFTER_DISC + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_HT_A + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_TTC + " DECIMAL(10, 2), " +
+            TRANSACTION_IS_TAXABLE + " INTEGER, " +
+            TRANSACTION_DATE_TRANSACTION + " TEXT, " +
+            TRANSACTION_TIME_TRANSACTION + " TEXT, " +
+            TRANSACTION_BARCODE + " TEXT, " +
+            TRANSACTION_WEIGHTS + " TEXT, " +
+            TRANSACTION_TOTAL_HT_B + " DECIMAL(10, 2), " +
+            TRANSACTION_TYPE_TAX + " TEXT, " +
+            TRANSACTION_RAYON + " TEXT, " +
+            TRANSACTION_FAMILLE + " TEXT, " +
+            TRANSACTION_ID_SALES_D + " TEXT, " +
+            TRANSACTION_TOTALIZER + " TEXT, " +
             "FOREIGN KEY (" + ITEM_ID + ") REFERENCES " +
             TABLE_NAME + "(" + _ID + "));";
 
+    private static final String CREATE_TRANSACTION_HEADER = "CREATE TABLE " + TRANSACTION_HEADER_TABLE_NAME + "(" +
+            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            TRANSACTION_TICKET_NO + " INTEGER NOT NULL, " +
+            TRANSACTION_SHOP_NO + " TEXT, " +
+            TRANSACTION_TERMINAL_NO + " TEXT, " +
+            TRANSACTION_DATE_CREATED + " TEXT, " +
+            TRANSACTION_DATE_MODIFIED + " TEXT, " +
+            TRANSACTION_TIME_CREATED + " TEXT, " +
+            TRANSACTION_TIME_MODIFIED + " TEXT, " +
+            TRANSACTION_MEMBER_CARD + " TEXT, " +
+            TRANSACTION_SUB_TOTAL + " DECIMAL(10, 2), " +
+            TRANSACTION_CASHIER_CODE + " TEXT, " +
+            TRANSACTION_DATE_TRANSACTION + " TEXT, " +
+            TRANSACTION_TIME_TRANSACTION + " TEXT, " +
+            TRANSACTION_TOTAL_HT_A + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_TTC + " DECIMAL(10, 2), " +
+            TRANSACTION_VAT_BEFORE_DISC + " DECIMAL(10, 2), " +
+            TRANSACTION_VAT_AFTER_DISC + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_TX_1 + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_TX_2 + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_TX_3 + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_DISCOUNT + " DECIMAL(10, 2), " +
+            TRANSACTION_ITEM_QUANTITY + " INTEGER, " +
+            TRANSACTION_TOTAL_HT_B + " DECIMAL(10, 2), " +
+            TRANSACTION_CLIENT_NAME + " TEXT, " +
+            TRANSACTION_CLIENT_OTHER_NAME + " TEXT, " +
+            TRANSACTION_CLIENT_ADR1 + " TEXT, " +
+            TRANSACTION_CLIENT_ADR2 + " TEXT, " +
+            TRANSACTION_CLIENT_VAT_REG_NO + " TEXT, " +
+            TRANSACTION_CLIENT_BRN + " TEXT, " +
+            TRANSACTION_CLIENT_TEL + " TEXT, " +
+            TRANSACTION_INVOICE_REF + " TEXT, " +
+            TRANSACTION_IS_CASH_CREDIT + " TEXT, " +
+            TRANSACTION_ID_SALESH + " TEXT, " +
+            TRANSACTION_CLIENT_CODE + " TEXT, " +
+            TRANSACTION_LOYALTY + " TEXT, " +
+            "FOREIGN KEY (" + TRANSACTION_TICKET_NO + ") REFERENCES " +
+            TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
+
+    // Create Invoice Settlement table query
+    private static final String CREATE_INVOICE_SETTLEMENT_TABLE = "CREATE TABLE " + INVOICE_SETTLEMENT_TABLE_NAME + "(" +
+            SETTLEMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            SETTLEMENT_SHOP_NO + " TEXT, " +
+            SETTLEMENT_TERMINAL_NO + " TEXT, " +
+            SETTLEMENT_DATE_TRANSACTION + " TEXT, " +
+            SETTLEMENT_PAYMENT_CODE + " TEXT, " +
+            SETTLEMENT_AMOUNT + " DECIMAL(10, 2), " +
+            SETTLEMENT_TOTAL_AMOUNT + " DECIMAL(10, 2), " +
+            SETTLEMENT_GIFT_VOUCHER_NO + " TEXT, " +
+            SETTLEMENT_INVOICE_ID + " INTEGER, " +
+            SETTLEMENT_REMARK + " TEXT, " +
+            SETTLEMENT_DATE_CREATED + " TEXT, " +
+            SETTLEMENT_PAYMENT_NAME + " TEXT, " +
+            SETTLEMENT_CHEQUE_NO + " TEXT, " +
+            "FOREIGN KEY (" + SETTLEMENT_INVOICE_ID + ") REFERENCES " +
+            TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -247,6 +406,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_USERS_TABLE);
         db.execSQL(CREATE_DISCOUNT_TABLE);
         db.execSQL(CREATE_TRANSACTION_TABLE);
+        db.execSQL(CREATE_TRANSACTION_HEADER);
+        db.execSQL(CREATE_INVOICE_SETTLEMENT_TABLE);
     }
 
     @Override
@@ -259,11 +420,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + SUBDEPARTMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DISCOUNT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_HEADER_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + INVOICE_SETTLEMENT_TABLE_NAME);
 
         onCreate(db);
     }
 
-    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus) {
+    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus,double UnitPrice) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -273,6 +436,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
         values.put(LongDescription, longDescription); // Add long description
+        values.put(TRANSACTION_UNIT_PRICE, UnitPrice); // Add long description
         values.put(TRANSACTION_STATUS, TransactionStatus); // Add long description
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
@@ -317,7 +481,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
+    public double getItemPrice(String id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        double price = 0;
 
+        String[] projection = {Price};
+        String selection = _ID + " = ?";
+        String[] selectionArgs = {id};
+
+        Cursor cursor = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+        if (cursor.moveToFirst()) {
+            price = cursor.getDouble(cursor.getColumnIndex(Price));
+        }
+
+        cursor.close();
+        db.close();
+
+        return price;
+    }
 
     public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
@@ -449,15 +630,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+
     public Cursor getTransactionByItemId(int itemId) {
         SQLiteDatabase db = getReadableDatabase();
-        String selection = ITEM_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(itemId) };
+        String selection = ITEM_ID + " = ? AND " + TRANSACTION_STATUS + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId), "InProgress" };
         return db.query(TRANSACTION_TABLE_NAME, null, selection, selectionArgs, null, null, null);
     }
 
 
 
+
+    public void updateTransactionIds(String newTransactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_ID, newTransactionId);
+        db.update(TRANSACTION_TABLE_NAME, values, TRANSACTION_STATUS + " = ?", new String[]{"InProgress"});
+    }
+
+    public Cursor getTransactionsByStatusAndId(String status, String transactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = ?" +
+                " AND " + TRANSACTION_ID + " = ?";
+        String[] selectionArgs = {status, transactionId};
+        return db.rawQuery(query, selectionArgs);
+    }
 }
 
 

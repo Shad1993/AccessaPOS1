@@ -43,7 +43,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
-            TVATextView = itemView.findViewById(R.id.Tax_text_view);
+            //TVATextView = itemView.findViewById(R.id.Tax_text_view);
 
         }
     }
@@ -81,7 +81,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         holder.nameTextView.setText(description);
         holder.QuantityTextView.setText("x  " + quantity ); // Add a multiplication sign after the quantity value
         holder.PriceTextView.setText("Rs " + totalPriceString);
-        holder.TVATextView.setText(TVA);
+//        holder.TVATextView.setText(TVA);
     }
 
 

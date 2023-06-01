@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.login.login;
+import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.menu.Product;
@@ -71,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
+
+
+
+
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
@@ -108,6 +113,16 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
+// Get the intent extra
+        String fragmentKey = getIntent().getStringExtra("fragment");
+        // Check if the intent contains the desired fragment key
+        if (fragmentKey != null && fragmentKey.equals("Ticket_fragment")) {
+            Fragment newFragment = new CategoryFragment();
+
+            replaceFragment(newFragment);
+        }
+
+
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @SuppressLint("NonConstantResourceId")
             @Override
@@ -179,12 +194,33 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
     }
+    private void replaceFragment(Fragment fragment) {
+        // create a FragmentManager
+        FragmentManager fm = getSupportFragmentManager();
+
+        // create a FragmentTransaction to begin the transaction and replace the Fragment
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        // replace the FrameLayout with new Fragment
+        fragmentTransaction.replace(R.id.TicketFragment, fragment);
+        fragmentTransaction.addToBackStack(fragment.toString());
+        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        fragmentTransaction.commit();
+    }
+
 
     @Override
     public void onItemAdded() {
         // Refresh the TicketFragment when an item is added in the SalesFragment
-        if (ticketFragment != null) {
-            ticketFragment.refreshData();
+        SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
+        if (salesFragment != null) {
+            double totalAmount = salesFragment.calculateTotalAmount();
+            TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+            if (ticketFragment != null) {
+                ticketFragment.refreshData(totalAmount);
+            }
         }
     }
+
+
+
 }

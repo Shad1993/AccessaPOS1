@@ -3,6 +3,8 @@ package com.accessa.ibora.sales.ticket;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
+import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.Item;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,6 +33,11 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private static final String ARG_LONG_DESC = "long_desc";
     private static final String ARG_Item_id = "Item_Id";
     private   String ITEM_ID;
+    private double UnitPrice;
+    private  String existingTransactionId;
+    private  double  newTotalPrice;
+    private String transactionIdInProgress; // Transaction ID for "InProgress" status
+    private DatabaseHelper mDatabaseHelper;
 
     public static ModifyItemDialogFragment newInstance(String quantity, String price, String longDesc, String itemId) {
         ModifyItemDialogFragment fragment = new ModifyItemDialogFragment();
@@ -53,7 +63,8 @@ public class ModifyItemDialogFragment extends DialogFragment {
         Xdatabasemanager = new DBManager(getContext());
         Xdatabasemanager.open();
 
-
+        // Initialize the DatabaseHelper
+        mDatabaseHelper = new DatabaseHelper(getContext());
 
         // Get the arguments passed to the dialog fragment
         Bundle args = getArguments();
@@ -109,7 +120,6 @@ public class ModifyItemDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-
                         // Get the current date and time for the transaction
                         String lastmodified = getCurrentDateTime();
                         String id= ITEM_ID;
@@ -125,13 +135,17 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             ModifyItemDialogListener listener = (ModifyItemDialogListener) getTargetFragment();
                             listener.onItemModified(quantity, price, longDesc);
                         }
+                       double UnitPrice= mDatabaseHelper.getItemPrice(id);
 
-                        boolean isUpdated = Xdatabasemanager.updateTransItem(Long.parseLong(id), quantity, price, longDesc,lastmodified);
+                        double Quantity= Double.parseDouble(quantity);
+                       double  totalPrice= Quantity * UnitPrice;
+                        boolean isUpdated = Xdatabasemanager.updateTransItem(Long.parseLong(id), quantity, String.valueOf(totalPrice), longDesc,lastmodified);
+                        returnHome();
+
                     }
                 })
                 .setNegativeButton(getString(R.string.cancel), null)
                 .create();
-
     }
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -143,10 +157,18 @@ public class ModifyItemDialogFragment extends DialogFragment {
             boolean deleted = Xdatabasemanager.deleteTransacItem(Long.parseLong(itemId));
             if (deleted) {
                 Toast.makeText(getActivity(), getString(R.string.item_deleted), Toast.LENGTH_SHORT).show();
+                returnHome();
             } else {
                 Toast.makeText(getActivity(), getString(R.string.delete_failed), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public void returnHome() {
+        Intent home_intent1 = new Intent(getContext(), MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "Ticket_fragment");
+        startActivity(home_intent1);
     }
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);

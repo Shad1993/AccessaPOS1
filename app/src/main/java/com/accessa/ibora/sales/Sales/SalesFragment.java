@@ -1,14 +1,17 @@
 package com.accessa.ibora.sales.Sales;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
@@ -16,10 +19,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
@@ -33,7 +39,10 @@ public class SalesFragment extends Fragment {
     private DatabaseHelper mDatabaseHelper;
     private  String transactionStatus;
     private ItemAddedListener itemAddedListener;
-
+    private int newQuantity ;
+    private double newTotalPrice ;
+    private  String existingTransactionId;
+    private double UnitPrice;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     @Override
@@ -88,6 +97,7 @@ public class SalesFragment extends Fragment {
 
 
 
+
                 String transactionStatus = "InProgress";
 
                 if (transactionStatus.equals("InProgress")) {
@@ -97,8 +107,11 @@ public class SalesFragment extends Fragment {
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
                         editor.apply();
+
+
                     }
                     transactionId = transactionIdInProgress;
+
                 } else {
                     transactionId = generateNewTransactionId(); // Generate a new transaction ID
                 }
@@ -111,40 +124,55 @@ public class SalesFragment extends Fragment {
                 double totalPrice = Double.parseDouble(price);
                 String vat = String.valueOf(2);
 
-                // Check if the item with the same ID is already selected
+// Update the transaction ID for all items in progress
+                if (transactionStatus.equals("InProgress")) {
+                    mDatabaseHelper.updateTransactionIds(transactionIdInProgress);
+
+                }
+
+// Check if the item with the same ID is already selected
                 Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId);
                 if (cursor != null && cursor.moveToFirst()) {
                     // Retrieve the existing transaction ID for the item
-                    String existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
+                    existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
 
-                    // Compare the existing transaction ID with the one in SharedPreferences
-                    if (existingTransactionId.equals(transactionIdInProgress)) {
+                    // Check if the existing transaction ID matches the current transaction ID
+                    if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
                         // Item already selected, update the quantity and total price
                         int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
-                        double currentTotalPrice = cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+                         UnitPrice = Double.parseDouble(price);
 
-                        int newQuantity = currentQuantity + 1;
-                        double newTotalPrice = currentTotalPrice + totalPrice;
 
-                        mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice);
+                          int  newQuantity = currentQuantity + 1;
+                          double  newTotalPrice = UnitPrice * newQuantity;
+                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice);
+
                     } else {
+                      double  UnitPrice = Double.parseDouble(price);
+                        double  newTotalPrice = UnitPrice * 1;
+
                         // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, totalPrice, Double.parseDouble(vat), longDescription, transactionStatus);
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice);
+                        refreshTicketFragment();
                     }
                 } else {
-                    // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, totalPrice, Double.parseDouble(vat), longDescription, transactionStatus);
-                }
+                    double  UnitPrice = Double.parseDouble(price);
+                    double  newTotalPrice = UnitPrice * 1;
 
+                    // Item not selected, insert a new transaction with quantity 1 and total price
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice);
+                    refreshTicketFragment();
+                }
 
                 if (cursor != null) {
                     cursor.close();
                 }
-
                 // Notify the listener that an item is added
                 if (itemAddedListener != null) {
                     itemAddedListener.onItemAdded();
                 }
+
+
             }
 
             @Override
@@ -157,6 +185,31 @@ public class SalesFragment extends Fragment {
         return view;
 
     }
+
+    private void refreshTicketFragment() {
+        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            ticketFragment.refreshData(calculateTotalAmount());
+        }
+    }
+    public double calculateTotalAmount() {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+
+
+
     private String generateNewTransactionId() {
         // Implement your logic to generate a unique transaction ID
         // For example, you can use a combination of timestamp and a random number
