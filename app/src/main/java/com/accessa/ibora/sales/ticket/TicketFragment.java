@@ -41,7 +41,14 @@ private String transactionIdInProgress;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
-        refreshData( totalAmount,  TaxtotalAmount);
+        // Update the tax and total amount TextViews
+        TextView taxTextView = view.findViewById(R.id.textViewVAT);
+        String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
+        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+        TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
+        String formattedTotalAmount = String.format("%.2f", totalAmount);
+        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
         updateAmounts();
 
 // Initialize the SoundPool and load the sound file
