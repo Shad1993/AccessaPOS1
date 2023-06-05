@@ -41,7 +41,7 @@ private String transactionIdInProgress;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
-
+        refreshData( totalAmount,  TaxtotalAmount);
         updateAmounts();
 
 // Initialize the SoundPool and load the sound file
@@ -256,7 +256,9 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
 }
     public void refreshData(double totalAmount, double TaxtotalAmount) {
+        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        mAdapter = new TicketAdapter(getActivity(), cursor);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 
