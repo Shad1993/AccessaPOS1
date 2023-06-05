@@ -41,15 +41,7 @@ private String transactionIdInProgress;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
-        // Update the tax and total amount TextViews
-        TextView taxTextView = view.findViewById(R.id.textViewVAT);
-        String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
-        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
 
-        TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
-        String formattedTotalAmount = String.format("%.2f", totalAmount);
-        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-        updateAmounts();
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -85,7 +77,25 @@ private String transactionIdInProgress;
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
+        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
+        // Retrieve the total amount and total tax amount from the transactionheader table
+        Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+            int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+            totalAmount = cursor.getDouble(columnIndexTotalAmount);
+            TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+            // Update the tax and total amount TextViews
+            TextView taxTextView = view.findViewById(R.id.textViewVAT);
+            String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
+            taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+            TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
+            String formattedTotalAmount = String.format("%.2f", totalAmount);
+            totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+        }
 
         // Load the data based on the transaction ID
         if (transactionIdInProgress != null) {
@@ -236,6 +246,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
     // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
     double totalHT_A = calculateTotalAmount();
     double totalTTC = totalAmount;
+    double totaltax= TaxtotalAmount;
 
     // Get the total quantity of items in the transaction
     int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
@@ -250,7 +261,8 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
             currentTime,
             totalHT_A,
             totalTTC,
-            quantityItem
+            quantityItem,
+            totaltax
     );
 
     if (success) {
@@ -263,9 +275,8 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
 }
     public void refreshData(double totalAmount, double TaxtotalAmount) {
-        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
+
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
-        mAdapter = new TicketAdapter(getActivity(), cursor);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 
@@ -300,32 +311,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         // Play the sound effect
         playSoundEffect();
     }
-    private void updateAmounts() {
-        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
-        // Retrieve the total amount and total tax amount from the transactionheader table
-        Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
-        if (cursor != null && cursor.moveToFirst()) {
-            int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
-            int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
-
-            totalAmount = cursor.getDouble(columnIndexTotalAmount);
-            TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
-
-            Toast.makeText(getContext(), "total" + totalAmount, Toast.LENGTH_SHORT).show();
-            // Update the tax and total amount TextViews
-            TextView taxTextView = getView().findViewById(R.id.textViewVAT);
-            String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
-            taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
-
-            TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
-            String formattedTotalAmount = String.format("%.2f", totalAmount);
-            totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-        }
-        if (cursor != null) {
-            cursor.close(); // Close the cursor if it's not null
-        }
-    }
     private void playSoundEffect() {
         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }

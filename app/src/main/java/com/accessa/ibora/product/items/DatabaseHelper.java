@@ -479,6 +479,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
         values.put(TRANSACTION_CASHIER_CODE, cashierId);
 
+
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
         return result != -1;
     }
@@ -508,16 +509,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] whereArgs = {TRANSACTION_STATUS_IN_PROGRESS};
         db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
     }
-    public boolean updateTransactionHeader(String transactionIdInProgress, double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem) {
+    public boolean updateTransactionHeader(String transactionIdInProgress, double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem, double totaltax) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_TOTAL_TTC, totalAmount);
         values.put(TRANSACTION_DATE_MODIFIED, currentDate);
-        values.put(TRANSACTION_TIME_CREATED, currentTime);
+        values.put(TRANSACTION_DATE_TRANSACTION, currentDate);
+        values.put(TRANSACTION_TIME_MODIFIED, currentTime);
+        values.put(TRANSACTION_TIME_TRANSACTION, currentTime);
         values.put(TRANSACTION_TOTAL_HT_A, totalHT_a);
         values.put(TRANSACTION_TOTAL_TTC, totalTTC);
         values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
+        values.put(TRANSACTION_TOTAL_TX_1, totaltax);
 
 
         String selection = TRANSACTION_TICKET_NO + " = ?";
@@ -698,7 +702,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {status, transactionId};
         return db.rawQuery(query, selectionArgs);
     }
+    public Cursor getTransactionHeader(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+
+        if (transactionId != null) {
+            return db.rawQuery(query, new String[]{transactionId});
+        } else {
+            // Handle the case where transactionId is null
+            // You can choose to return null or an empty cursor, depending on your requirements
+            return null;
+        }
+    }
 
     public double getItemPrice(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -757,20 +774,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public Cursor getTransactionHeader(String transactionId) {
-        SQLiteDatabase db = this.getReadableDatabase();
 
-        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
-
-        if (transactionId != null) {
-            return db.rawQuery(query, new String[]{transactionId});
-        } else {
-            // Handle the case where transactionId is null
-            // You can choose to return null or an empty cursor, depending on your requirements
-            return null;
-        }
-    }
 
 }
 
