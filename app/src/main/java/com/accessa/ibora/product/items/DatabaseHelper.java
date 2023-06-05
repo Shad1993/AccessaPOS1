@@ -27,6 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_UNIT_PRICE = "UnitPrice";
 
 
+
     private static final String INVOICE_SETTLEMENT_TABLE_NAME = "InvoiceSettlement";
 
     // Common column names
@@ -115,7 +116,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_DATE = "TransactionDate";
 
     public static final String TRANSACTION_STATUS = "TransactionStatus";
-    ;
+
     public static final String QUANTITY = "Quantity";
     public static final String TOTAL_PRICE = "TotalPrice";
 
@@ -132,8 +133,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_DISCOUNT = "Discount";
     private static final String TRANSACTION_VAT_BEFORE_DISC = "VAT_Before_Disc";
     private static final String TRANSACTION_VAT_AFTER_DISC = "VAT_After_Disc";
-    private static final String TRANSACTION_TOTAL_HT_A = "TotalHT_A";
-    private static final String TRANSACTION_TOTAL_TTC = "TotalTTC";
+    private static final String TRANSACTION_TOTAL_HT_A ="TOTALHT_A" ;
+    public static final String TRANSACTION_TOTAL_TTC =  "TotalTTC";
+
     private static final String TRANSACTION_IS_TAXABLE = "IsTaxable";
     private static final String TRANSACTION_DATE_TRANSACTION = "DateTransaction";
     private static final String TRANSACTION_TIME_TRANSACTION = "TimeTransaction";
@@ -152,7 +154,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_SUB_TOTAL = "SubTotal";
     private static final String TRANSACTION_CASHIER_CODE = "CashierCode";
 
-    private static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
+
+    public static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
     private static final String TRANSACTION_TOTAL_TX_2 = "Total_Tx_2";
     private static final String TRANSACTION_TOTAL_TX_3 = "Total_Tx_3";
     private static final String TRANSACTION_TOTAL_DISCOUNT = "TotalDisc";
@@ -296,6 +299,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+
     // Creating Transaction table query
     private static final String CREATE_TRANSACTION_TABLE = "CREATE TABLE " + TRANSACTION_TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -335,6 +339,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TOTALIZER + " TEXT, " +
             "FOREIGN KEY (" + ITEM_ID + ") REFERENCES " +
             TABLE_NAME + "(" + _ID + "));";
+
 
     private static final String CREATE_TRANSACTION_HEADER = "CREATE TABLE " + TRANSACTION_HEADER_TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -450,6 +455,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
                                          String currentTime, double totalHT_A, double totalTTC, int quantityItem, String cashierId) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        // Check if the transaction ID already exists
+        String query = "SELECT COUNT(*) FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{transactionId});
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+
+        if (count > 0) {
+            // Transaction ID already exists, do not insert
+            return false;
+        }
+
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_TICKET_NO, transactionId);
         values.put(TRANSACTION_TOTAL_TTC, totalAmount);
@@ -738,7 +757,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public Cursor getTransactionHeader(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+
+        if (transactionId != null) {
+            return db.rawQuery(query, new String[]{transactionId});
+        } else {
+            // Handle the case where transactionId is null
+            // You can choose to return null or an empty cursor, depending on your requirements
+            return null;
+        }
+    }
 
 }
 

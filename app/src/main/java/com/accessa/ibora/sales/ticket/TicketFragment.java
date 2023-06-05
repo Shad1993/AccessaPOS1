@@ -34,13 +34,15 @@ private double totalAmount,TaxtotalAmount;
 private String transactionIdInProgress;
     private SoundPool soundPool;
     private int soundId;
-    private String cashierId;
+
     private static final String TRANSACTION_ID_KEY = "transaction_id";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
+
+        updateAmounts();
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -58,14 +60,14 @@ private String transactionIdInProgress;
             }
         });
 
-        SendToHeader(totalAmount,TaxtotalAmount);
+     //   SendToHeader(totalAmount,TaxtotalAmount);
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
 
-        mAdapter = new TicketAdapter(getActivity(), cursor);
+        mAdapter = new TicketAdapter(getActivity(), cursor1);
         mRecyclerView.setAdapter(mAdapter);
 
 
@@ -77,12 +79,11 @@ private String transactionIdInProgress;
 
 
 
-        SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-         cashierId = sharedPreference.getString("cashorid", null);
+
         // Load the data based on the transaction ID
         if (transactionIdInProgress != null) {
-            Cursor cursor1 = mDatabaseHelper.getTransactionsByStatusAndId(DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
-            mAdapter.swapCursor(cursor1);
+            Cursor cursor2 = mDatabaseHelper.getTransactionsByStatusAndId(DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
+            mAdapter.swapCursor(cursor2);
         }
 
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
@@ -172,16 +173,11 @@ private String transactionIdInProgress;
 
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
-      //  SendToHeader(totalAmount,TaxtotalAmount);
+
 
 
         // Update the transaction status for all in-progress transactions to "Completed"
       //  mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
-        // Check if there is a transaction ID in SharedPreferences
-
-
-
-
 
   /*
         // Retrieve the SharedPreferences
@@ -197,49 +193,6 @@ private String transactionIdInProgress;
         editor.apply();*/
     }
 
-    private void SendToHeader(double totalAmount, double taxtotalAmount) {
-
-
-        // Save the transaction details in the TRANSACTION_HEADER table
-        if (transactionIdInProgress != null) {
-            TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
-            String formattedTotalAmount = String.format("%.2f", totalAmount);
-            totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-
-            // Get the current date and time
-            String currentDate = mDatabaseHelper.getCurrentDate();
-            String currentTime = mDatabaseHelper.getCurrentTime();
-
-            // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-            double totalHT_A = calculateTotalAmount();
-            double totalTTC = totalAmount;
-
-            // Get the total quantity of items in the transaction
-            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
-
-            // Retrieve the cashier ID from SharedPreferences
-
-            // Save the transaction details in the TRANSACTION_HEADER table
-            boolean success = mDatabaseHelper.saveTransactionHeader(
-                    transactionIdInProgress,
-                    totalAmount,
-                    currentDate,
-                    currentTime,
-                    totalHT_A,
-                    totalTTC,
-                    quantityItem,
-                    cashierId
-            );
-
-            if (success) {
-                // Transaction header saved successfully
-                Toast.makeText(getContext(), "Transaction completed", Toast.LENGTH_SHORT).show();
-            } else {
-                // Failed to save transaction header, handle the error
-                Toast.makeText(getContext(), "Failed to save transaction header", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 
 
     private void SaveTransaction(double totalAmount,double TaxtotalAmount) {
@@ -295,10 +248,10 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
     if (success) {
         // Transaction header saved successfully
-        Toast.makeText(getContext(), "Transaction completed", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Transaction updated", Toast.LENGTH_SHORT).show();
     } else {
         // Failed to save transaction header, handle the error
-        Toast.makeText(getContext(), "Failed to save transaction header", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Failed to update transaction header", Toast.LENGTH_SHORT).show();
     }
 
 }
@@ -332,13 +285,38 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
-       // SendToHeader(totalAmount,TaxtotalAmount);
+
         updateheader(totalAmount,TaxtotalAmount);
 
         // Play the sound effect
         playSoundEffect();
     }
+    private void updateAmounts() {
+        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
+        // Retrieve the total amount and total tax amount from the transactionheader table
+        Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+            int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+            totalAmount = cursor.getDouble(columnIndexTotalAmount);
+            TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+            Toast.makeText(getContext(), "total" + totalAmount, Toast.LENGTH_SHORT).show();
+            // Update the tax and total amount TextViews
+            TextView taxTextView = getView().findViewById(R.id.textViewVAT);
+            String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
+            taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+            TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
+            String formattedTotalAmount = String.format("%.2f", totalAmount);
+            totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+        }
+        if (cursor != null) {
+            cursor.close(); // Close the cursor if it's not null
+        }
+    }
     private void playSoundEffect() {
         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }

@@ -39,9 +39,9 @@ public class SalesFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private ItemGridAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
-
+    private String cashierId;
     private ItemAddedListener itemAddedListener;
-
+    private double totalAmount,TaxtotalAmount;
     private DBManager dbManager;
     private  String existingTransactionId;
     private double UnitPrice;
@@ -57,6 +57,10 @@ public class SalesFragment extends Fragment {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
+
+
+        SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorid", null);
         dbManager = new DBManager(getContext());
         dbManager.open();
 
@@ -185,7 +189,7 @@ public class SalesFragment extends Fragment {
                 if (itemAddedListener != null) {
                     itemAddedListener.onItemAdded();
                 }
-
+                SendToHeader(totalAmount,TaxtotalAmount);
 
             }
 
@@ -279,6 +283,41 @@ public class SalesFragment extends Fragment {
         return TaxtotalAmount;
     }
 
+    private void SendToHeader(double totalAmount, double taxtotalAmount) {
+
+
+        // Save the transaction details in the TRANSACTION_HEADER table
+        if (transactionIdInProgress != null) {
+
+
+            // Get the current date and time
+            String currentDate = mDatabaseHelper.getCurrentDate();
+            String currentTime = mDatabaseHelper.getCurrentTime();
+
+            // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+            double totalHT_A = calculateTotalAmount();
+            double totalTTC = totalAmount;
+
+            // Get the total quantity of items in the transaction
+            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+
+            // Retrieve the cashier ID from SharedPreferences
+
+            // Save the transaction details in the TRANSACTION_HEADER table
+            boolean success = mDatabaseHelper.saveTransactionHeader(
+                    transactionIdInProgress,
+                    totalAmount,
+                    currentDate,
+                    currentTime,
+                    totalHT_A,
+                    totalTTC,
+                    quantityItem,
+                    cashierId
+            );
+
+
+        }
+    }
 
 
     private String generateNewTransactionId() {
