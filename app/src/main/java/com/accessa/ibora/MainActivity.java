@@ -16,13 +16,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.login.login;
@@ -34,7 +32,6 @@ import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 
 
-import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -214,9 +211,10 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
         if (salesFragment != null) {
             double totalAmount = salesFragment.calculateTotalAmount();
+            double TaxtotalAmount = salesFragment.calculateTotalTax();
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshData(totalAmount);
+                ticketFragment.refreshData(totalAmount, TaxtotalAmount);
             }
         }
     }

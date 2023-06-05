@@ -18,11 +18,13 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import java.text.DecimalFormat;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.ticket.TicketFragment;
@@ -37,12 +39,14 @@ public class SalesFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private ItemGridAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
-    private  String transactionStatus;
+
     private ItemAddedListener itemAddedListener;
-    private int newQuantity ;
-    private double newTotalPrice ;
+
+    private DBManager dbManager;
     private  String existingTransactionId;
     private double UnitPrice;
+    private String VatVall;
+    private String price;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     @Override
@@ -53,7 +57,8 @@ public class SalesFragment extends Fragment {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
-
+        dbManager = new DBManager(getContext());
+        dbManager.open();
 
 
         mRecyclerView = view.findViewById(R.id.recycler_view1);
@@ -92,15 +97,21 @@ public class SalesFragment extends Fragment {
                 String id = idTextView.getText().toString();
                 String title = subjectEditText.getText().toString();
                 String longDescription = longDescriptionEditText.getText().toString();
-                String price = priceTextView.getText().toString();
+                 price = priceTextView.getText().toString();
                 String transactionId;
 
+                Item item = dbManager.getItemById(id);
+                if (item != null) {
+                     VatVall = item.getVAT();
 
+
+                }
 
 
                 String transactionStatus = "InProgress";
+                String transactionSaved = "Saved";
 
-                if (transactionStatus.equals("InProgress")) {
+                if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
                     if (transactionIdInProgress == null) {
                         transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                         // Store the transaction ID in SharedPreferences
@@ -122,7 +133,8 @@ public class SalesFragment extends Fragment {
                 // Insert/update the transaction into the Transaction table
                 int itemId = Integer.parseInt(id);
                 double totalPrice = Double.parseDouble(price);
-                String vat = String.valueOf(2);
+                String vat= String.valueOf(calculateTax());
+                String priceWithoutVat= String.valueOf(calculatePricewithoutTax());
 
 // Update the transaction ID for all items in progress
                 if (transactionStatus.equals("InProgress")) {
@@ -145,14 +157,16 @@ public class SalesFragment extends Fragment {
 
                           int  newQuantity = currentQuantity + 1;
                           double  newTotalPrice = UnitPrice * newQuantity;
-                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice);
+                        double newVat= newQuantity * calculateTax();
+                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat);
 
                     } else {
                       double  UnitPrice = Double.parseDouble(price);
                         double  newTotalPrice = UnitPrice * 1;
 
                         // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice);
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice, Double.parseDouble(priceWithoutVat));
+
                         refreshTicketFragment();
                     }
                 } else {
@@ -160,7 +174,7 @@ public class SalesFragment extends Fragment {
                     double  newTotalPrice = UnitPrice * 1;
 
                     // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice);
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice, Double.parseDouble(priceWithoutVat));
                     refreshTicketFragment();
                 }
 
@@ -189,9 +203,51 @@ public class SalesFragment extends Fragment {
     private void refreshTicketFragment() {
         TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            ticketFragment.refreshData(calculateTotalAmount());
+            ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
         }
     }
+
+    public double calculateTax() {
+        double TaxAmount = 0.0;
+
+        double  UnitPrice = Double.parseDouble(price);
+        if(VatVall.equals("VAT 15%"))
+        {
+            TaxAmount= UnitPrice * 0.15;
+
+
+        }else{
+            TaxAmount= 0.0;
+
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        String formattedTaxAmount = decimalFormat.format(TaxAmount);
+        TaxAmount = Double.parseDouble(formattedTaxAmount);
+
+        return TaxAmount;
+    }
+    public double calculatePricewithoutTax() {
+
+        double PriceWithoutVat=0.0;
+        double  UnitPrice = Double.parseDouble(price);
+        if(VatVall.equals("VAT 15%"))
+        {
+
+            PriceWithoutVat= UnitPrice * 0.85;
+
+        } else{
+            PriceWithoutVat= UnitPrice ;
+
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        String formattedTaxAmount = decimalFormat.format(PriceWithoutVat);
+        PriceWithoutVat = Double.parseDouble(formattedTaxAmount);
+
+        return PriceWithoutVat;
+    }
+
     public double calculateTotalAmount() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double totalAmount = 0.0;
@@ -206,6 +262,21 @@ public class SalesFragment extends Fragment {
             cursor.close();
         }
         return totalAmount;
+    }
+    public double calculateTotalTax() {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        double TaxtotalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            do {
+                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
+                TaxtotalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return TaxtotalAmount;
     }
 
 

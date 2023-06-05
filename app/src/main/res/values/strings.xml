@@ -316,6 +316,8 @@
     <string name="no">No</string>
     <string name="item_deleted">Item deleted</string>
     <string name="delete_failed">Deletion failed</string>
+    <string name="Total">Total</string>
+    <string name="ValTicket">Validate Ticket</string>
 
 
 </resources>

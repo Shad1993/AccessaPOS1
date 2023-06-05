@@ -10,6 +10,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.accessa.ibora.Constants;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Table Names
@@ -105,6 +109,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     // Transaction table columns
+    public static String TRANSACTION_STATUS_Saved = "Saved";
     public static final String TRANSACTION_ID = "TranscationId";
     public static final String ITEM_ID = "ItemId";
     public static final String TRANSACTION_DATE = "TransactionDate";
@@ -211,7 +216,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
-    private static final String UNIT_PRICE ="UnitPrice" ;
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -302,7 +306,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             LongDescription + " TEXT NOT NULL, " +
-            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Started', 'InProgress', 'Completed')), " +
+            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Saved', 'InProgress', 'Completed')), " +
             TRANSACTION_SHOP_NO + " TEXT, " +
             TRANSACTION_TERMINAL_NO + " TEXT, " +
             TRANSACTION_DATE_CREATED + " TEXT, " +
@@ -390,6 +394,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "FOREIGN KEY (" + SETTLEMENT_INVOICE_ID + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -426,7 +431,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus,double UnitPrice) {
+    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus,double UnitPrice,double priceWithoutVat) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -435,20 +440,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(QUANTITY, quantity);
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
-        values.put(LongDescription, longDescription); // Add long description
-        values.put(TRANSACTION_UNIT_PRICE, UnitPrice); // Add long description
-        values.put(TRANSACTION_STATUS, TransactionStatus); // Add long description
+        values.put(LongDescription, longDescription);
+        values.put(TRANSACTION_UNIT_PRICE, UnitPrice);
+        values.put(TRANSACTION_STATUS, TransactionStatus);
+        values.put(TRANSACTION_TOTAL_HT_A, priceWithoutVat);
+        values.put(TRANSACTION_TOTAL_TTC, totalPrice);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
 
+    public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
+                                         String currentTime, double totalHT_A, double totalTTC, int quantityItem, String cashierId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_TICKET_NO, transactionId);
+        values.put(TRANSACTION_TOTAL_TTC, totalAmount);
+        values.put(TRANSACTION_DATE_CREATED, currentDate);
+        values.put(TRANSACTION_TIME_CREATED, currentTime);
+        values.put(TRANSACTION_TOTAL_HT_A, totalHT_A);
+        values.put(TRANSACTION_TOTAL_TTC, totalTTC);
+        values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
+        values.put(TRANSACTION_CASHIER_CODE, cashierId);
 
+        long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
+        return result != -1;
+    }
 
-    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice) {
+    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(QUANTITY, newQuantity);
         values.put(TOTAL_PRICE, newTotalPrice);
+        values.put(VAT, newVat);
 
         String selection = ITEM_ID + " = ?";
         String[] selectionArgs = { String.valueOf(itemId) };
@@ -481,24 +504,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
-    public double getItemPrice(String id) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        double price = 0;
 
-        String[] projection = {Price};
-        String selection = _ID + " = ?";
-        String[] selectionArgs = {id};
-
-        Cursor cursor = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, null);
-        if (cursor.moveToFirst()) {
-            price = cursor.getDouble(cursor.getColumnIndex(Price));
-        }
-
-        cursor.close();
-        db.close();
-
-        return price;
-    }
 
     public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
@@ -656,6 +662,69 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {status, transactionId};
         return db.rawQuery(query, selectionArgs);
     }
+
+
+
+
+    public double getItemPrice(String id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        double price = 0;
+
+        String[] projection = {Price};
+        String selection = _ID + " = ?";
+        String[] selectionArgs = {id};
+
+        Cursor cursor = db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+        if (cursor.moveToFirst()) {
+            price = cursor.getDouble(cursor.getColumnIndex(Price));
+        }
+
+        cursor.close();
+        db.close();
+
+        return price;
+    }
+
+
+    public String getCurrentDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
+    public String getCurrentTime() {
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return timeFormat.format(date);
+    }
+
+
+
+    public int calculateTotalItemQuantity() {
+        int totalQuantity = 0;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            String query = "SELECT SUM(" + QUANTITY + ") FROM " + TRANSACTION_TABLE_NAME;
+            cursor = db.rawQuery(query, null);
+
+            if (cursor.moveToFirst()) {
+                totalQuantity = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return totalQuantity;
+    }
+
+
+
 }
 
 
