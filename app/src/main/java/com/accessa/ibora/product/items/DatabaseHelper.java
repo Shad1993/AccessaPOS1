@@ -23,7 +23,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COST_TABLE_NAME = "Cost";
     public static final String TRANSACTION_TABLE_NAME = "Transactions";
     public static final String TRANSACTION_HEADER_TABLE_NAME = "TransactionHeader";
-    public static final String TRANSACTION_STATUS_IN_PROGRESS ="InProgress";
+    public static final String TRANSACTION_STATUS_IN_PROGRESS = "InProgress";
     public static final String TRANSACTION_UNIT_PRICE = "UnitPrice";
 
 
@@ -77,7 +77,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Column names
 
     public static final String COLUMN_CASHOR_id = "cashorid";
-    public static final String TRANSACTION_STATUS_COMPLETED ="Completed" ;
+    public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
     static final String COLUMN_CASHOR_NAME = "cashorname";
@@ -114,8 +114,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String ITEM_ID = "ItemId";
     public static final String TRANSACTION_DATE = "TransactionDate";
 
-    public static final String TRANSACTION_STATUS="TransactionStatus";
-;
+    public static final String TRANSACTION_STATUS = "TransactionStatus";
+    ;
     public static final String QUANTITY = "Quantity";
     public static final String TOTAL_PRICE = "TotalPrice";
 
@@ -170,7 +170,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_ID_SALESH = "IDSalesH";
     private static final String TRANSACTION_CLIENT_CODE = "ClientCode";
     private static final String TRANSACTION_LOYALTY = "Loyalty";
-    private static final String TRANSACTION_TICKET_NO="TranscationId";
+    private static final String TRANSACTION_TICKET_NO = "TranscationId";
 
 
     // Invoice Settlement table columns
@@ -306,7 +306,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             LongDescription + " TEXT NOT NULL, " +
-            TRANSACTION_STATUS  + " TEXT NOT NULL CHECK(TransactionStatus IN ('Saved', 'InProgress', 'Completed')), " +
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('Saved', 'InProgress', 'Completed')), " +
             TRANSACTION_SHOP_NO + " TEXT, " +
             TRANSACTION_TERMINAL_NO + " TEXT, " +
             TRANSACTION_DATE_CREATED + " TEXT, " +
@@ -400,7 +400,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_ITEMS_TABLE);
@@ -431,7 +430,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public long insertTransaction(int itemId,String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription,String TransactionStatus,double UnitPrice,double priceWithoutVat) {
+    public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription, String TransactionStatus, double UnitPrice, double priceWithoutVat) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -474,10 +473,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(VAT, newVat);
 
         String selection = ITEM_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(itemId) };
+        String[] selectionArgs = {String.valueOf(itemId)};
 
         db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
     }
+
     public void updateAllTransactionsStatus(String newStatus) {
         SQLiteDatabase db = getWritableDatabase();
 
@@ -489,6 +489,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] whereArgs = {TRANSACTION_STATUS_IN_PROGRESS};
         db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
     }
+    public boolean updateTransactionHeader(String transactionIdInProgress, double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_TOTAL_TTC, totalAmount);
+        values.put(TRANSACTION_DATE_MODIFIED, currentDate);
+        values.put(TRANSACTION_TIME_CREATED, currentTime);
+        values.put(TRANSACTION_TOTAL_HT_A, totalHT_a);
+        values.put(TRANSACTION_TOTAL_TTC, totalTTC);
+        values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
+
+
+        String selection = TRANSACTION_TICKET_NO + " = ?";
+        String[] selectionArgs = {transactionIdInProgress};
+
+        int rowsAffected = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
+        return rowsAffected > 0;
+    }
+
     public Cursor getAllTransactions() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TRANSACTION_TABLE_NAME, null, null, null, null, null, null);
@@ -497,13 +516,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getAllInProgressTransactions() {
         SQLiteDatabase db = getReadableDatabase();
         String selection = TRANSACTION_STATUS + "=?";
-        String[] selectionArgs = { "InProgress" };
+        String[] selectionArgs = {"InProgress"};
 
         return db.query(TRANSACTION_TABLE_NAME, null, selection, selectionArgs, null, null, null);
     }
-
-
-
 
 
     public Cursor getAllItems() {
@@ -548,6 +564,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor getAllCosts() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(COST_TABLE_NAME, null, null, null, null, null, null);
@@ -557,16 +574,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(SUBDEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor getUserByPIN(String enteredPIN) {
         SQLiteDatabase db = getReadableDatabase();
         String[] selectionArgs = {enteredPIN};
         String query = "SELECT * FROM " + TABLE_NAME_Users + " WHERE pin = ?";
         return db.rawQuery(query, selectionArgs);
     }
+
     public Cursor getAllVendor() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(VENDOR_TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription, Category, Price};
@@ -584,7 +604,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = DEPARTMENT_NAME + " ASC";
         return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
-
 
 
     public Cursor searchVendor(String query) {
@@ -626,6 +645,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return exists;
     }
+
     public boolean checkBarcodeExists(String barcode) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, Barcode + "=?",
@@ -636,15 +656,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-
     public Cursor getTransactionByItemId(int itemId) {
         SQLiteDatabase db = getReadableDatabase();
         String selection = ITEM_ID + " = ? AND " + TRANSACTION_STATUS + " = ?";
-        String[] selectionArgs = { String.valueOf(itemId), "InProgress" };
+        String[] selectionArgs = {String.valueOf(itemId), "InProgress"};
         return db.query(TRANSACTION_TABLE_NAME, null, selection, selectionArgs, null, null, null);
     }
-
-
 
 
     public void updateTransactionIds(String newTransactionId) {
@@ -662,8 +679,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {status, transactionId};
         return db.rawQuery(query, selectionArgs);
     }
-
-
 
 
     public double getItemPrice(String id) {
@@ -699,7 +714,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-
     public int calculateTotalItemQuantity() {
         int totalQuantity = 0;
         SQLiteDatabase db = this.getReadableDatabase();
@@ -722,6 +736,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return totalQuantity;
     }
+
 
 
 
