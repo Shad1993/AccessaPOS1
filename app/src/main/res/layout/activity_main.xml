@@ -56,7 +56,7 @@
         android:id="@+id/right_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="1000dp"
+        android:layout_marginLeft="400dp"
       >
 
         <fragment
@@ -64,7 +64,7 @@
             class="com.accessa.ibora.sales.ticket.TicketFragment"
             android:layout_width="0dp"
             android:layout_height="fill_parent"
-            android:layout_weight="0.4"
+            android:layout_weight="0.5"
             />
     </FrameLayout>
 

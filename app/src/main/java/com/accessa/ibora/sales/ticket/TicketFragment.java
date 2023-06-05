@@ -28,7 +28,7 @@ public class TicketFragment extends Fragment  {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
-
+private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
     private  String ItemId;
 private String transactionIdInProgress;
@@ -58,7 +58,7 @@ private String transactionIdInProgress;
             }
         });
 
-
+        SendToHeader(totalAmount,TaxtotalAmount);
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -111,10 +111,6 @@ private String transactionIdInProgress;
                 updateTransactionStatus(totalAmount,TaxtotalAmount);
                 // Get the activity associated with the fragment
                 AppCompatActivity activity = (AppCompatActivity) requireActivity();
-
-
-                    //Update data in Header
-                UpdateHeader(totalAmount,TaxtotalAmount);
 
                 // Create and show the dialog fragment with the data
                 validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(transactionIdInProgress);
@@ -176,7 +172,7 @@ private String transactionIdInProgress;
 
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
-
+      //  SendToHeader(totalAmount,TaxtotalAmount);
 
 
         // Update the transaction status for all in-progress transactions to "Completed"
@@ -201,10 +197,7 @@ private String transactionIdInProgress;
         editor.apply();*/
     }
 
-    private void UpdateHeader(double totalAmount, double taxtotalAmount) {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
-        mAdapter.swapCursor(cursor);
-        mAdapter.notifyDataSetChanged();
+    private void SendToHeader(double totalAmount, double taxtotalAmount) {
 
 
         // Save the transaction details in the TRANSACTION_HEADER table
@@ -275,7 +268,40 @@ private String transactionIdInProgress;
 
         return TaxtotalAmount;
     }
+public void updateheader(double totalAmount, double TaxtotalAmount){
+    // Get the current date and time
+    String currentDate = mDatabaseHelper.getCurrentDate();
+    String currentTime = mDatabaseHelper.getCurrentTime();
 
+    // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+    double totalHT_A = calculateTotalAmount();
+    double totalTTC = totalAmount;
+
+    // Get the total quantity of items in the transaction
+    int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+
+    // Retrieve the cashier ID from SharedPreferences
+
+    // Save the transaction details in the TRANSACTION_HEADER table
+    boolean success = mDatabaseHelper.updateTransactionHeader(
+            transactionIdInProgress,
+            totalAmount,
+            currentDate,
+            currentTime,
+            totalHT_A,
+            totalTTC,
+            quantityItem
+    );
+
+    if (success) {
+        // Transaction header saved successfully
+        Toast.makeText(getContext(), "Transaction completed", Toast.LENGTH_SHORT).show();
+    } else {
+        // Failed to save transaction header, handle the error
+        Toast.makeText(getContext(), "Failed to save transaction header", Toast.LENGTH_SHORT).show();
+    }
+
+}
     public void refreshData(double totalAmount, double TaxtotalAmount) {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         mAdapter.swapCursor(cursor);
@@ -306,38 +332,8 @@ private String transactionIdInProgress;
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
-        // Get the current date and time
-        String currentDate = mDatabaseHelper.getCurrentDate();
-        String currentTime = mDatabaseHelper.getCurrentTime();
-
-        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-        double totalHT_A = calculateTotalAmount();
-        double totalTTC = totalAmount;
-
-        // Get the total quantity of items in the transaction
-        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
-
-        // Retrieve the cashier ID from SharedPreferences
-
-        // Save the transaction details in the TRANSACTION_HEADER table
-        boolean success = mDatabaseHelper.updateTransactionHeader(
-                transactionIdInProgress,
-                totalAmount,
-                currentDate,
-                currentTime,
-                totalHT_A,
-                totalTTC,
-                quantityItem
-        );
-
-        if (success) {
-            // Transaction header saved successfully
-            Toast.makeText(getContext(), "Transaction completed", Toast.LENGTH_SHORT).show();
-        } else {
-            // Failed to save transaction header, handle the error
-            Toast.makeText(getContext(), "Failed to save transaction header", Toast.LENGTH_SHORT).show();
-        }
-
+       // SendToHeader(totalAmount,TaxtotalAmount);
+        updateheader(totalAmount,TaxtotalAmount);
 
         // Play the sound effect
         playSoundEffect();
