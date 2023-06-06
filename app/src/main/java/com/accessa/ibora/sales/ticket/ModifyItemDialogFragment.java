@@ -33,10 +33,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private static final String ARG_LONG_DESC = "long_desc";
     private static final String ARG_Item_id = "Item_Id";
     private   String ITEM_ID;
-    private double UnitPrice;
-    private  String existingTransactionId;
-    private  double  newTotalPrice;
-    private String transactionIdInProgress; // Transaction ID for "InProgress" status
+
     private DatabaseHelper mDatabaseHelper;
 
     public static ModifyItemDialogFragment newInstance(String quantity, String price, String longDesc, String itemId) {

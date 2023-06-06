@@ -60,7 +60,7 @@ public class SalesFragment extends Fragment {
 
 
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-        cashierId = sharedPreference.getString("cashorid", null);
+        cashierId = sharedPreference.getString("cashorId", null);
         dbManager = new DBManager(getContext());
         dbManager.open();
 
@@ -169,7 +169,7 @@ public class SalesFragment extends Fragment {
                         double  newTotalPrice = UnitPrice * 1;
 
                         // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice, Double.parseDouble(priceWithoutVat));
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat));
 
                         refreshTicketFragment();
                     }
@@ -178,7 +178,7 @@ public class SalesFragment extends Fragment {
                     double  newTotalPrice = UnitPrice * 1;
 
                     // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, transactionStatus,UnitPrice, Double.parseDouble(priceWithoutVat));
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat));
                     refreshTicketFragment();
                 }
 
@@ -297,7 +297,7 @@ public class SalesFragment extends Fragment {
             // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
             double totalHT_A = calculateTotalAmount();
             double totalTTC = totalAmount;
-
+            String transactionStatus = "InProgress";
             // Get the total quantity of items in the transaction
             int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
 
@@ -312,7 +312,8 @@ public class SalesFragment extends Fragment {
                     totalHT_A,
                     totalTTC,
                     quantityItem,
-                    cashierId
+                    cashierId,
+                    transactionStatus
             );
 
 

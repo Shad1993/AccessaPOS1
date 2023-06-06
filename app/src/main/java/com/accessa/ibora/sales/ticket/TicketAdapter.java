@@ -15,6 +15,8 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHolder> {
 
@@ -26,6 +28,26 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         mCursor = cursor;
     }
 
+    public List<Transaction> getData() {
+        List<Transaction> transactionList = new ArrayList<>();
+
+        // Iterate through the cursor and add data to the list
+        if (mCursor != null && mCursor.moveToFirst()) {
+            do {
+                String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
+                double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+                int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                double unitPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
+
+
+                Transaction item = new Transaction(itemName, itemPrice, itemQuantity,unitPrice);
+                transactionList.add(item);
+            } while (mCursor.moveToNext());
+        }
+
+        return transactionList;
+    }
+
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView idTextView;
@@ -34,7 +56,6 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public TextView QuantityTextView;
         private TextView ItemIdTextView;
 
-        private TextView TVATextView;
 
 
         public ItemViewHolder(View itemView) {
@@ -43,7 +64,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
-            //TVATextView = itemView.findViewById(R.id.Tax_text_view);
+
 
         }
     }
@@ -65,14 +86,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
-        String TVA = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.VAT));
+
 
         // Format the price to two decimal places
         double formattedPrice = Double.parseDouble(price);
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-        String formattedPriceString = decimalFormat.format(formattedPrice);
-
-        int quantityValue = Integer.parseInt(quantity);
         double totalPrice = formattedPrice ;
         String totalPriceString = decimalFormat.format(totalPrice);
 
@@ -81,7 +99,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         holder.nameTextView.setText(description);
         holder.QuantityTextView.setText("x  " + quantity ); // Add a multiplication sign after the quantity value
         holder.PriceTextView.setText("Rs " + totalPriceString);
-//        holder.TVATextView.setText(TVA);
+
     }
 
 

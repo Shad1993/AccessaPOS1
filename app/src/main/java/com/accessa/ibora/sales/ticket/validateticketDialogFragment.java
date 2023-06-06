@@ -2,14 +2,17 @@ package com.accessa.ibora.sales.ticket;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,6 +21,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
@@ -28,12 +32,12 @@ import java.util.Locale;
 
 public class validateticketDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
-    private static final String ARG_QUANTITY = "quantity";
-    private static final String ARG_PRICE = "price";
-    private static final String ARG_LONG_DESC = "long_desc";
+    private String transactionIdInProgress;
+    private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
     private   String Transaction_Id;
-
+    private String cashierId;
+    private double totalAmount,TaxtotalAmount;
     private DatabaseHelper mDatabaseHelper;
 
     public static validateticketDialogFragment newInstance( String transactionId) {
@@ -65,7 +69,30 @@ public class validateticketDialogFragment extends DialogFragment {
 
             Transaction_Id = args.getString(ARG_Transaction_id);
 
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
+
+            SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+            cashierId = sharedPreference.getString("cashorId", null);
+
+
+            mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
+
+            // Retrieve the total amount and total tax amount from the transactionheader table
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+                totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+
+                TextView totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+                totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+            }
 
 
 
@@ -76,6 +103,8 @@ public class validateticketDialogFragment extends DialogFragment {
         cashButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                updateTransactionStatus();
             }
         });
         // Retrieve the delete button and set its click listener
@@ -96,11 +125,6 @@ public class validateticketDialogFragment extends DialogFragment {
                         // Get the current date and time for the transaction
                         String lastmodified = getCurrentDateTime();
                         String id= Transaction_Id;
-
-
-
-                        double UnitPrice= mDatabaseHelper.getItemPrice(id);
-
 
 
                         returnHome();
@@ -126,7 +150,24 @@ public class validateticketDialogFragment extends DialogFragment {
             }
         }
     }
+    private void updateTransactionStatus() {
 
+        // Retrieve the SharedPreferences
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+
+        // Get the SharedPreferences editor
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        // Clear all the stored data in SharedPreferences
+        editor.clear();
+
+        // Apply the changes
+        editor.apply();
+
+        Intent intent = new Intent(getActivity(), printerSetup.class);
+
+        startActivity(intent);
+    }
     public void returnHome() {
         Intent home_intent1 = new Intent(getContext(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

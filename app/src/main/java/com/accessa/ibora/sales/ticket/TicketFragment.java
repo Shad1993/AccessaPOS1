@@ -27,6 +27,8 @@ import com.bumptech.glide.Glide;
 public class TicketFragment extends Fragment  {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
+
+    private String cashierId;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
@@ -77,6 +79,10 @@ private String transactionIdInProgress;
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
+        SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorId", null);
+
+
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
         // Retrieve the total amount and total tax amount from the transactionheader table
@@ -124,9 +130,7 @@ private String transactionIdInProgress;
         checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                double totalAmount = calculateTotalAmount();
-                double TaxtotalAmount = calculateTotalTax();
-                updateTransactionStatus(totalAmount,TaxtotalAmount);
+
                 // Get the activity associated with the fragment
                 AppCompatActivity activity = (AppCompatActivity) requireActivity();
 
@@ -186,29 +190,6 @@ private String transactionIdInProgress;
 
         return view;
     }
-    private void updateTransactionStatus(double totalAmount, double TaxtotalAmount) {
-
-        // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
-
-
-
-        // Update the transaction status for all in-progress transactions to "Completed"
-      //  mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
-
-  /*
-        // Retrieve the SharedPreferences
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-
-        // Get the SharedPreferences editor
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        // Clear all the stored data in SharedPreferences
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();*/
-    }
 
 
 
@@ -244,9 +225,11 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
     String currentTime = mDatabaseHelper.getCurrentTime();
 
     // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-    double totalHT_A = calculateTotalAmount();
+
     double totalTTC = totalAmount;
     double totaltax= TaxtotalAmount;
+    double totalHT_A = totalTTC-totaltax;
+
 
     // Get the total quantity of items in the transaction
     int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
@@ -262,7 +245,8 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
             totalHT_A,
             totalTTC,
             quantityItem,
-            totaltax
+            totaltax,
+            cashierId
     );
 
     if (success) {
