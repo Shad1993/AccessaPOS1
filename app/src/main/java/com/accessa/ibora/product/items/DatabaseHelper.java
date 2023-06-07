@@ -330,7 +330,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             QUANTITY + " INTEGER NOT NULL, " +
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
-             VAT_Type + " TEXT NOT NULL CHECK(VAT IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
+            VAT_Type + " TEXT NOT NULL CHECK(VatType IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
             LongDescription + " TEXT NOT NULL, " +
             TRANSACTION_SHOP_NO + " TEXT, " +
             TRANSACTION_TERMINAL_NO + " TEXT, " +
