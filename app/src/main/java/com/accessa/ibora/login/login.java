@@ -134,7 +134,7 @@ public class login extends AppCompatActivity {
             // Load the GIF using Glide
             Glide.with(this)
                     .asGif()
-                    .load(R.drawable.folderwalk)
+                    .load(R.drawable.hello)
                     .into(gifImageView);
                   // Find the "Retry" button
                 Button retryButton = view.findViewById(R.id.button_retry);

@@ -112,7 +112,7 @@ private String transactionIdInProgress;
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
         Glide.with(getContext())
                 .asGif()
-                .load(R.drawable.folderwalk)
+                .load(R.drawable.transact)
                 .into(imageView);
 
          emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
