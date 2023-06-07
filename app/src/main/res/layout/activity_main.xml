@@ -56,7 +56,7 @@
         android:id="@+id/right_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="1000dp"
+        android:layout_marginLeft="300dp"
       >
 
         <fragment
