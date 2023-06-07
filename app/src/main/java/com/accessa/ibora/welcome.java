@@ -9,6 +9,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.login.InsertCompanyDataActivity;
+
 public class welcome extends AppCompatActivity {
 
     private Button welcomeButton;
@@ -25,7 +27,7 @@ public class welcome extends AppCompatActivity {
         welcomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(welcome.this, SelectProfile.class);
+                Intent intent = new Intent(welcome.this, InsertCompanyDataActivity.class);
                 startActivity(intent);
             }
         });

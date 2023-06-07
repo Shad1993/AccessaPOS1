@@ -1,0 +1,111 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data Insertion Form"
+        android:textSize="20sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/editAbbrev"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Abbreviation"/>
+
+    <EditText
+        android:id="@+id/editNoStock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="No. of Stock"
+        android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/editNoPrices"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="No. of Prices"
+        android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/editDefSupplierCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Default Supplier Code"/>
+
+    <EditText
+        android:id="@+id/editLogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Logo"/>
+
+    <EditText
+        android:id="@+id/editVATNo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="VAT No"/>
+
+    <EditText
+        android:id="@+id/editBRNNo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="BRN No"/>
+
+    <EditText
+        android:id="@+id/editADR1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ADR 1"/>
+
+    <EditText
+        android:id="@+id/editADR2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ADR 2"/>
+
+    <EditText
+        android:id="@+id/editADR3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ADR 3"/>
+
+    <EditText
+        android:id="@+id/editTelNo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tel No"/>
+
+    <EditText
+        android:id="@+id/editFaxNo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Fax No"/>
+
+    <EditText
+        android:id="@+id/editCompanyName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Company Name"/>
+
+    <Spinner
+        android:id="@+id/spinnerCashierLevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"/>
+
+    <Button
+        android:id="@+id/btnInsertData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Insert Data"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
+
+</LinearLayout>
