@@ -47,6 +47,7 @@ public class SalesFragment extends Fragment {
     private double UnitPrice;
     private String VatVall;
     private String price;
+    private String VatType;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     @Override
@@ -107,7 +108,7 @@ public class SalesFragment extends Fragment {
                 Item item = dbManager.getItemById(id);
                 if (item != null) {
                      VatVall = item.getVAT();
-
+                    VatType=item.getVAT();
 
                 }
 
@@ -156,7 +157,7 @@ public class SalesFragment extends Fragment {
                     if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
                         // Item already selected, update the quantity and total price
                         int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
-                        String VatType = String.valueOf(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.VAT_Type)));
+
                          UnitPrice = Double.parseDouble(price);
 
 
@@ -166,7 +167,7 @@ public class SalesFragment extends Fragment {
                             mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
 
                     } else {
-                        String VatType = String.valueOf(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.VAT_Type)));
+
                       double  UnitPrice = Double.parseDouble(price);
                         double  newTotalPrice = UnitPrice * 1;
 
@@ -181,7 +182,7 @@ public class SalesFragment extends Fragment {
                     double  newTotalPrice = UnitPrice * 1;
 
                     // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),"VAT 0%");
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType);
                     refreshTicketFragment();
                     refreshTotal();
                 }
