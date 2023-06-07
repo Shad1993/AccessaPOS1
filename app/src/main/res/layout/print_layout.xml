@@ -25,5 +25,11 @@
         android:layout_marginTop="16dp"
         android:textSize="12sp"
         android:text="Footer information" />
+    <TextView
+        android:id="@+id/textViewTimestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black" />
+
 
 </LinearLayout>

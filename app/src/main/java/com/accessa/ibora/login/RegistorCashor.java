@@ -25,7 +25,7 @@ public class RegistorCashor extends AppCompatActivity {
     public static final String TABLE_NAME_Users = "Users";
 
 
-    private EditText editTextPIN,editTextLevel,editTextCashor,editTextName;
+    private EditText editTextPIN,editTextLevel,editTextCashor,editTextName,editTextCompanyName;
     private StringBuilder enteredPIN;
     private DBManager dbManager;
     String dbName = Constants.DB_NAME;
@@ -46,6 +46,7 @@ public class RegistorCashor extends AppCompatActivity {
         editTextLevel = findViewById(R.id.editTextLevel);
         editTextCashor = findViewById(R.id.editTextCashor);
         editTextName = findViewById(R.id.editTextName);
+        editTextCompanyName= findViewById(R.id.editTextCompanyName);
 
         // Set click listener for Login button
         Button buttonLogin = findViewById(R.id.buttonLogin);
@@ -143,9 +144,10 @@ public class RegistorCashor extends AppCompatActivity {
             String cashorlevel = editTextLevel.getText().toString();
             String cashorname = editTextCashor.getText().toString();
             String cashordepartment = editTextName.getText().toString();
+            String CompanyName= editTextCompanyName.getText().toString();
             dbManager = new DBManager(getApplicationContext());
             dbManager.open();
-            Cursor cursor1 = dbManager.Registor(pin, cashorlevel, cashorname, cashordepartment );
+            Cursor cursor1 = dbManager.Registor(pin, cashorlevel, cashorname, cashordepartment,CompanyName );
 
 
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();

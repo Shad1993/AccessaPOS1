@@ -61,7 +61,7 @@ private String transactionIdInProgress;
             }
         });
 
-     //   SendToHeader(totalAmount,TaxtotalAmount);
+
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -290,7 +290,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
 
-        updateheader(totalAmount,TaxtotalAmount);
+
 
         // Play the sound effect
         playSoundEffect();

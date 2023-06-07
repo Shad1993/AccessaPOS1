@@ -39,9 +39,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener {
     private boolean doubleBackToExitPressedOnce = false;
-    private RecyclerView recyclerView;
-    private ItemAdapter itemAdapter;
-    private DatabaseHelper dbHelper;
 
     private TextView name;
     private TextView CashorId;
@@ -55,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     private TextView cashorIdTextView;
     private String cashorId;
     private String cashorName;
+    private TextView CompanyName;
+    private String Company_name;
 
     private SharedPreferences sharedPreferences;
 
@@ -79,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
@@ -91,10 +91,12 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
+        CompanyName = headerView.findViewById(R.id.Company_name);
 
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
+        CompanyName.setText(Company_name);
 
         // Initialize the TicketFragment
         ticketFragment = new TicketFragment();
@@ -215,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
+               ticketFragment.updateheader(totalAmount,TaxtotalAmount);
             }
         }
     }

@@ -156,30 +156,34 @@ public class SalesFragment extends Fragment {
                     if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
                         // Item already selected, update the quantity and total price
                         int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                        String VatType = String.valueOf(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.VAT_Type)));
                          UnitPrice = Double.parseDouble(price);
 
 
                           int  newQuantity = currentQuantity + 1;
                           double  newTotalPrice = UnitPrice * newQuantity;
                         double newVat= newQuantity * calculateTax();
-                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat);
+                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
 
                     } else {
+                        String VatType = String.valueOf(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.VAT_Type)));
                       double  UnitPrice = Double.parseDouble(price);
                         double  newTotalPrice = UnitPrice * 1;
 
                         // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat));
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
 
                         refreshTicketFragment();
+                        refreshTotal();
                     }
                 } else {
                     double  UnitPrice = Double.parseDouble(price);
                     double  newTotalPrice = UnitPrice * 1;
 
                     // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat));
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),"VAT 0%");
                     refreshTicketFragment();
+                    refreshTotal();
                 }
 
                 if (cursor != null) {
@@ -210,7 +214,12 @@ public class SalesFragment extends Fragment {
             ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
         }
     }
-
+    private void refreshTotal() {
+        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            ticketFragment.updateheader(calculateTotalAmount(),calculateTotalTax());
+        }
+    }
     public double calculateTax() {
         double TaxAmount = 0.0;
 

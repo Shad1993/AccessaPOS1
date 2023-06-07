@@ -313,5 +313,8 @@
     <string name="delete_failed">Deletion failed</string>
     <string name="Total">Total</string>
     <string name="ValTicket">Validate Ticket</string>
+    <string name="Footer_See_You">See You Again!!</string>
+    <string name="Footer_Have">Have a Nice Day</string>
+    <string name="Footer_OpenHours">Opening Hours between:</string>
 
 </resources>

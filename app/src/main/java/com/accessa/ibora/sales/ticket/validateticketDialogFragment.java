@@ -80,7 +80,7 @@ public class validateticketDialogFragment extends DialogFragment {
             mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(Transaction_Id);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -104,7 +104,14 @@ public class validateticketDialogFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
 
-                updateTransactionStatus();
+                printData();
+            }
+
+            private void printData() {
+
+                Intent intent = new Intent(getActivity(), printerSetup.class);
+
+                startActivity(intent);
             }
         });
         // Retrieve the delete button and set its click listener
@@ -150,24 +157,7 @@ public class validateticketDialogFragment extends DialogFragment {
             }
         }
     }
-    private void updateTransactionStatus() {
 
-        // Retrieve the SharedPreferences
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-
-        // Get the SharedPreferences editor
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        // Clear all the stored data in SharedPreferences
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();
-
-        Intent intent = new Intent(getActivity(), printerSetup.class);
-
-        startActivity(intent);
-    }
     public void returnHome() {
         Intent home_intent1 = new Intent(getContext(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

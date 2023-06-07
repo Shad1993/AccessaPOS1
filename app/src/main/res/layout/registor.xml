@@ -61,7 +61,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Cashor"
+            android:text="Enter Cashor name"
             android:textSize="24sp"
             android:textColor="@android:color/white"
             android:layout_gravity="center_horizontal"
@@ -82,7 +82,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Name"
+            android:text="Enter  Department Name"
             android:textSize="24sp"
             android:textColor="@android:color/white"
             android:layout_gravity="center_horizontal"
@@ -90,6 +90,27 @@
 
         <EditText
             android:id="@+id/editTextName"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:textSize="20sp"
+            android:textColor="@android:color/white"
+            android:background="@android:color/white"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter  Company Name"
+            android:textSize="24sp"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp" />
+
+        <EditText
+            android:id="@+id/editTextCompanyName"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:inputType="text"

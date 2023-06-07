@@ -78,6 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Column names
 
     public static final String COLUMN_CASHOR_id = "cashorid";
+    public static final String COLUMN_CASHOR_COMPANY ="CompanyName" ;
     public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
@@ -122,9 +123,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TRANSACTION_SHOP_NO = "ShopNo";
     private static final String TRANSACTION_TERMINAL_NO = "TerminalNo";
-    private static final String TRANSACTION_DATE_CREATED = "DateCreated";
+    public static final String TRANSACTION_DATE_CREATED = "DateCreated";
     private static final String TRANSACTION_DATE_MODIFIED = "DateModified";
-    private static final String TRANSACTION_TIME_CREATED = "TimeCreated";
+    public static final String TRANSACTION_TIME_CREATED = "TimeCreated";
     private static final String TRANSACTION_TIME_MODIFIED = "TimeModified";
     private static final String TRANSACTION_CODE = "Code";
     private static final String TRANSACTION_DESCRIPTION = "Description";
@@ -191,6 +192,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String SETTLEMENT_PAYMENT_NAME = "PaymentName";
     public static final String SETTLEMENT_CHEQUE_NO = "ChequeNo";
 
+    // Company tabel
+
+    public static final String TABLE_NAME_STD_ACCESS = "std_access";
+    private static final String COLUMN_STD_ACCESS_ID = "std_access_id";
+    private static final String COLUMN_ABBREV = "abbrev";
+    private static final String COLUMN_NO_STOCK = "no_stock";
+    private static final String COLUMN_NO_PRICES = "no_prices";
+    private static final String COLUMN_DEF_SUPPLIER_CODE = "def_supplier_code";
+    private static final String COLUMN_VAT_NO = "vat_no";
+    private static final String COLUMN_BRN_NO = "brn_no";
+    private static final String COLUMN_ADR_1 = "adr_1";
+    private static final String COLUMN_ADR_2 = "adr_2";
+    private static final String COLUMN_ADR_3 = "adr_3";
+    private static final String COLUMN_TEL_NO = "tel_no";
+    private static final String COLUMN_FAX_NO = "fax_no";
+    public static String VAT_Type= "VatType";
+    private static final String COLUMN_Logo = "Logo";
+    public static final String COLUMN_COMPANY_NAME = "company_name";
 
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
@@ -249,12 +268,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COST_TABLE_NAME + "(" + Barcode + "));";
 
 
+
     // Creating Users table query
     private static final String CREATE_USERS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_Users + " ("
             + COLUMN_CASHOR_id + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_PIN + " TEXT, "
             + COLUMN_CASHOR_LEVEL + " INTEGER, "
             + COLUMN_CASHOR_NAME + " TEXT, "
+            + COLUMN_CASHOR_COMPANY + " TEXT, "
             + COLUMN_CASHOR_DEPARTMENT + " TEXT)";
 
 
@@ -309,6 +330,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             QUANTITY + " INTEGER NOT NULL, " +
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
+             VAT_Type + " TEXT NOT NULL CHECK(VAT IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
             LongDescription + " TEXT NOT NULL, " +
             TRANSACTION_SHOP_NO + " TEXT, " +
             TRANSACTION_TERMINAL_NO + " TEXT, " +
@@ -398,7 +420,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             SETTLEMENT_CHEQUE_NO + " TEXT, " +
             "FOREIGN KEY (" + SETTLEMENT_INVOICE_ID + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
-
+    private static final String CREATE_STD_ACCESS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_STD_ACCESS + " ("
+            + COLUMN_STD_ACCESS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_ABBREV + " TEXT, "
+            + COLUMN_NO_STOCK + " INTEGER, "
+            + COLUMN_NO_PRICES + " INTEGER, "
+            + COLUMN_DEF_SUPPLIER_CODE + " TEXT, "
+             + COLUMN_Logo + " TEXT, "
+            + COLUMN_VAT_NO + " TEXT, "
+            + COLUMN_BRN_NO + " TEXT, "
+            + COLUMN_ADR_1 + " TEXT, "
+            + COLUMN_ADR_2 + " TEXT, "
+            + COLUMN_ADR_3 + " TEXT, "
+            + COLUMN_TEL_NO + " TEXT, "
+            + COLUMN_FAX_NO + " TEXT, "
+            + COLUMN_COMPANY_NAME + " TEXT, "
+            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
+            + ")";
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -417,6 +455,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TRANSACTION_TABLE);
         db.execSQL(CREATE_TRANSACTION_HEADER);
         db.execSQL(CREATE_INVOICE_SETTLEMENT_TABLE);
+        db.execSQL(CREATE_STD_ACCESS_TABLE);
     }
 
     @Override
@@ -431,11 +470,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + DISCOUNT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_HEADER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + INVOICE_SETTLEMENT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_STD_ACCESS);
 
         onCreate(db);
     }
 
-    public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity, double totalPrice, double vat, String longDescription, double UnitPrice, double priceWithoutVat) {
+
+    public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
+                                  double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
+                                  String vatType) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -445,12 +488,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
         values.put(LongDescription, longDescription);
-        values.put(TRANSACTION_UNIT_PRICE, UnitPrice);
+        values.put(TRANSACTION_UNIT_PRICE, unitPrice);
         values.put(TRANSACTION_TOTAL_HT_A, priceWithoutVat);
         values.put(TRANSACTION_TOTAL_TTC, totalPrice);
+        values.put(VAT_Type, vatType);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
-
     public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
                                          String currentTime, double totalHT_A, double totalTTC, int quantityItem, String cashierId, String transactionStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -484,13 +527,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat) {
+    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat, String vatType) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(QUANTITY, newQuantity);
         values.put(TOTAL_PRICE, newTotalPrice);
         values.put(VAT, newVat);
+        values.put(VAT_Type, vatType);
 
         String selection = ITEM_ID + " = ?";
         String[] selectionArgs = {String.valueOf(itemId)};
@@ -741,7 +785,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, selectionArgs);
     }
+    public Cursor getCompanyInfo(String companyName) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT * FROM " + TABLE_NAME_STD_ACCESS +
+                " WHERE " + COLUMN_COMPANY_NAME + " = ?";
+
+        if (companyName != null) {
+            return db.rawQuery(query, new String[]{companyName});
+        } else {
+            // Handle the case where transactionId is null
+            // You can choose to return null or an empty cursor, depending on your requirements
+            return null;
+        }
+    }
     public Cursor getTransactionHeader(String transactionId) {
         SQLiteDatabase db = this.getReadableDatabase();
 
