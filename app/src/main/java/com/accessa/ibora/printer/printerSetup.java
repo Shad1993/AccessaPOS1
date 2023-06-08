@@ -49,7 +49,7 @@ public class printerSetup extends AppCompatActivity {
     private String cashierName,cashierId;
     private double totalAmount,TaxtotalAmount;
     private  String DateCreated,timeCreated;
-    private String cashorlevel,CompanyName;
+    private String cashorlevel,CompanyName,LogoPath;
     private TicketAdapter adapter;
 
     private InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
@@ -69,7 +69,7 @@ public class printerSetup extends AppCompatActivity {
                     SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                     transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
-                    SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+                    SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
                     cashierId = sharedPreference.getString("cashorId", null);
                     cashierName = sharedPreference.getString("cashorName", null);
                     cashorlevel = sharedPreference.getString("cashorlevel", null);
@@ -97,7 +97,7 @@ public class printerSetup extends AppCompatActivity {
 
 
                     try {
-                        printLogoAndReceipt(service);
+
 
 
                         // Retrieve the total amount and total tax amount from the transactionheader table
@@ -105,13 +105,27 @@ public class printerSetup extends AppCompatActivity {
 
                         if (cursorCompany != null && cursorCompany.moveToFirst()) {
                             int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
+                            int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_1);
+                            int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_2);
+                            int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
+                            int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
+                            int columnLogoPathIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Logo);
                             String companyName = cursorCompany.getString(columnCompanyNameIndex);
+                            String CompanyAdress1= cursorCompany.getString(columnCompanyAddressIndex);
+                            String CompanyAdress2= cursorCompany.getString(columnCompanyAddress2Index);
+                            String CompanyVatNo= cursorCompany.getString(columnCompanyVATIndex);
+                            String CompanyBRNNo= cursorCompany.getString(columnCompanyBRNIndex);
+                            LogoPath = cursorCompany.getString(columnLogoPathIndex);
 
-
+                            printLogoAndReceipt(service,LogoPath);
 
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
-
+                            // Create the formatted companyAddress1Line  line
+                            String companyAddress1Line = CompanyAdress1 + "\n\n";
+                            String Add1andAdd2 = CompanyAdress1 + ", " + CompanyAdress2 + "\n";
+                            String CompVatNo= getString(R.string.Vat) + "  : " + CompanyVatNo + "\n";
+                            String CompBRNNo= getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n";
                             // Enable bold text
                             byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                             service.sendRAWData(boldOnBytes, null);
@@ -125,7 +139,18 @@ public class printerSetup extends AppCompatActivity {
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
+                            // Print the formatted company name line
+                            service.printText(companyAddress1Line, null);
+                            // Print the formatted company name line
+                            service.printText(companyNameLine, null);
+                            service.printText(Add1andAdd2, null);
+                            service.printText(CompVatNo, null);
+                            service.printText(CompBRNNo, null);
+
                             service.setAlignment(0, null);
+
+
+
                         }
 
 
@@ -214,12 +239,29 @@ public class printerSetup extends AppCompatActivity {
                             service.setFontSize(24, null);
 
 
+                            // Query the transaction table to get distinct VAT types
+                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress);
+                            if (vatCursor != null && vatCursor.moveToFirst()) {
+                                StringBuilder vatTypesBuilder = new StringBuilder();
+                                do {
+                                    int columnIndexVATType = vatCursor.getColumnIndex(DatabaseHelper.VAT_Type);
+                                    String vatType = vatCursor.getString(columnIndexVATType);
+                                    vatTypesBuilder.append(vatType).append(", ");
+                                } while (vatCursor.moveToNext());
+                                vatCursor.close();
+
+                                // Remove the trailing comma and space
+                                String vatTypes = vatTypesBuilder.toString().trim();
+                                if (vatTypes.endsWith(",")) {
+                                    vatTypes = vatTypes.substring(0, vatTypes.length() - 1);
+                                }
 
 
-                            // Create the formatted item price line
-                            String TotalTaxLine = TVA + " ".repeat(Math.max(0, TaxValuePadding)) + TotalVAT;
+                                int vatTypesPadding = lineWidth - TotalVAT.length() - vatTypes.length();
+                                String vatTypesLine = vatTypes + " ".repeat(Math.max(0, vatTypesPadding)) + TotalVAT;
+                                service.printText(vatTypesLine + "\n", null);
+                            }
 
-                            service.printText(TotalTaxLine + "\n", null);
 
                         }
 
@@ -308,7 +350,7 @@ public class printerSetup extends AppCompatActivity {
         }
     }
 
-    private void printLogoAndReceipt(SunmiPrinterService service) {
+    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath) {
         try {
             // Check if the service is connected
             if (service == null) {
@@ -317,7 +359,7 @@ public class printerSetup extends AppCompatActivity {
             }
 
             // Provide the path to the logo image
-            String logoPath = "/storage/emulated/0/Download/download (1).jpeg";
+            String logoPath = LogoPath;
 
             // Load the logo image as a Bitmap with options that preserve transparency
             BitmapFactory.Options options = new BitmapFactory.Options();

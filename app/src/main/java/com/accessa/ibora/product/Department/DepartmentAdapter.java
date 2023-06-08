@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.login.RegistorCashor;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
 public class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.ItemViewHolder> {

@@ -1,4 +1,4 @@
-package com.accessa.ibora.product.menu;
+package com.accessa.ibora.Admin;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,7 +12,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.product.menu.BodyActivity;
+import com.accessa.ibora.product.menu.BodyFragment;
+import com.accessa.ibora.product.menu.MenuFragment;
 import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
 import androidx.annotation.NonNull;
@@ -32,10 +34,11 @@ import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
+import com.accessa.ibora.product.menu.Product;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
-public class Product extends AppCompatActivity implements MenuFragment.OnMenufragListener {
+public class AdminActivity extends AppCompatActivity implements AdminMenuFragment.OnMenufragListener {
     private MaterialToolbar toolbar;
     private boolean doubleBackToExitPressedOnce = false;
     private String cashorId;
@@ -43,14 +46,12 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
     private TextView name;
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
-    private TextView CompanyName;
-    private String Company_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.ac_main);
+        setContentView(R.layout.admin_layout);
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -58,7 +59,6 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
@@ -81,7 +81,6 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-        CompanyName = headerView.findViewById(R.id.Company_name);
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
@@ -129,14 +128,16 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (id == R.id.Sales) {
-                    Intent intent = new Intent(Product.this, MainActivity.class);
+                    Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(AdminActivity.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {
                     Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(Product.this, Product.class);
+                    Toast.makeText(getApplicationContext(), "Items is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(AdminActivity.this, Product.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
@@ -146,7 +147,7 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(Product.this, AdminActivity.class);
+                    Intent intent = new Intent(AdminActivity.this, AdminActivity.class);
                     startActivity(intent);
                 }
                 return true;

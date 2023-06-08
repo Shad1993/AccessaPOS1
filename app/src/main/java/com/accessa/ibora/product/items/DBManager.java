@@ -4,6 +4,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
 
 import android.content.ContentValues;
@@ -72,20 +73,14 @@ public class DBManager {
         database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
 
-    public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment, String companyName) {
+    public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment) {
         ContentValues values = new ContentValues();
         values.put("pin", enteredPIN);
         values.put("cashorlevel", cashorlevel);
         values.put("cashorname", cashorname);
         values.put("cashorDepartment", cashordepartment);
-        values.put(DatabaseHelper.COLUMN_CASHOR_COMPANY, companyName);
 
         database.insert(DatabaseHelper.TABLE_NAME_Users, null, values);
-
-        // Insert the company name into the STD_ACCESS table
-        ContentValues stdAccessValues = new ContentValues();
-        stdAccessValues.put(DatabaseHelper.COLUMN_COMPANY_NAME, companyName);
-        long stdAccessResult = database.insert(DatabaseHelper.TABLE_NAME_STD_ACCESS, null, stdAccessValues);
         return null;
     }
     public Cursor fetch() {
@@ -565,7 +560,17 @@ public class DBManager {
         }
         return count;
     }
-
+    public int getCompanyCount() {
+        String query = "SELECT COUNT(*) FROM " + TABLE_NAME_STD_ACCESS;
+        Cursor cursor = database.rawQuery(query, null);
+        int count = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        return count;
+    }
     public void insertDisc(String discName, String lastModified, String userId, String discvalue) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.DISCOUNT_NAME, discName);

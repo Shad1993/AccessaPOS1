@@ -1,21 +1,25 @@
-package com.accessa.ibora.login;
+package com.accessa.ibora.Admin;
 
 
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Constants;
-import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.company.InsertCompanyDataActivity;
+import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
@@ -24,7 +28,7 @@ public class RegistorCashor extends AppCompatActivity {
     private static final int DATABASE_VERSION = 1;
     public static final String TABLE_NAME_Users = "Users";
 
-
+    private Spinner spinnerCashierLevel;
     private EditText editTextPIN,editTextLevel,editTextCashor,editTextName,editTextCompanyName;
     private StringBuilder enteredPIN;
     private DBManager dbManager;
@@ -43,11 +47,13 @@ public class RegistorCashor extends AppCompatActivity {
 
 // Initialize EditText fields
         editTextPIN = findViewById(R.id.editTextPIN);
-        editTextLevel = findViewById(R.id.editTextLevel);
         editTextCashor = findViewById(R.id.editTextCashor);
         editTextName = findViewById(R.id.editTextName);
-        editTextCompanyName= findViewById(R.id.editTextCompanyName);
-
+        spinnerCashierLevel = findViewById(R.id.spinnerCashierLevel);
+        // Populate spinner with options 1 to 5
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.cashier_levels, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCashierLevel.setAdapter(adapter);
         // Set click listener for Login button
         Button buttonLogin = findViewById(R.id.buttonLogin);
         buttonLogin.setOnClickListener(new View.OnClickListener() {
@@ -119,45 +125,65 @@ public class RegistorCashor extends AppCompatActivity {
 
 
     private void register() {
-        // Retrieve user input from EditText fields
         String pin = editTextPIN.getText().toString();
-
-        // Perform registration operation using SQLite database
-        // Add your code here to insert the registration details into the database
         String enteredPIN = editTextPIN.getText().toString();
 
-        // Check if the entered PIN is empty
         if (enteredPIN.isEmpty()) {
             Toast.makeText(this, "Please enter a PIN", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Query the database for the entered PIN
         Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
 
         if (cursor.moveToFirst()) {
-            // PIN already exists, registration failed
             Toast.makeText(this, "PIN already registered", Toast.LENGTH_SHORT).show();
         } else {
-            // Additional fields for registration
+            Cursor stdAccessCursor = mDatabaseHelper.getStdAccessData();
 
-            String cashorlevel = editTextLevel.getText().toString();
-            String cashorname = editTextCashor.getText().toString();
-            String cashordepartment = editTextName.getText().toString();
-            String CompanyName= editTextCompanyName.getText().toString();
-            dbManager = new DBManager(getApplicationContext());
-            dbManager.open();
-            Cursor cursor1 = dbManager.Registor(pin, cashorlevel, cashorname, cashordepartment,CompanyName );
+            if (stdAccessCursor.moveToFirst()) {
+                String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
+                String cashorname = editTextCashor.getText().toString();
+                String cashordepartment = editTextName.getText().toString();
+                String cashierLevel = spinnerCashierLevel.getSelectedItem().toString();
+
+                ContentValues values = new ContentValues();
+                values.put("CompanyName", companyName);
+                values.put("pin", enteredPIN);
+                values.put("cashorname", cashorname);
+                values.put("cashorDepartment", cashordepartment);
+                values.put("cashorlevel", cashierLevel);
+
+                long result = mDatabaseHelper.insertUserData(values);
+
+                if (result != -1) {
+                    Toast.makeText(this, "User data inserted successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Failed to insert user data", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } else {
+                // Additional fields for registration
+
+                String cashierLevel = spinnerCashierLevel.getSelectedItem().toString();
+                String cashorname = editTextCashor.getText().toString();
+                String cashordepartment = editTextName.getText().toString();
+                dbManager = new DBManager(getApplicationContext());
+                dbManager.open();
+                Cursor cursor1 = dbManager.Registor(pin, cashierLevel, cashorname, cashordepartment);
 
 
-            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(RegistorCashor.this, login.class);
+                Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(RegistorCashor.this, AdminActivity.class);
+                startActivity(intent);
+                return;
+            }
+
+            // User data has been inserted, proceed to AdminActivity or any other desired activity
+            Intent intent = new Intent(RegistorCashor.this, AdminActivity.class);
             startActivity(intent);
         }
-
         cursor.close();
     }
-
 
 
     public void onClearButtonClick(View view) {

@@ -73,7 +73,7 @@ public class validateticketDialogFragment extends DialogFragment {
             transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
-            SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+            SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
             cashierId = sharedPreference.getString("cashorId", null);
 
 

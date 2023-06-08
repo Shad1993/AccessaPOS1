@@ -47,7 +47,7 @@ public class AddVendorActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setTitle("Add Department");
 
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
         setContentView(R.layout.add_vendor_activity);

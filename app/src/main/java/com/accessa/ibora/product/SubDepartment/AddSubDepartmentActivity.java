@@ -44,7 +44,7 @@ public class AddSubDepartmentActivity extends Activity {
         setTitle("Add Department");
 
 
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID

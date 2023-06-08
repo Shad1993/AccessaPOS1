@@ -59,12 +59,10 @@ public class login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the screen orientation to landscape
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         // remove onscreen Keyboard
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.login);
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
 
         // Initialize views

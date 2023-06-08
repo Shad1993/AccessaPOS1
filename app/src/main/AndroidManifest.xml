@@ -29,19 +29,20 @@
         </activity>
         <activity android:name=".MainActivity" />
         <activity android:name=".SelectLanguage" />
-        <activity android:name=".login.InsertCompanyDataActivity" />
+        <activity android:name=".company.InsertCompanyDataActivity" />
         <activity android:name=".login.login" />
         <activity android:name=".product.SubDepartment.AddSubDepartmentActivity" />
         <activity android:name=".product.SubDepartment.ModifySubDepartmentActivity" />
         <activity android:name=".product.items.ModifyItemActivity" />
         <activity android:name=".product.items.AddItemActivity" />
         <activity android:name=".product.menu.Product"  />
+        <activity android:name=".Admin.SelectAdminOptions"  />
         <activity android:name=".product.Cost.ModifyCostActivity" />
         <activity android:name=".product.Discount.AddDiscontActivity"/>
         <activity android:name=".product.Discount.ModifyDiscountActivity"/>
         <activity android:name=".product.items.FirstFragment" android:theme="@style/Widget.AppCompat.Spinner" />
         <activity android:name=".product.Department.AddDepartmentActivity"  />
-        <activity android:name=".login.RegistorCashor" />
+        <activity android:name=".Admin.RegistorCashor" />
         <activity android:name=".product.Department.ModifyDepartmentActivity" />
         <activity android:name=".SelectProfile" />
         <activity android:name=".welcome" />
@@ -51,6 +52,8 @@
         <activity android:name=".product.category.ModifyCategoryActivity" />
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".scanner.BarcodeReader" />
+        <activity android:name=".Admin.RegistorAdmin" />
+        <activity android:name=".Admin.AdminActivity" />
 
     </application>
     <uses-permission android:name="com.summi.permission.PRINT"/>

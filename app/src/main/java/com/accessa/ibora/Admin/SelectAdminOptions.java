@@ -1,4 +1,4 @@
-package com.accessa.ibora;
+package com.accessa.ibora.Admin;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -10,12 +10,12 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.accessa.ibora.Admin.SelectAdminOptions;
-import com.accessa.ibora.login.login;
+import com.accessa.ibora.R;
+import com.accessa.ibora.company.InsertCompanyDataActivity;
 
 import java.util.Locale;
 
-public class SelectProfile extends AppCompatActivity {
+public class SelectAdminOptions extends AppCompatActivity {
     Button buttonEng, buttonFr;
 
     @Override
@@ -23,10 +23,10 @@ public class SelectProfile extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.selectprofile);
+        setContentView(R.layout.select_admin_options);
 
-        // Eng cashier
-        buttonEng = findViewById(R.id.buttonCashor);
+        // Eng Registor  cashior
+        buttonEng = findViewById(R.id.buttonRegistor);
         buttonEng.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -34,8 +34,8 @@ public class SelectProfile extends AppCompatActivity {
             }
         });
 
-        // Fr admin
-        buttonFr = findViewById(R.id.buttonAdmin);
+        // Fr company
+        buttonFr = findViewById(R.id.buttonCompany);
         buttonFr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v1) {
@@ -49,12 +49,12 @@ public class SelectProfile extends AppCompatActivity {
     }
 
     public void openNewActivity() {
-        Intent intent = new Intent(this, login.class);
+        Intent intent = new Intent(this, RegistorCashor.class);
         startActivity(intent);
     }
 
     public void openNewActivityAdmin() {
-        Intent intent = new Intent(this, SelectAdminOptions.class);
+        Intent intent = new Intent(this, InsertCompanyDataActivity.class);
         startActivity(intent);
     }
 
@@ -64,11 +64,11 @@ public class SelectProfile extends AppCompatActivity {
 
         Resources resources = getResources();
         if (currentLocale.getLanguage().equals("fr")) {
-            buttonEng.setText(resources.getString(R.string.cashier));
-            buttonFr.setText(resources.getString(R.string.admin));
+            buttonEng.setText(resources.getString(R.string.RegistorUser));
+            buttonFr.setText(resources.getString(R.string.EditComapanyInfo));
         } else {
-            buttonEng.setText(resources.getString(R.string.cashier));
-            buttonFr.setText(resources.getString(R.string.admin));
+            buttonEng.setText(resources.getString(R.string.RegistorUser));
+            buttonFr.setText(resources.getString(R.string.EditComapanyInfo));
         }
     }
 

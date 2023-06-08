@@ -321,6 +321,14 @@
     <string name="Footer_See_You">See You Again!!</string>
     <string name="Footer_Have">Have a Nice Day</string>
     <string name="Footer_OpenHours">Opening Hours between:</string>
+    <string name="CompanyInfo">Company Info</string>
+    <string name="RegistorUser">Registor Users</string>
+    <string name="EditComapanyInfo">Edit Company Info</string>
+    <string name="BRN">BRN</string>
+    <string name="MaxCom">Only one company allowed!</string>
+    <string name="People">Cashier/People Management</string>
+    <string name="Rights">Rights/Access</string>
+    <string name="Admin">Admin</string>
 
 
 </resources>

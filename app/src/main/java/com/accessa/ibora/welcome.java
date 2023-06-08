@@ -9,7 +9,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.accessa.ibora.login.InsertCompanyDataActivity;
+import com.accessa.ibora.Admin.RegistorAdmin;
+import com.accessa.ibora.company.InsertCompanyDataActivity;
 
 public class welcome extends AppCompatActivity {
 
@@ -22,12 +23,15 @@ public class welcome extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.welcome);
 
+
+
+
         welcomeButton = findViewById(R.id.buttonGetStarted);
 
         welcomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(welcome.this, InsertCompanyDataActivity.class);
+                Intent intent = new Intent(welcome.this, RegistorAdmin.class);
                 startActivity(intent);
             }
         });

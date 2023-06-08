@@ -200,15 +200,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_NO_STOCK = "no_stock";
     private static final String COLUMN_NO_PRICES = "no_prices";
     private static final String COLUMN_DEF_SUPPLIER_CODE = "def_supplier_code";
-    private static final String COLUMN_VAT_NO = "vat_no";
-    private static final String COLUMN_BRN_NO = "brn_no";
-    private static final String COLUMN_ADR_1 = "adr_1";
-    private static final String COLUMN_ADR_2 = "adr_2";
+    public static final String COLUMN_VAT_NO = "vat_no";
+    public static final String COLUMN_BRN_NO = "brn_no";
+    public static final String COLUMN_ADR_1 = "adr_1";
+    public static final String COLUMN_ADR_2 = "adr_2";
     private static final String COLUMN_ADR_3 = "adr_3";
     private static final String COLUMN_TEL_NO = "tel_no";
     private static final String COLUMN_FAX_NO = "fax_no";
     public static String VAT_Type= "VatType";
-    private static final String COLUMN_Logo = "Logo";
+    public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
 
     // Creating Department table query
@@ -466,6 +466,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + COST_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DEPARTMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + SUBDEPARTMENT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_Users);
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DISCOUNT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_HEADER_TABLE_NAME);
@@ -871,7 +872,59 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public Cursor getDistinctVATTypes(String transactionIdInProgress) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String[] columns = {DatabaseHelper.VAT_Type};
+        String selection = DatabaseHelper.TRANSACTION_ID + " = ?";
+        String[] selectionArgs = {transactionIdInProgress};
+        String orderBy = DatabaseHelper.VAT_Type + " ASC";
+
+        return db.query(true, DatabaseHelper.TRANSACTION_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.VAT_Type, null, orderBy, null);
+    }
+
+    // Method to insert user data into the Users table
+    public long insertUserData(ContentValues values) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        long result = db.insert(TABLE_NAME_Users, null, values);
+        db.close();
+        return result;
+    }
+
+    // Method to retrieve data from the std_access table
+    public Cursor getStdAccessData() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME_STD_ACCESS, null, null, null, null, null, null);
+        return cursor;
+    }
+
+
+    public boolean isUserTableEmpty() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM " + TABLE_NAME_Users;
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int count = cursor.getInt(0);
+            cursor.close();
+            return count == 0;
+        }
+
+        return true; // Return true by default if an error occurs
+    }
+    public boolean isCompanyTableEmpty() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM " + TABLE_NAME_STD_ACCESS;
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int count = cursor.getInt(0);
+            cursor.close();
+            return count == 0;
+        }
+
+        return true; // Return true by default if an error occurs
+    }
 }
 
 

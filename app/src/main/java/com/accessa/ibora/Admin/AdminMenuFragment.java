@@ -1,4 +1,4 @@
-package com.accessa.ibora.product.menu;
+package com.accessa.ibora.Admin;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -25,7 +25,7 @@ import com.accessa.ibora.product.items.FirstFragment;
 import com.accessa.ibora.product.menu.CustomAdapter;
 
 // extended from compatibility Fragment for pre-HC fragment support
-public class MenuFragment extends Fragment {
+public class AdminMenuFragment extends Fragment {
 
 
     private String toolbarTitle;
@@ -59,26 +59,18 @@ public class MenuFragment extends Fragment {
     // onCreate
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        toolbarTitle = getString(R.string.Items);
+        toolbarTitle = getString(R.string.Admin);
         super.onCreate(savedInstanceState);
-        toolbarTitle = getString(R.string.Items);
+        toolbarTitle = getString(R.string.Admin);
         menuList = new String[]{
-                getString(R.string.Items),
-                getString(R.string.Department),
-                getString(R.string.SubDept),
-                getString(R.string.Category),
-                getString(R.string.vendor),
-                getString(R.string.cost),
-                getString(R.string.discount)
+                getString(R.string.People),
+                getString(R.string.Rights),
+                getString(R.string.CompanyInfo)
         };
         icons = new int[]{
-                R.drawable.cart,
-                R.drawable.department,
-                R.drawable.department,
-                R.drawable.category,
-                R.drawable.vendor,
-                R.drawable.cost,
-                R.drawable.baseline_discount_24
+                R.drawable.cashier,
+                R.drawable.key,
+                R.drawable.comp
         };
 
         setHasOptionsMenu(true);
@@ -124,7 +116,7 @@ public class MenuFragment extends Fragment {
 
                 if (position == 0) {
 
-                    toolbarTitle = getString(R.string.Items);
+                    toolbarTitle = getString(R.string.People);
                     // Create new fragment and transaction
                     Fragment newFragment = new FirstFragment();
                     // create a FragmentManager
@@ -138,7 +130,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 1) {
-                    toolbarTitle = getString(R.string.Department);
+                    toolbarTitle = getString(R.string.Rights);
                     Fragment newFragment = new DepartmentFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -151,7 +143,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
                 } else if (position == 2) {
-                    toolbarTitle = getString(R.string.SubDept);
+                    toolbarTitle = getString(R.string.CompanyInfo);
                     Fragment newFragment = new SubDepartmentFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
@@ -162,60 +154,8 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
-
-                } else if (position == 3) {
-                    toolbarTitle = getString(R.string.Category);
-                    Fragment newFragment = new CategoryFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-
-
-                } else if (position == 4) {
-                    toolbarTitle = getString(R.string.vendor);
-                    Fragment newFragment = new VendorFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-
-                } else if (position == 5) {
-                    toolbarTitle = getString(R.string.cost);
-                    Fragment newFragment = new CostFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-                } else if (position == 6) {
-                    toolbarTitle = getString(R.string.discount);
-                    Fragment newFragment = new DiscountFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-                } else {
-                    toolbarTitle = getString(R.string.Items); // Set a default value if needed
+                }else {
+                    toolbarTitle = getString(R.string.Admin); // Set a default value if needed
                 }
 
                 // Set the toolbar title

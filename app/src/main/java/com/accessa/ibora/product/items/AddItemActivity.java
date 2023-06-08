@@ -97,7 +97,7 @@ public class AddItemActivity extends Activity {
 
 
 
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
 

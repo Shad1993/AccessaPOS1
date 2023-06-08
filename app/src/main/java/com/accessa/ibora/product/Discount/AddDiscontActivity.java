@@ -33,15 +33,11 @@ public class AddDiscontActivity extends Activity {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setTitle("Add Department");
+        setTitle("Add Discount");
 
 
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-
-
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
-
-
 
 
         setContentView(R.layout.add_discount_activity);

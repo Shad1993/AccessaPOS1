@@ -23,6 +23,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
 
 
         // Retrieve the shared preferences
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
@@ -147,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {
-                    Toast.makeText(getApplicationContext(), "Admin is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, AdminActivity.class);
+                    startActivity(intent);
                 }
                 return true;
             }

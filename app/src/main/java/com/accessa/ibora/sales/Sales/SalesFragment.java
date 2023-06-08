@@ -60,7 +60,7 @@ public class SalesFragment extends Fragment {
 
 
 
-        SharedPreferences sharedPreference = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
         dbManager = new DBManager(getContext());
         dbManager.open();

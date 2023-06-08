@@ -44,32 +44,13 @@
             android:padding="8dp"
             android:layout_gravity="center"
             android:layout_marginBottom="24dp" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Enter Level"
-            android:textSize="24sp"
-            android:textColor="@android:color/white"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp" />
-
-        <Spinner
-            android:id="@+id/spinnerCashierLevel"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:textColor="@color/BleuAccessaText"
-            android:background="@drawable/edittext_rounded_bg"
-            android:gravity="center"
-            android:padding="8dp"
-            android:layout_marginTop="16dp" />
-
 
 
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enter Cashor name"
+            android:text="Enter Admin name"
             android:textSize="24sp"
             android:textColor="@android:color/white"
             android:layout_gravity="center_horizontal"
@@ -111,15 +92,7 @@
             android:layout_marginBottom="24dp" />
 
 
-        <Button
-            android:id="@+id/buttonLogin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Login"
-            android:textSize="20sp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/BleuAccessaText"
-            android:layout_gravity="center_horizontal" />
+
 
         <Button
             android:id="@+id/buttonRegister"

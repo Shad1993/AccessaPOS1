@@ -46,7 +46,7 @@ public class ModifyDepartmentActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.modify_department_activity);
 
-        sharedPreferences = getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
         String cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
          cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
