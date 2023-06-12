@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/welcome_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/ItemsCard"
+                style="@style/centreLocatorCardDesign"
+                app:cardCornerRadius="16dp"
+                android:layout_width="match_parent"
+                android:layout_marginStart="200dp"
+                android:layout_marginEnd="200dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:focusableInTouchMode="false"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/ModPIN" />
+
+                    <EditText
+                        android:id="@+id/PinEditText"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/ModPIN"
+                        android:singleLine="true"
+                        android:maxLength="4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberPassword" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/cashiername" />
+
+                    <EditText
+                        android:id="@+id/IdCashierName_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/cashiername"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/CashierLevel" />
+
+
+
+                    <Spinner
+                        android:id="@+id/Cashier_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/CashierDepartment" />
+
+                    <EditText
+                        android:id="@+id/department_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="@string/CashierDepartment" />
+
+
+
+                </LinearLayout>
+
+
+
+
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btn_update"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/white"
+                android:background="@drawable/button_bleu_accessa"
+                android:drawableLeft="@drawable/baseline_update_24"
+                android:text="Update" />
+
+            <Button
+                android:id="@+id/btn_delete"
+                android:layout_width="0dp"
+                android:background="@drawable/button_bleu_accessa"
+                android:drawableLeft="@drawable/baseline_delete_24"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:layout_weight="1"
+                android:text="Delete" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
+

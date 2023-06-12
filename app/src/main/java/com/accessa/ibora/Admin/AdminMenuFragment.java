@@ -13,15 +13,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
-import com.accessa.ibora.product.Cost.CostFragment;
-import com.accessa.ibora.product.Department.DepartmentFragment;
+import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
+import com.accessa.ibora.Admin.People.PeopleFragment;
+import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.Discount.DiscountFragment;
-import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
-import com.accessa.ibora.product.Vendor.VendorFragment;
-import com.accessa.ibora.product.category.CategoryFragment;
-import com.accessa.ibora.product.items.FirstFragment;
+
 import com.accessa.ibora.product.menu.CustomAdapter;
 
 // extended from compatibility Fragment for pre-HC fragment support
@@ -74,7 +70,7 @@ public class AdminMenuFragment extends Fragment {
         };
 
         setHasOptionsMenu(true);
-        Fragment newFragment = new FirstFragment();
+        Fragment newFragment = new PeopleFragment();
         // create a FragmentManager
         FragmentManager fm = getFragmentManager();
 // create a FragmentTransaction to begin the transaction and replace the Fragment
@@ -118,7 +114,7 @@ public class AdminMenuFragment extends Fragment {
 
                     toolbarTitle = getString(R.string.People);
                     // Create new fragment and transaction
-                    Fragment newFragment = new FirstFragment();
+                    Fragment newFragment = new PeopleFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment
@@ -131,7 +127,7 @@ public class AdminMenuFragment extends Fragment {
 
                 } else if (position == 1) {
                     toolbarTitle = getString(R.string.Rights);
-                    Fragment newFragment = new DepartmentFragment();
+                    Fragment newFragment = new RightAccessFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment
@@ -144,7 +140,7 @@ public class AdminMenuFragment extends Fragment {
 
                 } else if (position == 2) {
                     toolbarTitle = getString(R.string.CompanyInfo);
-                    Fragment newFragment = new SubDepartmentFragment();
+                    Fragment newFragment = new CompanyInfoFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment

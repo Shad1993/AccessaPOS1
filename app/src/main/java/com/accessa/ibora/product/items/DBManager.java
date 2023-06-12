@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.accessa.ibora.Admin.cashier;
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
@@ -22,7 +23,7 @@ public class DBManager {
 
     private DatabaseHelper dbHelper;
     private Context context;
-    private SQLiteDatabase database;
+    private static SQLiteDatabase database;
 
     public DBManager(Context c) {
         context = c;
@@ -38,7 +39,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String LastModified) {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,String DateCreated, String LastModified) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -59,6 +60,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Variant, Variant);
         contentValue.put(DatabaseHelper.SKU, SKU);
         contentValue.put(DatabaseHelper.Cost, Cost);
+        contentValue.put(DatabaseHelper.DateCreated, DateCreated);
         contentValue.put(DatabaseHelper.LastModified, LastModified);
         contentValue.put(DatabaseHelper.UserId, UserId);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
@@ -72,13 +74,61 @@ public class DBManager {
         costContentValue.put(DatabaseHelper.Cost, Cost);
         database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
+    public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String dateCreated, String lastModified) {
+        // Insert the item into the main table
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.COLUMN_PIN, pin);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_NAME, cashorname);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_LEVEL, cashierLevel);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT, cashordepartment);
+        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
 
-    public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment) {
+        database.insert(DatabaseHelper.TABLE_NAME_Users, null, contentValue);
+
+        // Auto-increment the department code
+        String departmentCode = getAutoIncrementedDepartmentCode();
+
+        // Insert duplicates into the cost table
+        ContentValues costContentValue = new ContentValues();
+        costContentValue.put(DatabaseHelper.DEPARTMENT_NAME, cashordepartment);
+        costContentValue.put(DatabaseHelper.DEPARTMENT_CODE, departmentCode);
+
+        database.insert(DEPARTMENT_TABLE_NAME, null, costContentValue);
+    }
+    public static String getAutoIncrementedDepartmentCode() {
+        String lastDepartmentCode = ""; // Initialize with an empty string
+
+        // Query the database to retrieve the last department code
+        String query = "SELECT MAX(" + DatabaseHelper.DEPARTMENT_CODE + ") FROM " + DEPARTMENT_TABLE_NAME;
+        Cursor cursor = database.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            lastDepartmentCode = cursor.getString(0); // Get the last department code from the cursor
+        }
+
+        cursor.close();
+
+        // Increment the department code
+        String nextDepartmentCode = ""; // Initialize with an empty string
+
+        if (!lastDepartmentCode.isEmpty()) {
+            int numericValue = Integer.parseInt(lastDepartmentCode.substring(1)); // Extract the numeric part of the department code
+            int nextNumericValue = numericValue + 1;
+            nextDepartmentCode = lastDepartmentCode.charAt(0) + String.valueOf(nextNumericValue); // Reconstruct the department code
+        }
+
+        return nextDepartmentCode;
+    }
+
+    public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment,String DateCreated,String LastModified) {
         ContentValues values = new ContentValues();
         values.put("pin", enteredPIN);
         values.put("cashorlevel", cashorlevel);
         values.put("cashorname", cashorname);
         values.put("cashorDepartment", cashordepartment);
+        values.put("DateCreated", DateCreated);
+        values.put("LastModified", LastModified);
 
         database.insert(DatabaseHelper.TABLE_NAME_Users, null, values);
         return null;
@@ -86,6 +136,14 @@ public class DBManager {
     public Cursor fetch() {
         String[] columns = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+        return cursor;
+    }
+    public Cursor fetchUser() {
+        String[] columns = new String[]{DatabaseHelper.COLUMN_CASHOR_id, DatabaseHelper.COLUMN_CASHOR_NAME, DatabaseHelper.COLUMN_CASHOR_LEVEL};
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME_Users, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
         }
@@ -100,7 +158,20 @@ public class DBManager {
         database.update(TRANSACTION_TABLE_NAME, contentValues, ITEM_ID + " = " + id, null);
         return true;
     }
+    public boolean updateUser(long id, String name, String enteredPIN, String dept, String level,String lastmodified) {
 
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseHelper.COLUMN_CASHOR_NAME, name);
+        contentValues.put(DatabaseHelper.COLUMN_PIN,enteredPIN);
+        contentValues.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT,dept);
+        contentValues.put(DatabaseHelper.COLUMN_CASHOR_LEVEL,level);
+        contentValues.put(DatabaseHelper.LastModified,lastmodified);
+
+
+        database.update(DatabaseHelper.TABLE_NAME_Users, contentValues, DatabaseHelper.COLUMN_CASHOR_id + " = " + id, null);
+        return true;
+
+    }
     public boolean updateItem(long id,String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost,String lastmodified) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.Name, name);
@@ -134,7 +205,35 @@ public class DBManager {
         return true;
     }
 
+    public cashier getUserById(String id) {
+        cashier user = null;
+        String[] columns = new String[]{
+                DatabaseHelper.COLUMN_CASHOR_id,
+                DatabaseHelper.COLUMN_PIN,
+                DatabaseHelper.COLUMN_CASHOR_LEVEL,
+                DatabaseHelper.COLUMN_CASHOR_NAME,
+                DatabaseHelper.COLUMN_CASHOR_DEPARTMENT,
 
+        };
+
+        String selection = DatabaseHelper.COLUMN_CASHOR_id + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME_Users, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            user = new cashier();
+            user.setcashorid((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
+            user.setcashorname(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME)));
+            user.setcashorlevel(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_LEVEL)));
+            user.setpin(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_PIN)));
+            user.setcashorDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT)));
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return user;
+    }
     public Item getItemById(String id) {
         Item item = null;
         String[] columns = new String[]{
@@ -579,7 +678,6 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DISCOUNT_VALUE, discvalue);
         database.insert(DatabaseHelper.DISCOUNT_TABLE_NAME, null, contentValue);
     }
-
 
 
 

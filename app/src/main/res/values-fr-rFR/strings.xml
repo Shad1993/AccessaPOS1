@@ -324,5 +324,11 @@
     <string name="People">Cashier/People Management</string>
     <string name="Rights">Rights/Access</string>
     <string name="Admin">Admin</string>
+    <string name="AllUsers">All Users</string>
+    <string name="ModPIN">Edit PIN</string>
+    <string name="cashiername">Cashier name</string>
+    <string name="CashierLevel">Cashier Level</string>
+    <string name="CashierDepartment">Cashier Department</string>
+    <string name="adduser">Add user</string>
 
 </resources>

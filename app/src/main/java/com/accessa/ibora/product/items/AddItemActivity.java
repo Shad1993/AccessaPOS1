@@ -435,6 +435,7 @@ public class AddItemActivity extends Activity {
         if (quantity.isEmpty()) {
             quantity = "0"; // Assign a default value of 0 if the quantity is empty
         }
+        String DateCreated = dateFormat.format(new Date(currentTimeMillis));
         String department = departmentSpinner.getSelectedItem().toString().trim();
         String longDescription = longDescEditText.getText().toString().trim();
         String subDepartment = subDepartmentSpinner.getSelectedItem().toString().trim();
@@ -486,7 +487,7 @@ public class AddItemActivity extends Activity {
 
         dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost,UserId,LastModified);
+                availableForSale, soldBy, image, variant, sku, cost,UserId,DateCreated,LastModified);
         dbManager.close();
 
         // Clear the input fields

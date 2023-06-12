@@ -9,7 +9,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -22,6 +21,9 @@ import com.accessa.ibora.company.InsertCompanyDataActivity;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class RegistorAdmin extends AppCompatActivity {
 
@@ -94,18 +96,29 @@ public class RegistorAdmin extends AppCompatActivity {
 
             if (stdAccessCursor.moveToFirst()) {
                 String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
-                String cashorname = editTextCashor.getText().toString();
-                String cashordepartment = editTextName.getText().toString();
-                String cashierLevel = "5" ;
 
+                long currentTimeMillis = System.currentTimeMillis();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+                String DateModified = dateFormat.format(new Date(currentTimeMillis));
+                String LastModified = dateFormat.format(new Date(currentTimeMillis));
+                String cashorname = editTextCashor.getText().toString();
+                String cashordepartment = "Admin";
+                String cashierLevel = "5" ;
+                // Auto-increment the department code
+                String departmentCode = DBManager.getAutoIncrementedDepartmentCode();
                 ContentValues values = new ContentValues();
+                ContentValues values1 = new ContentValues();
                 values.put("CompanyName", companyName);
                 values.put("pin", enteredPIN);
                 values.put("cashorname", cashorname);
                 values.put("cashorDepartment", cashordepartment);
                 values.put("cashorlevel", cashierLevel);
+                values.put("DateCreated", DateModified);
+                values.put("LastModified", LastModified);
+                values1.put("DepartmentCode", departmentCode);
+                values1.put("cashorDepartment", cashordepartment);
 
-                long result = mDatabaseHelper.insertUserData(values);
+                long result = mDatabaseHelper.insertUserData(values, values1);
 
                 if (result != -1) {
                     Toast.makeText(this, "User data inserted successfully", Toast.LENGTH_SHORT).show();
@@ -115,13 +128,16 @@ public class RegistorAdmin extends AppCompatActivity {
                 }
             } else {
                 // Additional fields for registration
-
+                long currentTimeMillis = System.currentTimeMillis();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
                 String cashierLevel = "5";
                 String cashorname = editTextCashor.getText().toString();
                 String cashordepartment = editTextName.getText().toString();
+                String DateModified = dateFormat.format(new Date(currentTimeMillis));
+                String LastModified = dateFormat.format(new Date(currentTimeMillis));
                 dbManager = new DBManager(getApplicationContext());
                 dbManager.open();
-                Cursor cursor1 = dbManager.Registor(pin, cashierLevel, cashorname, cashordepartment);
+                Cursor cursor1 = dbManager.Registor(pin, cashierLevel, cashorname, cashordepartment,DateModified,LastModified);
 
 
                 Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();

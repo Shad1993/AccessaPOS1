@@ -27,7 +27,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_UNIT_PRICE = "UnitPrice";
 
 
-
     private static final String INVOICE_SETTLEMENT_TABLE_NAME = "InvoiceSettlement";
 
     // Common column names
@@ -54,6 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String Variant = "Variant";
     public static final String Weight = "Weight";
     public static final String UserId = "UserId";
+    public static String DateCreated ="DateCreated";
     public static final String LastModified = "LastModified";
 
 
@@ -80,10 +80,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CASHOR_id = "cashorid";
     public static final String COLUMN_CASHOR_COMPANY ="CompanyName" ;
     public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
-    private static final String COLUMN_PIN = "pin";
-    private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
-    static final String COLUMN_CASHOR_NAME = "cashorname";
-    private static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
+    public static final String COLUMN_PIN = "pin";
+    public static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
+     public static final String COLUMN_CASHOR_NAME = "cashorname";
+    public static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
     // Database Information
     private static final String DB_NAME = Constants.DB_NAME;
     private static final int DB_VERSION = 1;
@@ -238,6 +238,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -259,6 +260,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Cost + " DECIMAL(10, 2) NOT NULL, "
             + Weight + " DECIMAL(10, 2), " // Allow NULL values for Weight
             + UserId + " INTEGER NOT NULL, "
+            + DateCreated + " DATETIME NOT NULL, "
             + LastModified + " DATETIME NOT NULL, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
             + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
@@ -276,7 +278,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_CASHOR_LEVEL + " INTEGER, "
             + COLUMN_CASHOR_NAME + " TEXT, "
             + COLUMN_CASHOR_COMPANY + " TEXT, "
-            + COLUMN_CASHOR_DEPARTMENT + " TEXT)";
+            + COLUMN_CASHOR_DEPARTMENT + " TEXT,"
+            + DateCreated + " DATETIME NOT NULL,"
+            + LastModified + " DATETIME NOT NULL) ";
 
 
     // Creating Vendor table query
@@ -605,6 +609,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
+    public Cursor getAllUsers() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(TABLE_NAME_Users, null, null, null, null, null, null);
+    }
 
     public Cursor getAllDepartment() {
         SQLiteDatabase db = getReadableDatabase();
@@ -675,6 +683,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
+    public Cursor searchUser(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {COLUMN_CASHOR_id, COLUMN_CASHOR_NAME, COLUMN_CASHOR_DEPARTMENT, COLUMN_CASHOR_LEVEL, COLUMN_CASHOR_COMPANY};
+        String selection = COLUMN_CASHOR_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = COLUMN_CASHOR_NAME + " ASC";
+        return db.query(TABLE_NAME_Users, projection, selection, selectionArgs, null, null, sortOrder);
+    }
     public Cursor searchCategory(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {DEPARTMENT_ID, DEPARTMENT_CODE, DEPARTMENT_NAME, DEPARTMENT_LAST_MODIFIED, COLUMN_CASHOR_id};
@@ -884,9 +900,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Method to insert user data into the Users table
-    public long insertUserData(ContentValues values) {
+    public long insertUserData(ContentValues values, ContentValues values1) {
         SQLiteDatabase db = this.getWritableDatabase();
         long result = db.insert(TABLE_NAME_Users, null, values);
+        long result1 = db.insert(DEPARTMENT_TABLE_NAME, null, values1);
         db.close();
         return result;
     }
@@ -924,6 +941,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         return true; // Return true by default if an error occurs
+    }
+
+
+
+    public Cursor getAlllevels() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT " + COLUMN_CASHOR_LEVEL + " FROM " + TABLE_NAME_Users, null);
+        return cursor;
     }
 }
 

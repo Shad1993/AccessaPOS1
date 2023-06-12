@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.product.menu.BodyActivity;
 import com.accessa.ibora.product.menu.BodyFragment;
 import com.accessa.ibora.product.menu.MenuFragment;
@@ -33,7 +34,6 @@ import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
-import com.accessa.ibora.product.items.FirstFragment;
 import com.accessa.ibora.product.menu.Product;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
@@ -62,7 +62,7 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
-        toolbar.setTitle(R.string.Items);
+        toolbar.setTitle(R.string.Admin);
         setSupportActionBar(toolbar);
 
 
@@ -91,9 +91,9 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
             setToolbarTitle(getString(R.string.category)); // Set the toolbar title
 
             replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Item_fragment")) {
-            Fragment newFragment = new FirstFragment();
-            setToolbarTitle(getString(R.string.Items)); // Set the toolbar title
+        } else if (fragmentKey != null && fragmentKey.equals("people_fragment")) {
+            Fragment newFragment = new PeopleFragment();
+            setToolbarTitle(getString(R.string.People)); // Set the toolbar title
             replaceFragment(newFragment);
         } else if (fragmentKey != null && fragmentKey.equals("Dept_fragment")) {
             Fragment newFragment = new DepartmentFragment();
@@ -199,11 +199,11 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
 
     @Override
     public void onMenufrag(String s) {
-        BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
+        AdminBodyFragment fragment1 = (AdminBodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
         if (fragment1 != null && fragment1.isInLayout()) {
             fragment1.setText(s);
         } else {
-            Intent intent = new Intent(this, BodyActivity.class);
+            Intent intent = new Intent(this, AdminBodyActivity.class);
             intent.putExtra("value", s);
             startActivity(intent);
         }
