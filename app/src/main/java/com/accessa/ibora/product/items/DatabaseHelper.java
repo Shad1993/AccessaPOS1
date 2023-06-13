@@ -91,6 +91,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Department table columns
     public static final String DEPARTMENT_TABLE_NAME = "Department";
     public static final String DEPARTMENT_ID = "_id";
+    public static  final String  DEPARTMENT_DATE_CREATED= "DateCreated";
     public static final String DEPARTMENT_CODE = "DepartmentCode";
     public static final String DEPARTMENT_NAME = "DepartmentName";
     public static final String DEPARTMENT_LAST_MODIFIED = "LastModified";
@@ -216,6 +217,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             DEPARTMENT_CODE + " TEXT UNIQUE NOT NULL, " +
             DEPARTMENT_NAME + " TEXT NOT NULL, " +
+            DEPARTMENT_DATE_CREATED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
             DEPARTMENT_LAST_MODIFIED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
             COLUMN_CASHOR_id + " INTEGER, " +
             "FOREIGN KEY (" + COLUMN_CASHOR_id + ") REFERENCES " +
@@ -597,12 +599,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
-                " WHERE th." + TRANSACTION_STATUS + "=?";
+                " WHERE th." + TRANSACTION_STATUS + "=? " +
+                "ORDER BY t." + TRANSACTION_DATE + " ASC";
 
         String[] selectionArgs = {"InProgress"};
 
         return db.rawQuery(query, selectionArgs);
     }
+
+
 
 
     public Cursor getAllItems() {
@@ -950,6 +955,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery("SELECT DISTINCT " + COLUMN_CASHOR_LEVEL + " FROM " + TABLE_NAME_Users, null);
         return cursor;
     }
+
+
+    public   Cursor getDepartmentByName(String departmentName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String[] columns = {DEPARTMENT_ID, DEPARTMENT_CODE, DEPARTMENT_NAME, DEPARTMENT_LAST_MODIFIED, COLUMN_CASHOR_id};
+        String selection = DEPARTMENT_NAME + "=?";
+        String[] selectionArgs = {departmentName};
+
+        return db.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+    }
+
 }
 
 

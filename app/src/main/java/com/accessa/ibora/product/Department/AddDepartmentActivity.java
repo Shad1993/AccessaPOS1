@@ -5,11 +5,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatImageView;
+
+import com.bumptech.glide.Glide;
+import pl.droidsonroids.gif.GifImageView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -19,7 +29,7 @@ import java.util.Date;
 
 public class AddDepartmentActivity extends Activity {
 
-
+    private AlertDialog alertDialog;
       private EditText DeptName_Edittext;
     private EditText LastModified_Edittext;
     private EditText Userid_Edittext;
@@ -72,9 +82,10 @@ public class AddDepartmentActivity extends Activity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         String DeptName = DeptName_Edittext.getText().toString().trim();
         String LastModified = dateFormat.format(new Date(currentTimeMillis));
+        String DateCreated = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
         String DeptCode = Deptcode_Edittext.getText().toString().trim();
-
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         // Check if all required fields are filled
         if (DeptName.isEmpty() ||  DeptCode.isEmpty()
                 ) {
@@ -88,10 +99,108 @@ public class AddDepartmentActivity extends Activity {
         // Check if the department code already exists
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         if (databaseHelper.isDepartmentCodeExists(DeptCode)) {
-            Toast.makeText(this, getString(R.string.deptcodeexists), Toast.LENGTH_SHORT).show();
+            // Show pop-up dialog with GIF animation and message
+
+            View view = LayoutInflater.from(this).inflate(R.layout.dialog_gif, null);
+
+            // Get a reference to the AppCompatImageView
+            AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
+            builder.setMessage(getString(R.string.deptcodeexists));
+            // Load the GIF using Glide
+            Glide.with(this)
+                    .asGif()
+                    .load(R.drawable.close)
+                    .into(gifImageView);
+
+
+            // Set the custom view to the AlertDialog
+            builder.setView(view);
+            builder.setCancelable(false);
+            alertDialog = builder.create();
+            alertDialog.show();
+            // Check if the activity is still running before showing the dialog
+            if (!isFinishing()) {
+                alertDialog.show();
+            }
+
+            // Find the "Retry" button
+            Button retryButton = view.findViewById(R.id.button_retry);
+
+            // Set a click listener for the "Retry" button
+            retryButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Retry button clicked
+                    // Perform any necessary actions here
+                    // For example, you can close the dialog or retry the login process
+                    alertDialog.dismiss(); // Dismiss the dialog
+                    // Add your desired actions here
+                    Deptcode_Edittext.setText("");
+
+                }
+            });
+
+            builder.setCancelable(false);
+
+
+
+
             return;
         }
-        dbManager.insertDept(DeptName, LastModified, UserId, DeptCode);
+
+// Check if the department name already exists in the database
+        Cursor departmentCursor = databaseHelper.getDepartmentByName(DeptName);
+        if (departmentCursor.moveToFirst()) {
+            // Inflate the custom view for the AlertDialog
+            View view = LayoutInflater.from(this).inflate(R.layout.dialog_gif, null);
+
+            // Get a reference to the AppCompatImageView
+            AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
+            builder.setMessage(getString(R.string.deptnameexist));
+            // Load the GIF using Glide
+            Glide.with(this)
+                    .asGif()
+                    .load(R.drawable.close)
+                    .into(gifImageView);
+
+
+            // Set the custom view to the AlertDialog
+            builder.setView(view);
+            builder.setCancelable(false);
+            alertDialog = builder.create();
+            alertDialog.show();
+            // Check if the activity is still running before showing the dialog
+            if (!isFinishing()) {
+                alertDialog.show();
+            }
+
+            // Find the "Retry" button
+            Button retryButton = view.findViewById(R.id.button_retry);
+
+            // Set a click listener for the "Retry" button
+            retryButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Retry button clicked
+                    // Perform any necessary actions here
+                    // For example, you can close the dialog or retry the login process
+                    alertDialog.dismiss(); // Dismiss the dialog
+                    DeptName_Edittext.setText("");
+                    // Add your desired actions here
+
+                }
+            });
+
+            builder.setCancelable(false);
+
+
+
+
+            return;
+        }
+
+
+        dbManager.insertDept(DeptName,DateCreated, LastModified, UserId, DeptCode);
         dbManager.close();
 
         // Clear the input

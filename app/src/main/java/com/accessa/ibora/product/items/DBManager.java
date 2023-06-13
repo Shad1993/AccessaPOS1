@@ -74,29 +74,44 @@ public class DBManager {
         costContentValue.put(DatabaseHelper.Cost, Cost);
         database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
-    public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String dateCreated, String lastModified) {
+    public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String CompanyName, String dateCreated, String lastModified, DatabaseHelper databaseHelper) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.COLUMN_PIN, pin);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_NAME, cashorname);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_LEVEL, cashierLevel);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT, cashordepartment);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_COMPANY, CompanyName);
         contentValue.put(DatabaseHelper.DateCreated, dateCreated);
         contentValue.put(DatabaseHelper.LastModified, lastModified);
 
         database.insert(DatabaseHelper.TABLE_NAME_Users, null, contentValue);
 
         // Auto-increment the department code
-        String departmentCode = getAutoIncrementedDepartmentCode();
+        String departmentCode = getAutoIncrementedDepartmentCode(database);
 
-        // Insert duplicates into the cost table
-        ContentValues costContentValue = new ContentValues();
-        costContentValue.put(DatabaseHelper.DEPARTMENT_NAME, cashordepartment);
-        costContentValue.put(DatabaseHelper.DEPARTMENT_CODE, departmentCode);
+        // Check if the department name already exists
+        Cursor departmentCursor = databaseHelper.getDepartmentByName(cashordepartment);
+        if (departmentCursor.moveToFirst()) {
+            // Department already exists, update the department code instead of inserting
+            departmentCode = departmentCursor.getString(departmentCursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CODE));
+        } else {
+            // Department doesn't exist, insert it into the department table
+            ContentValues departmentContentValue = new ContentValues();
+            departmentContentValue.put(DatabaseHelper.DEPARTMENT_NAME, cashordepartment);
+            departmentContentValue.put(DatabaseHelper.DEPARTMENT_CODE, departmentCode);
+            departmentContentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
 
-        database.insert(DEPARTMENT_TABLE_NAME, null, costContentValue);
+            database.insert(DEPARTMENT_TABLE_NAME, null, departmentContentValue);
+        }
+
+        // Continue with inserting the user record with the department code
+        contentValue.put(DatabaseHelper.DEPARTMENT_CODE, departmentCode);
+        database.insert(DatabaseHelper.TABLE_NAME_Users, null, contentValue);
     }
-    public static String getAutoIncrementedDepartmentCode() {
+
+
+    public static String getAutoIncrementedDepartmentCode(SQLiteDatabase database) {
         String lastDepartmentCode = ""; // Initialize with an empty string
 
         // Query the database to retrieve the last department code
@@ -107,18 +122,30 @@ public class DBManager {
             lastDepartmentCode = cursor.getString(0); // Get the last department code from the cursor
         }
 
-        cursor.close();
+
 
         // Increment the department code
         String nextDepartmentCode = ""; // Initialize with an empty string
 
-        if (!lastDepartmentCode.isEmpty()) {
-            int numericValue = Integer.parseInt(lastDepartmentCode.substring(1)); // Extract the numeric part of the department code
-            int nextNumericValue = numericValue + 1;
-            nextDepartmentCode = lastDepartmentCode.charAt(0) + String.valueOf(nextNumericValue); // Reconstruct the department code
+        if (lastDepartmentCode != null && !lastDepartmentCode.isEmpty()) {
+            String numericPart = lastDepartmentCode.substring(1); // Extract the numeric part of the department code
+            if (!numericPart.isEmpty()) {
+                int numericValue = Integer.parseInt(numericPart);
+                int nextNumericValue = numericValue + 1;
+                nextDepartmentCode = lastDepartmentCode.charAt(0) + String.valueOf(nextNumericValue); // Reconstruct the department code
+            } else {
+                nextDepartmentCode = lastDepartmentCode; // Keep the same department code if the numeric part is empty
+            }
+        } else {
+            lastDepartmentCode = "D0"; // Default department code if there is no previous code
+            nextDepartmentCode = lastDepartmentCode;
         }
 
+        if (cursor != null) {
+            cursor.close();
+        }
         return nextDepartmentCode;
+
     }
 
     public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment,String DateCreated,String LastModified) {
@@ -202,6 +229,12 @@ public class DBManager {
         String selection = DatabaseHelper._ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
         database.delete(DatabaseHelper.TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+    public boolean deleteUser(long id) {
+        String selection = DatabaseHelper.COLUMN_CASHOR_id + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.TABLE_NAME_Users, selection, selectionArgs);
         return true;
     }
 
@@ -322,9 +355,10 @@ public class DBManager {
         return vatValue;
     }
 
-    public void insertDept(String deptName, String lastModified, String userId, String deptCode) {
+    public void insertDept(String deptName,String DateCreated, String lastModified, String userId, String deptCode) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
+        contentValue.put(DatabaseHelper.DEPARTMENT_DATE_CREATED, DateCreated);
         contentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
         contentValue.put(DEPARTMENT_CODE, deptCode);

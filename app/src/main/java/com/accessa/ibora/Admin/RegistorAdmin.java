@@ -50,7 +50,6 @@ public class RegistorAdmin extends AppCompatActivity {
 // Initialize EditText fields
         editTextPIN = findViewById(R.id.editTextPIN);
         editTextCashor = findViewById(R.id.editTextCashor);
-        editTextName = findViewById(R.id.editTextName);
 
 
 
@@ -95,17 +94,20 @@ public class RegistorAdmin extends AppCompatActivity {
             Cursor stdAccessCursor = mDatabaseHelper.getStdAccessData();
 
             if (stdAccessCursor.moveToFirst()) {
-                String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
+                DatabaseHelper databaseHelper = new DatabaseHelper(this);
+                SQLiteDatabase database = databaseHelper.getWritableDatabase();
 
+
+                String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
                 long currentTimeMillis = System.currentTimeMillis();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
                 String DateModified = dateFormat.format(new Date(currentTimeMillis));
                 String LastModified = dateFormat.format(new Date(currentTimeMillis));
                 String cashorname = editTextCashor.getText().toString();
                 String cashordepartment = "Admin";
-                String cashierLevel = "5" ;
+                String cashierLevel = "7" ;
                 // Auto-increment the department code
-                String departmentCode = DBManager.getAutoIncrementedDepartmentCode();
+                String departmentCode = DBManager.getAutoIncrementedDepartmentCode(database);
                 ContentValues values = new ContentValues();
                 ContentValues values1 = new ContentValues();
                 values.put("CompanyName", companyName);
@@ -130,9 +132,9 @@ public class RegistorAdmin extends AppCompatActivity {
                 // Additional fields for registration
                 long currentTimeMillis = System.currentTimeMillis();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-                String cashierLevel = "5";
+                String cashierLevel = "7";
                 String cashorname = editTextCashor.getText().toString();
-                String cashordepartment = editTextName.getText().toString();
+                String cashordepartment = "Admin";
                 String DateModified = dateFormat.format(new Date(currentTimeMillis));
                 String LastModified = dateFormat.format(new Date(currentTimeMillis));
                 dbManager = new DBManager(getApplicationContext());

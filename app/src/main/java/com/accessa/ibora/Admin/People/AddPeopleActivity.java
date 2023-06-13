@@ -64,7 +64,7 @@ public class AddPeopleActivity extends Activity {
     private EditText PinTextView;
     private EditText DepartmentTextView;
     private Spinner LevelSpinner;
-
+    private String companyName;
     private String cashorId;
     private String cashorName;
     private SharedPreferences sharedPreferences;
@@ -85,6 +85,7 @@ public class AddPeopleActivity extends Activity {
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+         companyName = sharedPreferences.getString("CompanyName", null); // Retrieve cashor's level
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
@@ -153,7 +154,60 @@ public class AddPeopleActivity extends Activity {
                 return;
             }
 
-// Check if the barcode is already present in the database
+            // Check if the department name already exists in the database
+            Cursor departmentCursor = mDatabaseHelper.getDepartmentByName(cashordepartment);
+            if (departmentCursor.moveToFirst()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Department Already Exists");
+                builder.setMessage("The department already exists. Do you want to insert the user into this department?");
+
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Insert the record into the database
+                        DBManager dbManager = new DBManager(AddPeopleActivity.this);
+                        dbManager.open();
+
+
+
+                        dbManager.insertUser(pin, cashorname, cashierLevel, cashordepartment,companyName, DateCreated, LastModified, mDatabaseHelper);
+                        dbManager.close();
+
+                        // Clear the input fields
+                        PinTextView.setText("");
+                        DepartmentTextView.setText("");
+                        CashierNameTextView.setText("");
+                        // Reset spinners to default selection
+                        LevelSpinner.setSelection(0);
+
+                        // Redirect to the Product activity
+                        Intent intent = new Intent(AddPeopleActivity.this, AdminActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
+                });
+
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Clear the input fields
+                        PinTextView.setText("");
+                        DepartmentTextView.setText("");
+                        CashierNameTextView.setText("");
+                        // Reset spinners to default selection
+                        LevelSpinner.setSelection(0);
+
+                        // Redirect to the Product activity
+                        Intent intent = new Intent(AddPeopleActivity.this, AdminActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
+                });
+
+                builder.show();
+                return;
+            }
+
 
 
             // Insert the record into the database
@@ -162,7 +216,7 @@ public class AddPeopleActivity extends Activity {
 
 
 
-            dbManager.insertUser(pin,cashorname, cashierLevel, cashordepartment, DateCreated, LastModified);
+            dbManager.insertUser(pin,cashorname, cashierLevel, cashordepartment, companyName,DateCreated, LastModified,mDatabaseHelper);
             dbManager.close();
 
             // Clear the input fields

@@ -123,13 +123,16 @@ public class SalesFragment extends Fragment {
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
                         editor.apply();
-
+                        refreshTicketFragment();
+                        refreshTotal();
 
                     }
                     transactionId = transactionIdInProgress;
 
                 } else {
                     transactionId = generateNewTransactionId(); // Generate a new transaction ID
+                    refreshTicketFragment();
+                    refreshTotal();
                 }
 
                 // Get the current date and time for the transaction
@@ -140,11 +143,13 @@ public class SalesFragment extends Fragment {
                 double totalPrice = Double.parseDouble(price);
                 String vat= String.valueOf(calculateTax());
                 String priceWithoutVat= String.valueOf(calculatePricewithoutTax());
-
+                refreshTicketFragment();
+                refreshTotal();
 // Update the transaction ID for all items in progress
                 if (transactionStatus.equals("InProgress")) {
                     mDatabaseHelper.updateTransactionIds(transactionIdInProgress);
-
+                    refreshTicketFragment();
+                    refreshTotal();
                 }
 
 // Check if the item with the same ID is already selected
@@ -165,7 +170,8 @@ public class SalesFragment extends Fragment {
                           double  newTotalPrice = UnitPrice * newQuantity;
                         double newVat= newQuantity * calculateTax();
                             mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
-
+                        refreshTicketFragment();
+                        refreshTotal();
                     } else {
 
                       double  UnitPrice = Double.parseDouble(price);

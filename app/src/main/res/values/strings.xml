@@ -335,6 +335,7 @@
     <string name="CashierLevel">Cashier Level</string>
     <string name="CashierDepartment">Cashier Department</string>
     <string name="adduser">Add user</string>
+    <string name="deptnameexist">Department already exists</string>
 
 
 </resources>

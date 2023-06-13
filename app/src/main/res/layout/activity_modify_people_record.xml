@@ -92,15 +92,13 @@
                         android:textSize="18sp"
                         android:text="@string/CashierDepartment" />
 
-                    <EditText
-                        android:id="@+id/department_edittext"
-                        style="@style/modifiedEditText"
+
+                    <Spinner
+                        android:id="@+id/dept_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:hint="@string/CashierDepartment" />
-
-
+                        android:layout_height="wrap_content" />
 
                 </LinearLayout>
 

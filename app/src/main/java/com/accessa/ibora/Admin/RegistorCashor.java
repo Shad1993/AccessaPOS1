@@ -128,6 +128,8 @@ public class RegistorCashor extends AppCompatActivity {
 
 
     private void register() {
+
+
         String pin = editTextPIN.getText().toString();
         String enteredPIN = editTextPIN.getText().toString();
 
@@ -144,13 +146,18 @@ public class RegistorCashor extends AppCompatActivity {
             Cursor stdAccessCursor = mDatabaseHelper.getStdAccessData();
 
             if (stdAccessCursor.moveToFirst()) {
+
+                // Create a new instance of DatabaseHelper to get a writable database
+                DatabaseHelper databaseHelper = new DatabaseHelper(this);
+                SQLiteDatabase database = databaseHelper.getWritableDatabase();
+
                 long currentTimeMillis = System.currentTimeMillis();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
                 String DateModified = dateFormat.format(new Date(currentTimeMillis));
                 String LastModified = dateFormat.format(new Date(currentTimeMillis));
                 String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
                 // Auto-increment the department code
-                String departmentCode = DBManager.getAutoIncrementedDepartmentCode();
+                String departmentCode = DBManager.getAutoIncrementedDepartmentCode(database);
                 String cashorname = editTextCashor.getText().toString();
                 String cashordepartment = editTextName.getText().toString();
                 if( cashordepartment.equals("Admin")){
@@ -168,8 +175,12 @@ public class RegistorCashor extends AppCompatActivity {
                 values.put("cashorlevel", cashierLevel);
                 values.put("DateCreated", DateModified);
                 values.put("LastModified", LastModified);
+
+                //Values1 for Dept Table
+                values1.put("DateCreated", DateModified);
+                values1.put("LastModified", LastModified);
                 values1.put("DepartmentCode", departmentCode);
-                values1.put("cashorDepartment", cashordepartment);
+                values1.put("DepartmentName", cashordepartment);
 
                 long result = mDatabaseHelper.insertUserData(values,values1);
 
@@ -203,6 +214,7 @@ public class RegistorCashor extends AppCompatActivity {
             Intent intent = new Intent(RegistorCashor.this, AdminActivity.class);
             startActivity(intent);
         }
+        database.close();
         cursor.close();
     }
 

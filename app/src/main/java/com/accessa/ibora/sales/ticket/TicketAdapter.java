@@ -32,21 +32,21 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         List<Transaction> transactionList = new ArrayList<>();
 
         // Iterate through the cursor and add data to the list
-        if (mCursor != null && mCursor.moveToFirst()) {
+        if (mCursor != null && mCursor.moveToLast()) {
             do {
                 String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
                 double unitPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
 
-
-                Transaction item = new Transaction(itemName, itemPrice, itemQuantity,unitPrice);
-                transactionList.add(item);
-            } while (mCursor.moveToNext());
+                Transaction item = new Transaction(itemName, itemPrice, itemQuantity, unitPrice);
+                transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
+            } while (mCursor.moveToPrevious());
         }
 
         return transactionList;
     }
+
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 

@@ -66,7 +66,7 @@ import java.util.Locale;
 public class ModifyPeopleActivity extends Activity {
     private EditText NameText,DepartmentText;
     private EditText PIN;
-    private Spinner spinnerCashierLevel;
+    private Spinner spinnerCashierLevel,spinnerDepartment;
     private Button buttonUpdate;
     private Button buttonDelete;
 
@@ -89,9 +89,9 @@ public class ModifyPeopleActivity extends Activity {
 
         NameText = findViewById(R.id.IdCashierName_edittext);
         PIN = findViewById(R.id.PinEditText);
-        DepartmentText = findViewById(R.id.department_edittext);
 
         spinnerCashierLevel = findViewById(R.id.Cashier_spinner);
+        spinnerDepartment = findViewById(R.id.dept_spinner);
 
 
         Intent intent = getIntent();
@@ -108,11 +108,12 @@ public class ModifyPeopleActivity extends Activity {
         if (user != null) {
             NameText.setText(user.getcashorname());
             PIN.setText(user.getpin());
-            DepartmentText.setText(String.valueOf(user.getcashorDepartment()));
             spinnerCashierLevel.setSelection(getSpinnerIndex1(spinnerCashierLevel, user.getcashorlevel()));
+            spinnerDepartment.setSelection(getSpinnerIndex(spinnerDepartment, user.getcashorDepartment()));
 
 
         }
+        Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
         Cursor levelCursor  = mDatabaseHelper.getAlllevels();
         List<String> levels = new ArrayList<>();
         levels.add("All Levels");
@@ -124,11 +125,28 @@ public class ModifyPeopleActivity extends Activity {
         }
         levelCursor.close();
 
+        List<String> departments = new ArrayList<>();
+        departments.add("All Departments");
+        if (departmentCursor.moveToFirst()) {
+            do {
+                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DEPARTMENT_NAME));
+                departments.add(department);
+            } while (departmentCursor.moveToNext());
+        }
+        departmentCursor.close();
 
 // Populate spinner with options 1 to 5
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.cashier_levels, android.R.layout.simple_spinner_item);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCashierLevel.setAdapter(spinnerAdapter);
+
+
+        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDepartment.setAdapter(spinnerAdapterDept);
+
+
 
         spinnerCashierLevel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -142,14 +160,37 @@ public class ModifyPeopleActivity extends Activity {
                 // Handle the case when nothing is selected
             }
         });
+
+
+        spinnerDepartment.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedItem = parent.getItemAtPosition(position).toString();
+                // Handle the selected item here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
 // Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
         String existinglevel = user.getcashorlevel();
 
 // Get the index of the existing category value in the spinner's data source
         int levelIndex = spinnerAdapter.getPosition(existinglevel);
 
+        // Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
+        String existingDepartment = user.getcashorDepartment();
+        // Get the index of the existing category value in the spinner's data source
+        int DeptIndex = spinnerAdapterDept.getPosition(existingDepartment);
 
-// Set the selected item of the CategorySpinner to the existing category value
+
+        // Set the selected item of the department to the existing category value
+        spinnerDepartment.setSelection(DeptIndex);
+
+        // Set the selected item of the level to the existing category value
         spinnerCashierLevel.setSelection(levelIndex);
 
         buttonUpdate = findViewById(R.id.btn_update);
@@ -179,17 +220,15 @@ public class ModifyPeopleActivity extends Activity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String name = NameText.getText().toString().trim();
-        String dept = DepartmentText.getText().toString().trim();
+        String dept = spinnerDepartment.getSelectedItem().toString();
         String pin =PIN.getText().toString().trim();
         String level = spinnerCashierLevel.getSelectedItem().toString();
         String enteredPIN = PIN.getText().toString();
 
-        if (name.isEmpty() || dept.isEmpty() || enteredPIN.isEmpty()) {
-            Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+        if (name.isEmpty()  || enteredPIN.isEmpty()) {
+            Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
-
-
 
 
         Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
@@ -199,8 +238,6 @@ public class ModifyPeopleActivity extends Activity {
             Toast.makeText(this, "PIN already registered for another user", Toast.LENGTH_SHORT).show();
             return;
         }
-
-
 
 
             boolean isUpdated = dbManager.updateUser(_id, name, enteredPIN, dept ,level,lastmodified);
@@ -215,7 +252,7 @@ public class ModifyPeopleActivity extends Activity {
 
 
     private void deleteItem() {
-        boolean isDeleted = dbManager.deleteItem(_id);
+        boolean isDeleted = dbManager.deleteUser(_id);
         returnHome();
         if (isDeleted) {
             Toast.makeText(this, "Item deleted successfully", Toast.LENGTH_SHORT).show();
@@ -229,6 +266,40 @@ public class ModifyPeopleActivity extends Activity {
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         home_intent1.putExtra("fragment", "people_fragment");
         startActivity(home_intent1);
+    }
+    private int getSpinnerIndex(Spinner spinner, String value) {
+        // Retrieve departments from the database
+        DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
+        Cursor departmentCursor = databaseHelper.getAllDepartment();
+
+        List<String> departments = new ArrayList<>();
+
+        // Iterate through the cursor and add department names to the list
+        if (departmentCursor.moveToFirst()) {
+            do {
+                String department = departmentCursor.getString(departmentCursor.getColumnIndex(DEPARTMENT_NAME));
+                departments.add(department);
+            } while (departmentCursor.moveToNext());
+        }
+
+        // Create an ArrayAdapter and populate it with the retrieved data
+        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, departments);
+        spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapterDept);
+
+        // Find the index of the selected value in the spinner
+        int index = departments.indexOf(value);
+        if (index != -1) {
+            // Set the spinner selection to the found index
+            spinner.setSelection(index);
+            Toast.makeText(spinner.getContext(), "Index: " + index, Toast.LENGTH_SHORT).show();
+            return index;
+        }
+
+        // If the selected value is not found, default to the first item
+        spinner.setSelection(0);
+        Toast.makeText(spinner.getContext(), "Index: 0", Toast.LENGTH_SHORT).show();
+        return 0; // Default index
     }
 
     private int getSpinnerIndex1(Spinner spinner, String value) {
