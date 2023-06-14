@@ -4,11 +4,13 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
@@ -16,12 +18,13 @@ import androidx.fragment.app.Fragment;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
-import com.accessa.ibora.scanner.BarcodeReader;
+import com.accessa.ibora.scanner.USBScanner;
+import com.accessa.ibora.scanner.inbuildScannerSunmiT2Mini;
 
 public class keyboardFragment extends Fragment {
     private AlertDialog alertDialog;
-    private EditText editTextPIN;
-    private StringBuilder enteredPIN;
+    private EditText editTextBarcode;
+    private StringBuilder enteredBarcode;
 
     private SQLiteDatabase database;
     String dbName = Constants.DB_NAME;
@@ -30,14 +33,15 @@ public class keyboardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.keyboard_fragment, container, false);
 
+
         // Set the screen orientation to landscape
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         // Initialize views
-        editTextPIN = view.findViewById(R.id.editTextPIN);
+        editTextBarcode = view.findViewById(R.id.editTextBarcode);
 
         // Initialize the StringBuilder for entered PIN
-        enteredPIN = new StringBuilder();
+        enteredBarcode = new StringBuilder();
 
         // Find the number buttons and set OnClickListener
         Button button1 = view.findViewById(R.id.button1);
@@ -53,9 +57,45 @@ public class keyboardFragment extends Fragment {
         Button button00 = view.findViewById(R.id.button00);
         Button buttonComma = view.findViewById(R.id.buttonComma);
         Button buttonClear = view.findViewById(R.id.buttonClear);
-        Button buttonScan = view.findViewById(R.id.buttonScan);
+        Button buttonEnter = view.findViewById(R.id.buttonEnter);
         Button buttonPrint = view.findViewById(R.id.buttonPrint);
         Button buttonQr = view.findViewById(R.id.buttonQr);
+
+
+        // Set the focus to the EditText initially
+        editTextBarcode.requestFocus();
+
+        editTextBarcode.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    // "Enter" key was pressed
+                    // Handle the barcode data here
+                    String barcode = editTextBarcode.getText().toString().trim();
+                    Toast.makeText(getContext(), "Barcode : " + barcode, Toast.LENGTH_SHORT).show();
+
+                    v.requestFocus();
+                    if (!barcode.isEmpty()) {
+                        // Store the barcode or perform desired action with it
+                        // barcodeString = barcode;
+
+                        // Clear the entered barcode and update the EditText
+                        editTextBarcode.setText("");
+
+                        // Set the focus back to the EditText for further scanning
+                        editTextBarcode.requestFocus();
+
+                        // Return true to indicate that the key press event has been handled
+                        return true;
+                    }
+                }
+
+                // Return false to allow the key press event to be handled by the system as well
+                return false;
+            }
+
+        });
+
 
         // Set OnClickListener for number buttons
         button1.setOnClickListener(new View.OnClickListener() {
@@ -149,11 +189,10 @@ public class keyboardFragment extends Fragment {
             }        });
 
         // Set OnClickListener for other buttons
-        buttonScan.setOnClickListener(new View.OnClickListener() {
+        buttonEnter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle the scan button click
-                // Implement the desired functionality here
+                onEnterButtonClick();
             }
         });
 
@@ -173,7 +212,7 @@ public class keyboardFragment extends Fragment {
             public void onClick(View v) {
                 // Handle the QR button click
                 // Implement the desired functionality here
-                Intent intent = new Intent(getActivity(), BarcodeReader.class);
+                Intent intent = new Intent(getActivity(), inbuildScannerSunmiT2Mini.class);
                 startActivity(intent);
             }
         });
@@ -181,19 +220,37 @@ public class keyboardFragment extends Fragment {
         return view;
     }
 
+    private void onEnterButtonClick() {
+        String barcode = editTextBarcode.getText().toString().trim();
+        Toast.makeText(getContext(), "Barcode : " + barcode, Toast.LENGTH_SHORT).show();
+        // Clear the entered barcode and update the EditText
+        editTextBarcode.setText("");
+        editTextBarcode.requestFocus();
+        // Set the focus back to the EditText for further scanning
+        editTextBarcode.requestFocus();
+        if (!barcode.isEmpty()) {
+            // Store the barcode or perform desired action with it
+            // barcodeString = barcode;
 
+            // Clear the entered barcode and update the EditText
+            editTextBarcode.setText("");
+
+            // Set the focus back to the EditText for further scanning
+            editTextBarcode.requestFocus();
+    }
+    }
 
     public void onNumberButtonClick(String number) {
         // Append the pressed number to the entered PIN
-        enteredPIN.append(number);
+        enteredBarcode.append(number);
 
         // Update the PIN EditText with the entered numbers
-        editTextPIN.setText(enteredPIN.toString());
+        editTextBarcode.setText(enteredBarcode.toString());
     }
     public void onClearButtonClick(View view) {
         // Clear the entered PIN and update the PIN EditText
-        enteredPIN.setLength(0);
-        editTextPIN.setText("");
+        enteredBarcode.setLength(0);
+        editTextBarcode.setText("");
     }
 
     @Override

@@ -5,6 +5,7 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+    <uses-feature android:name="android.hardware.usb.host" />
     <application
         android:allowBackup="true"
         android:screenOrientation="landscape"
@@ -53,12 +54,20 @@
         <activity android:name=".product.category.AddCategoryActivity" />
         <activity android:name=".product.category.ModifyCategoryActivity" />
         <activity android:name=".printer.printerSetup" />
-        <activity android:name=".scanner.BarcodeReader" />
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
-
+        <activity android:name=".scanner.inbuildScannerSunmiT2Mini" />
+        <activity android:name=".scanner.USBScanner" />
+        <receiver android:name=".scanner.USBScanner"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+        </receiver>
     </application>
+
     <uses-permission android:name="android.permission.CAMERA" />
+
 
     <uses-permission android:name="com.summi.permission.PRINT"/>
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -72,10 +81,17 @@
     <uses-permission android:name="com.sunmi.scanner.ACTION_DATA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
+    <uses-permission android:name="android.permission.ACCESS_USB_DEVICE" />
+
+
+    <uses-feature android:name="android.hardware.usb.host" />
 
     <uses-feature android:name="sunmi.hardware.v2.barcode" android:required="false" />
 
-
+    <meta-data
+        android:name="com.google.android.gms.vision.DEPENDENCIES"
+        android:value="barcode" />
 
     <queries>
         <package android:name="woyou.aidlservice.jiuiv5"/>
