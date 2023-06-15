@@ -56,8 +56,8 @@
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
-        <activity android:name=".scanner.inbuildScannerSunmiT2Mini" />
-        <activity android:name=".scanner.USBScanner" />
+        <activity android:name=".sales.scanner.inbuildScannerSunmiT2Mini" />
+
         <receiver android:name=".scanner.USBScanner"
             android:exported="true">
             <intent-filter>

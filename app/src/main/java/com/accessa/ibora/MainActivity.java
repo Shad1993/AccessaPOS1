@@ -31,8 +31,6 @@ import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
-
-
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 

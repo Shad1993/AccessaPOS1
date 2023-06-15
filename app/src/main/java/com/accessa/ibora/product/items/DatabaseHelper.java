@@ -614,6 +614,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
+    public Cursor getAllItemsByBarcode(String barcode) {
+        SQLiteDatabase db = getReadableDatabase();
+        String selection =  "Barcode LIKE ?";
+        String[] selectionArgs = { "%" + barcode + "%" };
+        return db.query(TABLE_NAME, null, selection, selectionArgs, null, null, null);
+    }
     public Cursor getAllUsers() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME_Users, null, null, null, null, null, null);
@@ -966,6 +972,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
     }
+
 
 }
 

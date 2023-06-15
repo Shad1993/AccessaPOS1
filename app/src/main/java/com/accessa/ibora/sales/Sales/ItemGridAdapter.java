@@ -161,11 +161,11 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         }
     }
 
-    private boolean isWebLink(String url) {
+    public static boolean isWebLink(String url) {
         return URLUtil.isValidUrl(url);
     }
 
-    private void loadLocalImage(ImageView imageView, String imageLocation) {
+    public static void loadLocalImage(ImageView imageView, String imageLocation) {
         if (imageLocation != null && !imageLocation.isEmpty()) {
             File imageFile = new File(imageLocation);
             if (imageFile.exists()) {

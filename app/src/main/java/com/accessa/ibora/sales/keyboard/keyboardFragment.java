@@ -1,4 +1,4 @@
-package com.accessa.ibora.sales;
+package com.accessa.ibora.sales.keyboard;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -6,10 +6,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -18,14 +20,13 @@ import androidx.fragment.app.Fragment;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
-import com.accessa.ibora.scanner.USBScanner;
-import com.accessa.ibora.scanner.inbuildScannerSunmiT2Mini;
+import com.accessa.ibora.sales.scanner.inbuildScannerSunmiT2Mini;
 
 public class keyboardFragment extends Fragment {
     private AlertDialog alertDialog;
-    private EditText editTextBarcode;
+    private SearchView searchView;
     private StringBuilder enteredBarcode;
-
+    private CustomEditText editTextBarcode;
     private SQLiteDatabase database;
     String dbName = Constants.DB_NAME;
 
@@ -38,10 +39,15 @@ public class keyboardFragment extends Fragment {
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         // Initialize views
-        editTextBarcode = view.findViewById(R.id.editTextBarcode);
 
+        editTextBarcode = view.findViewById(R.id.editTextBarcode);
         // Initialize the StringBuilder for entered PIN
         enteredBarcode = new StringBuilder();
+        // Set the focus to the EditText initially
+        editTextBarcode.requestFocus();
+        // Keep focus on editTextBarcode
+        editTextBarcode.setNextFocusDownId(R.id.editTextBarcode);
+
 
         // Find the number buttons and set OnClickListener
         Button button1 = view.findViewById(R.id.button1);
@@ -61,9 +67,25 @@ public class keyboardFragment extends Fragment {
         Button buttonPrint = view.findViewById(R.id.buttonPrint);
         Button buttonQr = view.findViewById(R.id.buttonQr);
 
+        EditText editTextSearch = view.findViewById(R.id.editTextBarcode);
+        editTextBarcode.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                final int DRAWABLE_RIGHT = 2;
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    if (event.getRawX() >= (editTextBarcode.getRight() - editTextBarcode.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // Search icon clicked, perform the search functionality
+                        String searchText = editTextBarcode.getText().toString().trim();
 
-        // Set the focus to the EditText initially
-        editTextBarcode.requestFocus();
+                        performItemSearch(searchText);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        editTextBarcode = view.findViewById(R.id.editTextBarcode);
 
         editTextBarcode.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -72,28 +94,19 @@ public class keyboardFragment extends Fragment {
                     // "Enter" key was pressed
                     // Handle the barcode data here
                     String barcode = editTextBarcode.getText().toString().trim();
-                    Toast.makeText(getContext(), "Barcode : " + barcode, Toast.LENGTH_SHORT).show();
-
-                    v.requestFocus();
-                    if (!barcode.isEmpty()) {
-                        // Store the barcode or perform desired action with it
-                        // barcodeString = barcode;
-
-                        // Clear the entered barcode and update the EditText
-                        editTextBarcode.setText("");
-
-                        // Set the focus back to the EditText for further scanning
-                        editTextBarcode.requestFocus();
-
-                        // Return true to indicate that the key press event has been handled
-                        return true;
-                    }
+                    onclearButtonClick();
+                    editTextBarcode.requestFocus();
+                    Bundle resultBundle = new Bundle();
+                    resultBundle.putString("barcode", barcode);
+                    getParentFragmentManager().setFragmentResult("barcodeKey", resultBundle);
+                    return true;
+                } else if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    editTextBarcode.requestFocus();
                 }
 
                 // Return false to allow the key press event to be handled by the system as well
                 return false;
             }
-
         });
 
 
@@ -248,9 +261,26 @@ public class keyboardFragment extends Fragment {
         editTextBarcode.setText(enteredBarcode.toString());
     }
     public void onClearButtonClick(View view) {
+
+            onclearButtonClick();
+
+
+    }
+    private void onclearButtonClick() {
         // Clear the entered PIN and update the PIN EditText
         enteredBarcode.setLength(0);
         editTextBarcode.setText("");
+        editTextBarcode.setText("");
+        editTextBarcode.requestFocus();
+
+        }
+    private void performItemSearch(String searchText) {
+
+        Bundle resultBundle = new Bundle();
+        resultBundle.putString("barcode", searchText);
+        getParentFragmentManager().setFragmentResult("barcodesearched", resultBundle);
+
+
     }
 
     @Override

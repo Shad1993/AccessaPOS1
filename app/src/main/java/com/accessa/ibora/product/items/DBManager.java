@@ -336,6 +336,75 @@ public class DBManager {
         }
         return item;
     }
+    public Item getItemByBarcode(String barcode) {
+        Item item = null;
+        String[] columns = new String[]{
+                DatabaseHelper._ID,
+                DatabaseHelper.Name,
+                DatabaseHelper.DESC,
+                DatabaseHelper.Price,
+                DatabaseHelper.Category,
+                DatabaseHelper.Barcode,
+                DatabaseHelper.Department,
+                DatabaseHelper.SubDepartment,
+                DatabaseHelper.LongDescription,
+                DatabaseHelper.Quantity,
+                DatabaseHelper.ExpiryDate,
+                DatabaseHelper.VAT,
+                DatabaseHelper.SoldBy,
+                DatabaseHelper.Weight,
+                DatabaseHelper.Cost,
+                DatabaseHelper.SKU,
+                DatabaseHelper.AvailableForSale,
+                DatabaseHelper.Variant,
+                DatabaseHelper.Image
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper.Barcode + " = ?";
+        String[] selectionArgs = new String[]{barcode};
+
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            item = new Item();
+            item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
+            item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
+            item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
+
+            // Handle empty strings or invalid numbers for Price, Quantity, and Cost
+            String priceString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
+            item.setPrice(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString));
+
+            String quantityString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Quantity));
+            item.setQuantity(quantityString.isEmpty() ? 0 : Float.parseFloat(quantityString));
+
+            String costString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Cost));
+            item.setCost(costString.isEmpty() ? 0.0f : Float.parseFloat(costString));
+
+            String weightString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Weight));
+            item.setWeight(weightString.isEmpty() ? 0.0f : Float.parseFloat(weightString));
+
+            item.setCategory(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category)));
+            item.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Barcode)));
+            item.setDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Department)));
+            item.setSubDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SubDepartment)));
+            item.setLongDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription)));
+            item.setExpiryDate(cursor.getString(cursor.getColumnIndex(DatabaseHelper.ExpiryDate)));
+
+            item.setVAT(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VAT)));
+
+            item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
+            item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
+            item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
+            item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
+            item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
+            // Set other properties of the item
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return item;
+    }
 
     public String getVATById(String id) {
         String vatValue = null;

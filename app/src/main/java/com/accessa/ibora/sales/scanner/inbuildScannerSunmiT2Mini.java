@@ -1,8 +1,7 @@
-package com.accessa.ibora.scanner;
+package com.accessa.ibora.sales.scanner;
         import android.content.Intent;
         import android.os.Bundle;
         import android.util.Log;
-        import android.view.TextureView;
         import android.widget.Toast;
 
         import androidx.activity.result.ActivityResult;
@@ -16,7 +15,7 @@ package com.accessa.ibora.scanner;
         import java.util.ArrayList;
         import java.util.HashMap;
 
-public class inbuildScannerSunmiT2Mini extends AppCompatActivity {
+public class inbuildScannerSunmiT2Mini extends AppCompatActivity  {
 
     private ActivityResultLauncher<Intent> scanLauncher;
 
