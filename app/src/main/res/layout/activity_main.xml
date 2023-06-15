@@ -9,10 +9,9 @@
     android:background="@color/white"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
@@ -30,9 +29,9 @@
         </com.google.android.material.appbar.AppBarLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
             android:orientation="vertical">
 
             <fragment
@@ -42,48 +41,55 @@
                 android:layout_weight="1"
                 class="com.accessa.ibora.sales.Sales.SalesFragment" />
 
-            <fragment
-                android:id="@+id/Keyboard_fragment"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                class="com.accessa.ibora.sales.keyboardFragment" />
-
-        </LinearLayout>
-
-
-
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <fragment
+                    android:id="@+id/Keyboard_fragment"
+                    class="com.accessa.ibora.sales.keyboard.keyboardFragment"
+                    android:layout_width="500dp"
+                    android:layout_height="500dp"
+                    android:layout_weight="0" />
 
                 <FrameLayout
                     android:id="@+id/scanner_fragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_width="500dp"
+                    android:layout_height="500dp"
+                    android:layout_weight="0">
 
+                    <SurfaceView
+                        android:id="@+id/scanner_surface"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <View
+                        android:id="@+id/scanner_square"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/scanner_square" />
+
+                </FrameLayout>
             </LinearLayout>
-
         </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    </LinearLayout>
     <FrameLayout
         android:id="@+id/right_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="1000dp"
-        >
+        android:layout_marginLeft="1000dp">
 
         <fragment
             android:id="@+id/TicketFragment"
             class="com.accessa.ibora.sales.ticket.TicketFragment"
             android:layout_width="0dp"
             android:layout_height="fill_parent"
-            android:layout_weight="0.5"
-            />
+            android:layout_weight="0.5" />
     </FrameLayout>
+
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
         android:layout_width="wrap_content"
