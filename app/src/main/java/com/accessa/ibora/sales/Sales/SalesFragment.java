@@ -67,6 +67,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private BarcodeListener barcodeListener;
 
+
     @Override
     public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
 
@@ -84,6 +85,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.sales_fragment, container, false);
 
+
         int numberOfColumns = 6;
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -94,7 +96,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
                 if (requestKey.equals("barcodesearched")) {
                     // Retrieve the barcode value from the result bundle
-                     barcode = result.getString("barcode");
+                    barcode = result.getString("barcode");
 
                     // Handle the barcode value as needed
                     if (barcode != null) {
@@ -111,7 +113,6 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 if (requestKey.equals("barcodeKey")) {
                     // Retrieve the barcode value from the result bundle
                     barcode = result.getString("barcode");
-
                     // Handle the barcode value as needed
                     if (barcode != null) {
                         //add to transaction
@@ -163,12 +164,12 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String id = idTextView.getText().toString();
                 String title = subjectEditText.getText().toString();
                 String longDescription = longDescriptionEditText.getText().toString();
-                 price = priceTextView.getText().toString();
+                price = priceTextView.getText().toString();
                 String transactionId;
 
                 Item item = dbManager.getItemById(id);
                 if (item != null) {
-                     VatVall = item.getVAT();
+                    VatVall = item.getVAT();
                     VatType=item.getVAT();
 
                 }
@@ -224,18 +225,18 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         // Item already selected, update the quantity and total price
                         int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
-                         UnitPrice = Double.parseDouble(price);
+                        UnitPrice = Double.parseDouble(price);
 
 
-                          int  newQuantity = currentQuantity + 1;
-                          double  newTotalPrice = UnitPrice * newQuantity;
+                        int  newQuantity = currentQuantity + 1;
+                        double  newTotalPrice = UnitPrice * newQuantity;
                         double newVat= newQuantity * calculateTax();
-                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
+                        mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
                         refreshTicketFragment();
                         refreshTotal();
                     } else {
 
-                      double  UnitPrice = Double.parseDouble(price);
+                        double  UnitPrice = Double.parseDouble(price);
                         double  newTotalPrice = UnitPrice * 1;
 
                         // Item has a different transaction ID, insert a new transaction
@@ -417,131 +418,131 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         dialogRecyclerView.setAdapter(dialogAdapter);
 
         // Set the OnItemTouchListener on the RecyclerView{
-           dialogRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), dialogRecyclerView,
-            new RecyclerItemClickListener.OnItemClickListener() {
-                @Override
-                public void onItemClick(View view, int position) {
+        dialogRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), dialogRecyclerView,
+                new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
 
-                    SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                    transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
-
-
-                    TextView idTextView = view.findViewById(R.id.id_text_view);
-                    TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                    TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                    TextView priceTextView = view.findViewById(R.id.price_text_view);
-
-                    String id = idTextView.getText().toString();
-                    String title = subjectEditText.getText().toString();
-                    String longDescription = longDescriptionEditText.getText().toString();
-                    price = priceTextView.getText().toString();
-                    String transactionId;
-
-                    Item item = dbManager.getItemById(id);
-                    if (item != null) {
-                        VatVall = item.getVAT();
-                        VatType=item.getVAT();
-
-                    }
+                        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
-                    String transactionStatus = "InProgress";
-                    String transactionSaved = "Saved";
+                        TextView idTextView = view.findViewById(R.id.id_text_view);
+                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
+                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
+                        TextView priceTextView = view.findViewById(R.id.price_text_view);
 
-                    if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
-                        if (transactionIdInProgress == null) {
-                            transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
-                            // Store the transaction ID in SharedPreferences
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
-                            editor.apply();
-                            refreshTicketFragment();
-                            refreshTotal();
+                        String id = idTextView.getText().toString();
+                        String title = subjectEditText.getText().toString();
+                        String longDescription = longDescriptionEditText.getText().toString();
+                        price = priceTextView.getText().toString();
+                        String transactionId;
+
+                        Item item = dbManager.getItemById(id);
+                        if (item != null) {
+                            VatVall = item.getVAT();
+                            VatType=item.getVAT();
 
                         }
-                        transactionId = transactionIdInProgress;
-
-                    } else {
-                        transactionId = generateNewTransactionId(); // Generate a new transaction ID
-                        refreshTicketFragment();
-                        refreshTotal();
-                    }
-
-                    // Get the current date and time for the transaction
-                    String transactionDate = getCurrentDateTime();
-
-                    // Insert/update the transaction into the Transaction table
-                    int itemId = Integer.parseInt(id);
-                    double totalPrice = Double.parseDouble(price);
-                    String vat= String.valueOf(calculateTax());
-                    String priceWithoutVat= String.valueOf(calculatePricewithoutTax());
-                    refreshTicketFragment();
-                    refreshTotal();
-// Update the transaction ID for all items in progress
-                    if (transactionStatus.equals("InProgress")) {
-                        mDatabaseHelper.updateTransactionIds(transactionIdInProgress);
-                        refreshTicketFragment();
-                        refreshTotal();
-                    }
-
-// Check if the item with the same ID is already selected
-                    Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        // Retrieve the existing transaction ID for the item
-                        existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
-
-                        // Check if the existing transaction ID matches the current transaction ID
-                        if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
-                            // Item already selected, update the quantity and total price
-                            int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
-
-                            UnitPrice = Double.parseDouble(price);
 
 
-                            int  newQuantity = currentQuantity + 1;
-                            double  newTotalPrice = UnitPrice * newQuantity;
-                            double newVat= newQuantity * calculateTax();
-                            mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
+                        String transactionStatus = "InProgress";
+                        String transactionSaved = "Saved";
+
+                        if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
+                            if (transactionIdInProgress == null) {
+                                transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
+                                // Store the transaction ID in SharedPreferences
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
+                                editor.apply();
+                                refreshTicketFragment();
+                                refreshTotal();
+
+                            }
+                            transactionId = transactionIdInProgress;
+
+                        } else {
+                            transactionId = generateNewTransactionId(); // Generate a new transaction ID
                             refreshTicketFragment();
                             refreshTotal();
-                        } else {
+                        }
 
+                        // Get the current date and time for the transaction
+                        String transactionDate = getCurrentDateTime();
+
+                        // Insert/update the transaction into the Transaction table
+                        int itemId = Integer.parseInt(id);
+                        double totalPrice = Double.parseDouble(price);
+                        String vat= String.valueOf(calculateTax());
+                        String priceWithoutVat= String.valueOf(calculatePricewithoutTax());
+                        refreshTicketFragment();
+                        refreshTotal();
+// Update the transaction ID for all items in progress
+                        if (transactionStatus.equals("InProgress")) {
+                            mDatabaseHelper.updateTransactionIds(transactionIdInProgress);
+                            refreshTicketFragment();
+                            refreshTotal();
+                        }
+
+// Check if the item with the same ID is already selected
+                        Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            // Retrieve the existing transaction ID for the item
+                            existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
+
+                            // Check if the existing transaction ID matches the current transaction ID
+                            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+                                // Item already selected, update the quantity and total price
+                                int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+
+                                UnitPrice = Double.parseDouble(price);
+
+
+                                int  newQuantity = currentQuantity + 1;
+                                double  newTotalPrice = UnitPrice * newQuantity;
+                                double newVat= newQuantity * calculateTax();
+                                mDatabaseHelper.updateTransaction(itemId, newQuantity, newTotalPrice,newVat,VatType);
+                                refreshTicketFragment();
+                                refreshTotal();
+                            } else {
+
+                                double  UnitPrice = Double.parseDouble(price);
+                                double  newTotalPrice = UnitPrice * 1;
+
+                                // Item has a different transaction ID, insert a new transaction
+                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
+
+                                refreshTicketFragment();
+                                refreshTotal();
+                            }
+                        } else {
                             double  UnitPrice = Double.parseDouble(price);
                             double  newTotalPrice = UnitPrice * 1;
 
-                            // Item has a different transaction ID, insert a new transaction
-                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
-
+                            // Item not selected, insert a new transaction with quantity 1 and total price
+                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType);
                             refreshTicketFragment();
                             refreshTotal();
                         }
-                    } else {
-                        double  UnitPrice = Double.parseDouble(price);
-                        double  newTotalPrice = UnitPrice * 1;
 
-                        // Item not selected, insert a new transaction with quantity 1 and total price
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType);
-                        refreshTicketFragment();
-                        refreshTotal();
+                        if (cursor != null) {
+                            cursor.close();
+                        }
+                        // Notify the listener that an item is added
+                        if (itemAddedListener != null) {
+                            itemAddedListener.onItemAdded();
+                        }
+                        SendToHeader(totalAmount,TaxtotalAmount);
+
                     }
 
-                    if (cursor != null) {
-                        cursor.close();
+                    @Override
+                    public void onLongItemClick(View view, int position) {
+                        // Handle long item click
+                        // ...
                     }
-                    // Notify the listener that an item is added
-                    if (itemAddedListener != null) {
-                        itemAddedListener.onItemAdded();
-                    }
-                    SendToHeader(totalAmount,TaxtotalAmount);
-
-                }
-
-                @Override
-                public void onLongItemClick(View view, int position) {
-                    // Handle long item click
-                    // ...
-                }
-            }));
+                }));
 
         // Show the dialog
         AlertDialog dialog = builder.create();

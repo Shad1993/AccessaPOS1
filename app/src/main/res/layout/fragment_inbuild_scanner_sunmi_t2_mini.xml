@@ -1,0 +1,33 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scanner_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_gravity="center"
+        android:layout_width="450dp"
+        android:layout_height="300dp" />
+
+    <View
+        android:id="@+id/scanner_square"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:background="@drawable/scanner_square" />
+
+    <TextView
+        android:id="@+id/barcode_text"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        app:layout_constraintTop_toBottomOf="@id/surface_view"
+        android:layout_marginTop="50dp"
+        android:visibility="gone"
+        android:text="Barcode Text"
+        android:textSize="25sp"
+        android:padding="5dp"/>
+
+</FrameLayout>

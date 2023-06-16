@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
@@ -20,7 +19,7 @@ import androidx.fragment.app.Fragment;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
-import com.accessa.ibora.sales.scanner.inbuildScannerSunmiT2Mini;
+
 
 public class keyboardFragment extends Fragment {
     private AlertDialog alertDialog;
@@ -225,8 +224,8 @@ public class keyboardFragment extends Fragment {
             public void onClick(View v) {
                 // Handle the QR button click
                 // Implement the desired functionality here
-                Intent intent = new Intent(getActivity(), inbuildScannerSunmiT2Mini.class);
-                startActivity(intent);
+                // Create an intent to navigate to the parent activity
+
             }
         });
 
@@ -235,7 +234,7 @@ public class keyboardFragment extends Fragment {
 
     private void onEnterButtonClick() {
         String barcode = editTextBarcode.getText().toString().trim();
-        Toast.makeText(getContext(), "Barcode : " + barcode, Toast.LENGTH_SHORT).show();
+
         // Clear the entered barcode and update the EditText
         editTextBarcode.setText("");
         editTextBarcode.requestFocus();

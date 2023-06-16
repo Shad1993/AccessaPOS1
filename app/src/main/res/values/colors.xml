@@ -10,6 +10,7 @@
     <color name="colorAccent">#fff</color>
     <color name="primaryTextColor">#00a5ff</color>
     <color name="whiteTextColor">#00a5ff</color>
+    <color name="textviewextColor">#DAE2F3</color>
 
 
 </resources>

@@ -49,29 +49,29 @@
                 <fragment
                     android:id="@+id/Keyboard_fragment"
                     class="com.accessa.ibora.sales.keyboard.keyboardFragment"
-                    android:layout_width="500dp"
-                    android:layout_height="500dp"
-                    android:layout_weight="0" />
+                    android:layout_width="510dp"
+                    android:layout_height="310dp"
+                    android:layout_weight="1" />
+
 
                 <FrameLayout
-                    android:id="@+id/scanner_fragment"
-                    android:layout_width="500dp"
-                    android:layout_height="500dp"
-                    android:layout_weight="0">
+            android:id="@+id/scanner_container"
+            android:layout_width="450dp"
+            android:layout_height="300dp"
+            >
 
-                    <SurfaceView
-                        android:id="@+id/scanner_surface"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+            <fragment
+                android:id="@+id/ScannerFragment"
+                class="com.accessa.ibora.sales.scanner.InbuiltScannerFragment"
+                android:layout_width="450dp"
+                android:layout_height="310dp"
+                android:layout_weight="0.5" />
 
-                    <View
-                        android:id="@+id/scanner_square"
-                        android:layout_width="200dp"
-                        android:layout_height="200dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/scanner_square" />
 
-                </FrameLayout>
+</FrameLayout>
+
+
+
             </LinearLayout>
         </LinearLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

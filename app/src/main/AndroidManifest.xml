@@ -56,14 +56,6 @@
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
-        <activity android:name=".sales.scanner.inbuildScannerSunmiT2Mini" />
-
-        <receiver android:name=".scanner.USBScanner"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-            </intent-filter>
-        </receiver>
     </application>
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -83,6 +75,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.ACCESS_USB_DEVICE" />
+    <uses-feature android:name="android.hardware.camera.flash" />
 
 
     <uses-feature android:name="android.hardware.usb.host" />

@@ -16,13 +16,13 @@
 
         <com.accessa.ibora.sales.keyboard.CustomEditText
             android:id="@+id/editTextBarcode"
-            android:layout_width="200dp"
+            android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:maxLength="20"
             android:textSize="20sp"
             android:textColor="@color/BleuAccessaText"
-            android:background="@drawable/edittext_rounded_bg"
+            android:background="@drawable/edittext1_rounded_bg"
             android:gravity="center"
             android:drawableEnd="@drawable/bsearchbarcode"
             android:padding="8dp"
@@ -36,7 +36,7 @@
             android:textColor="@android:color/white"
             android:backgroundTint="@color/OrangeAccessa"
             android:onClick="onEnterButtonClick"
-            android:layout_width="200dp"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"/>
 
         <GridLayout
