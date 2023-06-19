@@ -15,7 +15,9 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    buildFeatures {
+        aidl = true
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -26,6 +28,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+    sourceSets{
+        main{
+            aidl.srcDirs = ['src/main/aidl']
+            jniLibs.srcDirs=['libs']
+        }
+    }
 }
 
 dependencies {
@@ -34,6 +42,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.drawerlayout:drawerlayout:1.1.1'
     implementation 'org.jetbrains:annotations:15.0'
+    implementation 'androidx.gridlayout:gridlayout:1.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -54,6 +63,7 @@ dependencies {
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.23'
     implementation files('libs/sunmiscan.jar')
     implementation 'com.google.android.gms:play-services-vision:11.0.2'
+    implementation files('libs/sunmiscan.jar')
     implementation('com.journeyapps:zxing-android-embedded:4.1.0') {
         exclude group: 'com.google.zxing', module: 'core'
     }

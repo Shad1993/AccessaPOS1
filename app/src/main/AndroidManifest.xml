@@ -56,6 +56,7 @@
         <activity android:name=".printer.printerSetup" />
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
+        <activity android:name=".CustomerLcd.CustomerLcd"/>
     </application>
 
     <uses-permission android:name="android.permission.CAMERA" />

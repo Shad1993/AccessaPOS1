@@ -60,12 +60,12 @@
             android:layout_height="300dp"
             >
 
-            <fragment
-                android:id="@+id/ScannerFragment"
-                class="com.accessa.ibora.sales.scanner.InbuiltScannerFragment"
-                android:layout_width="450dp"
-                android:layout_height="310dp"
-                android:layout_weight="0.5" />
+                    <fragment
+                        android:id="@+id/customerDisplay_fragment"
+                        class="com.accessa.ibora.CustomerLcd.CustomerLcdFragment"
+                        android:layout_width="450dp"
+                        android:layout_height="310dp"
+                        android:layout_weight="1" />
 
 
 </FrameLayout>

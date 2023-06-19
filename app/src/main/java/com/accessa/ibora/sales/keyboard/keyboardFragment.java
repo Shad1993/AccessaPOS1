@@ -12,13 +12,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Constants;
+import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
+import com.accessa.ibora.scanner.InbuiltScannerFragment;
 
 
 public class keyboardFragment extends Fragment {
@@ -222,16 +228,35 @@ public class keyboardFragment extends Fragment {
         buttonQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle the QR button click
-                // Implement the desired functionality here
-                // Create an intent to navigate to the parent activity
-
+                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.scanner_container);
+                if (currentFragment instanceof CustomerLcdFragment) {
+                    // The current fragment is CustomerLcdFragment, replace it with InbuiltScannerFragment
+                    buttonQr.setText(getString(R.string.LCDSettings));
+                    InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
+                    replaceFragment(newScannerFragment);
+                } else if(currentFragment instanceof InbuiltScannerFragment) {
+                    buttonQr.setText(getString(R.string.Scan));
+                    CustomerLcdFragment customerFragment = new CustomerLcdFragment();
+                    replaceFragment(customerFragment);
+                }else {
+                    // The current fragment is CustomerLcdFragment, replace it with InbuiltScannerFragment
+                    buttonQr.setText(getString(R.string.LCDSettings));
+                    InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
+                    replaceFragment(newScannerFragment);
+                }
             }
+
         });
 
         return view;
     }
-
+    private void replaceFragment(Fragment newFragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.scanner_container, newFragment);
+        fragmentTransaction.addToBackStack(null); // Optional: Add the transaction to the back stack
+        fragmentTransaction.commit();
+    }
     private void onEnterButtonClick() {
         String barcode = editTextBarcode.getText().toString().trim();
 

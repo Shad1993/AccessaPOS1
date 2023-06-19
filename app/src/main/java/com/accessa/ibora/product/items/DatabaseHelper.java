@@ -175,7 +175,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_ID_SALESH = "IDSalesH";
     private static final String TRANSACTION_CLIENT_CODE = "ClientCode";
     private static final String TRANSACTION_LOYALTY = "Loyalty";
-    private static final String TRANSACTION_TICKET_NO = "TranscationId";
+    public static final String TRANSACTION_TICKET_NO = "TranscationId";
 
 
     // Invoice Settlement table columns

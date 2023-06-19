@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +24,8 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.CustomerLcd.CustomerLcd;
+import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -37,7 +38,9 @@ import com.google.android.material.navigation.NavigationView;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener {
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketReloadListener {
     private boolean doubleBackToExitPressedOnce = false;
 
     private TextView name;
@@ -56,19 +59,30 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     private String Company_name;
 
     private SharedPreferences sharedPreferences;
-
+    private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private TicketFragment ticketFragment;
-
+    private CustomerLcdFragment customerLcdFragment;
+    private static final String TRANSACTION_ID_KEY = "transaction_id";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
         // remove onscreen Keyboard
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
+        CustomerLcdFragment customerLcdFragment = new CustomerLcdFragment();
+        customerLcdFragment.setTicketReloadListener(this); // Set the activity as the listener
 
+// Add the fragment to the activity using a FragmentTransaction
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.container, customerLcdFragment);
+        transaction.commit();
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -77,6 +91,31 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
         Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
+
+
+
+
+
+        String transactionId;
+        String transactionStatus = "Started";
+        String transactionSaved = "Saved";
+
+        if (transactionStatus.equals("Started") || transactionSaved.equals("Saved")  ) {
+            if (transactionIdInProgress == null) {
+                transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
+                // Store the transaction ID in SharedPreferences
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
+                editor.apply();
+
+
+            }
+            transactionId = transactionIdInProgress;
+
+        } else {
+            transactionId = generateNewTransactionId(); // Generate a new transaction ID
+
+        }
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
@@ -139,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                     return true;
                 } else if (id == R.id.Settings) {
                     Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, CustomerLcd.class);
+                    startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
@@ -205,7 +246,13 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         fragmentTransaction.commit();
     }
 
-
+    private String generateNewTransactionId() {
+        // Implement your logic to generate a unique transaction ID
+        // For example, you can use a combination of timestamp and a random number
+        long timestamp = System.currentTimeMillis();
+        int random = new Random().nextInt(10000);
+        return "TXN-" + timestamp + "-" + random;
+    }
     @Override
     public void onItemAdded() {
         // Refresh the TicketFragment when an item is added in the SalesFragment
@@ -217,6 +264,46 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
+            }
+        }
+    }
+
+
+    @Override
+    public void onTransactionCleared() {
+        // Refresh the TicketFragment when an item is added in the SalesFragment
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
+        if (customerLcdFragment != null) {
+            double totalAmount = customerLcdFragment.calculateTotalAmount();
+            double taxTotalAmount = customerLcdFragment.calculateTotalTax();
+            TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+            if (ticketFragment != null) {
+                ticketFragment.refreshData(totalAmount, taxTotalAmount);
+                ticketFragment.updateheader(totalAmount, taxTotalAmount);
+            }
+        }
+    }
+    @Override
+    public void onTicketReload() {
+        double totalAmount = customerLcdFragment.calculateTotalAmount();
+        double taxTotalAmount = customerLcdFragment.calculateTotalTax();
+        // Reload the TicketFragment
+        TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+        }
+    }
+
+    public void onItemDeleted() {
+        // Refresh the TicketFragment when an item is added in the SalesFragment
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
+        if (customerLcdFragment != null) {
+            double totalAmount = customerLcdFragment.calculateTotalAmount();
+            double TaxtotalAmount = customerLcdFragment.calculateTotalTax();
+            TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+            if (ticketFragment == null) {
+                ticketFragment.refreshData(totalAmount, TaxtotalAmount);
+                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
             }
         }
     }

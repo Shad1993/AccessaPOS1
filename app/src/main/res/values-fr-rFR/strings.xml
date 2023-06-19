@@ -332,5 +332,10 @@
     <string name="adduser">Add user</string>
     <string name="deptnameexist">Department already exists</string>
     <string name="itemnotavailables">"  :Not Available For sale, Please contact your Admin:"</string>
+    <string name="LCDSettings">LCD Settings</string>
+    <string name="TicketSettings">Tickets Settings</string>
+    <string name="ClearTicket">Clear Tickets</string>
+    <string name="transactioncleared">Transaction cleared Sucessefully</string>
+    <string name="sync">Syncronise database</string>
 
 </resources>

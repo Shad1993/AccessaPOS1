@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
@@ -28,6 +29,7 @@ import java.util.Locale;
 
 public class ModifyItemDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
+    private ItemClearedListener itemclearedListener;
     private static final String ARG_QUANTITY = "quantity";
     private static final String ARG_PRICE = "price";
     private static final String ARG_LONG_DESC = "long_desc";
@@ -102,7 +104,9 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 deleteItem(ITEM_ID); // Call the deleteItem() method with the item ID
+                                refreshTicketFragment();
                                 dismiss(); // Close the dialog after deleting the item
+
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
@@ -137,6 +141,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
                         double Quantity= Double.parseDouble(quantity);
                        double  totalPrice= Quantity * UnitPrice;
                         boolean isUpdated = Xdatabasemanager.updateTransItem(Long.parseLong(id), quantity, String.valueOf(totalPrice), longDesc,lastmodified);
+                       refreshTicketFragment();
                         returnHome();
 
                     }
@@ -160,7 +165,42 @@ public class ModifyItemDialogFragment extends DialogFragment {
             }
         }
     }
-
+    private void refreshTicketFragment() {
+        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
+        }
+    }
+    public double calculateTotalAmount() {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+    public double calculateTotalTax() {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        double TaxtotalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            do {
+                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
+                TaxtotalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return TaxtotalAmount;
+    }
     public void returnHome() {
         Intent home_intent1 = new Intent(getContext(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -169,5 +209,10 @@ public class ModifyItemDialogFragment extends DialogFragment {
     }
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);
+    }
+    public interface ItemClearedListener {
+
+
+        void onItemDeleted();
     }
 }

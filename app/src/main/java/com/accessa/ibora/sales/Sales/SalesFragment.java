@@ -693,6 +693,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     }
     public interface ItemAddedListener {
         void onItemAdded();
+
+        void onTransactionCleared();
     }
     @Override
     public void onDetach() {

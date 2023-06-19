@@ -179,7 +179,9 @@ private String transactionIdInProgress;
                         ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quatity, Price, LongDesc,ItemId);
                         dialogFragment.setTargetFragment(TicketFragment.this, 0);
                         dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
+
                     }
+
 
                     @Override
                     public void onLongItemClick(View view, int position) {
@@ -258,7 +260,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
     }
 
 }
-    public void refreshData(double totalAmount, double TaxtotalAmount) {
+    public  void refreshData(double totalAmount, double TaxtotalAmount) {
 
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         mAdapter.swapCursor(cursor);
