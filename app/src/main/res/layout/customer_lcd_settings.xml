@@ -31,7 +31,7 @@
     android:id="@+id/button3"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="LCD Sleep"
+    android:text="@string/lcdsleep"
     android:onClick="button3"
     tools:layout_gravity="center" />
 
@@ -39,7 +39,7 @@
     android:id="@+id/button2"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="LCD Wakeup"
+    android:text="@string/lcdwake"
     android:onClick="button2"
     tools:layout_gravity="center" />
 
@@ -47,7 +47,7 @@
     android:id="@+id/button4"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="LCD Clear"
+    android:text="@string/lcdclear"
     android:onClick="button4"
     tools:layout_gravity="center" />
 
@@ -55,7 +55,7 @@
     android:id="@+id/button"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="LCD Init"
+    android:text="@string/lcdinit"
     android:onClick="button1"
     tools:layout_gravity="center" />
 
@@ -63,7 +63,7 @@
     android:id="@+id/button6"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Send a pic"
+    android:text="@string/lcdimg"
     android:onClick="button6"
     tools:layout_gravity="center" />
 
@@ -71,7 +71,7 @@
     android:id="@+id/button5"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Send a text"
+    android:text="@string/sendtext"
     android:onClick="button5"
     tools:layout_gravity="center" />
 

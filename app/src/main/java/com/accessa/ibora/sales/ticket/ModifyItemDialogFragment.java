@@ -2,6 +2,7 @@ package com.accessa.ibora.sales.ticket;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -22,6 +23,7 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
+import com.accessa.ibora.sales.Sales.SalesFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,7 +38,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private static final String ARG_Item_id = "Item_Id";
     private   String ITEM_ID;
 
-    private DatabaseHelper mDatabaseHelper;
+    private static DatabaseHelper mDatabaseHelper;
 
     public static ModifyItemDialogFragment newInstance(String quantity, String price, String longDesc, String itemId) {
         ModifyItemDialogFragment fragment = new ModifyItemDialogFragment();
@@ -106,7 +108,9 @@ public class ModifyItemDialogFragment extends DialogFragment {
                                 deleteItem(ITEM_ID); // Call the deleteItem() method with the item ID
                                 refreshTicketFragment();
                                 dismiss(); // Close the dialog after deleting the item
-
+                                if (itemclearedListener != null) {
+                                    itemclearedListener.onItemDeleted();
+                                }
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
@@ -141,7 +145,9 @@ public class ModifyItemDialogFragment extends DialogFragment {
                         double Quantity= Double.parseDouble(quantity);
                        double  totalPrice= Quantity * UnitPrice;
                         boolean isUpdated = Xdatabasemanager.updateTransItem(Long.parseLong(id), quantity, String.valueOf(totalPrice), longDesc,lastmodified);
-                       refreshTicketFragment();
+                        if (itemclearedListener != null) {
+                            itemclearedListener.onAmountModified();
+                        }
                         returnHome();
 
                     }
@@ -157,6 +163,9 @@ public class ModifyItemDialogFragment extends DialogFragment {
         // Perform the delete operation here
         if (Xdatabasemanager != null) {
             boolean deleted = Xdatabasemanager.deleteTransacItem(Long.parseLong(itemId));
+            if (itemclearedListener != null) {
+                itemclearedListener.onItemDeleted();
+            }
             if (deleted) {
                 Toast.makeText(getActivity(), getString(R.string.item_deleted), Toast.LENGTH_SHORT).show();
                 returnHome();
@@ -171,7 +180,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
             ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
         }
     }
-    public double calculateTotalAmount() {
+    public static double calculateTotalAmount() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double totalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
@@ -186,7 +195,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
         }
         return totalAmount;
     }
-    public double calculateTotalTax() {
+    public static double calculateTotalTax() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double TaxtotalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
@@ -210,9 +219,23 @@ public class ModifyItemDialogFragment extends DialogFragment {
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);
     }
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof ItemClearedListener) {
+            itemclearedListener = (ItemClearedListener) context;
+        }
+
+    }
     public interface ItemClearedListener {
 
 
         void onItemDeleted();
+        void onAmountModified();
+    }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        itemclearedListener = null;
     }
 }

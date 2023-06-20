@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.Sales.SalesFragment;
@@ -78,6 +79,7 @@ public class CustomerLcdFragment extends Fragment {
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
         mDatabaseHelper = new DatabaseHelper(requireContext()); // Initialize DatabaseHelper
+
 
 
         // Find and set click listeners for all buttons
@@ -274,26 +276,18 @@ public class CustomerLcdFragment extends Fragment {
         db.delete(TRANSACTION_TABLE_NAME, whereClause, whereArgs1);
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
-
-        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
-        refreshTicketFragment();
-        generateNewTransactionId();
-
-        // Notify the listener that an item is added
+// Notify the listener that an item is added
         if (ticketclearedListener != null) {
             ticketclearedListener.onTransactionCleared();
         }
-        // Notify the listener to reload the TicketFragment
-        if (ticketReloadListener != null) {
-            ticketReloadListener.onTicketReload();
-        }
+        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
+
+        generateNewTransactionId();
+
+
+
     }
-    private void refreshTicketFragment() {
-        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
-        if (ticketFragment != null) {
-            ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
-        }
-    }
+
     public double calculateTotalAmount() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double totalAmount = 0.0;
@@ -333,10 +327,24 @@ public class CustomerLcdFragment extends Fragment {
         int random = new Random().nextInt(10000);
         return "TXN-" + timestamp + "-" + random;
     }
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof TicketClearedListener) {
+            ticketclearedListener = (TicketClearedListener) context;
+        }
 
+    }
     public interface TicketClearedListener {
 
 
         void onTransactionCleared();
+
     }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        ticketclearedListener = null;
+    }
+
 }

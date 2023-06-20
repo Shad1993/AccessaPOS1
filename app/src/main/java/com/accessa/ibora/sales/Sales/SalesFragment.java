@@ -396,6 +396,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     }
     private void refreshTicketFragment() {
         TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
+
         if (ticketFragment != null) {
             ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
         }
@@ -529,6 +530,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         if (cursor != null) {
                             cursor.close();
                         }
+
+
                         // Notify the listener that an item is added
                         if (itemAddedListener != null) {
                             itemAddedListener.onItemAdded();
@@ -694,7 +697,6 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public interface ItemAddedListener {
         void onItemAdded();
 
-        void onTransactionCleared();
     }
     @Override
     public void onDetach() {

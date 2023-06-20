@@ -23,9 +23,14 @@ import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+
+import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
+import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
@@ -38,6 +43,8 @@ import com.sunmi.peripheral.printer.SunmiPrinterService;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 public class printerSetup extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
@@ -308,6 +315,13 @@ public class printerSetup extends AppCompatActivity {
                         mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
 
                         updateTransactionStatus();
+                        MainActivity mainActivity = MainActivity.getInstance();
+                        if (mainActivity != null) {
+                            mainActivity.onTransationCompleted();
+                        }
+
+                        Intent intent = new Intent(printerSetup.this, MainActivity.class);
+                        startActivity(intent);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -419,5 +433,7 @@ public class printerSetup extends AppCompatActivity {
         editor.apply();
 
 
+
     }
+
 }

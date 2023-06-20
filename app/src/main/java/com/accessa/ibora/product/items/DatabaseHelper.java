@@ -80,6 +80,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CASHOR_id = "cashorid";
     public static final String COLUMN_CASHOR_COMPANY ="CompanyName" ;
     public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
+    public static final String TRANSACTION_STATUS_INPROGRESS = "InProgress";
     public static final String COLUMN_PIN = "pin";
     public static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
      public static final String COLUMN_CASHOR_NAME = "cashorname";
@@ -570,7 +571,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Update the status of all in-progress transactions to the new status
         String whereClause = TRANSACTION_STATUS + " = ?";
         String[] whereArgs = {TRANSACTION_STATUS_IN_PROGRESS};
-        db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+        db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
     }
     public boolean updateTransactionHeader(String transactionIdInProgress, double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem, double totaltax, String cashierId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -604,13 +605,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         String[] selectionArgs = {"InProgress"};
 
-        return db.rawQuery(query, selectionArgs);
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        if (cursor == null || !cursor.moveToFirst()) {
+            // There are no in-progress transactions.
+            // Return zero.
+            return null;
+        } else {
+            // There are in-progress transactions.
+            // Return the Cursor object.
+            return cursor;
+        }
     }
 
 
 
 
-    public Cursor getAllItems() {
+        public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }

@@ -30,8 +30,7 @@
              />
         <Button
             android:id="@+id/buttonEnter"
-            android:text="Enter"
-
+            android:text="@string/enter"
             android:textSize="24sp"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/OrangeAccessa"

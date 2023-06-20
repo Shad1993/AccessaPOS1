@@ -32,6 +32,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
@@ -40,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketReloadListener {
+public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener {
     private boolean doubleBackToExitPressedOnce = false;
 
     private TextView name;
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     private String cashorName;
     private TextView CompanyName;
     private String Company_name;
-
+    private static MainActivity instance;
     private SharedPreferences sharedPreferences;
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private TicketFragment ticketFragment;
@@ -75,14 +76,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
-        CustomerLcdFragment customerLcdFragment = new CustomerLcdFragment();
-        customerLcdFragment.setTicketReloadListener(this); // Set the activity as the listener
-
-// Add the fragment to the activity using a FragmentTransaction
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.container, customerLcdFragment);
-        transaction.commit();
+        instance = this;
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -100,13 +94,14 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         String transactionStatus = "Started";
         String transactionSaved = "Saved";
 
-        if (transactionStatus.equals("Started") || transactionSaved.equals("Saved")  ) {
+        if (transactionStatus.equals("Started")|| transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
             if (transactionIdInProgress == null) {
                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                 // Store the transaction ID in SharedPreferences
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
                 editor.apply();
+
 
 
             }
@@ -193,7 +188,9 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             }
         });
     }
-
+    public static MainActivity getInstance() {
+        return instance;
+    }
     private void logout() {
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
@@ -264,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
+
             }
         }
     }
@@ -271,7 +269,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
 
     @Override
     public void onTransactionCleared() {
-        // Refresh the TicketFragment when an item is added in the SalesFragment
+
+        // Refresh the TicketFragment when transaction cleared
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (customerLcdFragment != null) {
             double totalAmount = customerLcdFragment.calculateTotalAmount();
@@ -280,34 +279,48 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);
                 ticketFragment.updateheader(totalAmount, taxTotalAmount);
+
+
             }
         }
     }
+
+
     @Override
-    public void onTicketReload() {
-        double totalAmount = customerLcdFragment.calculateTotalAmount();
-        double taxTotalAmount = customerLcdFragment.calculateTotalTax();
-        // Reload the TicketFragment
+    public  void onItemDeleted() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.updateheader(totalAmount, taxTotalAmount);
+            Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
         }
-    }
 
-    public void onItemDeleted() {
-        // Refresh the TicketFragment when an item is added in the SalesFragment
-        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
-        if (customerLcdFragment != null) {
-            double totalAmount = customerLcdFragment.calculateTotalAmount();
-            double TaxtotalAmount = customerLcdFragment.calculateTotalTax();
-            TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
-            if (ticketFragment == null) {
-                ticketFragment.refreshData(totalAmount, TaxtotalAmount);
-                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
-            }
+
+    }
+    @Override
+    public void onAmountModified() {
+        TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
+            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.updateheader(totalAmount, taxTotalAmount);
+
         }
+
     }
+    public  void onTransationCompleted() {
+        TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+        if (ticketFragment != null) {
+            double totalAmount = 0.0;
+            double taxTotalAmount = 0.0;
+            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.updateheader(totalAmount, taxTotalAmount);
+            Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
+        }
 
 
-
+    }
 }

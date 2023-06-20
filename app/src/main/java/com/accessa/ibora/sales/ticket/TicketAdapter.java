@@ -118,4 +118,10 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             notifyDataSetChanged();
         }
     }
+    public Cursor getCursor() {
+        return mCursor;
+    }
+    public class TicketViewHolder {
+
+    }
 }

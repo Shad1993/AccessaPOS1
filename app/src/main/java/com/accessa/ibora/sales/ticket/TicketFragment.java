@@ -1,5 +1,8 @@
 package com.accessa.ibora.sales.ticket;
 
+import static androidx.core.app.ActivityCompat.recreate;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -16,15 +19,23 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.bumptech.glide.Glide;
 
-public class TicketFragment extends Fragment  {
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Random;
+
+public class TicketFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
 
@@ -34,6 +45,7 @@ private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
     private  String ItemId;
 private String transactionIdInProgress;
+private TextView textViewVATs,textViewTotals;
     private SoundPool soundPool;
     private int soundId;
 
@@ -64,15 +76,17 @@ private String transactionIdInProgress;
 
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
+        emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         mDatabaseHelper = new DatabaseHelper(getContext());
         Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
         mRecyclerView.setAdapter(mAdapter);
 
-
-
+        textViewVATs=view.findViewById(R.id.textViewVATs);
+        textViewTotals=view.findViewById(R.id.textViewTotals);
+        textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");
+        textViewTotals.setText(getString(R.string.Total) + " : Rs 0.00");
 
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -222,44 +236,61 @@ private String transactionIdInProgress;
         return TaxtotalAmount;
     }
 public void updateheader(double totalAmount, double TaxtotalAmount){
-    // Get the current date and time
-    String currentDate = mDatabaseHelper.getCurrentDate();
-    String currentTime = mDatabaseHelper.getCurrentTime();
-
-    // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-
-    double totalTTC = totalAmount;
-    double totaltax= TaxtotalAmount;
-    double totalHT_A = totalTTC-totaltax;
 
 
-    // Get the total quantity of items in the transaction
-    int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+        // Get the current date and time
+        String currentDate = mDatabaseHelper.getCurrentDate();
+        String currentTime = mDatabaseHelper.getCurrentTime();
 
-    // Retrieve the cashier ID from SharedPreferences
+        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
 
-    // Save the transaction details in the TRANSACTION_HEADER table
-    boolean success = mDatabaseHelper.updateTransactionHeader(
-            transactionIdInProgress,
-            totalAmount,
-            currentDate,
-            currentTime,
-            totalHT_A,
-            totalTTC,
-            quantityItem,
-            totaltax,
-            cashierId
-    );
+        double totalTTC = totalAmount;
+        double totaltax = TaxtotalAmount;
+        double totalHT_A = totalTTC - totaltax;
 
-    if (success) {
-        // Transaction header saved successfully
-        Toast.makeText(getContext(), "Transaction updated", Toast.LENGTH_SHORT).show();
-    } else {
-        // Failed to save transaction header, handle the error
-        Toast.makeText(getContext(), "Failed to update transaction header", Toast.LENGTH_SHORT).show();
-    }
+
+        // Get the total quantity of items in the transaction
+        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+
+        // Retrieve the cashier ID from SharedPreferences
+        Toast.makeText(getContext(), "transaction header" + transactionIdInProgress, Toast.LENGTH_SHORT).show();
+
+        // Save the transaction details in the TRANSACTION_HEADER table
+        boolean success = mDatabaseHelper.updateTransactionHeader(
+                transactionIdInProgress,
+                totalAmount,
+                currentDate,
+                currentTime,
+                totalHT_A,
+                totalTTC,
+                quantityItem,
+                totaltax,
+                cashierId
+        );
+
+        if (success) {
+
+        } else {
+            // Failed to save transaction header, handle the error
+            Toast.makeText(getContext(), "Failed to update transaction header", Toast.LENGTH_SHORT).show();
+
+            getActivity().recreate();
+        }
 
 }
+    private String generateNewTransactionId() {
+        // Implement your logic to generate a unique transaction ID
+        // For example, you can use a combination of timestamp and a random number
+        long timestamp = System.currentTimeMillis();
+        int random = new Random().nextInt(10000);
+        return "TXN-" + timestamp + "-" + random;
+    }
+    private String getCurrentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
+    }
+
+
     public  void refreshData(double totalAmount, double TaxtotalAmount) {
 
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
