@@ -503,7 +503,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
     public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
-                                         String currentTime, double totalHT_A, double totalTTC, int quantityItem, String cashierId, String transactionStatus) {
+                                         String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Check if the transaction ID already exists
@@ -526,6 +526,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_TIME_CREATED, currentTime);
         values.put(TRANSACTION_TOTAL_HT_A, totalHT_A);
         values.put(TRANSACTION_TOTAL_TTC, totalTTC);
+        values.put(TRANSACTION_TOTAL_TX_1, taxAmount);
         values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
         values.put(TRANSACTION_CASHIER_CODE, cashierId);
         values.put(TRANSACTION_STATUS, transactionStatus);
@@ -886,14 +887,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public int calculateTotalItemQuantity() {
+    public int calculateTotalItemQuantity(String transactionId) {
         int totalQuantity = 0;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
         try {
-            String query = "SELECT SUM(" + QUANTITY + ") FROM " + TRANSACTION_TABLE_NAME;
-            cursor = db.rawQuery(query, null);
+            String query = "SELECT SUM(" + QUANTITY + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_ID  + " = ?";
+            String[] selectionArgs = {String.valueOf(transactionId)};
+            cursor = db.rawQuery(query, selectionArgs);
 
             if (cursor.moveToFirst()) {
                 totalQuantity = cursor.getInt(0);
@@ -908,6 +910,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return totalQuantity;
     }
+
 
 
     public Cursor getDistinctVATTypes(String transactionIdInProgress) {

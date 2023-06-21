@@ -16,7 +16,11 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -36,24 +40,43 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Random;
 
+import woyou.aidlservice.jiuiv5.ILcdCallback;
 import woyou.aidlservice.jiuiv5.IWoyouService;
-
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 public class CustomerLcdFragment extends Fragment {
 
     private static final String TRANSACTION_TICKET_NO = "";
+
     private DatabaseHelper mDatabaseHelper;
     private IWoyouService woyouService;
+
     private TicketClearedListener ticketclearedListener;
     private double totalAmount, taxTotalAmount;
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private TicketReloadListener ticketReloadListener;
+
     public interface TicketReloadListener {
         void onTicketReload();
     }
+
     private ServiceConnection connService = new ServiceConnection() {
 
         @Override
@@ -79,7 +102,6 @@ public class CustomerLcdFragment extends Fragment {
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
         mDatabaseHelper = new DatabaseHelper(requireContext()); // Initialize DatabaseHelper
-
 
 
         // Find and set click listeners for all buttons
@@ -151,7 +173,7 @@ public class CustomerLcdFragment extends Fragment {
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
     }
 
-    private void displayOnLCD() {
+    public void displayOnLCD() {
         if (woyouService == null) {
             Toast.makeText(requireContext(), "Service not ready", Toast.LENGTH_SHORT).show();
             return;
@@ -176,6 +198,34 @@ public class CustomerLcdFragment extends Fragment {
             e.printStackTrace();
         }
     }
+
+    public Bitmap generateQRCode(String data, int width, int height) {
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix;
+        try {
+            bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, width, height);
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        int matrixWidth = bitMatrix.getWidth();
+        int matrixHeight = bitMatrix.getHeight();
+
+        int[] pixels = new int[matrixWidth * matrixHeight];
+        for (int y = 0; y < matrixHeight; y++) {
+            int offset = y * matrixWidth;
+            for (int x = 0; x < matrixWidth; x++) {
+                pixels[offset + x] = bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE;
+            }
+        }
+
+        Bitmap qrCodeBitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
+        qrCodeBitmap.setPixels(pixels, 0, matrixWidth, 0, 0, matrixWidth, matrixHeight);
+
+        return qrCodeBitmap;
+    }
+
 
     @Override
     public void onDestroyView() {
@@ -251,43 +301,90 @@ public class CustomerLcdFragment extends Fragment {
         }
 
         try {
-            woyouService.sendLCDBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), null);
-        } catch (RemoteException e) {
+            String qrCodeData = "Your QR code data";
+            int qrCodeWidth = 50; // Set your desired width
+            int qrCodeHeight = 50; // Set your desired height
+            Bitmap qrCodeBitmap = generateQRCode(qrCodeData, qrCodeWidth, qrCodeHeight);
+
+            // Create a temporary file to store the QR code bitmap
+            File tempFile = File.createTempFile("temp_qr_code", ".png", getContext().getCacheDir());
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            qrCodeBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+
+            // Get the resource ID of the temporary file
+            int resourceId = getResources().getIdentifier(tempFile.getName(), "drawable", getContext().getPackageName());
+
+
+            String content = "MCB Juice!";
+            int fontSize = 14; // Set your desired font size
+            boolean fill = true; // Set to true if you want to fill up the LCD, false otherwise
+
+
+            // Adjust the text size by modifying the font size or applying custom formatting
+            String adjustedText = adjustTextSize(content, fontSize);
+
+            // Send the adjusted text to the LCD screen
+            woyouService.sendLCDString(adjustedText, null);
+
+            // Send the QR code bitmap to the LCD screen
+            woyouService.sendLCDBitmap(qrCodeBitmap, null);
+        }  catch (RemoteException e) {
             e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
-    public void button7(View view) {
-        // Create an instance of the DatabaseHelper class
 
-        DatabaseHelper dbHelper = new DatabaseHelper(requireContext()); // Replace 'context' with the appropriate context for your application
+
+
+
+    public void button7(View view) {
+
+
+        clearTransact();
+
+    }
+public void clearTransact(){
+    // Create an instance of the DatabaseHelper class
+
+    DatabaseHelper dbHelper = new DatabaseHelper(requireContext()); // Replace 'context' with the appropriate context for your application
 
 // Get a writable database instance
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
-        values.putNull(TRANSACTION_TICKET_NO); // Set the field to null
-        String whereClause = _ID + " = ?";
-        String[] whereArgs = {String.valueOf(transactionIdInProgress)}; // Replace transactionHeaderId with the actual header ID
-        db.delete(TRANSACTION_HEADER_TABLE_NAME, whereClause, whereArgs);
+    ContentValues values = new ContentValues();
+    values.putNull(TRANSACTION_TICKET_NO); // Set the field to null
+    String whereClause = _ID + " = ?";
+    String[] whereArgs = {String.valueOf(transactionIdInProgress)}; // Replace transactionHeaderId with the actual header ID
+    db.delete(TRANSACTION_HEADER_TABLE_NAME, whereClause, whereArgs);
 
-        // Delete corresponding data in the transaction table
-        whereClause = TRANSACTION_ID + " = ?";
-        String[] whereArgs1 = {String.valueOf(transactionIdInProgress)};
-        db.delete(TRANSACTION_TABLE_NAME, whereClause, whereArgs1);
+    // Delete corresponding data in the transaction table
+    whereClause = TRANSACTION_ID + " = ?";
+    String[] whereArgs1 = {String.valueOf(transactionIdInProgress)};
+    db.delete(TRANSACTION_TABLE_NAME, whereClause, whereArgs1);
 
-        // Optionally, you can notify the user or perform any other actions after clearing the transaction
+    // Optionally, you can notify the user or perform any other actions after clearing the transaction
 // Notify the listener that an item is added
-        if (ticketclearedListener != null) {
-            ticketclearedListener.onTransactionCleared();
-        }
-        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
-
-        generateNewTransactionId();
-
-
-
+    if (ticketclearedListener != null) {
+        ticketclearedListener.onTransactionCleared();
     }
+    Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
 
+    generateNewTransactionId();
+}
+
+    private String adjustTextSize(String text, int textSize) {
+        // Adjust the text size as per your requirements
+        // You can manipulate the text or apply any desired formatting
+
+        // Example: Set the text size to the provided value
+        String adjustedText = "<size=" + textSize + ">" + text + "</size>";
+
+        return adjustedText;
+    }
     public double calculateTotalAmount() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double totalAmount = 0.0;

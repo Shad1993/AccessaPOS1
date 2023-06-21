@@ -1,9 +1,7 @@
 package com.accessa.ibora.scanner;
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.SparseArray;
@@ -33,8 +31,8 @@ public class InbuiltScannerFragment extends Fragment {
     private BarcodeDetector barcodeDetector;
     private CameraSource cameraSource;
     private static final int REQUEST_CAMERA_PERMISSION = 201;
-    private MediaPlayer mediaPlayer;
-    private ToneGenerator toneGen1;
+
+
     private TextView barcodeText;
     private String barcodeData;
     private static final long SCAN_TIMEOUT = 3000; // Timeout in milliseconds
@@ -45,10 +43,8 @@ public class InbuiltScannerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_inbuild_scanner_sunmi_t2_mini, container, false);
-        toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
         surfaceView = view.findViewById(R.id.surface_view);
         barcodeText = view.findViewById(R.id.barcode_text);
-        mediaPlayer = MediaPlayer.create(requireContext(), R.raw.beep);
         initialiseDetectorsAndSources();
         return view;
     }
@@ -128,7 +124,6 @@ public class InbuiltScannerFragment extends Fragment {
         Bundle resultBundle = new Bundle();
         resultBundle.putString("barcode", barcodeData);
         getParentFragmentManager().setFragmentResult("barcodeKey", resultBundle);
-        mediaPlayer.start();
 
         // Delay before processing next barcode
         handler.postDelayed(new Runnable() {

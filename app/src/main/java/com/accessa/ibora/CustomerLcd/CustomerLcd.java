@@ -21,6 +21,18 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class CustomerLcd extends AppCompatActivity {
 
@@ -81,7 +93,7 @@ public class CustomerLcd extends AppCompatActivity {
                 String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
                 String formattedTotalAmount = String.format("%.2f", totalAmount);
 
-                woyouService.sendLCDDoubleString("Total: Rs" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
+                woyouService.sendLCDDoubleString("Total: Rs1" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -94,7 +106,32 @@ public class CustomerLcd extends AppCompatActivity {
         super.onDestroy();
         unbindService(connService);
     }
+    public Bitmap generateQRCode(String data, int width, int height) {
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix;
+        try {
+            bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, width, height);
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return null;
+        }
 
+        int matrixWidth = bitMatrix.getWidth();
+        int matrixHeight = bitMatrix.getHeight();
+
+        int[] pixels = new int[matrixWidth * matrixHeight];
+        for (int y = 0; y < matrixHeight; y++) {
+            int offset = y * matrixWidth;
+            for (int x = 0; x < matrixWidth; x++) {
+                pixels[offset + x] = bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE;
+            }
+        }
+
+        Bitmap qrCodeBitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
+        qrCodeBitmap.setPixels(pixels, 0, matrixWidth, 0, 0, matrixWidth, matrixHeight);
+
+        return qrCodeBitmap;
+    }
     public void button1(View view) {
         if(woyouService == null){
             Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
@@ -168,9 +205,29 @@ public class CustomerLcd extends AppCompatActivity {
         }
 
         try {
-            woyouService.sendLCDBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), null);
+            //woyouService.sendLCDBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), null);
+            String qrCodeData = "Your QR code data";
+            int qrCodeWidth = 500; // Set your desired width
+            int qrCodeHeight = 500; // Set your desired height
+            Bitmap qrCodeBitmap = generateQRCode(qrCodeData, qrCodeWidth, qrCodeHeight);
+
+            // Create a temporary file to store the QR code bitmap
+            File tempFile = File.createTempFile("temp_qr_code", ".png", getCacheDir());
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            qrCodeBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+
+            // Get the resource ID of the temporary file
+            int resourceId = getResources().getIdentifier(tempFile.getName(), "drawable", getPackageName());
+
+            // Send the QR code bitmap to the LCD screen
+            woyouService.sendLCDBitmap(qrCodeBitmap, null);
         } catch (RemoteException e) {
             e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

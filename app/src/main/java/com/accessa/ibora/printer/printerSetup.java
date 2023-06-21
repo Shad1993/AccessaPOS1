@@ -3,11 +3,13 @@ package com.accessa.ibora.printer;
 import static android.app.PendingIntent.getActivity;
 import java.nio.charset.Charset;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -320,8 +322,26 @@ public class printerSetup extends AppCompatActivity {
                             mainActivity.onTransationCompleted();
                         }
 
-                        Intent intent = new Intent(printerSetup.this, MainActivity.class);
-                        startActivity(intent);
+                        // Display a pop-up with a "Thanks" message and a button
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(printerSetup.this);
+                                builder.setTitle("Printing Completed");
+                                builder.setMessage("Thanks for printing. Next customer?");
+                                builder.setPositiveButton("Next Customer", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                        Intent intent = new Intent(printerSetup.this, MainActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear the activity stack
+                                        startActivity(intent);
+                                    }
+                                });
+                                builder.setCancelable(false); // Prevent dialog from being dismissed by clicking outside
+                                builder.show();
+                            }
+                        });
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }

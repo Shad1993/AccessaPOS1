@@ -87,7 +87,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
 
-
+// Limit the description length to a certain number of characters
+        int maxDescriptionLength = 20; // Change this value to your desired length
+        if (description.length() > maxDescriptionLength) {
+            description = description.substring(0, maxDescriptionLength) + "...";
+        }
         // Format the price to two decimal places
         double formattedPrice = Double.parseDouble(price);
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");

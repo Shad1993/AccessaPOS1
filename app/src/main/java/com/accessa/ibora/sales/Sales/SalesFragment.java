@@ -258,11 +258,18 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 if (cursor != null) {
                     cursor.close();
                 }
+                item = dbManager.getItemById(id);
+                if (item != null) {
+                    VatVall = item.getVAT();
+                    double unitprice=item.getPrice();
+
+                    SendToHeader(unitprice, calculateTax());
+                }
                 // Notify the listener that an item is added
                 if (itemAddedListener != null) {
                     itemAddedListener.onItemAdded();
                 }
-                SendToHeader(totalAmount,TaxtotalAmount);
+
 
             }
 
@@ -379,11 +386,17 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     if (cursor != null) {
                         cursor.close();
                     }
+                    item = dbManager.getItemById(String.valueOf(id));
+                    if (item != null) {
+                        VatVall = item.getVAT();
+                        double unitprice=item.getPrice();
+                        SendToHeader(unitprice, calculateTax());
+                    }
                     // Notify the listener that an item is added
                     if (itemAddedListener != null) {
                         itemAddedListener.onItemAdded();
                     }
-                    SendToHeader(totalAmount, TaxtotalAmount);
+
 
                 } else {
                     Toast.makeText(getContext(), barcode + getText(R.string.itemnotavailables), Toast.LENGTH_SHORT).show();
@@ -530,13 +543,18 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         if (cursor != null) {
                             cursor.close();
                         }
-
+                        item = dbManager.getItemById(id);
+                        if (item != null) {
+                            VatVall = item.getVAT();
+                            double unitprice=item.getPrice();
+                            SendToHeader(unitprice, calculateTax());
+                        }
 
                         // Notify the listener that an item is added
                         if (itemAddedListener != null) {
                             itemAddedListener.onItemAdded();
                         }
-                        SendToHeader(totalAmount,TaxtotalAmount);
+
 
                     }
 
@@ -644,13 +662,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             String currentTime = mDatabaseHelper.getCurrentTime();
 
             // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-            double totalHT_A = calculateTotalAmount();
+            double totalHT_A = totalAmount- taxtotalAmount;
             double totalTTC = totalAmount;
+            double TaxAmount=taxtotalAmount;
             String transactionStatus = "InProgress";
             // Get the total quantity of items in the transaction
-            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+           int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
 
-            // Retrieve the cashier ID from SharedPreferences
 
             // Save the transaction details in the TRANSACTION_HEADER table
             boolean success = mDatabaseHelper.saveTransactionHeader(
@@ -660,6 +678,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     currentTime,
                     totalHT_A,
                     totalTTC,
+                    TaxAmount,
                     quantityItem,
                     cashierId,
                     transactionStatus

@@ -4,6 +4,7 @@ import static androidx.core.app.ActivityCompat.recreate;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.SoundPool;
@@ -16,6 +17,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.Fragment;
@@ -24,6 +26,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -250,10 +253,9 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
 
         // Get the total quantity of items in the transaction
-        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity();
+        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
 
-        // Retrieve the cashier ID from SharedPreferences
-        Toast.makeText(getContext(), "transaction header" + transactionIdInProgress, Toast.LENGTH_SHORT).show();
+    Toast.makeText(getContext(), "id " + " " + quantityItem, Toast.LENGTH_SHORT).show();
 
         // Save the transaction details in the TRANSACTION_HEADER table
         boolean success = mDatabaseHelper.updateTransactionHeader(
@@ -272,22 +274,20 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
         } else {
             // Failed to save transaction header, handle the error
-            Toast.makeText(getContext(), "Failed to update transaction header", Toast.LENGTH_SHORT).show();
-
-            getActivity().recreate();
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
 
+
 }
+
     private String generateNewTransactionId() {
         // Implement your logic to generate a unique transaction ID
         // For example, you can use a combination of timestamp and a random number
         long timestamp = System.currentTimeMillis();
         int random = new Random().nextInt(10000);
         return "TXN-" + timestamp + "-" + random;
-    }
-    private String getCurrentDateTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return sdf.format(new Date());
     }
 
 
@@ -321,7 +321,6 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-
 
 
 

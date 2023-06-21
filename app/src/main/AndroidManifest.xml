@@ -6,6 +6,7 @@
         android:name="android.hardware.camera"
         android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <application
         android:allowBackup="true"
         android:screenOrientation="landscape"
@@ -57,6 +58,7 @@
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
         <activity android:name=".CustomerLcd.CustomerLcd"/>
+
     </application>
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -76,9 +78,13 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.ACCESS_USB_DEVICE" />
+
+
+
+
+
+
     <uses-feature android:name="android.hardware.camera.flash" />
-
-
     <uses-feature android:name="android.hardware.usb.host" />
 
     <uses-feature android:name="sunmi.hardware.v2.barcode" android:required="false" />

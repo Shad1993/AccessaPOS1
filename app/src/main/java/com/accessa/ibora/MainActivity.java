@@ -1,12 +1,17 @@
 package com.accessa.ibora;
 
+import static com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -26,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
+import com.accessa.ibora.CustomerLcd.TextDisplay;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -36,6 +42,12 @@ import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
+import android.app.Activity;
+import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.WindowManager;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,14 +55,14 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener {
     private boolean doubleBackToExitPressedOnce = false;
-
+    private TextDisplay customPresentation;
     private TextView name;
     private TextView CashorId;
     private ItemAdapter mAdapter;
     private TextView emptyView;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
-
+    private static final int SYSTEM_ALERT_WINDOW_PERMISSION_REQUEST_CODE = 1001;
     private DatabaseHelper mDatabaseHelper;
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
@@ -87,6 +99,31 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
 
+        // Check if the permission is granted
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            // Permission has not been granted, request it
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, SYSTEM_ALERT_WINDOW_PERMISSION_REQUEST_CODE);
+        } else {
+            DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+            Display[] displays = displayManager.getDisplays();
+
+            // Display the custom presentation on the second screen
+            if (displays.length > 1) {
+                Display secondScreen = displays[1]; // Assuming the second screen is at index 1
+
+                customPresentation = new TextDisplay(this, secondScreen);
+
+                // Update the window type to allow overlay on the second screen
+                WindowManager.LayoutParams params = customPresentation.getWindow().getAttributes();
+                params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+                customPresentation.getWindow().setAttributes(params);
+
+                customPresentation.show();
+        }
+
+
+        }
 
 
 
@@ -173,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                     return true;
                 } else if (id == R.id.Settings) {
                     Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(MainActivity.this, CustomerLcd.class);
+                    Intent intent = new Intent(MainActivity.this, TextDisplay.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
@@ -208,7 +245,35 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         startActivity(intent);
         finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SYSTEM_ALERT_WINDOW_PERMISSION_REQUEST_CODE) {
+            // Check if the permission has been granted or not
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+                // Permission granted, continue with your code
+                DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+                Display[] displays = displayManager.getDisplays();
 
+                // Display the custom presentation on the second screen
+                if (displays.length > 1) {
+                    Display secondScreen = displays[1]; // Assuming the second screen is at index 1
+
+                    customPresentation = new TextDisplay(this, secondScreen);
+
+                    // Update the window type to allow overlay on the second screen
+                    WindowManager.LayoutParams params = customPresentation.getWindow().getAttributes();
+                    params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+                    customPresentation.getWindow().setAttributes(params);
+
+                    customPresentation.show();
+                } else {
+                    // Permission not granted, handle the situation or show an error message
+                    Toast.makeText(instance, "No Second screen", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
     @Override
     public void onBackPressed() {
         if (doubleBackToExitPressedOnce) {
@@ -252,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     }
     @Override
     public void onItemAdded() {
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
         if (salesFragment != null) {
@@ -261,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
-
+                customerLcdFragment.displayOnLCD();
             }
         }
     }
@@ -280,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);
                 ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
-
+                customerLcdFragment.displayOnLCD();
             }
         }
     }
@@ -288,39 +354,55 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
 
     @Override
     public  void onItemDeleted() {
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+       // CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (ticketFragment != null) {
             double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
             double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
-            Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
+            customerLcdFragment.displayOnLCD();
+
         }
 
 
     }
     @Override
     public void onAmountModified() {
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
             double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
             double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
+            customerLcdFragment.displayOnLCD();
 
         }
 
     }
     public  void onTransationCompleted() {
+        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
             double totalAmount = 0.0;
             double taxTotalAmount = 0.0;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
-            Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show();
+            customerLcdFragment.displayOnLCD();
         }
 
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (customPresentation != null) {
+            customPresentation.dismiss();
+            customPresentation = null;
+        }
     }
 }
