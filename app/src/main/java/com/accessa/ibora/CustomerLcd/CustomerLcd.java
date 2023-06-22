@@ -37,7 +37,7 @@ import java.io.IOException;
 public class CustomerLcd extends AppCompatActivity {
 
     private DatabaseHelper mDatabaseHelper;
-    private IWoyouService woyouService;
+    private static IWoyouService woyouService;
     private double totalAmount,TaxtotalAmount;
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
@@ -74,7 +74,7 @@ public class CustomerLcd extends AppCompatActivity {
 
 
     }
-    private void displayOnLCD() {
+    public  void displayOnLCD() {
         if (woyouService == null) {
             Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
             return;

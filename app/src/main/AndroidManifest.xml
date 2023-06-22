@@ -58,6 +58,9 @@
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
         <activity android:name=".CustomerLcd.CustomerLcd"/>
+        <activity android:name=".Settings.SettingsDashboard"/>
+        <activity android:name=".Settings.QRMethods.AddQrActivity"/>
+        <activity android:name=".QR.QRActivity"/>
 
     </application>
 

@@ -22,6 +22,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
+import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.scanner.InbuiltScannerFragment;
@@ -231,16 +232,16 @@ public class keyboardFragment extends Fragment {
                 Fragment currentFragment = getFragmentManager().findFragmentById(R.id.scanner_container);
                 if (currentFragment instanceof CustomerLcdFragment) {
                     // The current fragment is CustomerLcdFragment, replace it with InbuiltScannerFragment
-                    buttonQr.setText(getString(R.string.LCDSettings));
+                    buttonQr.setText(getString(R.string.QR));
                     InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
                     replaceFragment(newScannerFragment);
                 } else if(currentFragment instanceof InbuiltScannerFragment) {
                     buttonQr.setText(getString(R.string.Scan));
-                    CustomerLcdFragment customerFragment = new CustomerLcdFragment();
+                    QRFragment customerFragment = new QRFragment();
                     replaceFragment(customerFragment);
                 }else {
                     // The current fragment is CustomerLcdFragment, replace it with InbuiltScannerFragment
-                    buttonQr.setText(getString(R.string.LCDSettings));
+                    buttonQr.setText(getString(R.string.QR));
                     InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
                     replaceFragment(newScannerFragment);
                 }

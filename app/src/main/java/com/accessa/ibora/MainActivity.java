@@ -1,16 +1,19 @@
 package com.accessa.ibora;
 
-import static com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE;
-
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +35,9 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
+import com.accessa.ibora.QR.QRActivity;
+import com.accessa.ibora.QR.QRFragment;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -42,18 +48,17 @@ import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
-import android.app.Activity;
-import android.content.Context;
+
 import android.hardware.display.DisplayManager;
-import android.os.Bundle;
 import android.view.Display;
-import android.view.WindowManager;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener {
+import woyou.aidlservice.jiuiv5.IWoyouService;
+
+public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener {
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
     private TextView name;
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     private SimpleCursorAdapter adapter;
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION_REQUEST_CODE = 1001;
     private DatabaseHelper mDatabaseHelper;
+    private static IWoyouService woyouService;
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
     private String cashorId;
@@ -77,6 +83,30 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     private CustomerLcdFragment customerLcdFragment;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     @Override
+    public void onDataPass(String name, String id, String QR) {
+        // Handle the passed data here
+        // You can start the QRActivity or perform any other action
+        Intent modifyIntent = new Intent(getApplicationContext(), QRActivity.class);
+        modifyIntent.putExtra("name", name);
+        modifyIntent.putExtra("id", id);
+        startActivity(modifyIntent);
+    }
+    private ServiceConnection connService = new ServiceConnection() {
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            woyouService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            woyouService = IWoyouService.Stub.asInterface(service);
+
+            // Call the method to display on the LCD here
+            displayOnLCD();
+        }
+    };
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
@@ -88,8 +118,13 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
-        instance = this;
+        Intent intent1 = new Intent();
+        intent1.setPackage("woyou.aidlservice.jiuiv5");
+        intent1.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
+        bindService(intent1, connService, Context.BIND_AUTO_CREATE);
 
+        instance = this;
+        mDatabaseHelper = new DatabaseHelper(this);
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -209,8 +244,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
-                    Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(MainActivity.this, TextDisplay.class);
+                    Intent intent = new Intent(MainActivity.this, SettingsDashboard.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
@@ -317,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     }
     @Override
     public void onItemAdded() {
-        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
+
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
         if (salesFragment != null) {
@@ -327,12 +361,37 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
-                customerLcdFragment.displayOnLCD();
+                CustomerLcd instance = new CustomerLcd();
+                displayOnLCD();
             }
         }
     }
 
+    public  void displayOnLCD() {
+        if (woyouService == null) {
+            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        try {
+            // Retrieve the total amount and total tax amount from the transactionheader table
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+               double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double  TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                woyouService.sendLCDDoubleString("Total: Rs1" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     public void onTransactionCleared() {
 

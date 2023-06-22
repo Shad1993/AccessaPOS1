@@ -5,6 +5,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal">
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/BleuAccessaText"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -31,7 +44,9 @@
     android:id="@+id/button3"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:backgroundTint="@color/BleuAccessaText"
     android:text="@string/lcdsleep"
+
     android:onClick="button3"
     tools:layout_gravity="center" />
 
@@ -40,6 +55,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/lcdwake"
+    android:backgroundTint="@color/BleuAccessaText"
     android:onClick="button2"
     tools:layout_gravity="center" />
 
@@ -48,6 +64,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/lcdclear"
+    android:backgroundTint="@color/BleuAccessaText"
     android:onClick="button4"
     tools:layout_gravity="center" />
 
@@ -56,6 +73,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/lcdinit"
+    android:backgroundTint="@color/BleuAccessaText"
     android:onClick="button1"
     tools:layout_gravity="center" />
 
@@ -65,6 +83,7 @@
     android:layout_height="wrap_content"
     android:text="@string/lcdimg"
     android:onClick="button6"
+    android:backgroundTint="@color/BleuAccessaText"
     tools:layout_gravity="center" />
 
 <Button
@@ -72,6 +91,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/sendtext"
+    android:backgroundTint="@color/BleuAccessaText"
     android:onClick="button5"
     tools:layout_gravity="center" />
 

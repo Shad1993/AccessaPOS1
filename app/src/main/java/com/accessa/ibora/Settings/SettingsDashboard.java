@@ -1,4 +1,4 @@
-package com.accessa.ibora.Admin;
+package com.accessa.ibora.Settings;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,13 +12,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.accessa.ibora.Admin.People.PeopleFragment;
-import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.product.menu.BodyActivity;
-import com.accessa.ibora.product.menu.BodyFragment;
-import com.accessa.ibora.product.menu.MenuFragment;
-import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -27,19 +20,24 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
-import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.product.items.FirstFragment;
+import com.accessa.ibora.product.menu.BodyActivity;
+import com.accessa.ibora.product.menu.BodyFragment;
+import com.accessa.ibora.Settings.SettingsMenuFragment.OnMenufragListener;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
-public class AdminActivity extends AppCompatActivity implements AdminMenuFragment.OnMenufragListener {
+public class SettingsDashboard extends AppCompatActivity implements OnMenufragListener {
     private MaterialToolbar toolbar;
     private boolean doubleBackToExitPressedOnce = false;
     private String cashorId;
@@ -47,12 +45,14 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
     private TextView name;
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
+    private TextView CompanyName;
+    private String Company_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.admin_layout);
+        setContentView(R.layout.settings_dashboard);
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -60,10 +60,11 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
-        toolbar.setTitle(R.string.Admin);
+        toolbar.setTitle(R.string.Settings);
         setSupportActionBar(toolbar);
 
 
@@ -82,35 +83,16 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
+        CompanyName = headerView.findViewById(R.id.Company_name);
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
 
         // Check if the intent contains the desired fragment key
-        if (fragmentKey != null && fragmentKey.equals("Category_fragment")) {
-            Fragment newFragment = new CategoryFragment();
-            setToolbarTitle(getString(R.string.category)); // Set the toolbar title
+        if (fragmentKey != null && fragmentKey.equals("Qr_fragment")) {
+            Fragment newFragment = new QRSettingsFragment();
+            setToolbarTitle(getString(R.string.QR)); // Set the toolbar title
 
-            replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("people_fragment")) {
-            Fragment newFragment = new PeopleFragment();
-            setToolbarTitle(getString(R.string.People)); // Set the toolbar title
-            replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Dept_fragment")) {
-            Fragment newFragment = new DepartmentFragment();
-            setToolbarTitle(getString(R.string.Department)); // Set the toolbar title
-            replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("SUBDept_fragment")) {
-            Fragment newFragment = new SubDepartmentFragment();
-            setToolbarTitle(getString(R.string.SubDept)); // Set the toolbar title
-            replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Vend_fragment")) {
-            Fragment newFragment = new VendorFragment();
-            setToolbarTitle(getString(R.string.vendor)); // Set the toolbar title
-            replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Discount_fragment")) {
-            Fragment newFragment = new DiscountFragment();
-            setToolbarTitle(getString(R.string.discount)); // Set the toolbar title
             replaceFragment(newFragment);
         }
 
@@ -129,32 +111,32 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (id == R.id.Sales) {
-                    Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(AdminActivity.this, MainActivity.class);
+                    Intent intent = new Intent(SettingsDashboard.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {
                     Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(AdminActivity.this, Product.class);
+                    Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(AdminActivity.this, SettingsDashboard.class);
+                    Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(AdminActivity.this, AdminActivity.class);
+                    Intent intent = new Intent(SettingsDashboard.this, AdminActivity.class);
                     startActivity(intent);
                 }
                 return true;
             }
         });
     }
+
 
     private void logout() {
         // Perform any necessary cleanup or logout actions here
@@ -173,7 +155,6 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         startActivity(intent);
         finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
     }
-
     @Override
     public void onBackPressed() {
         if (doubleBackToExitPressedOnce) {
@@ -216,11 +197,11 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
 
     @Override
     public void onMenufrag(String s) {
-        AdminBodyFragment fragment1 = (AdminBodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
+        BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
         if (fragment1 != null && fragment1.isInLayout()) {
             fragment1.setText(s);
         } else {
-            Intent intent = new Intent(this, AdminBodyActivity.class);
+            Intent intent = new Intent(this, BodyActivity.class);
             intent.putExtra("value", s);
             startActivity(intent);
         }

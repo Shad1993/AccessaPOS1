@@ -21,6 +21,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -53,13 +55,7 @@ import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.ILcdCallback;
 import woyou.aidlservice.jiuiv5.IWoyouService;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
+
 public class CustomerLcdFragment extends Fragment {
 
     private static final String TRANSACTION_TICKET_NO = "";
@@ -301,42 +297,56 @@ public class CustomerLcdFragment extends Fragment {
         }
 
         try {
-            String qrCodeData = "Your QR code data";
-            int qrCodeWidth = 50; // Set your desired width
-            int qrCodeHeight = 50; // Set your desired height
-            Bitmap qrCodeBitmap = generateQRCode(qrCodeData, qrCodeWidth, qrCodeHeight);
+            String content = "MCB Juice!"; // Set your desired content
+            int fontSize = 10; // Set your desired font size
+            int textColor = Color.WHITE; // Set your desired text color
+            Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
 
-            // Create a temporary file to store the QR code bitmap
-            File tempFile = File.createTempFile("temp_qr_code", ".png", getContext().getCacheDir());
-            FileOutputStream fos = new FileOutputStream(tempFile);
-            qrCodeBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-            fos.close();
+            // Generate QR code bitmap
+            int qrCodeSize = 50; // Set your desired QR code size
+            BitMatrix qrCodeMatrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+            int qrCodeWidth = qrCodeMatrix.getWidth();
+            int qrCodeHeight = qrCodeMatrix.getHeight();
 
-            // Get the resource ID of the temporary file
-            int resourceId = getResources().getIdentifier(tempFile.getName(), "drawable", getContext().getPackageName());
+            Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+            for (int x = 0; x < qrCodeWidth; x++) {
+                for (int y = 0; y < qrCodeHeight; y++) {
+                    qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                }
+            }
 
+            // Generate text bitmap
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(fontSize);
+            textPaint.setColor(textColor);
+            textPaint.setTypeface(typeface);
 
-            String content = "MCB Juice!";
-            int fontSize = 14; // Set your desired font size
-            boolean fill = true; // Set to true if you want to fill up the LCD, false otherwise
+            Rect textBounds = new Rect();
+            textPaint.getTextBounds(content, 0, content.length(), textBounds);
+            int textWidth = textBounds.width();
+            int textHeight = textBounds.height();
 
+            Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+            Canvas textCanvas = new Canvas(textBitmap);
+            textCanvas.drawText(content, 0, textHeight, textPaint);
 
-            // Adjust the text size by modifying the font size or applying custom formatting
-            String adjustedText = adjustTextSize(content, fontSize);
+            // Create composite bitmap
+            int compositeWidth = qrCodeWidth + textWidth;
+            int compositeHeight = Math.max(qrCodeHeight, textHeight);
 
-            // Send the adjusted text to the LCD screen
-            woyouService.sendLCDString(adjustedText, null);
+            Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+            Canvas compositeCanvas = new Canvas(compositeBitmap);
+            compositeCanvas.drawColor(Color.BLACK);
 
-            // Send the QR code bitmap to the LCD screen
-            woyouService.sendLCDBitmap(qrCodeBitmap, null);
-        }  catch (RemoteException e) {
+            compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+            compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+            woyouService.sendLCDBitmap(compositeBitmap, null);
+        } catch (RemoteException | WriterException e) {
             e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
+
 
 
 
@@ -375,16 +385,28 @@ public void clearTransact(){
 
     generateNewTransactionId();
 }
+    public static Bitmap textToBitmap(String text, float textSize) {
+        // Create a Paint object
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextSize(textSize);
+        paint.setTextAlign(Paint.Align.LEFT);
 
-    private String adjustTextSize(String text, int textSize) {
-        // Adjust the text size as per your requirements
-        // You can manipulate the text or apply any desired formatting
+        // Calculate the size of the text
+        float baseline = -paint.ascent(); // ascent() is negative
+        int width = (int) (paint.measureText(text) + 0.5f); // round
+        int height = (int) (baseline + paint.descent() + 0.5f);
 
-        // Example: Set the text size to the provided value
-        String adjustedText = "<size=" + textSize + ">" + text + "</size>";
+        // Create a Bitmap of the appropriate size
+        Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(image);
 
-        return adjustedText;
+        // Draw the text onto the Bitmap
+        canvas.drawText(text, 0, baseline, paint);
+
+        // Return the Bitmap
+        return image;
     }
+
     public double calculateTotalAmount() {
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         double totalAmount = 0.0;

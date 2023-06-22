@@ -213,6 +213,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
 
+    // payment by qr
+
+    public static final String TABLE_NAME_PAYMENTBYQY= "PaymentByQr";
+    public static final String COLUMN_PAYMENT_ID= "PaymentMethodID";
+
+    public static final String COLUMN_PAYMENT_METHOD= "PaymentMethod";
+
+    public static final String COLUMN_QR_CODE_NUM= "QRString";
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -272,6 +280,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY (" + Barcode + ") REFERENCES "
             + COST_TABLE_NAME + "(" + Barcode + "));";
 
+    // Creating PaymentByQy table query
+    private static final String CREATE_PAYMENTBYQY_TABLE = "CREATE TABLE " + TABLE_NAME_PAYMENTBYQY + "(" +
+            COLUMN_PAYMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_PAYMENT_METHOD + " TEXT NOT NULL, " +
+            COLUMN_CASHOR_id + " TEXT NOT NULL, " +
+            DateCreated + " TEXT NOT NULL, " +
+            LastModified + " TEXT NOT NULL, " +
+            COLUMN_QR_CODE_NUM + " TEXT NOT NULL);";
 
 
     // Creating Users table query
@@ -463,6 +479,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TRANSACTION_HEADER);
         db.execSQL(CREATE_INVOICE_SETTLEMENT_TABLE);
         db.execSQL(CREATE_STD_ACCESS_TABLE);
+        db.execSQL(CREATE_PAYMENTBYQY_TABLE);
     }
 
     @Override
@@ -479,6 +496,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_HEADER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + INVOICE_SETTLEMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_STD_ACCESS);
+        db.execSQL("DROP TABLE IF EXISTS " + CREATE_PAYMENTBYQY_TABLE);
 
         onCreate(db);
     }
@@ -625,6 +643,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
+    }
+    public Cursor getAllQR() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(TABLE_NAME_PAYMENTBYQY, null, null, null, null, null, null);
     }
     public Cursor getAllItemsByBarcode(String barcode) {
         SQLiteDatabase db = getReadableDatabase();
@@ -988,6 +1010,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public boolean isQrCodeExists(String qrCode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME_PAYMENTBYQY, null, COLUMN_QR_CODE_NUM + "=?",
+                new String[]{qrCode}, null, null, null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
+    public Cursor getQRByName(String qrName) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {COLUMN_PAYMENT_METHOD};
+        String selection = COLUMN_QR_CODE_NUM + " = ?";
+        String[] selectionArgs = {qrName};
+        return db.query(TABLE_NAME_PAYMENTBYQY, columns, selection, selectionArgs, null, null, null);
+    }
+
+    public Cursor searchqr(String newText) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {COLUMN_PAYMENT_METHOD, COLUMN_PAYMENT_ID};
+        String selection = COLUMN_PAYMENT_METHOD + " LIKE ?";
+        String[] selectionArgs = {"%" + newText + "%"};
+        String sortOrder = COLUMN_PAYMENT_METHOD + " ASC";
+        return db.query(TABLE_NAME_PAYMENTBYQY, projection, selection, selectionArgs, null, null, sortOrder);
+    }
 }
 
 

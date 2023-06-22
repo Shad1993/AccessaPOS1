@@ -783,5 +783,13 @@ public class DBManager {
     }
 
 
-
+    public void insertQr(String qrName, String dateCreated, String lastModified, String userId, String qrCode) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.COLUMN_PAYMENT_METHOD, qrName);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
+        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(DatabaseHelper.COLUMN_QR_CODE_NUM, qrCode);
+        database.insert(DatabaseHelper.TABLE_NAME_PAYMENTBYQY, null, contentValue);
+    }
 }

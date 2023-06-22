@@ -79,7 +79,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         public TextView nameTextView;
         public TextView descriptionTextView;
         public TextView idTextView;
-        public TextView priceTextView;
+        public TextView priceTextView,priceNorsTextView;
         public ImageView productImage;
 
 
@@ -90,6 +90,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             nameTextView = itemView.findViewById(R.id.name_text_view);
             descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
             priceTextView = itemView.findViewById(R.id.price_text_view);
+            priceNorsTextView=itemView.findViewById(R.id.priceNoRs_text_view);
             productImage = itemView.findViewById(R.id.ProductImage);
 
         }
@@ -112,13 +113,15 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
+        String PriceInRs= "Rs " + price;
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.descriptionTextView.setText(description);
-        holder.priceTextView.setText(price);
+        holder.priceTextView.setText(PriceInRs);
+        holder.priceNorsTextView.setText(price);
 
         if (isWebLink(productImageName)) {
             // Load image from web link

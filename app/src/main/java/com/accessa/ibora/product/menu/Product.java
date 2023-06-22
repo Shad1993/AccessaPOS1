@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
 import androidx.annotation.NonNull;
@@ -140,7 +141,8 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
-                    Toast.makeText(getApplicationContext(), "Settings is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Product.this, SettingsDashboard.class);
+                    startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Help) {

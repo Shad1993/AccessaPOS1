@@ -62,7 +62,7 @@
 
                     <fragment
                         android:id="@+id/customerDisplay_fragment"
-                        class="com.accessa.ibora.CustomerLcd.CustomerLcdFragment"
+                        class="com.accessa.ibora.QR.QRFragment"
                         android:layout_width="450dp"
                         android:layout_height="310dp"
                         android:layout_weight="1" />

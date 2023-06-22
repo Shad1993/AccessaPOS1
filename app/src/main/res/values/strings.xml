@@ -349,6 +349,15 @@
     <string name="lcdimg">Send a pic</string>
     <string name="sendtext">Send a text</string>
     <string name="enter">Enter</string>
+    <string name="QR">QR Settings</string>
+    <string name="NoQRFound">No QR Found!</string>
+    <string name="AllQR">All QR</string>
+    <string name="methodname">QR Method Name</string>
+    <string name="QrCode">Qr Code</string>
+    <string name="addQr">Add QR Method</string>
+    <string name="qrcodeexists">QR code already exists</string>
+    <string name="QRDisplaySettings">LED Display Settings</string>
+    <string name="LEDScreenSettings" />
 
 
 </resources>

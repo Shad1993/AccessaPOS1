@@ -159,7 +159,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 TextView idTextView = view.findViewById(R.id.id_text_view);
                 TextView subjectEditText = view.findViewById(R.id.name_text_view);
                 TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                TextView priceTextView = view.findViewById(R.id.price_text_view);
+                TextView priceTextView = view.findViewById(R.id.priceNoRs_text_view);
 
                 String id = idTextView.getText().toString();
                 String title = subjectEditText.getText().toString();
