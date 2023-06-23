@@ -353,6 +353,17 @@
     <string name="qrcodeexists">QR code already exists</string>
     <string name="QRDisplaySettings">LED Display Settings</string>
     <string name="LEDScreenSettings" />
+    <string name="updatQR">Update sucessfull</string>
+    <string name="failedupdate">Update Failed</string>
+    <string name="deleteqr">Deletion Sucess</string>
+    <string name="failedDelete">Deletion Failed</string>
+    <string name="MyProfile">Profile</string>
+    <string name="displayQR">Display QR on LED Screen</string>
+    <string name="TotalDue">Total Amount Due</string>
+    <string name="amountRecieved">Amount Recieved</string>
+    <string name="PaymentMethods">Payment Methods</string>
+    <string name="AllPayment">All Payment Methods</string>
+    <string name="addpayment">Add Payment Method</string>
 
 
 </resources>

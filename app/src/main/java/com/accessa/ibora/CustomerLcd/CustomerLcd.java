@@ -1,11 +1,19 @@
 package com.accessa.ibora.CustomerLcd;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper._ID;
+
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -230,4 +238,6 @@ public class CustomerLcd extends AppCompatActivity {
             throw new RuntimeException(e);
         }
     }
+
+
 }

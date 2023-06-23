@@ -23,6 +23,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
@@ -93,6 +94,10 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
             Fragment newFragment = new QRSettingsFragment();
             setToolbarTitle(getString(R.string.QR)); // Set the toolbar title
 
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("Pay_fragment")) {
+            Fragment newFragment = new PaymentFragment();
+            setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
             replaceFragment(newFragment);
         }
 

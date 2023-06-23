@@ -1,8 +1,18 @@
 package com.accessa.ibora.sales.ticket;
 
-import static androidx.core.app.ActivityCompat.recreate;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
-import android.app.Activity;
+import android.content.ComponentName;
+import android.content.ContentValues;
+import android.content.ServiceConnection;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.view.Menu;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,33 +20,37 @@ import android.database.Cursor;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.MenuInflater;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
+
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.sales.ticket.Checkout.CheckoutGridAdapter;
+import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Random;
+
+import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class TicketFragment extends Fragment {
     private RecyclerView mRecyclerView;
@@ -51,14 +65,80 @@ private String transactionIdInProgress;
 private TextView textViewVATs,textViewTotals;
     private SoundPool soundPool;
     private int soundId;
-
+    private IWoyouService woyouService;
+    private Toolbar toolbar;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
+    private ServiceConnection connService = new ServiceConnection() {
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            woyouService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            woyouService = IWoyouService.Stub.asInterface(service);
+
+            // Call the method to display on the LCD here
+            displayOnLCD();
+        }
+    };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.setSupportActionBar(toolbar);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.navigation_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.nav_settings) {
+            Context context = getContext(); // Get the Context object
+            if (context != null) {
+                Intent intent = new Intent(context, SettingsDashboard.class);
+                startActivity(intent);
+            }
+            return true;
+        } else if
+        (id == R.id.nav_logout) {
+            MainActivity mainActivity = (MainActivity) requireActivity(); // Get the MainActivity object
+            mainActivity.logout(); // Call the logout() function
+            return true;
+        }else if
+        (id == R.id.clear_ticket) {
+
+               clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
+
+        }
+        // Handle other menu items as needed
+
+        return super.onOptionsItemSelected(item);
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
-
+        // Find the toolbar view
+        toolbar = view.findViewById(R.id.topAppBar);
+        Intent intent = new Intent();
+        intent.setPackage("woyou.aidlservice.jiuiv5");
+        intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
+        requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -210,8 +290,6 @@ private TextView textViewVATs,textViewTotals;
         return view;
     }
 
-
-
     private void SaveTransaction(double totalAmount,double TaxtotalAmount) {
         // Update the transaction status for all in-progress transactions to "saved"
         mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_Saved);
@@ -221,8 +299,63 @@ private TextView textViewVATs,textViewTotals;
 
 
     }
+    public void clearTransact(){
+        // Create an instance of the DatabaseHelper class
 
-    private double calculateTotalAmount() {
+        DatabaseHelper dbHelper = new DatabaseHelper(requireContext()); // Replace 'context' with the appropriate context for your application
+
+// Get a writable database instance
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.putNull(TRANSACTION_TICKET_NO); // Set the field to null
+        String whereClause = _ID + " = ?";
+        String[] whereArgs = {String.valueOf(transactionIdInProgress)}; // Replace transactionHeaderId with the actual header ID
+        db.delete(TRANSACTION_HEADER_TABLE_NAME, whereClause, whereArgs);
+
+        // Delete corresponding data in the transaction table
+        whereClause = TRANSACTION_ID + " = ?";
+        String[] whereArgs1 = {String.valueOf(transactionIdInProgress)};
+        db.delete(TRANSACTION_TABLE_NAME, whereClause, whereArgs1);
+
+        // Optionally, you can notify the user or perform any other actions after clearing the transaction
+// Notify the listener that an item is added
+
+           refreshData(calculateTotalAmount(), calculateTotalTax());
+           updateheader(calculateTotalAmount(), calculateTotalTax());
+              displayOnLCD();
+
+
+        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
+
+        generateNewTransactionId();
+    }
+    public void displayOnLCD() {
+        if (woyouService == null) {
+            Toast.makeText(requireContext(), "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Retrieve the total amount and total tax amount from the transactionheader table
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+               double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                String formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                woyouService.sendLCDDoubleString("Total: Rs" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+    public double calculateTotalAmount() {
         // Implement your logic to calculate the total amount
         double totalAmount = 0.0;
 
@@ -230,7 +363,7 @@ private TextView textViewVATs,textViewTotals;
 
         return totalAmount;
     }
-    private double calculateTotalTax() {
+    public double calculateTotalTax() {
         // Implement your logic to calculate the total amount
         double TaxtotalAmount = 0.0;
 
@@ -331,4 +464,5 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
     private void playSoundEffect() {
         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }
+
 }

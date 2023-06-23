@@ -30,7 +30,7 @@ import woyou.aidlservice.jiuiv5.IWoyouService;
 public class QRActivity extends AppCompatActivity implements QRFragment.DataPassListener {
     private DatabaseHelper mDatabaseHelper;
     private IWoyouService woyouService;
-    private double totalAmount,TaxtotalAmount;
+    private String qrname,code, qrid;
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private ServiceConnection connService = new ServiceConnection() {
@@ -45,7 +45,9 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
             woyouService = IWoyouService.Stub.asInterface(service);
 
             // Call the method to display on the LCD here
-            displayQROnLCD("1234","test");
+
+            displayQROnLCD(code,qrname);
+
         }
     };
 
@@ -87,7 +89,7 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
 
             Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
             Canvas textCanvas = new Canvas(textBitmap);
-            textCanvas.drawText(code, 0, textHeight, textPaint);
+            textCanvas.drawText(name, 0, textHeight, textPaint);
 
             // Create composite bitmap
             int compositeWidth = qrCodeWidth + textWidth;
@@ -164,6 +166,10 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
         modifyIntent.putExtra("name", name);
         modifyIntent.putExtra("id", id);
         modifyIntent.putExtra("qr", QR);
+        qrname= name;
+        qrid=id;
+        code=QR;
+        Toast.makeText(this, qrid+""+qrname, Toast.LENGTH_SHORT).show();
         startActivity(modifyIntent);
         displayQROnLCD(QR, name);
 

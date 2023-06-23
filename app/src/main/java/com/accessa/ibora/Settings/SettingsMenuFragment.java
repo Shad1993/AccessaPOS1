@@ -20,6 +20,7 @@ import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
 import com.accessa.ibora.product.menu.CustomAdapter;
 
@@ -63,11 +64,13 @@ public class SettingsMenuFragment extends Fragment {
         toolbarTitle = getString(R.string.Settings);
         menuList = new String[]{
                 getString(R.string.QR),
-                getString(R.string.QRDisplaySettings)
+                getString(R.string.QRDisplaySettings),
+                getString(R.string.PaymentMethods)
         };
         icons = new int[]{
                 R.drawable.qr,
-                R.drawable.led_display
+                R.drawable.led_display,
+                R.drawable.payment
         };
 
         setHasOptionsMenu(true);
@@ -140,8 +143,23 @@ public class SettingsMenuFragment extends Fragment {
                     fragmentTransaction.commit();
 
 
+            }else if (position==2) {
+                    toolbarTitle = getString(R.string.LEDScreenSettings);
+                    // Create new fragment and transaction
+                    Fragment newFragment = new PaymentFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
 
-            }else {
+
+
+                }else {
                     toolbarTitle = getString(R.string.Settings); // Set a default value if needed
                 }
 

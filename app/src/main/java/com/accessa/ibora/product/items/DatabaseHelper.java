@@ -221,6 +221,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PAYMENT_METHOD= "PaymentMethod";
 
     public static final String COLUMN_QR_CODE_NUM= "QRString";
+
+    // payment methods
+    public static final String PAYMENT_METHOD_COLUMN_ID = "PaymentMethodId";
+    public static final String PAYMENT_METHOD_COLUMN_NAME = "PaymentMethodName";
+    public static final String PAYMENT_METHOD_COLUMN_ICON = "PaymentMethodIcon";
+    public static final String PAYMENT_METHOD_COLUMN_DATE_CREATED = "PaymentMethodDateCreated";
+    public static final String PAYMENT_METHOD_COLUMN_LAST_MODIFIED = "PaymentMethodLastModified";
+    public static final String PAYMENT_METHOD_COLUMN_CASHOR_ID = "PaymentMethodCashorId";
+    public static final String PAYMENT_METHOD_TABLE_NAME= "PaymentMethodTable";
+
+
+
+
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -461,6 +474,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
             + ")";
 
+
+    private static final String CREATE_PAYMENT_METHOD_TABLE = "CREATE TABLE IF NOT EXISTS " + PAYMENT_METHOD_TABLE_NAME + " ("
+            + PAYMENT_METHOD_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + PAYMENT_METHOD_COLUMN_NAME + " TEXT NOT NULL, "
+            + PAYMENT_METHOD_COLUMN_ICON + " TEXT, "
+            + PAYMENT_METHOD_COLUMN_DATE_CREATED + " TEXT NOT NULL, "
+            + PAYMENT_METHOD_COLUMN_LAST_MODIFIED + " TEXT , "
+            + PAYMENT_METHOD_COLUMN_CASHOR_ID + " TEXT NOT NULL, "
+            + "FOREIGN KEY (" + PAYMENT_METHOD_COLUMN_CASHOR_ID + ") REFERENCES "
+            + TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
+
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -480,6 +505,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_INVOICE_SETTLEMENT_TABLE);
         db.execSQL(CREATE_STD_ACCESS_TABLE);
         db.execSQL(CREATE_PAYMENTBYQY_TABLE);
+        db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
     }
 
     @Override
@@ -496,7 +522,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TRANSACTION_HEADER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + INVOICE_SETTLEMENT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_STD_ACCESS);
-        db.execSQL("DROP TABLE IF EXISTS " + CREATE_PAYMENTBYQY_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PAYMENTBYQY);
+        db.execSQL("DROP TABLE IF EXISTS " + PAYMENT_METHOD_TABLE_NAME);
 
         onCreate(db);
     }
@@ -718,7 +745,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(VENDOR_TABLE_NAME, null, null, null, null, null, null);
     }
-
+    public Cursor getAllPaymentMethod() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(PAYMENT_METHOD_TABLE_NAME, null, null, null, null, null, null);
+    }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription, Category, Price};
@@ -1017,6 +1047,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         boolean exists = cursor.getCount() > 0;
         cursor.close();
         return exists;
+
     }
 
     public Cursor getQRByName(String qrName) {
@@ -1034,6 +1065,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {"%" + newText + "%"};
         String sortOrder = COLUMN_PAYMENT_METHOD + " ASC";
         return db.query(TABLE_NAME_PAYMENTBYQY, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+
+
+    public Cursor searchpaymentmethod(String newText) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {PAYMENT_METHOD_COLUMN_NAME, PAYMENT_METHOD_COLUMN_ID,PAYMENT_METHOD_COLUMN_ICON};
+        String selection = PAYMENT_METHOD_COLUMN_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + newText + "%"};
+        String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
+        return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
 }
 

@@ -1,4 +1,4 @@
-package com.accessa.ibora.Settings.QRMethods;
+package com.accessa.ibora.Settings.PaymentFragment;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -23,7 +23,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.accessa.ibora.Admin.People.ModifyPeopleActivity;
+
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -35,12 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class QRSettingsFragment extends Fragment {
+public class PaymentFragment extends Fragment {
 private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
-    private QrAdaptor mAdapter;
+    private PaymentAdaptor mAdapter;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
     private Spinner spinner;
@@ -61,7 +61,7 @@ private  EditText searchEditText;
     // onCreateView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.qr_settings_fragment, container, false);
+        View view = inflater.inflate(R.layout.payment_settings_fragment, container, false);
         // Get the current locale
 
         // Spinner
@@ -71,13 +71,13 @@ private  EditText searchEditText;
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor = mDatabaseHelper.getAllQR();
+        Cursor cursor = mDatabaseHelper.getAllPaymentMethod();
 
         List<String> cashier = new ArrayList<>();
-        cashier.add(String.valueOf(getString(R.string.AllQR)));
+        cashier.add(String.valueOf(getString(R.string.AllPayment)));
         if (cursor.moveToFirst()) {
             do {
-                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_PAYMENT_METHOD));
+                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME));
                 cashier.add(item);
             } while (cursor.moveToNext());
         }
@@ -159,13 +159,13 @@ private  EditText searchEditText;
 
         mDatabaseHelper = new DatabaseHelper(getContext());
 
-        Cursor userCursor = mDatabaseHelper.getAllQR();
-        mAdapter = new QrAdaptor(getActivity(), userCursor);
+        Cursor userCursor = mDatabaseHelper.getAllPaymentMethod();
+        mAdapter = new PaymentAdaptor(getActivity(), userCursor);
         mRecyclerView.setAdapter(mAdapter);
         // Empty state
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
         Glide.with(getContext()).asGif()
-                .load(R.drawable.card)
+                .load(R.drawable.paymethods)
                 .into(imageView);
         FrameLayout emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         if (mAdapter.getItemCount() <= 0) {
@@ -189,7 +189,7 @@ private  EditText searchEditText;
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchqr(newText);
+                Cursor newCursor = mDatabaseHelper.searchpaymentmethod(newText);
                 mAdapter.swapCursor(newCursor);
                 if (newText.isEmpty()) {
 
@@ -227,7 +227,7 @@ private  EditText searchEditText;
                         String name = NameEditText.getText().toString();
 
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyQRActivity.class);
+                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifypaymentActivity.class);
                         modifyIntent.putExtra("name", name);
                         modifyIntent.putExtra("id", id);
 
@@ -253,8 +253,8 @@ private  EditText searchEditText;
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals(getString(R.string.AllQR))) {
-            filteredCursor = mDatabaseHelper.getAllQR();
+        if (selectedItem == null || selectedItem.equals(getString(R.string.AllPayment))) {
+            filteredCursor = mDatabaseHelper.getAllPaymentMethod();
         } else {
             filteredCursor = mDatabaseHelper.searchUser(selectedItem);
         }
@@ -285,7 +285,7 @@ private  EditText searchEditText;
 
 
         // Start the AddItemActivity
-        Intent intent = new Intent(requireContext(), AddQrActivity.class);
+        Intent intent = new Intent(requireContext(), AddPaymentActivity.class);
         intent.putExtra("locale", currentLocale.toString());
         startActivity(intent);
     }

@@ -7,7 +7,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import tyrantgit.explosionfield.ExplosionField;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -368,7 +368,7 @@ public class printerSetup extends AppCompatActivity {
 
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
-
+        ExplosionField explosionField = ExplosionField.attach2Window(this);
         // Initialize the printer service
         boolean result = false;
         try {

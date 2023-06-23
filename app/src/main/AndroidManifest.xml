@@ -61,6 +61,9 @@
         <activity android:name=".Settings.SettingsDashboard"/>
         <activity android:name=".Settings.QRMethods.AddQrActivity"/>
         <activity android:name=".QR.QRActivity"/>
+        <activity android:name=".Settings.QRMethods.ModifyQRActivity"/>
+        <activity android:name=".Settings.PaymentFragment.AddPaymentActivity"/>
+        <activity android:name=".Settings.PaymentFragment.ModifypaymentActivity"/>
 
     </application>
 

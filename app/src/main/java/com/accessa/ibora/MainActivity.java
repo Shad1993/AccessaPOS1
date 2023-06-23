@@ -8,6 +8,12 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +21,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -48,6 +55,10 @@ import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import android.hardware.display.DisplayManager;
 import android.view.Display;
@@ -86,10 +97,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     public void onDataPass(String name, String id, String QR) {
         // Handle the passed data here
         // You can start the QRActivity or perform any other action
-        Intent modifyIntent = new Intent(getApplicationContext(), QRActivity.class);
-        modifyIntent.putExtra("name", name);
-        modifyIntent.putExtra("id", id);
-        startActivity(modifyIntent);
+
+      displayQROnLCD(QR, name);
     }
     private ServiceConnection connService = new ServiceConnection() {
 
@@ -106,6 +115,12 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             displayOnLCD();
         }
     };
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.navigation_menu, menu);
+        return true;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -262,10 +277,11 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     public static MainActivity getInstance() {
         return instance;
     }
-    private void logout() {
+    public void logout() {
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences
+        SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         // Clear all the stored values
@@ -410,7 +426,6 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         }
     }
 
-
     @Override
     public  void onItemDeleted() {
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
@@ -440,7 +455,64 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
 
         }
 
+    } private void displayQROnLCD(String code, String name) {
+        if (woyouService == null) {
+            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+
+            int fontSize = 10; // Set your desired font size
+            int textColor = Color.WHITE; // Set your desired text color
+            Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
+
+            // Generate QR code bitmap
+            int qrCodeSize = 50; // Set your desired QR code size
+            BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+            int qrCodeWidth = qrCodeMatrix.getWidth();
+            int qrCodeHeight = qrCodeMatrix.getHeight();
+
+            Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+            for (int x = 0; x < qrCodeWidth; x++) {
+                for (int y = 0; y < qrCodeHeight; y++) {
+                    qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                }
+            }
+
+            // Generate text bitmap
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(fontSize);
+            textPaint.setColor(textColor);
+            textPaint.setTypeface(typeface);
+
+            Rect textBounds = new Rect();
+            textPaint.getTextBounds(name, 0, name.length(), textBounds);
+            int textWidth = textBounds.width();
+            int textHeight = textBounds.height();
+
+            Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+            Canvas textCanvas = new Canvas(textBitmap);
+            textCanvas.drawText(name, 0, textHeight, textPaint);
+
+            // Create composite bitmap
+            int compositeWidth = qrCodeWidth + textWidth;
+            int compositeHeight = Math.max(qrCodeHeight, textHeight);
+
+            Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+            Canvas compositeCanvas = new Canvas(compositeBitmap);
+            compositeCanvas.drawColor(Color.BLACK);
+
+            compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+            compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+            woyouService.sendLCDBitmap(compositeBitmap, null);
+        } catch (RemoteException | WriterException e) {
+            e.printStackTrace();
+        }
+
     }
+
     public  void onTransationCompleted() {
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);

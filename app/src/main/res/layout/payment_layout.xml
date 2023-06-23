@@ -12,7 +12,7 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:scaleType="fitXY"
-        android:src="@drawable/purpleqr" />
+        android:src="@drawable/payment" />
     <TextView
         android:id="@+id/id_text_view"
         android:layout_width="wrap_content"
@@ -23,15 +23,26 @@
         android:textColor="#000"
         android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/name_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="10dp"
-            android:text="Name"
-            android:textColor="#000"
-            android:textSize="20sp" />
+    <TextView
+        android:id="@+id/name_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:text="Name"
+        android:textColor="#000"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/icon_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:text="Name"
+        android:visibility="gone"
+        android:textColor="#000"
+        android:textSize="20sp" />
 
 
 

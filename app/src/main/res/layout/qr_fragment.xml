@@ -7,16 +7,26 @@
     android:screenOrientation="landscape"
     android:orientation="vertical">
 
-
-    <!-- Product List -->
+    <TextView
+        android:id="@+id/title_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/displayQR"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp" />
+    <!-- qr List -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@null"
-        android:dividerHeight="0dp" />
+        android:layout_height="match_parent"
+        android:layout_below="@id/title_text_view"
+        android:layout_alignParentStart="true"/>
+
 
     <FrameLayout
         android:id="@+id/empty_frame_layout"
