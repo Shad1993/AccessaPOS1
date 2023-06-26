@@ -67,6 +67,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener {
@@ -124,6 +127,8 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        TicketFragment ticketFragment1=new TicketFragment();
+        ticketFragment1.setHasOptionsMenu(true);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -132,6 +137,10 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         // remove onscreen Keyboard
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
+
+
+
+
 
         Intent intent1 = new Intent();
         intent1.setPackage("woyou.aidlservice.jiuiv5");
@@ -206,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
 
         // Get the header view from the NavigationView
         View headerView = navigationView.getHeaderView(0);
+
 
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
@@ -514,14 +524,14 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
     }
 
     public  void onTransationCompleted() {
-        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
+
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
             double totalAmount = 0.0;
             double taxTotalAmount = 0.0;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
-            customerLcdFragment.displayOnLCD();
+           displayOnLCD();
         }
 
 

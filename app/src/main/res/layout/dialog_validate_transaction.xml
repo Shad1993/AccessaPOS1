@@ -16,7 +16,7 @@
         android:id="@+id/textViewTotalAmount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/TotalDue"
+        android:text="@string/Total"
         android:gravity="center"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -36,11 +36,61 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"/>
     <TextView
+        android:id="@+id/textViewTotalAmountdue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/remainingTopay"
+        android:gravity="center"
+        android:visibility="gone"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"/>
+
+    <TextView
+        android:id="@+id/textViewAmountdue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rs 0.00"
+        android:visibility="gone"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"/>
+    <TextView
+        android:id="@+id/textViewCashReturn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/cashReturn"
+        android:textSize="18dp"
+        android:visibility="gone"
+        android:layout_gravity="center_horizontal"
+        android:textColor="@android:color/black" />
+
+    <TextView
+        android:id="@+id/textViewCashReturnAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rs 0.00"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone" />
+    <TextView
+        android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/amountRecieved"
         android:layout_gravity="center_horizontal"
         android:textColor="@android:color/black" />
+
 
     <EditText
         android:id="@+id/editAbbrev"
@@ -74,6 +124,7 @@
             android:drawableEnd="@drawable/baseline_payments_24"
             android:text="Validate"
             android:textSize="18sp"
+            android:visibility="gone"
             android:backgroundTint="@color/BleuAccessaText"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"/>

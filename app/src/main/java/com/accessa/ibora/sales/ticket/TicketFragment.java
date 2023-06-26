@@ -52,7 +52,7 @@ import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class TicketFragment extends Fragment {
+public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
 
@@ -97,11 +97,13 @@ private TextView textViewVATs,textViewTotals;
         activity.setSupportActionBar(toolbar);
     }
 
+
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.navigation_menu, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -123,18 +125,33 @@ private TextView textViewVATs,textViewTotals;
         (id == R.id.clear_ticket) {
 
                clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
+            return true;
+        }else if
+        (id == R.id.open_drawer) {
 
+            try {
+                woyouService.openDrawer(null);
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+            return true;
         }
         // Handle other menu items as needed
 
         return super.onOptionsItemSelected(item);
     }
     @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        return onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
 
         // Find the toolbar view
         toolbar = view.findViewById(R.id.topAppBar);
+        toolbar.setOnMenuItemClickListener(this);
         Intent intent = new Intent();
         intent.setPackage("woyou.aidlservice.jiuiv5");
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");

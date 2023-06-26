@@ -8,9 +8,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -137,9 +140,71 @@ public class validateticketDialogFragment extends DialogFragment {
 
 
         }
-        // Retrieve the delete button and set its click listener
-        Button cashButton = view.findViewById(R.id.buttonCash);
-        cashButton.setOnClickListener(new View.OnClickListener() {
+        // Add this code inside the onCreateDialog() method of validateticketDialogFragment
+
+        EditText amountReceivedEditText = view.findViewById(R.id.editAbbrev);
+        Button validateButton = view.findViewById(R.id.buttonCash);
+
+        amountReceivedEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String amountReceivedString = s.toString();
+                double amountReceived = 0.0;
+
+                if (!amountReceivedString.isEmpty()) {
+                    try {
+                        amountReceived = Double.parseDouble(amountReceivedString);
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+                TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
+                TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
+                TextView textViewCashReturn= view.findViewById(R.id.textViewCashReturn);
+
+                double remainingAmount = totalAmount - amountReceived;
+                if (remainingAmount < 0) {
+                    remainingAmount = 0;
+                    remainingAmountTextView.setVisibility(View.GONE);
+                    remainingTotalAmountTextView.setVisibility(View.GONE);
+                    validateButton.setVisibility(View.VISIBLE);
+                }else{
+                    remainingAmountTextView.setVisibility(View.VISIBLE);
+                    remainingTotalAmountTextView.setVisibility(View.VISIBLE);
+                    validateButton.setVisibility(View.GONE);
+                }
+
+                remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
+
+                TextView textViewCashReturnAmount =view.findViewById(R.id.textViewCashReturnAmount);
+                TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
+                if (amountReceived > totalAmount) {
+                    double cashReturn = amountReceived - totalAmount;
+                    cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
+                    textViewCashReturnAmount.setVisibility(View.VISIBLE);
+                    cashReturnTextView.setVisibility(View.VISIBLE);
+                    textViewCashReturn.setVisibility(View.VISIBLE);
+                } else {
+                    textViewCashReturn.setVisibility(View.GONE);
+                    cashReturnTextView.setVisibility(View.GONE);
+                    textViewCashReturnAmount.setVisibility(View.GONE);
+                }
+            }
+        });
+
+
+
+
+
+        validateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -147,31 +212,28 @@ public class validateticketDialogFragment extends DialogFragment {
             }
 
             private void printData() {
-
                 Intent intent = new Intent(getActivity(), printerSetup.class);
+
+                // Pass the amount received and cash return values as extras
+                double amountReceived = 0.0;
+                if (!amountReceivedEditText.getText().toString().isEmpty()) {
+                    amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
+                }
+                double cashReturn = 0.0;
+                if (amountReceived > totalAmount) {
+                    cashReturn = amountReceived - totalAmount;
+                }
+                intent.putExtra("amount_received", amountReceived);
+                intent.putExtra("cash_return", cashReturn);
 
                 startActivity(intent);
             }
+
         });
 
 
         return new AlertDialog.Builder(getActivity())
-                .setTitle(getString(R.string.ValTicket))
                 .setView(view)
-                .setPositiveButton(getString(R.string.Save), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        // Get the current date and time for the transaction
-                        String lastmodified = getCurrentDateTime();
-                        String id= Transaction_Id;
-
-
-                        returnHome();
-
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel), null)
                 .create();
     }
     private String getCurrentDateTime() {

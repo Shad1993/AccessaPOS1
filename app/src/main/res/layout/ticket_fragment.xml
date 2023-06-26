@@ -137,15 +137,7 @@
             android:textSize="18sp"
             android:textColor="@color/BleuAccessaText"
             android:textStyle="bold" />
-
-
-
-
-
     </LinearLayout>
-
-
-
 
     <!-- Footer Section -->
     <LinearLayout

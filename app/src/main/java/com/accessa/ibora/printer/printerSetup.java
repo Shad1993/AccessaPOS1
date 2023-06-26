@@ -5,9 +5,10 @@ import java.nio.charset.Charset;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import tyrantgit.explosionfield.ExplosionField;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,10 +16,14 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,11 +47,11 @@ import com.sunmi.peripheral.printer.InnerPrinterManager;
 import com.sunmi.peripheral.printer.InnerResultCallback;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
+
 
 public class printerSetup extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
@@ -59,8 +64,10 @@ public class printerSetup extends AppCompatActivity {
     private double totalAmount,TaxtotalAmount;
     private  String DateCreated,timeCreated;
     private String cashorlevel,CompanyName,LogoPath;
+    private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
 
+    private double amountReceived,cashReturn;
     private InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
         @Override
         protected void onConnected(SunmiPrinterService service) {
@@ -273,13 +280,25 @@ public class printerSetup extends AppCompatActivity {
 
 
                         }
-
+                        String formattedTotalTender = String.format("%.2f", amountReceived);
+                        String formattedTotalReturn = String.format("%.2f", cashReturn);
                         String Paymentmethod= "Cash";
+                        String TenderAmount= "Amount Paid in  " + Paymentmethod ;
+                        String CashReturn = "Cash Return  "  ;
+                        String formattedtender= "Rs "  + formattedTotalTender;
+                        String formattedReturn="Rs " + formattedTotalReturn;
 
-
+                        int TenderTypesPadding = lineWidth - formattedtender.length() - TenderAmount.length();
+                        String TenderTypesLine = TenderAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
                         service.printText(Paymentmethod + "\n", null);
-                        service.printText(lineSeparator + "\n", null);
+                        service.printText(TenderTypesLine + "\n", null);
+                        if(cashReturn >=0) {
+                            int ReturnTypesPadding = lineWidth - formattedReturn.length() - CashReturn.length();
+                            String ReturnTypesLine = CashReturn + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedReturn;
+                            service.printText(ReturnTypesLine + "\n", null);
 
+                        }
+                        service.printText(lineSeparator + "\n", null);
                         service.setAlignment(1, null); // Align center
                         // Footer Text
                         String FooterText = getString(R.string.Footer_See_You);
@@ -313,6 +332,15 @@ public class printerSetup extends AppCompatActivity {
                         // Cut the paper
                         service.cutPaper(null);
 
+                        // Open the cash drawer
+                        byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
+                        service.sendRAWData(openDrawerBytes, null);
+                        // Open the cash drawer
+                        if(Paymentmethod == "Cash") {
+                            service.openDrawer(null);
+
+                        }
+
                         // Update the transaction status for all in-progress transactions to "Completed"
                         mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
 
@@ -327,8 +355,8 @@ public class printerSetup extends AppCompatActivity {
                             @Override
                             public void run() {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(printerSetup.this);
-                                builder.setTitle("Printing Completed");
-                                builder.setMessage("Thanks for printing. Next customer?");
+                                builder.setTitle("Transaction Completed");
+                                builder.setMessage("Thanks for Using AccessaPOS. Next customer?");
                                 builder.setPositiveButton("Next Customer", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
@@ -365,10 +393,52 @@ public class printerSetup extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recycleview_printer);
+         amountReceived = getIntent().getDoubleExtra("amount_received", 0.0);
+         cashReturn = getIntent().getDoubleExtra("cash_return", 0.0);
 
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
-        ExplosionField explosionField = ExplosionField.attach2Window(this);
+
+        final KonfettiView konfettiView = findViewById(R.id.konfettiView);
+        konfettiView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                konfettiView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                konfettiView.build()
+                        .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA)
+                        .setDirection(0, 90)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(2000L)
+                        .addShapes(Shape.Square.INSTANCE, Shape.Circle.INSTANCE)
+                        .addSizes(new Size(12, 5))
+                        .setPosition(-konfettiView.getWidth(), 0f, -konfettiView.getWidth(), (float)konfettiView.getHeight())
+                        .streamFor(300, 4500L);
+            }
+        });
+
+        final KonfettiView konfettiView1 = findViewById(R.id.konfettiView1);
+        konfettiView1.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                konfettiView1.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                konfettiView1.build()
+                        .addColors(Color.RED, Color.GREEN, Color.BLUE)
+                        .setDirection(180, 270)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(2000L)
+                        .addShapes(Shape.Square.INSTANCE, Shape.Circle.INSTANCE)
+                        .addSizes(new Size(12, 5))
+                        .setPosition(konfettiView1.getWidth(), 0f, konfettiView1.getWidth(),(float) konfettiView1.getHeight())
+                        .streamFor(300, 4500L);
+            }
+        });
+
+
+
         // Initialize the printer service
         boolean result = false;
         try {

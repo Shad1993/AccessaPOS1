@@ -19,4 +19,8 @@
         android:id="@+id/clear_ticket"
         android:title="@string/ClearTicket" />
 
+    <item
+        android:id="@+id/open_drawer"
+        android:title="@string/OpenDrawer" />
+
 </menu>

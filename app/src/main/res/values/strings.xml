@@ -369,6 +369,11 @@
     <string name="PaymentMethods">Payment Methods</string>
     <string name="AllPayment">All Payment Methods</string>
     <string name="addpayment">Add Payment Method</string>
+    <string name="transactioncompleted">Transaction Completed</string>
+    <string name="remainingTopay">Remaining To  pay</string>
+    <string name="cashReturn">Cash return</string>
+    <string name="currency_symbol">Rs</string>
+    <string name="OpenDrawer">Open Drawer</string>
 
 
 </resources>
