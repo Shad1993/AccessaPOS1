@@ -7,13 +7,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,8 +37,11 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class validateticketDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
@@ -42,12 +50,18 @@ public class validateticketDialogFragment extends DialogFragment {
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
-    private   String Transaction_Id;
+    private String Transaction_Id;
     private String cashierId;
-    private double totalAmount,TaxtotalAmount;
+    private Set<String> selectedItems; // Store selected items
+    private TextView IDselectedQRTextView;
+    private double totalAmount, TaxtotalAmount;
     private DatabaseHelper mDatabaseHelper;
+    private LinearLayout containerLayout; // Added
+    private  Button validateButton;
 
-    public static validateticketDialogFragment newInstance( String transactionId) {
+    private View view; // Declare the view variable
+
+    public static validateticketDialogFragment newInstance(String transactionId) {
         validateticketDialogFragment fragment = new validateticketDialogFragment();
         Bundle args = new Bundle();
 
@@ -56,10 +70,18 @@ public class validateticketDialogFragment extends DialogFragment {
         return fragment;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        selectedItems = new HashSet<>(); // Initialize the set
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_validate_transaction, null);
+         view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_validate_transaction, null);
+
+        containerLayout = view.findViewById(R.id.container_layout); // Initialize the container layout
 
         int numberOfColumns = 2;
         mRecyclerView = view.findViewById(R.id.recycler_view1);
@@ -71,22 +93,66 @@ public class validateticketDialogFragment extends DialogFragment {
         mAdapter = new CheckoutGridAdapter(getContext(), cursor3);
         mRecyclerView.setAdapter(mAdapter);
 
-
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
                 TextView idTextView = view.findViewById(R.id.id_text_view);
-                TextView NameEditText = view.findViewById(R.id.name_text_view);
-                TextView QrEditText = view.findViewById(R.id.code);
+                TextView nameTextView = view.findViewById(R.id.name_text_view);
+                TextView qrTextView = view.findViewById(R.id.icon);
 
-
-
-                String id1 = idTextView.getText().toString();
                 String id = idTextView.getText().toString();
-                String QR = QrEditText.getText().toString();
-                String name = NameEditText.getText().toString();
+                String qrCode = qrTextView.getText().toString();
+                String name = nameTextView.getText().toString();
+                if (id != null && !selectedItems.contains(id)) {
+                    selectedItems.add(id);
+                    // Create a new TextView
+                    TextView textView = new TextView(getContext());
+                    textView.setText(name); // Set the text for the new TextView
+                    textView.setGravity(Gravity.CENTER);
 
+                    // Add the TextView to the container layout
+                    containerLayout.addView(textView);
+                    String amount = " Rs 0.00";
+                    // Create a new EditText
+                    EditText editText = new EditText(getContext());
+                    editText.setHint(amount);
+                    editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
 
+                    // Create layout parameters for centering the EditText
+                    LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
+                            500,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    editParams.gravity = Gravity.CENTER;
+
+                    // Apply the layout parameters to the EditText
+                    editText.setLayoutParams(editParams);
+
+                    // Set other properties of the EditText
+                    Drawable drawable = getResources().getDrawable(R.drawable.edittext1_rounded_bg);
+                    editText.setBackground(drawable);
+                    editText.setTextColor(getResources().getColor(R.color.BleuAccessaText));
+                    editText.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+
+                    // Add a TextWatcher to the EditText
+                    editText.addTextChangedListener(new TextWatcher() {
+                        @Override
+                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        }
+
+                        @Override
+                        public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        }
+
+                        @Override
+                        public void afterTextChanged(Editable s) {
+                            calculateTotalAmount();
+                        }
+                    });
+
+                    // Add the EditText to the container layout
+                    containerLayout.addView(editText);
+                }
             }
 
             @Override
@@ -95,9 +161,6 @@ public class validateticketDialogFragment extends DialogFragment {
                 // ...
             }
         }));
-
-
-
 
         Xdatabasemanager = new DBManager(getContext());
         Xdatabasemanager.open();
@@ -108,16 +171,13 @@ public class validateticketDialogFragment extends DialogFragment {
         // Get the arguments passed to the dialog fragment
         Bundle args = getArguments();
         if (args != null) {
-
             Transaction_Id = args.getString(ARG_Transaction_id);
 
             SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
             transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
-
             SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
             cashierId = sharedPreference.getString("cashorId", null);
-
 
             mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
@@ -130,20 +190,15 @@ public class validateticketDialogFragment extends DialogFragment {
                 totalAmount = cursor.getDouble(columnIndexTotalAmount);
                 TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
 
-
                 TextView totalAmountTextView = view.findViewById(R.id.textViewAmount);
                 String formattedTotalAmount = String.format("%.2f", totalAmount);
                 totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
             }
-
-
-
-
         }
-        // Add this code inside the onCreateDialog() method of validateticketDialogFragment
 
+        // Add this code inside the onCreateDialog() method of validateticketDialogFragment
         EditText amountReceivedEditText = view.findViewById(R.id.editAbbrev);
-        Button validateButton = view.findViewById(R.id.buttonCash);
+         validateButton = view.findViewById(R.id.buttonCash);
 
         amountReceivedEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -166,100 +221,189 @@ public class validateticketDialogFragment extends DialogFragment {
                         e.printStackTrace();
                     }
                 }
+
+                double totalAmountEntered = 0.0;
+
+                // Iterate over the container layout to calculate the total amount entered
+                for (int i = 0; i < containerLayout.getChildCount(); i++) {
+                    View childView = containerLayout.getChildAt(i);
+
+                    if (childView instanceof EditText) {
+                        EditText editText = (EditText) childView;
+                        String amountText = editText.getText().toString();
+                        double enteredAmount = 0.0;
+                        if (!amountText.isEmpty()) {
+                            enteredAmount = Double.parseDouble(amountText);
+                        }
+                        totalAmountEntered += enteredAmount;
+                    }
+                }
+
+                double remainingAmount = totalAmount - totalAmountEntered;
+
                 TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
                 TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
-                TextView textViewCashReturn= view.findViewById(R.id.textViewCashReturn);
+                TextView textViewCashReturn = view.findViewById(R.id.textViewCashReturn);
 
-                double remainingAmount = totalAmount - amountReceived;
                 if (remainingAmount < 0) {
                     remainingAmount = 0;
                     remainingAmountTextView.setVisibility(View.GONE);
                     remainingTotalAmountTextView.setVisibility(View.GONE);
-                    validateButton.setVisibility(View.VISIBLE);
-                }else{
+                    textViewCashReturn.setVisibility(View.VISIBLE);
+                } else {
                     remainingAmountTextView.setVisibility(View.VISIBLE);
                     remainingTotalAmountTextView.setVisibility(View.VISIBLE);
-                    validateButton.setVisibility(View.GONE);
+                    textViewCashReturn.setVisibility(View.GONE);
                 }
 
                 remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
 
-                TextView textViewCashReturnAmount =view.findViewById(R.id.textViewCashReturnAmount);
+                TextView textViewCashReturnAmount = view.findViewById(R.id.textViewCashReturnAmount);
                 TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
-                if (amountReceived > totalAmount) {
-                    double cashReturn = amountReceived - totalAmount;
+                if (totalAmountEntered >= totalAmount) {
+                    double cashReturn = totalAmountEntered - totalAmount;
                     cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
                     textViewCashReturnAmount.setVisibility(View.VISIBLE);
                     cashReturnTextView.setVisibility(View.VISIBLE);
-                    textViewCashReturn.setVisibility(View.VISIBLE);
+                    validateButton.setVisibility(View.VISIBLE);
                 } else {
-                    textViewCashReturn.setVisibility(View.GONE);
-                    cashReturnTextView.setVisibility(View.GONE);
                     textViewCashReturnAmount.setVisibility(View.GONE);
+                    cashReturnTextView.setVisibility(View.GONE);
+                    validateButton.setVisibility(View.GONE);
                 }
             }
         });
 
-
-
-
-
         validateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 printData();
             }
 
             private void printData() {
-                Intent intent = new Intent(getActivity(), printerSetup.class);
-
-                // Pass the amount received and cash return values as extras
+                // Get the amount received
                 double amountReceived = 0.0;
                 if (!amountReceivedEditText.getText().toString().isEmpty()) {
                     amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
                 }
-                double cashReturn = 0.0;
-                if (amountReceived > totalAmount) {
-                    cashReturn = amountReceived - totalAmount;
+
+                // Iterate over the container layout to get the settlement details
+                ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+                for (int i = 0; i < containerLayout.getChildCount(); i += 2) {
+                    View childView = containerLayout.getChildAt(i);
+                    if (childView instanceof TextView) {
+                        TextView nameTextView = (TextView) childView;
+                        String paymentName = nameTextView.getText().toString();
+
+                        View amountView = containerLayout.getChildAt(i + 1);
+                        if (amountView instanceof EditText) {
+                            EditText amountEditText = (EditText) amountView;
+                            String amountText = amountEditText.getText().toString();
+                            double settlementAmount = 0.0;
+                            if (!amountText.isEmpty()) {
+                                settlementAmount = Double.parseDouble(amountText);
+                            }
+                            settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+                        }
+                    }
                 }
-                intent.putExtra("amount_received", amountReceived);
+
+                // Update the table with settlement details
+                for (SettlementItem settlementItem : settlementItems) {
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(),Transaction_Id);
+                    if (updated) {
+                        Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                // Declare a variable to hold the total amount
+                double totalAmountinserted = 0.0;
+
+                    // Iterate over the settlement items to calculate the total amount
+                for (SettlementItem item : settlementItems) {
+                    totalAmountinserted += item.getSettlementAmount();
+                }
+
+                // Print or use the total amount as needed
+
+                Toast.makeText(getContext(), "Total Amount: "  + totalAmountinserted, Toast.LENGTH_SHORT).show();
+                double cashReturn= totalAmountinserted- totalAmount;
+                // Pass the amount received and settlement items as extras to the print activity
+                Intent intent = new Intent(getActivity(), printerSetup.class);
+                intent.putExtra("amount_received", totalAmountinserted);
                 intent.putExtra("cash_return", cashReturn);
+                intent.putExtra("settlement_items", settlementItems);
 
                 startActivity(intent);
             }
 
         });
 
-
         return new AlertDialog.Builder(getActivity())
                 .setView(view)
                 .create();
     }
-    private String getCurrentDateTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return sdf.format(new Date());
-    }
-    private void deleteItem(String itemId) {
-        // Perform the delete operation here
-        if (Xdatabasemanager != null) {
-            boolean deleted = Xdatabasemanager.deleteTransacItem(Long.parseLong(itemId));
-            if (deleted) {
-                Toast.makeText(getActivity(), getString(R.string.item_deleted), Toast.LENGTH_SHORT).show();
-                returnHome();
-            } else {
-                Toast.makeText(getActivity(), getString(R.string.delete_failed), Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+
+
+
+
 
     public void returnHome() {
-        Intent home_intent1 = new Intent(getContext(), MainActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "Ticket_fragment");
+        Intent home_intent1 = new Intent(getActivity(), MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(home_intent1);
     }
-    public interface ModifyItemDialogListener {
-        void onItemModified(String quantity, String price, String longDesc);
+
+    private void calculateTotalAmount() {
+        double totalAmountEntered = 0.0;
+
+        // Iterate over the container layout to calculate the total amount entered
+        for (int i = 0; i < containerLayout.getChildCount(); i++) {
+            View childView = containerLayout.getChildAt(i);
+
+            if (childView instanceof EditText) {
+                EditText editText = (EditText) childView;
+                String amountText = editText.getText().toString();
+                double enteredAmount = 0.0;
+                if (!amountText.isEmpty()) {
+                    enteredAmount = Double.parseDouble(amountText);
+                }
+                totalAmountEntered += enteredAmount;
+            }
+        }
+
+        double remainingAmount = totalAmount - totalAmountEntered;
+
+        TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
+        TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
+        TextView textViewCashReturn = view.findViewById(R.id.textViewCashReturn);
+
+        if (remainingAmount < 0) {
+            remainingAmount = 0;
+            remainingAmountTextView.setVisibility(View.GONE);
+            remainingTotalAmountTextView.setVisibility(View.GONE);
+            textViewCashReturn.setVisibility(View.VISIBLE);
+        } else {
+            remainingAmountTextView.setVisibility(View.VISIBLE);
+            remainingTotalAmountTextView.setVisibility(View.VISIBLE);
+            textViewCashReturn.setVisibility(View.GONE);
+        }
+
+        remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
+
+        TextView textViewCashReturnAmount = view.findViewById(R.id.textViewCashReturnAmount);
+        TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
+        if (totalAmountEntered >= totalAmount) {
+            double cashReturn = totalAmountEntered - totalAmount;
+            cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
+            textViewCashReturnAmount.setVisibility(View.VISIBLE);
+            cashReturnTextView.setVisibility(View.VISIBLE);
+            validateButton.setVisibility(View.VISIBLE);
+        } else {
+            textViewCashReturnAmount.setVisibility(View.GONE);
+            cashReturnTextView.setVisibility(View.GONE);
+            validateButton.setVisibility(View.GONE);
+        }
     }
 }

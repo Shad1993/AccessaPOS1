@@ -8,8 +8,11 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.accessa.ibora.QR.QR;
 import com.accessa.ibora.R;
@@ -17,6 +20,7 @@ import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.Item;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,7 +28,8 @@ import java.util.Date;
 public class ModifypaymentActivity extends Activity {
     private Button buttonUpdate;
     private Button buttonDelete;
-
+    private SwitchCompat Draweropen;
+    private boolean isDrawerOpen;
 
     private DBManager dbManager;
     private EditText QRName_Edittext;
@@ -32,6 +37,7 @@ public class ModifypaymentActivity extends Activity {
     private EditText Userid_Edittext;
     private EditText QRcode_Edittext;
     private long _id;
+    private String  id;
     private DatabaseHelper mDatabaseHelper;
     private CategoryDatabaseHelper catDatabaseHelper;
     private SharedPreferences sharedPreferences;
@@ -43,7 +49,7 @@ public class ModifypaymentActivity extends Activity {
         super.onCreate(savedInstanceState);
         setTitle("Modify QR");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.modify_qr_activity);
+        setContentView(R.layout.modify_payment_activity);
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -62,33 +68,53 @@ public class ModifypaymentActivity extends Activity {
         LastModified_Edittext = findViewById(R.id.LastModified_edittext);
         Userid_Edittext = findViewById(R.id.userid_edittext);
         QRcode_Edittext = findViewById(R.id.qrcode_edittext);
+        Draweropen = findViewById(R.id.draweropener);
 
+
+        Draweropen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isDrawerOpen = isChecked;
+
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(ModifypaymentActivity.this, R.string.draweropenrmsg, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(ModifypaymentActivity.this, R.string.drawernotopen, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         Intent intent = getIntent();
-        String id = intent.getStringExtra("id");
+         id = intent.getStringExtra("id");
         _id = Long.parseLong(id);
+        payment payments = dbManager.getpaymentById(id);
+        if (payments != null) {
+            // set switch as true if available for sale
+            Boolean isConditionMet = payments.getOpenDrawer();
 
-
-        QR qr = dbManager.getQRById(id);
-        if (qr != null) {
-            QRName_Edittext.setText(qr.getName());
-            QRcode_Edittext.setText(qr.getQRcode());
-
+            if (Boolean.TRUE.equals(isConditionMet)) {
+                Draweropen.setChecked(true);
+                QRName_Edittext.setText(payments.getPaymentName());
+                QRcode_Edittext.setText(payments.getPaymentMethodIcon());
+            }
         }
+
         Userid_Edittext.setText(String.valueOf(cashorId));
 
         buttonUpdate = findViewById(R.id.btn_update);
         buttonUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateQR();
+                updatePayment();
             }
         });
         buttonDelete = findViewById(R.id.btn_delete);
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteQR();
+                deletePayment();
             }
         });
 
@@ -98,32 +124,34 @@ public class ModifypaymentActivity extends Activity {
     }
 
 
-    private void updateQR() {
-        String name = QRName_Edittext.getText().toString().trim();
+    private void updatePayment() {
+
 
         // Get the current timestamp
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        String QRName = QRName_Edittext.getText().toString().trim();
+        String paymentName = QRName_Edittext.getText().toString().trim();
         String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
-        String QRCode = QRcode_Edittext.getText().toString().trim();
+        String icon = QRcode_Edittext.getText().toString().trim();
+        String drawer =String.valueOf(isDrawerOpen);
 
-        if (QRName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || QRCode.isEmpty() ) {
+
+        if (paymentName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || icon.isEmpty() ) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
         // Retrieve the existing qr details
-        QR existingQR = dbManager.getQRById(String.valueOf(_id));
+        payment existingname = dbManager.getpaymentById(String.valueOf(_id));
 
         // Check if the qr code already exists and is not the same as the existing code
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        if (databaseHelper.isQrCodeExists(QRCode) && !QRCode.equals(existingQR.getQRcode())) {
-            Toast.makeText(this, getString(R.string.qrcodeexists), Toast.LENGTH_SHORT).show();
+        if ( !paymentName.equals(existingname.getPaymentName())) {
+            Toast.makeText(this, getString(R.string.paymentnameexists), Toast.LENGTH_SHORT).show();
             return;
         }
 
-        boolean isUpdated = dbManager.updateQR( _id,name, lastmodified, UserId, QRCode);
+        boolean isUpdated = dbManager.updatePayment( _id,paymentName, lastmodified, UserId, icon,drawer);
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, getString(R.string.updatQR), Toast.LENGTH_SHORT).show();
@@ -133,8 +161,8 @@ public class ModifypaymentActivity extends Activity {
         }
     }
 
-    private void deleteQR() {
-        boolean isDeleted = dbManager.deleteQR(_id);
+    private void deletePayment() {
+        boolean isDeleted = dbManager.deletepaymentMethod(_id);
         returnHome();
         if (isDeleted) {
             Toast.makeText(this, getString(R.string.deleteqr), Toast.LENGTH_SHORT).show();
@@ -146,7 +174,7 @@ public class ModifypaymentActivity extends Activity {
     public void returnHome() {
         Intent home_intent1 = new Intent(getApplicationContext(), SettingsDashboard.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "Qr_fragment");
+        home_intent1.putExtra("fragment", "Pay_fragment");
         startActivity(home_intent1);
     }
 

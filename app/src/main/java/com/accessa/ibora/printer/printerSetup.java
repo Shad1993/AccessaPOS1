@@ -38,6 +38,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
@@ -47,6 +48,7 @@ import com.sunmi.peripheral.printer.InnerPrinterManager;
 import com.sunmi.peripheral.printer.InnerResultCallback;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
 
+import java.util.ArrayList;
 import java.util.List;
 import nl.dionsegijn.konfetti.KonfettiView;
 import nl.dionsegijn.konfetti.models.Shape;
@@ -66,7 +68,12 @@ public class printerSetup extends AppCompatActivity {
     private String cashorlevel,CompanyName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
+    private String paymentName ;
 
+    private  ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+
+
+    private double settlementAmount ;
     private double amountReceived,cashReturn;
     private InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
         @Override
@@ -177,6 +184,7 @@ public class printerSetup extends AppCompatActivity {
                         // Print a line separator
 
                         String lineSeparator = "=".repeat(lineWidth);
+                        String singlelineSeparator = "-".repeat(lineWidth);
                         service.printText(lineSeparator + "\n", null);
 
                         // Print the data from the RecyclerView
@@ -282,17 +290,57 @@ public class printerSetup extends AppCompatActivity {
                         }
                         String formattedTotalTender = String.format("%.2f", amountReceived);
                         String formattedTotalReturn = String.format("%.2f", cashReturn);
-                        String Paymentmethod= "Cash";
-                        String TenderAmount= "Amount Paid in  " + Paymentmethod ;
+
+
+
+                        String TenderTotalAmount= "Total Amount Paid "  ;
                         String CashReturn = "Cash Return  "  ;
                         String formattedtender= "Rs "  + formattedTotalTender;
                         String formattedReturn="Rs " + formattedTotalReturn;
 
-                        int TenderTypesPadding = lineWidth - formattedtender.length() - TenderAmount.length();
-                        String TenderTypesLine = TenderAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
-                        service.printText(Paymentmethod + "\n", null);
+
+
+
+
+
+                        int lineWidths= 41;
+                        int TenderTypesPadding = lineWidths - formattedtender.length() - TenderTotalAmount.length();
+                        service.printText(singlelineSeparator + "\n", null);
+
+                        // Enable bold text and set font size to 30
+                        byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
+                        service.sendRAWData(boldOnBytes, null);
+                        service.setFontSize(28, null);
+
+
+                        String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
                         service.printText(TenderTypesLine + "\n", null);
-                        if(cashReturn >=0) {
+
+
+                        // Disable bold text and reset font size
+                        byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                        service.sendRAWData(boldOffBytes, null);
+                        service.setFontSize(24, null);
+
+
+                        if (settlementItems != null) {
+                            // Use the settlementItems as needed
+                            // You can iterate over the list and access the payment name and settlement amount for each item
+                            for (SettlementItem items : settlementItems) {
+
+                                paymentName = items.getPaymentName();
+                                settlementAmount = items.getSettlementAmount();
+                                String formattedSettlementAmount = String.format("%.2f", settlementAmount);
+                                String TenderAmount= "Amount Paid in  " + paymentName ;
+                                String formatteditemtender= "Rs "  + formattedSettlementAmount;
+                                int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
+                                String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
+                                service.printText(TenderItemsTypesLine + "\n", null);
+                            }
+                        }
+
+                        if(cashReturn >0) {
+                            service.printText(singlelineSeparator + "\n", null);
                             int ReturnTypesPadding = lineWidth - formattedReturn.length() - CashReturn.length();
                             String ReturnTypesLine = CashReturn + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedReturn;
                             service.printText(ReturnTypesLine + "\n", null);
@@ -336,7 +384,7 @@ public class printerSetup extends AppCompatActivity {
                         byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
                         service.sendRAWData(openDrawerBytes, null);
                         // Open the cash drawer
-                        if(Paymentmethod == "Cash") {
+                        if(paymentName == "Cash") {
                             service.openDrawer(null);
 
                         }
@@ -395,6 +443,11 @@ public class printerSetup extends AppCompatActivity {
         setContentView(R.layout.recycleview_printer);
          amountReceived = getIntent().getDoubleExtra("amount_received", 0.0);
          cashReturn = getIntent().getDoubleExtra("cash_return", 0.0);
+
+
+         settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
+
+
 
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);

@@ -6,7 +6,10 @@ import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.OpenDrawer;
+import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
+import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
@@ -20,10 +23,12 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.accessa.ibora.Admin.cashier;
 import com.accessa.ibora.QR.QR;
+import com.accessa.ibora.Settings.PaymentFragment.payment;
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.Vendor.Vendor;
+import com.accessa.ibora.sales.ticket.Checkout.Payment;
 
 public class DBManager {
 
@@ -845,13 +850,62 @@ public class DBManager {
         return Qr;
     }
 
-    public void insertPaymentMethod(String methodName, String dateCreated, String lastModified, String userId, String icon) {
+    public void insertPaymentMethod(String methodName, String dateCreated, String lastModified, String userId, String icon, String drawerValue) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME, methodName);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_LAST_MODIFIED, lastModified);
-        contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID, userId);
+        contentValue.put(PAYMENT_METHOD_COLUMN_CASHOR_ID, userId);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_DATE_CREATED, dateCreated);
         contentValue.put(PAYMENT_METHOD_COLUMN_ICON, icon);
+        contentValue.put(OpenDrawer, drawerValue);
         database.insert(PAYMENT_METHOD_TABLE_NAME, null, contentValue);
+    }
+
+    public payment getpaymentById(String id) {
+        payment payments = null;
+        String[] columns = new String[]{
+                PAYMENT_METHOD_COLUMN_ID,
+                DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME,
+                DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON,
+                DatabaseHelper.OpenDrawer,
+                PAYMENT_METHOD_COLUMN_CASHOR_ID,
+
+                // Add other columns as needed
+        };
+
+        String selection = PAYMENT_METHOD_COLUMN_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(PAYMENT_METHOD_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            payments = new payment();
+            payments.setId(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ID));
+            payments.setPaymentMethodName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME)));
+            payments.setDrawerOpen(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(OpenDrawer))));
+            payments.setDPaymentMethodIcon(cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ICON)));
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return payments;
+    }
+
+    public boolean updatePayment(long id, String paymentName, String lastmodified, String userId, String icon, String drawer) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME, paymentName);
+        contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_LAST_MODIFIED, lastmodified);
+        contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID, userId);
+        contentValue.put(PAYMENT_METHOD_COLUMN_ICON, icon);
+        contentValue.put(OpenDrawer, drawer);
+
+        database.update(PAYMENT_METHOD_TABLE_NAME, contentValue, PAYMENT_METHOD_COLUMN_ID + " = " + id, null);
+        return true;
+    }
+
+    public boolean deletepaymentMethod(long id) {
+        String selection = PAYMENT_METHOD_COLUMN_ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(PAYMENT_METHOD_TABLE_NAME, selection, selectionArgs);
+        return true;
     }
 }

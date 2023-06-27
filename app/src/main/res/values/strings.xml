@@ -374,6 +374,11 @@
     <string name="cashReturn">Cash return</string>
     <string name="currency_symbol">Rs</string>
     <string name="OpenDrawer">Open Drawer</string>
+    <string name="icon">Icon</string>
+    <string name="draweropener">Do you want to allow Drawer to be oppenned when This method of payment is used</string>
+    <string name="draweropenrmsg">Drawer will open if this payment method is called</string>
+    <string name="drawernotopen">Drawer will not open if this payment method is called</string>
+    <string name="paymentnameexists">Payment name Already exists</string>
 
 
 </resources>

@@ -35,6 +35,7 @@ import com.accessa.ibora.product.items.FirstFragment;
 import com.accessa.ibora.product.menu.BodyActivity;
 import com.accessa.ibora.product.menu.BodyFragment;
 import com.accessa.ibora.Settings.SettingsMenuFragment.OnMenufragListener;
+import com.accessa.ibora.product.menu.Product;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -100,7 +101,6 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
             setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
             replaceFragment(newFragment);
         }
-
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,7 +123,7 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
+                    Intent intent = new Intent(SettingsDashboard.this, Product.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {

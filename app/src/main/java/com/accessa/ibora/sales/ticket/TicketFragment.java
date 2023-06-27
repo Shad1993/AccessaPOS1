@@ -42,6 +42,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.SplashActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.CheckoutGridAdapter;
@@ -424,9 +425,13 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
         } else {
             // Failed to save transaction header, handle the error
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+
+            Intent splashIntent = new Intent(getActivity(), SplashActivity.class);
+            Intent mainIntent = new Intent(getActivity(), MainActivity.class);
+            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            startActivity(splashIntent);
+            startActivity(mainIntent);
         }
 
 

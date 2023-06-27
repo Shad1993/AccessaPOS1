@@ -230,6 +230,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String PAYMENT_METHOD_COLUMN_LAST_MODIFIED = "PaymentMethodLastModified";
     public static final String PAYMENT_METHOD_COLUMN_CASHOR_ID = "PaymentMethodCashorId";
     public static final String PAYMENT_METHOD_TABLE_NAME= "PaymentMethodTable";
+    public static String OpenDrawer = "OpenDrawer";
 
 
 
@@ -475,12 +476,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + ")";
 
 
+
     private static final String CREATE_PAYMENT_METHOD_TABLE = "CREATE TABLE IF NOT EXISTS " + PAYMENT_METHOD_TABLE_NAME + " ("
             + PAYMENT_METHOD_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + PAYMENT_METHOD_COLUMN_NAME + " TEXT NOT NULL, "
             + PAYMENT_METHOD_COLUMN_ICON + " TEXT, "
             + PAYMENT_METHOD_COLUMN_DATE_CREATED + " TEXT NOT NULL, "
             + PAYMENT_METHOD_COLUMN_LAST_MODIFIED + " TEXT , "
+            + OpenDrawer + " BOOLEAN NOT NULL DEFAULT 1, "
             + PAYMENT_METHOD_COLUMN_CASHOR_ID + " TEXT NOT NULL, "
             + "FOREIGN KEY (" + PAYMENT_METHOD_COLUMN_CASHOR_ID + ") REFERENCES "
             + TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
@@ -1076,6 +1079,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
         return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
+    public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(SETTLEMENT_PAYMENT_NAME, paymentName);
+        values.put(SETTLEMENT_AMOUNT, settlementAmount);
+        values.put(SETTLEMENT_INVOICE_ID  , SettlementId);
+
+        // Insert the values into the table
+        long newRowId = db.insert(INVOICE_SETTLEMENT_TABLE_NAME, null, values);
+
+        // Close the database connection
+        db.close();
+
+        // Return true if the row was inserted successfully, false otherwise
+        return newRowId != -1;
+    }
+
+
+
 }
 
 

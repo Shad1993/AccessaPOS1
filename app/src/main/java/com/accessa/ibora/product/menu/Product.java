@@ -145,6 +145,7 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
+
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {

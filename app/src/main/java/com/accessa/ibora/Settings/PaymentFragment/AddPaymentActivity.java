@@ -10,14 +10,17 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.bumptech.glide.Glide;
@@ -32,7 +35,8 @@ public class AddPaymentActivity extends Activity {
     private EditText LastModified_Edittext;
     private EditText Userid_Edittext;
     private EditText icon_Edittext;
-
+    private SwitchCompat Draweropen;
+    private boolean isDrawerOpen;
     private String cashorId;
     private String cashorName;
     private SharedPreferences sharedPreferences;
@@ -54,12 +58,31 @@ public class AddPaymentActivity extends Activity {
 
 
 
-        setContentView(R.layout.add_qr_activity);
+        setContentView(R.layout.add_payment_activity);
 
         methodName_Edittext = findViewById(R.id.qrName_edittext);
         LastModified_Edittext = findViewById(R.id.LastModified_edittext);
         Userid_Edittext = findViewById(R.id.userid_edittext);
        icon_Edittext = findViewById(R.id.deptcode_edittext);
+        Draweropen = findViewById(R.id.draweropener);
+
+
+
+
+        Draweropen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isDrawerOpen = isChecked;
+
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(AddPaymentActivity.this, R.string.draweropenrmsg, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(AddPaymentActivity.this, R.string.drawernotopen, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         // Add Record
         Button addButton = findViewById(R.id.add_record);
@@ -83,6 +106,7 @@ public class AddPaymentActivity extends Activity {
         String DateCreated = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
         String Icon = icon_Edittext.getText().toString().trim();
+        String DrawerValue = String.valueOf(isDrawerOpen);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         // Check if all required fields are filled
         if (MethodName.isEmpty() ||  Icon.isEmpty()
@@ -198,7 +222,7 @@ public class AddPaymentActivity extends Activity {
         }
 
 
-        dbManager.insertPaymentMethod(MethodName,DateCreated, LastModified, UserId, Icon);
+        dbManager.insertPaymentMethod(MethodName,DateCreated, LastModified, UserId, Icon,DrawerValue);
         dbManager.close();
 
         // Clear the input
