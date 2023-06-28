@@ -2,12 +2,14 @@ package com.accessa.ibora.Settings.PaymentFragment;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
@@ -27,7 +29,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView nameTextView;
-        public TextView idTextView,iconTextView;
+        public TextView idTextView,iconTextView,Opens;
 
 
         public ItemViewHolder(View itemView) {
@@ -35,6 +37,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             iconTextView= itemView.findViewById(R.id.icon_text_view);
+            Opens = itemView.findViewById(R.id.Available_text_view);
 
         }
     }
@@ -58,7 +61,27 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_ID));
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME));
         String icon = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON));
+        String Draweropens = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.OpenDrawer));
+        if (Draweropens.equals("true")) {
+            holder.Opens.setText( mContext.getResources().getString(R.string.DrawerOpens));
+            holder.Opens.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText)); // Set text color
 
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.check); // Replace with your drawable resource
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2); // Adjust the size by dividing the width and height by the desired scale factor
+            }
+
+
+            holder.Opens.setCompoundDrawables(null, null, drawable, null); // Set the scaled drawable
+        } else {
+            holder.Opens.setText( mContext.getResources().getString(R.string.DrawerNotOpens));
+
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.cancel); // Replace with your drawable resource
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2); // Adjust the size by dividing the width and height by the desired scale factor
+            }
+            holder.Opens.setCompoundDrawables(null, null, drawable, null); // Set the scaled drawable
+        }
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.iconTextView.setText(icon);

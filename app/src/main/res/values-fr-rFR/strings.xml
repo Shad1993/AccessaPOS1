@@ -374,6 +374,11 @@
     <string name="draweropenrmsg">Drawer will open if this payment method is called</string>
     <string name="drawernotopen">Drawer will not open if this payment method is called</string>
     <string name="paymentnameexists">Payment name Already exists</string>
+    <string name="drawerindication">Drawer will open if used</string>
+    <string name="DrawerOpens">Drawer Opens</string>
+    <string name="DrawerNotOpens">Drawer Stay closed</string>
+    <string name="Report">Report</string>
+    <string name="Notallowed">You are not allowed to perform this action</string>
 
 
 </resources>

@@ -23,4 +23,8 @@
         android:id="@+id/open_drawer"
         android:title="@string/OpenDrawer" />
 
+    <item
+        android:id="@+id/Report"
+        android:title="@string/Report" />
+
 </menu>

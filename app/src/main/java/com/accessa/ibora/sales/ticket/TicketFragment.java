@@ -43,9 +43,10 @@ import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.SplashActivity;
+
+import com.accessa.ibora.printer.BluetoothPrinterActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
-import com.accessa.ibora.sales.ticket.Checkout.CheckoutGridAdapter;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
@@ -57,7 +58,7 @@ public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickL
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
 
-    private String cashierId;
+    private String cashierId,cashierLevel;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
@@ -128,13 +129,32 @@ private TextView textViewVATs,textViewTotals;
                clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
             return true;
         }else if
-        (id == R.id.open_drawer) {
-
-            try {
-                woyouService.openDrawer(null);
-            } catch (RemoteException e) {
-                throw new RuntimeException(e);
+        (id == R.id.open_drawer ) {
+            int level= Integer.parseInt(cashierLevel);
+            if(level == 7){
+                try {
+                    woyouService.openDrawer(null);
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
+        }else {
+                Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
             }
+            return true;
+        }else if
+        (id == R.id.Report) {
+            int level= Integer.parseInt(cashierLevel);
+            if(level == 7){
+                Context context = getContext(); // Get the Context object
+                if (context != null) {
+                    Intent intent = new Intent(context, BluetoothPrinterActivity.class);
+                    startActivity(intent);
+                }
+                //Toast.makeText(getContext(), "Report soon comming", Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+            }
+
             return true;
         }
         // Handle other menu items as needed
@@ -196,6 +216,7 @@ private TextView textViewVATs,textViewTotals;
 
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
+        cashierLevel = sharedPreference.getString("cashorlevel", null);
 
 
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
@@ -425,13 +446,13 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
         } else {
             // Failed to save transaction header, handle the error
-
             Intent splashIntent = new Intent(getActivity(), SplashActivity.class);
             Intent mainIntent = new Intent(getActivity(), MainActivity.class);
             mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
             startActivity(splashIntent);
             startActivity(mainIntent);
+
         }
 
 

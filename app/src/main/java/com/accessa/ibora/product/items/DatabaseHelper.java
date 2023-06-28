@@ -1097,7 +1097,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public Cursor getDistinctDrawerconfig(String paymentName) {
 
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String[] columns = {DatabaseHelper.OpenDrawer};
+        String selection = DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME + " = ?";
+        String[] selectionArgs = {paymentName};
+        String orderBy = DatabaseHelper.OpenDrawer + " ASC";
+
+        return db.query(true, DatabaseHelper.PAYMENT_METHOD_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.OpenDrawer, null, orderBy, null);
+    }
 }
 
 

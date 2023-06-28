@@ -377,6 +377,42 @@ public class printerSetup extends AppCompatActivity {
                         // Print  date and time
                         service.printText(DateTimeIdLine + "\n\n", null);
 
+
+                        if (settlementItems != null) {
+                            // Use the settlementItems as needed
+                            // You can iterate over the list and access the payment name and settlement amount for each item
+                            for (SettlementItem items : settlementItems) {
+
+                                paymentName = items.getPaymentName();
+                                // Query the transaction table to get distinct VAT types
+                                Cursor DrawerCursor = mDatabaseHelper.getDistinctDrawerconfig(paymentName);
+                                if (DrawerCursor != null && DrawerCursor.moveToFirst()) {
+                                    StringBuilder vatTypesBuilder = new StringBuilder();
+                                    do {
+                                        int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
+                                        String vatType = DrawerCursor.getString(columnIndexDrawer);
+                                        if (cashReturn > 0 || "true".equals(vatType)) {
+                                            service.openDrawer(null);
+                                        }
+                                        vatTypesBuilder.append(vatType).append(", ");
+                                    } while (DrawerCursor.moveToNext());
+                                    DrawerCursor.close();
+
+                                    // Remove the trailing comma and space
+                                    String Drawer = vatTypesBuilder.toString().trim();
+
+
+
+
+
+
+                                }
+
+                            }
+                        }
+
+
+
                         // Cut the paper
                         service.cutPaper(null);
 
@@ -384,10 +420,13 @@ public class printerSetup extends AppCompatActivity {
                         byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
                         service.sendRAWData(openDrawerBytes, null);
                         // Open the cash drawer
-                        if(paymentName == "Cash") {
+
+                        if(cashReturn > 0) {
                             service.openDrawer(null);
 
                         }
+
+
 
                         // Update the transaction status for all in-progress transactions to "Completed"
                         mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);

@@ -118,7 +118,18 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             displayOnLCD();
         }
     };
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Check if the selected menu item belongs to the TicketFragment
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.right_container);
+        if (currentFragment instanceof TicketFragment) {
+            TicketFragment ticketFragment = (TicketFragment) currentFragment;
+            return ticketFragment.onOptionsItemSelected(item);
+        }
 
+        // Handle other menu items as needed
+        return super.onOptionsItemSelected(item);
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.navigation_menu, menu);
@@ -412,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
                 String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
                 String formattedTotalAmount = String.format("%.2f", totalAmount);
 
-                woyouService.sendLCDDoubleString("Total: Rs1" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
+                woyouService.sendLCDDoubleString("Total: Rs" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
