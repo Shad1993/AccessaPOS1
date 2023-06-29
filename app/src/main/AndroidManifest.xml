@@ -6,7 +6,7 @@
         android:name="android.hardware.camera"
         android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" />
-
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -85,8 +85,12 @@
         <activity android:name=".Settings.QRMethods.ModifyQRActivity"/>
         <activity android:name=".Settings.PaymentFragment.AddPaymentActivity"/>
         <activity android:name=".Settings.PaymentFragment.ModifypaymentActivity"/>
-        <activity android:name=".printer.cloudPrinter"/>
-        <activity android:name=".printer.BluetoothPrinterActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.CloudPrinterActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.SearchActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.WifiConfigActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.WifiSelectActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.PrinterSelectActivity"/>
+        <activity android:name=".printer.cloudPrinter.bluetoothPrinter"/>
 
     </application>
 

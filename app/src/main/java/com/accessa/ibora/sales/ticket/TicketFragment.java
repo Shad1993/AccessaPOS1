@@ -44,7 +44,8 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.SplashActivity;
 
-import com.accessa.ibora.printer.BluetoothPrinterActivity;
+import com.accessa.ibora.printer.cloudPrinter.bluetoothPrinter;
+import com.accessa.ibora.printer.externalprinterlibrary2.CloudPrinterActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
@@ -147,7 +148,7 @@ private TextView textViewVATs,textViewTotals;
             if(level == 7){
                 Context context = getContext(); // Get the Context object
                 if (context != null) {
-                    Intent intent = new Intent(context, BluetoothPrinterActivity.class);
+                    Intent intent = new Intent(context, bluetoothPrinter.class);
                     startActivity(intent);
                 }
                 //Toast.makeText(getContext(), "Report soon comming", Toast.LENGTH_SHORT).show();
