@@ -169,33 +169,6 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
 
-        // Check if the permission is granted
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            // Permission has not been granted, request it
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-            startActivityForResult(intent, SYSTEM_ALERT_WINDOW_PERMISSION_REQUEST_CODE);
-        } else {
-            DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
-            Display[] displays = displayManager.getDisplays();
-
-            // Display the custom presentation on the second screen
-            if (displays.length > 1) {
-                Display secondScreen = displays[1]; // Assuming the second screen is at index 1
-
-                customPresentation = new TextDisplay(this, secondScreen);
-
-                // Update the window type to allow overlay on the second screen
-                WindowManager.LayoutParams params = customPresentation.getWindow().getAttributes();
-                params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-                customPresentation.getWindow().setAttributes(params);
-
-                customPresentation.show();
-        }
-
-
-        }
-
-
 
         String transactionId;
         String transactionStatus = "Started";

@@ -72,7 +72,7 @@ public class PrinterSelectActivity extends AppCompatActivity implements PrinterL
     @Override
     protected void onStop() {
         super.onStop();
-        stopSearch();
+       stopSearch();
     }
 
     private void initSearch() {

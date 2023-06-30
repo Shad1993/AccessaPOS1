@@ -81,7 +81,7 @@ public class bluetoothPrinter extends AppCompatActivity implements ResultCallbac
             if(result != null) {
                 tv.setText(result.getCloudPrinterInfo().toString());
                 cloudPrinter = result;
-                printSample(view);
+                connect(view);
             }
         });
 
@@ -91,8 +91,9 @@ public class bluetoothPrinter extends AppCompatActivity implements ResultCallbac
     }
     public void connect(View view) {
         if(cloudPrinter != null) {
-
+            cloudPrinter.printText("before Success ****");
             cloudPrinter.connect(this, new ConnectCallback() {
+
                 @Override
                 public void onConnect() {
 
@@ -111,15 +112,15 @@ public class bluetoothPrinter extends AppCompatActivity implements ResultCallbac
                     runOnUiThread(() -> {
 
                         Toast.makeText(bluetoothPrinter.this, s, Toast.LENGTH_LONG).show();
-                        cloudPrinter.printText("Failed ****");
-                        printSample(view);
+
                     });
 
                 }
 
                 @Override
                 public void onDisConnect() {
-
+                    cloudPrinter.printText("On disconnect ****");
+                    printSample(view); // Call printSample() method here
                 }
             });
 
@@ -202,6 +203,7 @@ public class bluetoothPrinter extends AppCompatActivity implements ResultCallbac
     public void onFailed(CloudPrinterStatus cloudPrinterStatus) {
         runOnUiThread(() -> {
             Toast.makeText(bluetoothPrinter.this, String.format(getString(R.string.toast_print_failed), cloudPrinterStatus.name()), Toast.LENGTH_LONG).show();
+            cloudPrinter.printText("--------------------------------");
         });
     }
 
