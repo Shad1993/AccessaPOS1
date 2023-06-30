@@ -22,10 +22,15 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
 
     private Context mContext;
     private Cursor mCursor;
+    private List<String> data;
 
     public TicketAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
+    }
+
+    public void setData(List<String> newData) {
+        data = newData;
     }
 
     public List<Transaction> getData() {

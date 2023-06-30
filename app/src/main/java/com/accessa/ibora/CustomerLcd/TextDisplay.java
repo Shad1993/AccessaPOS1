@@ -47,4 +47,8 @@ public class TextDisplay extends Presentation {
         }
         return null;
     }
+
+
+    public void updateText(String content) {
+    }
 }

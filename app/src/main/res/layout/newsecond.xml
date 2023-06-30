@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="sunmi_test"
+        />
+
+
+
+    <Button
+        android:id="@+id/btn_open_vice_app"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="open_vice_app"/>
+
+    <Button
+        android:id="@+id/btn_show_picture"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="show_single_picture"/>
+
+    <Button
+        android:id="@+id/btn_play_video"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="btn_play_video"/>
+
+    <Button
+        android:id="@+id/btn_play_videos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="btn_play_videos"/>
+
+    <Button
+        android:id="@+id/btn_show_imgs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="btn_show_imgs"/>
+
+    <Button
+        android:id="@+id/btn_show_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:gravity="center"
+        android:text="send_text"/>
+
+    <Button
+        android:id="@+id/btn_clean_cache"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:text="clean_vice_cache"/>
+
+    <Button
+        android:id="@+id/btn_getfilecachesize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_default_small"
+        android:text="get_vice_cahceSize"/>
+
+</LinearLayout>

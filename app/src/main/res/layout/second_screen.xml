@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btn_welcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="@string/welcome"/>
+
+        <Button
+            android:id="@+id/btn_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="welcome"/>
+
+        <Button
+            android:id="@+id/btn_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="menu"/>
+
+        <Button
+            android:id="@+id/btn_wxpay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="WX_pay"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:onClick="test"
+            android:text="to_sunmi_dsc14"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/btn_open_mydsd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="o_mydsd"/>
+
+        <Button
+            android:id="@+id/btn_menu_ppt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="menu_ppt"/>
+
+        <Button
+            android:id="@+id/btn_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:visibility="gone"
+            android:text="getphoto"/>
+
+        <Button
+            android:id="@+id/btn_send_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="send_videos"/>
+
+        <Button
+            android:id="@+id/btn_menu_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="menu_videos"/>
+
+        <Button
+            android:id="@+id/btn_getfilecachesize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="GetViceFileCacheSize"/>
+
+        <Button
+            android:id="@+id/btn_clear_vice_cachefile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="clear_vice_cachefile"/>
+
+        <Button
+            android:id="@+id/btn_play_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="paly_video"/>
+
+        <Button
+            android:id="@+id/btn_get_sub_resolution_ratio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="acquire_sub_resolution_ratio"/>
+
+        <Button
+            android:id="@+id/btn_get_sub_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="get_sub_model"/>
+
+        <Button
+            android:id="@+id/btn_read_sub_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="read_sub_model"/>
+
+
+        <Button
+            android:id="@+id/btn_play_video_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="play_video_menu"/>
+
+        <Button
+            android:id="@+id/btn_show_imgs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="show_imgs"/>
+
+        <Button
+            android:id="@+id/btn_clear_fileid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="clear_fileid"/>
+
+
+        <Button
+            android:id="@+id/btn_open_vice_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_default_small"
+            android:text="pen_vice_setting"/>
+
+    </LinearLayout>
+</ScrollView>

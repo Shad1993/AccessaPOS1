@@ -174,4 +174,6 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
         displayQROnLCD(QR, name);
 
     }
+
+
 }

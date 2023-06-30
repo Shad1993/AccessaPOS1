@@ -14,9 +14,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.net.Uri;
+import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -25,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,8 +44,8 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
-import com.accessa.ibora.QR.QRActivity;
 import com.accessa.ibora.QR.QRFragment;
+import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
@@ -53,6 +55,7 @@ import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
+import com.alibaba.fastjson.JSONObject;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.zxing.BarcodeFormat;
@@ -62,19 +65,20 @@ import com.google.zxing.qrcode.QRCodeWriter;
 
 import android.hardware.display.DisplayManager;
 import android.view.Display;
+import android.widget.VideoView;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
-import nl.dionsegijn.konfetti.KonfettiView;
-import nl.dionsegijn.konfetti.models.Shape;
-import nl.dionsegijn.konfetti.models.Size;
+import sunmi.ds.DSKernel;
+import sunmi.ds.data.DataPacket;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class MainActivity extends AppCompatActivity implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener {
+public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener {
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
+
     private TextView name;
     private TextView CashorId;
     private ItemAdapter mAdapter;
@@ -149,9 +153,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_main);
 
-
-
-
+        showSecondaryScreen();
 
         Intent intent1 = new Intent();
         intent1.setPackage("woyou.aidlservice.jiuiv5");
@@ -268,6 +270,55 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
             }
         });
     }
+
+    private void showSecondaryScreen() {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
+
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(this, presentationDisplay);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+
+            // Update the content displayed on the secondary screen
+            // Example: Displaying an image
+            //ImageView imageView = secondaryDisplay.findViewById(R.id.presentation_image);
+            // imageView.setVisibility(View.VISIBLE);
+          //   imageView.setImageResource(R.drawable.accessalogo); // Replace with the actual image resource
+
+            // Example: Displaying a video
+            VideoView videoView = secondaryDisplay.findViewById(R.id.presentation_video);
+            videoView.setVisibility(View.VISIBLE);
+            String videoPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/welcome.mp4";
+            videoView.setVideoPath(videoPath);
+            videoView.start();
+
+            // Example: Displaying text
+            TextView textView = secondaryDisplay.findViewById(R.id.presentation_text);
+            textView.setVisibility(View.VISIBLE);
+            String text = "Welcome !";
+            textView.setText(text);
+        } else {
+            // Secondary screen not found or not supported
+            Toast.makeText(this, "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Display getPresentationDisplay() {
+        DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        for (Display display : displays) {
+            if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                return display;
+            }
+        }
+        return null;
+    }
+
     public static MainActivity getInstance() {
         return instance;
     }
@@ -351,6 +402,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         fragmentTransaction.commit();
     }
+
 
     private String generateNewTransactionId() {
         // Implement your logic to generate a unique transaction ID
@@ -506,6 +558,7 @@ public class MainActivity extends AppCompatActivity implements SalesFragment.Ite
         }
 
     }
+
 
     public  void onTransationCompleted() {
 

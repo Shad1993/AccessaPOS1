@@ -10,8 +10,10 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.ServiceConnection;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.view.Display;
 import android.view.Menu;
 import android.content.Context;
 import android.content.Intent;
@@ -41,6 +43,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.SplashActivity;
 
@@ -51,6 +54,7 @@ import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
+import java.util.List;
 import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
@@ -147,11 +151,7 @@ private TextView textViewVATs,textViewTotals;
             int level= Integer.parseInt(cashierLevel);
             if(level == 7){
                 Context context = getContext(); // Get the Context object
-                if (context != null) {
-                    Intent intent = new Intent(context, bluetoothPrinter.class);
-                    startActivity(intent);
-                }
-                //Toast.makeText(getContext(), "Report soon comming", Toast.LENGTH_SHORT).show();
+
             }else {
                 Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
             }
@@ -370,6 +370,39 @@ private TextView textViewVATs,textViewTotals;
 
         generateNewTransactionId();
     }
+
+    private void showSecondaryScreen(List<String> data) {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
+
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+
+            // Update the RecyclerView data on the secondary screen
+            secondaryDisplay.updateRecyclerViewData(data);
+        } else {
+            // Secondary screen not found or not supported
+            Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Display getPresentationDisplay() {
+        DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        for (Display display : displays) {
+            if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                return display;
+            }
+        }
+        return null;
+    }
+
     public void displayOnLCD() {
         if (woyouService == null) {
             Toast.makeText(requireContext(), "Service not ready", Toast.LENGTH_SHORT).show();
