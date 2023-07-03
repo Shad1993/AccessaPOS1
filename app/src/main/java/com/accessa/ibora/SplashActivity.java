@@ -101,24 +101,9 @@ public class SplashActivity extends Activity {
             // Show the secondary display
             secondaryDisplay.show();
 
-            // Update the content displayed on the secondary screen
-            // Example: Displaying an image
-         //   ImageView imageView = secondaryDisplay.findViewById(R.id.presentation_image);
-           // imageView.setVisibility(View.VISIBLE);
-          //  imageView.setImageResource(R.drawable.iboralogo); // Replace with the actual image resource
+            // Update the RecyclerView data on the secondary screen
+            secondaryDisplay.displaylogo();
 
-            // Example: Displaying a video
-            VideoView videoView = secondaryDisplay.findViewById(R.id.presentation_video);
-            videoView.setVisibility(View.VISIBLE);
-            String videoPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/welcome.mp4";
-            videoView.setVideoPath(videoPath);
-            videoView.start();
-
-            // Example: Displaying text
-            TextView textView = secondaryDisplay.findViewById(R.id.presentation_text);
-            textView.setVisibility(View.VISIBLE);
-            String text = "Welcome !";
-            textView.setText(text);
         } else {
             // Secondary screen not found or not supported
             Toast.makeText(this, "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();

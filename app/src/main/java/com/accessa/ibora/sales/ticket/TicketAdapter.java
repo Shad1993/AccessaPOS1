@@ -32,7 +32,10 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
     public void setData(List<String> newData) {
         data = newData;
     }
-
+    public void updateData(List<String> newData) {
+        this.data = newData;
+        notifyDataSetChanged();
+    }
     public List<Transaction> getData() {
         List<Transaction> transactionList = new ArrayList<>();
 

@@ -1,19 +1,26 @@
 package com.accessa.ibora;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Admin.RegistorCashor;
+import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
+import java.util.List;
 import java.util.Locale;
 
 public class SelectLanguage extends AppCompatActivity {
@@ -27,7 +34,7 @@ private DatabaseHelper mDatabaseHelper;
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.selectlanguage);
 
-
+        showSecondaryScreen();
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
         database = mDatabaseHelper.getReadableDatabase();
@@ -81,7 +88,37 @@ private DatabaseHelper mDatabaseHelper;
             startActivity(intent);
         }
     }
+    private void showSecondaryScreen() {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
 
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(this, presentationDisplay);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+
+            // Update the RecyclerView data on the secondary screen
+            secondaryDisplay.displaydefault();
+        } else {
+            // Secondary screen not found or not supported
+            Toast.makeText(this, "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Display getPresentationDisplay() {
+        DisplayManager displayManager = (DisplayManager) this.getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        for (Display display : displays) {
+            if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                return display;
+            }
+        }
+        return null;
+    }
     public void CheckTableCompany(){
         // Check if "Company" table is not empty
         boolean isUserTableEmpty = mDatabaseHelper.isCompanyTableEmpty();

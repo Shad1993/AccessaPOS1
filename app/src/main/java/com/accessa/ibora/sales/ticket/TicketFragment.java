@@ -44,6 +44,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.SplashActivity;
 
@@ -75,6 +76,7 @@ private TextView textViewVATs,textViewTotals;
     private IWoyouService woyouService;
     private Toolbar toolbar;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
+     private  List<String> data ;
     private ServiceConnection connService = new ServiceConnection() {
 
         @Override
@@ -94,7 +96,7 @@ private TextView textViewVATs,textViewTotals;
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        showSecondaryScreen(data);
     }
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -338,6 +340,7 @@ private TextView textViewVATs,textViewTotals;
         refreshData(totalAmount, TaxtotalAmount);
 
 
+
     }
     public void clearTransact(){
         // Create an instance of the DatabaseHelper class
@@ -364,6 +367,8 @@ private TextView textViewVATs,textViewTotals;
            refreshData(calculateTotalAmount(), calculateTotalTax());
            updateheader(calculateTotalAmount(), calculateTotalTax());
               displayOnLCD();
+              showSecondaryScreen(data);
+
 
 
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
@@ -371,13 +376,14 @@ private TextView textViewVATs,textViewTotals;
         generateNewTransactionId();
     }
 
+
     private void showSecondaryScreen(List<String> data) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
 
         if (presentationDisplay != null) {
             // Create an instance of SeconScreenDisplay using the obtained display
-            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
+            TransactionDisplay secondaryDisplay = new TransactionDisplay(getActivity(), presentationDisplay);
 
             // Show the secondary display
             secondaryDisplay.show();
@@ -461,8 +467,6 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         // Get the total quantity of items in the transaction
         int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
 
-    Toast.makeText(getContext(), "id " + " " + quantityItem, Toast.LENGTH_SHORT).show();
-
         // Save the transaction details in the TRANSACTION_HEADER table
         boolean success = mDatabaseHelper.updateTransactionHeader(
                 transactionIdInProgress,
@@ -477,7 +481,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         );
 
         if (success) {
-
+            showSecondaryScreen(data);
         } else {
             // Failed to save transaction header, handle the error
             Intent splashIntent = new Intent(getActivity(), SplashActivity.class);

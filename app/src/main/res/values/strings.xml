@@ -429,6 +429,7 @@
     <string name="toast_select_printer">Please select the device through the Bluetooth network first!</string>
     <string name="toast_wifi_ok">Setting succeeded</string>
     <string name="toast_password_error">The device failed to connect to Wi Fi. Please confirm your password and try again.</string>
+    <string name="Thanks">Thank you for Your Trust.</string>
 
 
 </resources>

@@ -9,6 +9,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -23,6 +26,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class SeconScreenDisplay extends Presentation {
     private TextView textView;
     private ImageView imageView;
@@ -30,6 +35,7 @@ public class SeconScreenDisplay extends Presentation {
     private DatabaseHelper mDatabaseHelper;
     private RecyclerView recyclerView;
     private TicketAdapter adapter;
+    private FrameLayout QRFrameLayout,Splashlayout;
     public SeconScreenDisplay(Context context, Display display) {
         super(context, display);
     }
@@ -45,11 +51,7 @@ public class SeconScreenDisplay extends Presentation {
         imageView = findViewById(R.id.presentation_image);
         videoView = findViewById(R.id.presentation_video);
 
-        recyclerView = findViewById(R.id.recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
-        adapter= new TicketAdapter(getContext(), cursor1);
-        recyclerView.setAdapter(adapter);
+
     }
 
     public void updateContent(String content) {
@@ -63,10 +65,7 @@ public class SeconScreenDisplay extends Presentation {
         }
     }
     // Update the RecyclerView data
-    public void updateRecyclerViewData(List<String> newData) {
-        adapter.setData(newData);
-        adapter.notifyDataSetChanged();
-    }
+
     private boolean isImageContent(String content) {
         // Implement your logic to determine if the content is an image
         // Return true if it is an image, false otherwise
@@ -78,10 +77,20 @@ public class SeconScreenDisplay extends Presentation {
         // Return true if it is a video, false otherwise
         return true;
     }
-    public void updateTextAndQRCode(String text, Bitmap qrCode) {
+    public void updateTextAndQRCode(String text, Bitmap qrCode,String formattedTaxAmount, String formattedTotalAmount) {
+        QRFrameLayout = findViewById(R.id.qr_frame_layout);
+
+            QRFrameLayout.setVisibility(View.VISIBLE);
+
+
+
         // Update the text displayed on the secondary screen
         TextView textView = findViewById(R.id.text_view);
+        TextView TotaltextView = findViewById(R.id.Total_text_view);
+        TextView TaxtextView = findViewById(R.id.Tax_text_view);
         textView.setText(text);
+        TotaltextView.setText(getContext().getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+        TaxtextView.setText (getContext().getString(R.string.tax) + ": Rs " + formattedTaxAmount);
 
         // Update the QR code displayed on the secondary screen
         ImageView qrCodeImageView = findViewById(R.id.qr_code_image_view);
@@ -97,7 +106,48 @@ public class SeconScreenDisplay extends Presentation {
         imageView.setVisibility(View.GONE);
         videoView.setVisibility(View.GONE);
     }
+    public void displaylogo() {
+        Splashlayout = findViewById(R.id.splash_frame_layout);
 
+        Splashlayout.setVisibility(View.VISIBLE);
+// Get references to the logo ImageView and text TextView
+        CircleImageView logoImageView = findViewById(R.id.logo_image_view);
+        TextView welcomeTextView = findViewById(R.id.welcome_text_view);
+
+// Create animations
+        Animation logoAnimation = new TranslateAnimation(-200, 0, 0, 0); // Move logo from left (-200px) to center (0px)
+        logoAnimation.setDuration(1000); // Animation duration in milliseconds
+
+        Animation textAnimation = new TranslateAnimation(200, 0, 0, 0); // Move text from right (200px) to center (0px)
+        textAnimation.setDuration(1000); // Animation duration in milliseconds
+
+// Apply animations to views
+        logoImageView.startAnimation(logoAnimation);
+        welcomeTextView.startAnimation(textAnimation);
+
+    }
+
+
+    public void displaydefault() {
+        Splashlayout = findViewById(R.id.default_frame_layout);
+
+        Splashlayout.setVisibility(View.VISIBLE);
+// Get references to the logo ImageView and text TextView
+        CircleImageView logoImageView = findViewById(R.id.logo_image_view);
+        TextView welcomeTextView = findViewById(R.id.welcome_text_view);
+
+// Create animations
+        Animation logoAnimation = new TranslateAnimation(-200, 0, 0, 0); // Move logo from left (-200px) to center (0px)
+        logoAnimation.setDuration(1000); // Animation duration in milliseconds
+
+        Animation textAnimation = new TranslateAnimation(200, 0, 0, 0); // Move text from right (200px) to center (0px)
+        textAnimation.setDuration(1000); // Animation duration in milliseconds
+
+// Apply animations to views
+        logoImageView.startAnimation(logoAnimation);
+        welcomeTextView.startAnimation(textAnimation);
+
+    }
     private void displayImage(String imageUrl) {
         // Display the image content
         if (imageView != null) {
@@ -125,4 +175,6 @@ public class SeconScreenDisplay extends Presentation {
         textView.setVisibility(View.GONE);
         imageView.setVisibility(View.GONE);
     }
+
+
 }

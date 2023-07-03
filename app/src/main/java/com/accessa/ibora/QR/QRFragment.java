@@ -132,21 +132,33 @@ public class QRFragment extends Fragment {
     private void showSecondaryScreen(String name, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
-
+        String formattedTaxAmount = null,formattedTotalAmount = null;
         if (presentationDisplay != null) {
             // Create an instance of SeconScreenDisplay using the obtained display
             SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
 
             // Show the secondary display
             secondaryDisplay.show();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
 
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                 formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                 formattedTotalAmount = String.format("%.2f", totalAmount);
+
+
+            }
             // Get the selected item from the RecyclerView
             String selectedName = name;
             String selectedQR = QR;
             // Convert the QR code string to a Bitmap
             Bitmap qrBitmap = generateQRCodeBitmap(selectedQR);
             // Update the text and QR code on the secondary screen
-            secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap);
+            secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap,formattedTaxAmount,formattedTotalAmount);
         } else {
             // Secondary screen not found or not supported
             Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
