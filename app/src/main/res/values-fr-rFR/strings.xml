@@ -425,6 +425,7 @@
     <string name="toast_wifi_ok">Configuration réussie</string>
     <string name="toast_password_error">L\'appareil n\'a pas pu se connecter au Wi-Fi. Veuillez confirmer votre mot de passe et réessayer.</string>
     <string name="Thanks">Merci de votre confiance.</string>
+    <string name="newtransaction">New Transaction Loading</string>
 
 
 </resources>

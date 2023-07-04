@@ -1,298 +1,362 @@
 package com.accessa.ibora.Admin.CompanyInfo;
 
+import static android.app.Activity.RESULT_OK;
+import static com.accessa.ibora.sales.Sales.ItemGridAdapter.PERMISSION_REQUEST_CODE;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.company.Company;
+import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.items.ModifyItemActivity;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class CompanyInfoFragment extends Fragment {
-private  EditText searchEditText;
-    FloatingActionButton mAddFab;
-    private SearchView mSearchView;
-    private DBManager dbManager;
-    private ItemAdapter mAdapter;
-    private RecyclerView mRecyclerView;
-    private SimpleCursorAdapter adapter;
-    private Spinner spinner;
-    private ImageView arrow;
+
+    private EditText Abv, StockNo, PriceNo, DefSupplierCode, VATNo, BRNNo, ADR1, ADR2, ADR3, TelNo, FaxNo, CompanyName, cashior, date, lastmodified;
     private DatabaseHelper mDatabaseHelper;
-
-    final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
-    final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
-
+    private DBManager dbManager;
+    private SharedPreferences sharedPreferences;
+    private SQLiteDatabase database;
+    private String cashorId,cashiername,cashierlevel,cashorName;
+    private Button buttonUpdate;
+    private Button buttonDelete;
+    private String imagePath;
+    private String ImageLink;
+    private  ImageView imageView;
+    private View view; // Variable to store the inflated fragment view
+    private static final int REQUEST_IMAGE_GALLERY = 1;
     // onCreate
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setHasOptionsMenu(true);
+
     }
 
     // onCreateView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_first, container, false);
-        // Get the current locale
+        view = inflater.inflate(R.layout.edit_company_info, container, false);
+        Abv = view.findViewById(R.id.editAbbrev);
+        StockNo = view.findViewById(R.id.textNoStock);
+        PriceNo = view.findViewById(R.id.editNoPrices);
+        DefSupplierCode = view.findViewById(R.id.editDefSupplierCode);
+        VATNo = view.findViewById(R.id.editVATNo);
+        BRNNo = view.findViewById(R.id.editBRNNo);
+        ADR1 = view.findViewById(R.id.editADR1);
+        ADR2 = view.findViewById(R.id.editADR2);
+        ADR3 = view.findViewById(R.id.editADR3);
+        TelNo = view.findViewById(R.id.editTelNo);
+        FaxNo = view.findViewById(R.id.editFaxNo);
+        CompanyName = view.findViewById(R.id.editCompanyName);
+        cashior = view.findViewById(R.id.editCahiorNameid);
+        lastmodified = view.findViewById(R.id.lastmod);
+         imageView = view.findViewById(R.id.image_view);
 
-        // Spinner
-        spinner = view.findViewById(R.id.spinner);
+        sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        //arrow
-        arrow=view.findViewById(R.id.spinner_icon);
-        // Retrieve the items from the database
-        mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor = mDatabaseHelper.getAllItems();
-
-        List<String> items = new ArrayList<>();
-        items.add(String.valueOf(getString(R.string.AllItems)));
-        if (cursor.moveToFirst()) {
-            do {
-                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
-                items.add(item);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-
-        // Create an ArrayAdapter for the spinner with the custom layout
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(requireContext(), 0, items) {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_item, parent, false);
-                }
-
-                TextView textView = convertView.findViewById(android.R.id.text1);
-                textView.setTextColor(getResources().getColor(R.color.white));
+         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashierlevel= sharedPreferences.getString("cashorlevel", null);
 
 
 
-                // Set the text for the selected item
-                textView.setText(getItem(position));
-
-                return convertView;
-            }
-
-
-
-            @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-                }
-
-                TextView textView = convertView.findViewById(android.R.id.text1);
-                textView.setTextColor(getResources().getColor(R.color.white));
-
-                // Set the icon for the item
-                ImageView iconImageView = convertView.findViewById(android.R.id.icon);
-
-
-                // Set the text for the item
-                textView.setText(getItem(position));
-
-                return convertView;
-            }
-        };
-
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Initialize the spinner and set the adapter
-        spinner.setAdapter(spinnerAdapter);
-
-
-        // Set a listener for item selection
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedItem = (String) parent.getItemAtPosition(position);
-                // Handle the selected item here
-                filterRecyclerView(selectedItem);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Handle the case when nothing is selected
-                filterRecyclerView(null); // Remove any applied filter
-            }
-        });
-        arrow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                spinner.performClick(); // Programmatically open the dropdown list
-
-            }
-        });
-        // RecyclerView
-        mRecyclerView = view.findViewById(R.id.recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         mDatabaseHelper = new DatabaseHelper(getContext());
 
-        Cursor itemCursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getActivity(), itemCursor);
-        mRecyclerView.setAdapter(mAdapter);
-        // Empty state
-        AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
-        Glide.with(getContext()).asGif()
-                .load(R.drawable.folderwalk)
-                .into(imageView);
-        FrameLayout emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
-        if (mAdapter.getItemCount() <= 0) {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
-        } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
-        }
 
-        // SearchView
-        mSearchView = view.findViewById(R.id.search_view);
-         searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-        searchEditText.setTextColor(getResources().getColor(android.R.color.white));
-        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchItems(newText);
-                mAdapter.swapCursor(newCursor);
-                if (newText.isEmpty()) {
-
-                    searchEditText.setTextColor(getResources().getColor(android.R.color.white));
-
-                } else {
-
-                    searchEditText.setTextColor(getResources().getColor(R.color.white));
-
-                }
-                return true;
-            }
-        });
-
+        database = mDatabaseHelper.getWritableDatabase();
         dbManager = new DBManager(getContext());
         dbManager.open();
-        Cursor cursor1 = dbManager.fetch();
-        mAddFab = view.findViewById(R.id.add_fab);
 
+        Company company = dbManager.getCompanyInfo();
+        if (company != null) {
+            Abv.setText(company.getAbv());
+            StockNo.setText(company.getStockNo());
+            PriceNo.setText(company.getPriceNo());
+            DefSupplierCode.setText(company.getDefSupplierCode());
+            VATNo.setText(company.getVATNo());
+            BRNNo.setText(company.getBRNNo());
+            ADR1.setText(company.getADR1());
+            ADR2.setText(company.getADR2());
+            ADR3.setText(company.getADR3());
+            TelNo.setText(company.getTelNo());
+            FaxNo.setText(company.getFaxNo());
+            CompanyName.setText(company.getCompanyName());
 
-        adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, froms, tos, 0);
-        adapter.notifyDataSetChanged();
-        // Set item click listener for RecyclerView
-        mRecyclerView.addOnItemTouchListener(
-                new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                        TextView priceTextView = view.findViewById(R.id.price_text_view);
+            ImageLink= company.getImage();
 
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+            Glide.with(this).load(ImageLink).into(imageView);
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
-                        modifyIntent.putExtra("title", title);
-                        modifyIntent.putExtra("desc", longDescription);
-                        modifyIntent.putExtra("id", id);
+        }
+        cashior.setText(String.valueOf(cashorId));
 
-                        startActivity(modifyIntent);
-                    }
-
-                    @Override
-                    public void onLongItemClick(View view, int position) {
-                        // Do whatever you want on long item click
-                    }
-                })
-        );
-
-        mAddFab.setOnClickListener(new View.OnClickListener() {
+        buttonUpdate = view.findViewById(R.id.btn_update);
+        buttonUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                updateCompanyInfo();
+            }
+
+        });
+
+
+        // Image selection button
+        Button imageButton = view.findViewById(R.id.image_button);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openImageOptionsDialog();
             }
         });
 
         return view;
     }
-    // Filter the RecyclerView based on the selected item
-    private void filterRecyclerView(String selectedItem) {
-        Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals(getString(R.string.AllItems))) {
-            filteredCursor = mDatabaseHelper.getAllItems();
+
+
+        private void updateCompanyInfo() {
+            String abv = Abv.getText().toString().trim();
+
+            // Get the current timestamp
+            long currentTimeMillis = System.currentTimeMillis();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+            String stock = StockNo.getText().toString().trim();
+            String lastmodified = dateFormat.format(new Date(currentTimeMillis));
+            String UserId = cashorId;
+            String price = PriceNo.getText().toString().trim();
+            String defSupplierCode = DefSupplierCode.getText().toString().trim();
+            String vatNo = VATNo.getText().toString().trim();
+            String brnNo = BRNNo.getText().toString().trim();
+            String adr1 = ADR1.getText().toString().trim();
+            String adr2 = ADR2.getText().toString().trim();
+            String adr3 = ADR3.getText().toString().trim();
+            String telNo = TelNo.getText().toString().trim();
+            String faxNo = FaxNo.getText().toString().trim();
+            String companyName = CompanyName.getText().toString().trim();
+
+            String image ;
+            if( imagePath== null) {
+                image=  ImageLink;
+
+            } else{
+                image=  imagePath;
+
+            }
+
+            if (abv.isEmpty() || stock.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || price.isEmpty()
+                    || defSupplierCode.isEmpty() || vatNo.isEmpty() || brnNo.isEmpty()
+                    || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty()
+                    || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty()) {
+                Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ContentValues value = new ContentValues();
+            value.put("CompanyName", companyName);
+            // Insert the record into the database
+            DBManager dbManager = new DBManager(getContext());
+            dbManager.open();
+
+
+
+
+        boolean isUpdated = dbManager.updateCompanyInfo( abv,stock, lastmodified, UserId, price,defSupplierCode,vatNo,brnNo,adr1,adr2,adr3,telNo,faxNo,companyName,image);
+            int rowsAffected = database.update("Users", value, null, null);
+            dbManager.close();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("cashorName", cashorName); // Store cashor's name
+            editor.putString("cashorId", cashorId); // Store cashor's ID
+            editor.putString("cashorlevel", cashierlevel); // Store cashor's level
+            editor.putString("CompanyName", companyName); // Store company name
+            editor.apply();
+        returnHome();
+        if (isUpdated) {
+            Toast.makeText(getContext(), getString(R.string.updateDept), Toast.LENGTH_SHORT).show();
+            getActivity().finish();
         } else {
-            filteredCursor = mDatabaseHelper.searchItems(selectedItem);
+            Toast.makeText(getContext(), getString(R.string.failedupdateDept), Toast.LENGTH_SHORT).show();
         }
-        mAdapter.swapCursor(filteredCursor);
+    }
+    private void openImageOptionsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Image Source");
+        builder.setItems(new CharSequence[]{"Web Link", "Device Memory"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // Web Link
+                        openWebImageDialog();
+                        break;
+                    case 1: // Device Memory
+                        openDeviceImagePicker();
+                        break;
+                }
+            }
+        });
+        builder.show();
+    }
+    private void openWebImageDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Enter Image URL");
 
-        // Show or hide the empty state
-        showEmptyState(mAdapter.getItemCount() <= 0);
+        final EditText urlEditText = new EditText(getContext());
+        urlEditText.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.setMargins(48, 0, 48, 0);
+        urlEditText.setLayoutParams(layoutParams);
+
+        builder.setView(urlEditText);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String imageUrl = urlEditText.getText().toString().trim();
+                loadImageFromUrl(imageUrl);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
-    // Show or hide the empty state based on the item count
-    private void showEmptyState(boolean showEmpty) {
-        AppCompatImageView imageView = getView().findViewById(R.id.empty_image_view);
-        Glide.with(getContext()).asGif()
-                .load(R.drawable.folderwalk)
-                .into(imageView);
-        FrameLayout emptyFrameLayout = getView().findViewById(R.id.empty_frame_layout);
-        if (showEmpty) {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
+    private void openDeviceImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_IMAGE_GALLERY);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_GALLERY) {
+                Uri selectedImageUri = data.getData();
+                imagePath = getPathFromUri(selectedImageUri);
+                displaySelectedImage(selectedImageUri);
+            }
+        }
+    }
+    private void displaySelectedImage(Uri imageUri) {
+        ImageView imageView = view.findViewById(R.id.image_view); // Initialize imageView
+
+
+        if (isWebLink(String.valueOf(imageUri))) {
+            // Load image from web link
+            Glide.with(this)
+                    .load(imageUri)
+                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .error(R.drawable.iboralogos1)
+                    .into(imageView);
+            imageView.setVisibility(View.VISIBLE);
         } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
+            // Load image from local storage
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            } else {
+                loadLocalImage(imageView, String.valueOf(imageUri));
+            }
         }
     }
-    public void openNewActivity() {
-        Configuration configuration = getResources().getConfiguration();
-        Locale currentLocale = configuration.locale;
-
-
-        // Start the AddItemActivity
-        Intent intent = new Intent(requireContext(), AddItemActivity.class);
-        intent.putExtra("locale", currentLocale.toString());
-        startActivity(intent);
+    private String getPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String imagePath = cursor.getString(columnIndex);
+            cursor.close();
+            return imagePath;
+        }
+        return null;
     }
+
+    private boolean isWebLink(String url) {
+        return URLUtil.isValidUrl(url);
+    }
+    private void loadLocalImage(ImageView imageView, String imageLocation) {
+        File imageFile = new File(imageLocation);
+        if (imageFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            imageView.setImageBitmap(bitmap);
+        } else {
+            imageView.setImageResource(R.drawable.emptybasket);
+        }
+    }
+    private void loadImageFromUrl(String imageUrl) {
+        // Implement code to load image from URL
+        imagePath = imageUrl;
+        // You can also display the selected image here if needed
+        ImageView imageView = view.findViewById(R.id.image_view);
+        Glide.with(this).load(imageUrl).into(imageView);
+    }
+    public void returnHome() {
+        Intent home_intent1 = new Intent(getContext(), AdminActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "Company_info_fragment");
+        startActivity(home_intent1);
+    }
+
+
 
 
 

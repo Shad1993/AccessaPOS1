@@ -142,6 +142,8 @@ public class printerSetup extends AppCompatActivity {
 
                             printLogoAndReceipt(service,LogoPath);
 
+
+
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
                             // Create the formatted companyAddress1Line  line
@@ -175,7 +177,6 @@ public class printerSetup extends AppCompatActivity {
 
 
                         }
-
 
                         // Print the custom layout
                         service.printText(titleTextView.getText().toString(), null);
@@ -377,7 +378,6 @@ public class printerSetup extends AppCompatActivity {
                         // Print  date and time
                         service.printText(DateTimeIdLine + "\n\n", null);
 
-
                         if (settlementItems != null) {
                             // Use the settlementItems as needed
                             // You can iterate over the list and access the payment name and settlement amount for each item
@@ -574,7 +574,7 @@ public class printerSetup extends AppCompatActivity {
             // Print the logo image
             InnerResultCallback innerResultCallback = null;
             service.setAlignment(1, innerResultCallback); // Center alignment
-            service.printBitmap(resizedLogoBitmap, null);
+            service.printBitmap(resizedLogoBitmap, innerResultCallback);
             service.lineWrap(1, innerResultCallback); // Print a new line after the logo
             service.setAlignment(0, innerResultCallback); // Left alignment
 

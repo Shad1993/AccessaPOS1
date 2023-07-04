@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/welcome_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/ItemsCard"
+                style="@style/centreLocatorCardDesign"
+                app:cardCornerRadius="16dp"
+                android:layout_width="match_parent"
+                android:layout_marginStart="200dp"
+                android:layout_marginEnd="200dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:focusableInTouchMode="false"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/CompanyInfo" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Abbreviation" />
+
+                    <EditText
+                        android:id="@+id/editAbbrev"
+                        style="@style/modifiedEditText"
+                        android:hint="Abbreviation"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="No. of Stock" />
+
+                    <EditText
+                        android:id="@+id/textNoStock"
+                        style="@style/modifiedEditText"
+                        android:hint="No. of Stock"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+
+
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="No. of Prices" />
+
+                    <EditText
+                        android:id="@+id/editNoPrices"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:hint="No. of Prices"  />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Default Supplier Code"/>
+
+                    <EditText
+                        android:id="@+id/editDefSupplierCode"
+                        style="@style/modifiedEditText"
+                        android:hint="Default Supplier Code"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="VAT No"/>
+
+                    <EditText
+                        android:id="@+id/editVATNo"
+                        style="@style/modifiedEditText"
+                        android:hint="VAT No"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="BRN No" />
+
+                    <EditText
+                        android:id="@+id/editBRNNo"
+                        style="@style/modifiedEditText"
+                        android:hint="BRN No"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="ADR 1" />
+
+                    <EditText
+                        android:id="@+id/editADR1"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:hint="ADR 1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="ADR 2" />
+
+                    <EditText
+                        android:id="@+id/editADR2"
+                        style="@style/modifiedEditText"
+                        android:hint="ADR 2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="ADR 3" />
+
+                    <EditText
+                        android:id="@+id/editADR3"
+                        style="@style/modifiedEditText"
+                        android:hint="ADR 3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Tel No" />
+
+                    <EditText
+                        android:id="@+id/editTelNo"
+                        style="@style/modifiedEditText"
+                        android:hint="Tel No"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Fax No" />
+
+                    <EditText
+                        android:id="@+id/editFaxNo"
+                        style="@style/modifiedEditText"
+                        android:hint="Fax No"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Company Name" />
+
+                    <EditText
+                        android:id="@+id/editCompanyName"
+                        style="@style/modifiedEditText"
+                        android:hint="Company Name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+
+                    <EditText
+                        android:id="@+id/editCahiorNameid"
+                        style="@style/modifiedEditText"
+                        android:hint="Company Name"
+                        android:visibility="gone"
+                        android:editable="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+
+
+                    <EditText
+                        android:id="@+id/lastmod"
+                        style="@style/modifiedEditText"
+                        android:hint="Company Name"
+                        android:visibility="gone"
+                        android:editable="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+                    <Button
+                        android:id="@+id/image_button"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/Select_Image"
+                        android:textSize="10sp"
+                        android:drawableLeft="@drawable/select_image"
+                        android:background="@drawable/button_bleu_accessa"
+                        android:textColor="@android:color/white"
+                        android:layout_marginTop="10dp"
+                        android:layout_below="@id/line"
+                        android:backgroundTint="@color/BleuAccessaText"
+                        android:layout_gravity="center" />
+
+                    <ImageView
+                        android:id="@+id/image_view"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:scaleType="centerCrop"
+                        android:adjustViewBounds="true"
+                        android:src="@drawable/select_image"
+                        android:layout_gravity="center"
+                        />
+
+
+
+                </LinearLayout>
+
+
+
+
+
+
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btn_update"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:background="@drawable/button_bleu_accessa"
+                android:drawableLeft="@drawable/baseline_update_24"
+                android:text="Update" />
+
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
+

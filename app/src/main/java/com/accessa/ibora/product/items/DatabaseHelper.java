@@ -198,17 +198,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME_STD_ACCESS = "std_access";
     private static final String COLUMN_STD_ACCESS_ID = "std_access_id";
-    private static final String COLUMN_ABBREV = "abbrev";
-    private static final String COLUMN_NO_STOCK = "no_stock";
-    private static final String COLUMN_NO_PRICES = "no_prices";
-    private static final String COLUMN_DEF_SUPPLIER_CODE = "def_supplier_code";
+    public static final String COLUMN_ABBREV = "abbrev";
+    public static final String COLUMN_NO_STOCK = "no_stock";
+    public static final String COLUMN_NO_PRICES = "no_prices";
+    public static final String COLUMN_DEF_SUPPLIER_CODE = "def_supplier_code";
     public static final String COLUMN_VAT_NO = "vat_no";
     public static final String COLUMN_BRN_NO = "brn_no";
     public static final String COLUMN_ADR_1 = "adr_1";
     public static final String COLUMN_ADR_2 = "adr_2";
-    private static final String COLUMN_ADR_3 = "adr_3";
-    private static final String COLUMN_TEL_NO = "tel_no";
-    private static final String COLUMN_FAX_NO = "fax_no";
+    public static final String COLUMN_ADR_3 = "adr_3";
+    public static final String COLUMN_TEL_NO = "tel_no";
+    public static final String COLUMN_FAX_NO = "fax_no";
     public static String VAT_Type= "VatType";
     public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
@@ -463,7 +463,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_NO_STOCK + " INTEGER, "
             + COLUMN_NO_PRICES + " INTEGER, "
             + COLUMN_DEF_SUPPLIER_CODE + " TEXT, "
-             + COLUMN_Logo + " TEXT, "
+            + COLUMN_Logo + " TEXT, "
             + COLUMN_VAT_NO + " TEXT, "
             + COLUMN_BRN_NO + " TEXT, "
             + COLUMN_ADR_1 + " TEXT, "
@@ -472,8 +472,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_TEL_NO + " TEXT, "
             + COLUMN_FAX_NO + " TEXT, "
             + COLUMN_COMPANY_NAME + " TEXT, "
+            + COLUMN_CASHOR_id + " INTEGER, "
+            + LastModified + " TEXT, "
+            + DateCreated + " TEXT, "
             + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
             + ")";
+
 
 
 

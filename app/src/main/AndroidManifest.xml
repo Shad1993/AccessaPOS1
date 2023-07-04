@@ -91,6 +91,7 @@
         <activity android:name=".printer.externalprinterlibrary2.WifiSelectActivity"/>
         <activity android:name=".printer.externalprinterlibrary2.PrinterSelectActivity"/>
         <activity android:name=".printer.cloudPrinter.bluetoothPrinter"/>
+        <activity android:name=".Report.ReportActivity"/>
 
         <receiver android:name="sunmi.ds.MsgReceiver"
             android:exported="true">

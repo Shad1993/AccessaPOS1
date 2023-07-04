@@ -1,11 +1,27 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ABBREV;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_1;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_2;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_3;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_BRN_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_COMPANY_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_DEF_SUPPLIER_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_FAX_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Logo;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_NO_PRICES;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_NO_STOCK;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_PAYMENT_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_QR_CODE_NUM;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TEL_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_VAT_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.DateCreated;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
 import static com.accessa.ibora.product.items.DatabaseHelper.OpenDrawer;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
@@ -24,11 +40,11 @@ import android.database.sqlite.SQLiteDatabase;
 import com.accessa.ibora.Admin.cashier;
 import com.accessa.ibora.QR.QR;
 import com.accessa.ibora.Settings.PaymentFragment.payment;
+import com.accessa.ibora.company.Company;
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.Vendor.Vendor;
-import com.accessa.ibora.sales.ticket.Checkout.Payment;
 
 public class DBManager {
 
@@ -93,8 +109,8 @@ public class DBManager {
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_LEVEL, cashierLevel);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT, cashordepartment);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_COMPANY, CompanyName);
-        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
-        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DateCreated, dateCreated);
+        contentValue.put(LastModified, lastModified);
 
         database.insert(DatabaseHelper.TABLE_NAME_Users, null, contentValue);
 
@@ -180,7 +196,7 @@ public class DBManager {
         return cursor;
     }
     public Cursor fetchUser() {
-        String[] columns = new String[]{DatabaseHelper.COLUMN_CASHOR_id, DatabaseHelper.COLUMN_CASHOR_NAME, DatabaseHelper.COLUMN_CASHOR_LEVEL};
+        String[] columns = new String[]{COLUMN_CASHOR_id, DatabaseHelper.COLUMN_CASHOR_NAME, DatabaseHelper.COLUMN_CASHOR_LEVEL};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME_Users, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -203,10 +219,10 @@ public class DBManager {
         contentValues.put(DatabaseHelper.COLUMN_PIN,enteredPIN);
         contentValues.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT,dept);
         contentValues.put(DatabaseHelper.COLUMN_CASHOR_LEVEL,level);
-        contentValues.put(DatabaseHelper.LastModified,lastmodified);
+        contentValues.put(LastModified,lastmodified);
 
 
-        database.update(DatabaseHelper.TABLE_NAME_Users, contentValues, DatabaseHelper.COLUMN_CASHOR_id + " = " + id, null);
+        database.update(DatabaseHelper.TABLE_NAME_Users, contentValues, COLUMN_CASHOR_id + " = " + id, null);
         return true;
 
     }
@@ -230,7 +246,7 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Variant, Variant);
         contentValues.put(DatabaseHelper.Cost, Cost);
         contentValues.put(DatabaseHelper.AvailableForSale,AvailableForSale);
-        contentValues.put(DatabaseHelper.LastModified,lastmodified);
+        contentValues.put(LastModified,lastmodified);
 
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
@@ -243,7 +259,7 @@ public class DBManager {
         return true;
     }
     public boolean deleteUser(long id) {
-        String selection = DatabaseHelper.COLUMN_CASHOR_id + "=?";
+        String selection = COLUMN_CASHOR_id + "=?";
         String[] selectionArgs = { String.valueOf(id) };
         database.delete(DatabaseHelper.TABLE_NAME_Users, selection, selectionArgs);
         return true;
@@ -252,7 +268,7 @@ public class DBManager {
     public cashier getUserById(String id) {
         cashier user = null;
         String[] columns = new String[]{
-                DatabaseHelper.COLUMN_CASHOR_id,
+                COLUMN_CASHOR_id,
                 DatabaseHelper.COLUMN_PIN,
                 DatabaseHelper.COLUMN_CASHOR_LEVEL,
                 DatabaseHelper.COLUMN_CASHOR_NAME,
@@ -260,13 +276,13 @@ public class DBManager {
 
         };
 
-        String selection = DatabaseHelper.COLUMN_CASHOR_id + " = ?";
+        String selection = COLUMN_CASHOR_id + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME_Users, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             user = new cashier();
-            user.setcashorid((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
+            user.setcashorid((int) cursor.getLong(cursor.getColumnIndex(COLUMN_CASHOR_id)));
             user.setcashorname(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME)));
             user.setcashorlevel(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_LEVEL)));
             user.setpin(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_PIN)));
@@ -440,7 +456,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DEPARTMENT_NAME, deptName);
         contentValue.put(DatabaseHelper.DEPARTMENT_DATE_CREATED, DateCreated);
         contentValue.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastModified);
-        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
+        contentValue.put(COLUMN_CASHOR_id, userId);
         contentValue.put(DEPARTMENT_CODE, deptCode);
 
         database.insert(DEPARTMENT_TABLE_NAME, null, contentValue);
@@ -452,7 +468,7 @@ public class DBManager {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.DEPARTMENT_NAME, name);
         contentValues.put(DatabaseHelper.DEPARTMENT_LAST_MODIFIED, lastmodified);
-        contentValues.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
+        contentValues.put(COLUMN_CASHOR_id, userId);
         contentValues.put(DEPARTMENT_CODE, deptCode);
 
 
@@ -475,7 +491,7 @@ public class DBManager {
                 DEPARTMENT_CODE,
                 DatabaseHelper.DEPARTMENT_NAME,
                 DatabaseHelper.DEPARTMENT_LAST_MODIFIED,
-                DatabaseHelper.COLUMN_CASHOR_id,
+                COLUMN_CASHOR_id,
 
                 // Add other columns as needed
         };
@@ -490,7 +506,7 @@ public class DBManager {
             department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
             department.setDepartmentCode(cursor.getString(cursor.getColumnIndex(DEPARTMENT_CODE)));
             department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
-            department.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
+            department.setCashierID(cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id)));
 
 
 
@@ -509,7 +525,7 @@ public class DBManager {
 
                 DatabaseHelper.DEPARTMENT_NAME,
                 DatabaseHelper.DEPARTMENT_LAST_MODIFIED,
-                DatabaseHelper.COLUMN_CASHOR_id,
+                COLUMN_CASHOR_id,
 
                 // Add other columns as needed
         };
@@ -524,7 +540,7 @@ public class DBManager {
             department.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID)));
             department.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME)));
             department.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_LAST_MODIFIED)));
-            department.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id)));
+            department.setCashierID(cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id)));
 
 
 
@@ -538,7 +554,7 @@ public class DBManager {
 
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, subDeptName);
-        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(LastModified, lastModified);
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
         contentValue.put(DEPARTMENT_CODE, deptCode);
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, departmentId);
@@ -553,7 +569,7 @@ public class DBManager {
                 DatabaseHelper.SUBDEPARTMENT_ID,
                 DEPARTMENT_CODE,
                 DatabaseHelper.SUBDEPARTMENT_NAME,
-                DatabaseHelper.LastModified,
+                LastModified,
                 DatabaseHelper.DEPARTMENT_CASHIER_ID,
 
                 // Add other columns as needed
@@ -568,7 +584,7 @@ public class DBManager {
             Subdepartment.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_ID)));
             Subdepartment.setSubName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUBDEPARTMENT_NAME)));
             Subdepartment.setSubDepartmentCode(cursor.getString(cursor.getColumnIndex(DEPARTMENT_CODE)));
-            Subdepartment.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
+            Subdepartment.setLastModified(cursor.getString(cursor.getColumnIndex(LastModified)));
             Subdepartment.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_CASHIER_ID)));
 
 
@@ -624,7 +640,7 @@ public class DBManager {
                 DatabaseHelper.VendorID,
                 DatabaseHelper.NomFournisseur,
                 DatabaseHelper.CodeFournisseur,
-                DatabaseHelper.LastModified,
+                LastModified,
                 DatabaseHelper.UserId,
                 DatabaseHelper.PhoneNumber,
                 DatabaseHelper.Street,
@@ -645,7 +661,7 @@ public class DBManager {
             vendor.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VendorID)));
             vendor.setNomFournisseur(cursor.getString(cursor.getColumnIndex(DatabaseHelper.NomFournisseur)));
             vendor.setCodeFournisseur(cursor.getString(cursor.getColumnIndex(DatabaseHelper.CodeFournisseur)));
-            vendor.setLastModified(cursor.getString(cursor.getColumnIndex(DatabaseHelper.LastModified)));
+            vendor.setLastModified(cursor.getString(cursor.getColumnIndex(LastModified)));
             vendor.setCashierID(cursor.getString(cursor.getColumnIndex(DatabaseHelper.UserId)));
             vendor.setPhoneNumber(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PhoneNumber)));
             vendor.setStreet(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Street)));
@@ -696,7 +712,7 @@ public class DBManager {
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.NomFournisseur, vendorName);
-        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(LastModified, lastModified);
         contentValue.put(DatabaseHelper.UserId, userId);
         contentValue.put(DatabaseHelper.CodeFournisseur, vendCode);
         contentValue.put(DatabaseHelper.PhoneNumber, phoneNumber);
@@ -715,7 +731,7 @@ public class DBManager {
                                 String updatedSalesmen, String UserId) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.NomFournisseur, vendName);
-        contentValues.put(DatabaseHelper.LastModified, lastModified);
+        contentValues.put(LastModified, lastModified);
         contentValues.put(DatabaseHelper.CodeFournisseur, vendCode);
         contentValues.put(DatabaseHelper.PhoneNumber, updatedPhoneNumber);
         contentValues.put(DatabaseHelper.Street, updatedStreet);
@@ -732,7 +748,7 @@ public class DBManager {
 
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_NAME, name);
-        contentValue.put(DatabaseHelper.LastModified, lastmodified);
+        contentValue.put(LastModified, lastmodified);
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
         contentValue.put(DEPARTMENT_CODE, deptCode);
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
@@ -752,7 +768,7 @@ public class DBManager {
     public boolean updateCost(long id, String lastmodified, String userId, String vendCode) {
 
         ContentValues contentValue = new ContentValues();
-        contentValue.put(DatabaseHelper.LastModified, lastmodified);
+        contentValue.put(LastModified, lastmodified);
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
         contentValue.put(DatabaseHelper.CodeFournisseur, vendCode);
 
@@ -797,9 +813,9 @@ public class DBManager {
     public void insertQr(String qrName, String dateCreated, String lastModified, String userId, String qrCode) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.COLUMN_PAYMENT_METHOD, qrName);
-        contentValue.put(DatabaseHelper.LastModified, lastModified);
-        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
-        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(LastModified, lastModified);
+        contentValue.put(COLUMN_CASHOR_id, userId);
+        contentValue.put(DateCreated, dateCreated);
         contentValue.put(COLUMN_QR_CODE_NUM, qrCode);
         database.insert(TABLE_NAME_PAYMENTBYQY, null, contentValue);
     }
@@ -814,8 +830,8 @@ public class DBManager {
     public boolean updateQR(long id, String name, String lastmodified, String userId, String qrCode) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.COLUMN_PAYMENT_METHOD, name);
-        contentValue.put(DatabaseHelper.LastModified, lastmodified);
-        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, userId);
+        contentValue.put(LastModified, lastmodified);
+        contentValue.put(COLUMN_CASHOR_id, userId);
         contentValue.put(COLUMN_QR_CODE_NUM, qrCode);
 
         database.update(TABLE_NAME_PAYMENTBYQY, contentValue, DatabaseHelper.COLUMN_PAYMENT_ID + " = " + id, null);
@@ -826,9 +842,9 @@ public class DBManager {
         QR Qr = null;
         String[] columns = new String[]{
                 DatabaseHelper.COLUMN_PAYMENT_ID,
-                DatabaseHelper.LastModified,
+                LastModified,
                 DatabaseHelper.COLUMN_PAYMENT_METHOD,
-                DatabaseHelper.COLUMN_CASHOR_id,
+                COLUMN_CASHOR_id,
                 COLUMN_QR_CODE_NUM,
 
                 // Add other columns as needed
@@ -908,4 +924,77 @@ public class DBManager {
         database.delete(PAYMENT_METHOD_TABLE_NAME, selection, selectionArgs);
         return true;
     }
+
+    public Company getCompanyInfo() {
+        Company company = null;
+
+        String[] columns = new String[]{
+                COLUMN_ABBREV,
+                COLUMN_NO_STOCK,
+                COLUMN_NO_PRICES,
+                COLUMN_DEF_SUPPLIER_CODE,
+                COLUMN_VAT_NO,
+                COLUMN_BRN_NO,
+                COLUMN_ADR_1,
+                COLUMN_ADR_2,
+                COLUMN_ADR_3,
+                COLUMN_TEL_NO,
+                COLUMN_FAX_NO,
+                COLUMN_COMPANY_NAME,
+                COLUMN_CASHOR_id,
+                LastModified,
+                COLUMN_Logo
+        };
+
+        Cursor cursor = database.query(TABLE_NAME_STD_ACCESS, columns, null, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            company = new Company(); // Instantiate the company object
+            company.setAbv(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ABBREV)));
+            company.setStockNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NO_STOCK)));
+            company.setPriceNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NO_PRICES)));
+            company.setDefSupplierCode(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DEF_SUPPLIER_CODE)));
+            company.setVATNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VAT_NO)));
+            company.setBRNNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BRN_NO)));
+            company.setADR1(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_1)));
+            company.setADR2(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_2)));
+            company.setADR3(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_3)));
+            company.setTelNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEL_NO)));
+            company.setFaxNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAX_NO)));
+            company.setCompanyName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COMPANY_NAME)));
+            company.setCashorId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CASHOR_id)));
+            company.setLastModified(cursor.getString(cursor.getColumnIndexOrThrow(LastModified)));
+            company.setImage(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Logo)));
+
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return company;
+    }
+
+
+    public boolean updateCompanyInfo(String abv, String stock, String lastModified, String userId, String price, String defSupplierCode, String vatNo, String brnNo, String adr1, String adr2, String adr3, String telNo, String faxNo, String companyName, String image) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_ABBREV, abv);
+        values.put(COLUMN_NO_STOCK, stock);
+        values.put(LastModified, lastModified);
+        values.put(COLUMN_CASHOR_id, userId);
+        values.put(COLUMN_NO_PRICES, price);
+        values.put(COLUMN_DEF_SUPPLIER_CODE, defSupplierCode);
+        values.put(COLUMN_VAT_NO, vatNo);
+        values.put(COLUMN_BRN_NO, brnNo);
+        values.put(COLUMN_ADR_1, adr1);
+        values.put(COLUMN_ADR_2, adr2);
+        values.put(COLUMN_ADR_3, adr3);
+        values.put(COLUMN_TEL_NO, telNo);
+        values.put(COLUMN_FAX_NO, faxNo);
+        values.put(COLUMN_COMPANY_NAME, companyName);
+        values.put(COLUMN_Logo, image);
+
+        int rowsAffected = database.update(TABLE_NAME_STD_ACCESS, values, null, null);
+        return rowsAffected > 0;
+    }
+
 }

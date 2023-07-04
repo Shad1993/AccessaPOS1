@@ -6,11 +6,13 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_N
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.ServiceConnection;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.display.DisplayManager;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Display;
@@ -43,6 +45,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Report.ReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
@@ -151,8 +154,10 @@ private TextView textViewVATs,textViewTotals;
         }else if
         (id == R.id.Report) {
             int level= Integer.parseInt(cashierLevel);
-            if(level == 7){
+            if(level >= 6){
                 Context context = getContext(); // Get the Context object
+                Intent intent = new Intent(context, ReportActivity.class);
+                startActivity(intent);
 
             }else {
                 Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
@@ -484,12 +489,26 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
             showSecondaryScreen(data);
         } else {
             // Failed to save transaction header, handle the error
-            Intent splashIntent = new Intent(getActivity(), SplashActivity.class);
-            Intent mainIntent = new Intent(getActivity(), MainActivity.class);
-            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            startActivity(splashIntent);
-            startActivity(mainIntent);
+            // Create and show a Dialog for 1 second
+            final Dialog dialog = new Dialog(getActivity());
+            dialog.setContentView(R.layout.popup_layout); // Replace with your custom layout
+            dialog.show();
+
+// Delay the intent to start the MainActivity
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Start the MainActivity after the delay
+                    Intent mainIntent = new Intent(getActivity(), MainActivity.class);
+                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(mainIntent);
+
+                    // Dismiss the dialog
+                    dialog.dismiss();
+                }
+            }, 2000); // Delay of 1 second (1000 milliseconds)
 
         }
 

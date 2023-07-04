@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.menu.BodyActivity;
@@ -96,8 +97,8 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
             Fragment newFragment = new PeopleFragment();
             setToolbarTitle(getString(R.string.People)); // Set the toolbar title
             replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Dept_fragment")) {
-            Fragment newFragment = new DepartmentFragment();
+        } else if (fragmentKey != null && fragmentKey.equals("Company_info_fragment")) {
+            Fragment newFragment = new CompanyInfoFragment();
             setToolbarTitle(getString(R.string.Department)); // Set the toolbar title
             replaceFragment(newFragment);
         } else if (fragmentKey != null && fragmentKey.equals("SUBDept_fragment")) {
