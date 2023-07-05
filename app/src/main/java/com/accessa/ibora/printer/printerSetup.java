@@ -600,7 +600,7 @@ public class printerSetup extends AppCompatActivity {
     }
 
 
-    private void updateTransactionStatus() {
+    public void updateTransactionStatus() {
 
         // Retrieve the SharedPreferences
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);

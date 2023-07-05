@@ -51,8 +51,6 @@ public class ModifyDepartmentActivity extends Activity {
         String cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
          cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
-
-        Toast.makeText(this, "User ID: " + cashorId, Toast.LENGTH_SHORT).show();
         catDatabaseHelper = new CategoryDatabaseHelper(this);
 
         mDatabaseHelper = new DatabaseHelper(this);

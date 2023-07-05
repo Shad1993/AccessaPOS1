@@ -431,6 +431,12 @@
     <string name="toast_password_error">The device failed to connect to Wi Fi. Please confirm your password and try again.</string>
     <string name="Thanks">Thank you for Your Trust.</string>
     <string name="newtransaction">New Transaction Loading</string>
+    <string name="Daily">Daily amount</string>
+    <string name="weekly">Weekly Amount</string>
+    <string name="monthly">Monthly Amount</string>
+    <string name="AllReceipt">All Receipts</string>
+    <string name="transaction_prefix">Transaction id:</string>
+    <string name="date">Date of Transaction</string>
 
 
 </resources>

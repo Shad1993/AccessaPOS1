@@ -53,6 +53,7 @@ import com.accessa.ibora.SplashActivity;
 
 import com.accessa.ibora.printer.cloudPrinter.bluetoothPrinter;
 import com.accessa.ibora.printer.externalprinterlibrary2.CloudPrinterActivity;
+import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
@@ -344,6 +345,42 @@ private TextView textViewVATs,textViewTotals;
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
 
+        updateTransactionStatus();
+        generateNewTransactionId();
+        // Create and show a Dialog for 1 second
+        final Dialog dialog = new Dialog(getActivity());
+        dialog.setContentView(R.layout.popup_layout); // Replace with your custom layout
+        dialog.show();
+
+// Delay the intent to start the MainActivity
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Start the MainActivity after the delay
+                Intent mainIntent = new Intent(getActivity(), MainActivity.class);
+                mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(mainIntent);
+
+                // Dismiss the dialog
+                dialog.dismiss();
+            }
+        }, 2000); // Delay of 1 second (1000 milliseconds)
+    }
+    public void updateTransactionStatus() {
+
+        // Retrieve the SharedPreferences
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+
+        // Get the SharedPreferences editor
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        // Clear all the stored data in SharedPreferences
+        editor.clear();
+
+        // Apply the changes
+        editor.apply();
+
 
 
     }
@@ -457,7 +494,7 @@ private TextView textViewVATs,textViewTotals;
     }
 public void updateheader(double totalAmount, double TaxtotalAmount){
 
-
+    Toast.makeText(getContext(), "total= " + " " + totalAmount + " "+ TaxtotalAmount , Toast.LENGTH_SHORT).show();
         // Get the current date and time
         String currentDate = mDatabaseHelper.getCurrentDate();
         String currentTime = mDatabaseHelper.getCurrentTime();

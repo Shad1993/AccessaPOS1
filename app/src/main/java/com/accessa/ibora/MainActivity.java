@@ -14,7 +14,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -26,7 +25,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +43,7 @@ import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
 import com.accessa.ibora.QR.QRFragment;
+import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.login.login;
@@ -55,7 +54,6 @@ import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
-import com.alibaba.fastjson.JSONObject;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.zxing.BarcodeFormat;
@@ -71,8 +69,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
-import sunmi.ds.DSKernel;
-import sunmi.ds.data.DataPacket;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener {
@@ -247,7 +243,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                 if (id == R.id.Sales) {
                     // Already in the sales screen, do nothing
                 } else if (id == R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, ReceiptActivity.class);
+                    startActivity(intent);
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
@@ -423,6 +420,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
+                Toast.makeText(instance, "total= " + " " + totalAmount + " "+ TaxtotalAmount , Toast.LENGTH_SHORT).show();
                 CustomerLcd instance = new CustomerLcd();
                 displayOnLCD();
             }

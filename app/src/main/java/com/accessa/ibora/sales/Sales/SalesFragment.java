@@ -463,7 +463,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         String transactionStatus = "InProgress";
                         String transactionSaved = "Saved";
 
-                        if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
+                        String status = mDatabaseHelper.getTransactionStatus(transactionIdInProgress);
+
+                        if (status != null) {
+                            // Use the transaction status as needed
+                            // For example, display it in a TextView
+                            Toast.makeText(getContext(), "status: " + status, Toast.LENGTH_SHORT).show();
+                        } Toast.makeText(getContext(), "status null: " + status, Toast.LENGTH_SHORT).show();
+
+
+                        if (status.equals("InProgress") || status.equals("Saved")  ) {
                             if (transactionIdInProgress == null) {
                                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                                 // Store the transaction ID in SharedPreferences

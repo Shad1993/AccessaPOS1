@@ -1,6 +1,7 @@
 package com.accessa.ibora.Report;
 
 import static com.accessa.ibora.Constants.DB_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.accessa.ibora.R;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -68,7 +70,7 @@ public class ReportActivity extends AppCompatActivity {
         Date endDate = calendar.getTime();
 
         // Query the database to get the daily amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + TRANSACTION_TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?", new String[]{String.valueOf(startDate.getTime()), String.valueOf(endDate.getTime())});
+        Cursor cursor = database.rawQuery("SELECT SUM(" + TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?" ,new String[]{formatDateTime(startDate), formatDateTime(endDate)});
         double amount = 0.0;
 
         if (cursor.moveToFirst()) {
@@ -94,7 +96,10 @@ public class ReportActivity extends AppCompatActivity {
         Date endDate = calendar.getTime();
 
         // Query the database to get the weekly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + TRANSACTION_TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?", new String[]{String.valueOf(startDate.getTime()), String.valueOf(endDate.getTime())});
+
+        Cursor cursor = database.rawQuery("SELECT SUM(" + TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?", new String[]{formatDateTime(startDate), formatDateTime(endDate)});
+
+
         double amount = 0.0;
 
         if (cursor.moveToFirst()) {
@@ -120,7 +125,7 @@ public class ReportActivity extends AppCompatActivity {
         Date endDate = calendar.getTime();
 
         // Query the database to get the monthly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + TRANSACTION_TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?", new String[]{String.valueOf(startDate.getTime()), String.valueOf(endDate.getTime())});
+        Cursor cursor = database.rawQuery("SELECT SUM(" + TOTAL_PRICE + ") FROM " + TRANSACTION_TABLE_NAME + " WHERE " + TRANSACTION_DATE + " >= ? AND " + TRANSACTION_DATE + " < ?",new String[]{formatDateTime(startDate), formatDateTime(endDate)});
         double amount = 0.0;
 
         if (cursor.moveToFirst()) {
@@ -136,7 +141,10 @@ public class ReportActivity extends AppCompatActivity {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         return decimalFormat.format(amount);
     }
-
+    private String formatDateTime(Date date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return dateFormat.format(date);
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

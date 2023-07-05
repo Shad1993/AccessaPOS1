@@ -3,7 +3,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
-
+    <TextView
+        android:id="@+id/dailyAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Daily"
+        android:textSize="18sp" />
     <TextView
         android:id="@+id/dailyAmountTextView"
         android:layout_width="wrap_content"
@@ -12,12 +17,25 @@
         android:textSize="18sp" />
 
     <TextView
+        android:id="@+id/weeklyAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/weekly"
+        android:textSize="18sp" />
+    <TextView
         android:id="@+id/weeklyAmountTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Weekly Amount: "
         android:textSize="18sp"
         android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/MonthlyAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/monthly"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/monthlyAmountTextView"

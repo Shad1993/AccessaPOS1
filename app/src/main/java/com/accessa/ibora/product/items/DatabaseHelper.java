@@ -1113,6 +1113,87 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.query(true, DatabaseHelper.PAYMENT_METHOD_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.OpenDrawer, null, orderBy, null);
     }
+
+    public Cursor getAllReceipt() {
+        SQLiteDatabase db = getReadableDatabase();
+        String sortOrder = TRANSACTION_DATE_CREATED + " DESC";
+        return db.query(TRANSACTION_HEADER_TABLE_NAME, null, null, null, null, null, sortOrder);
+    }
+
+
+    public Cursor searchReceipt(String selectedItem) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {_ID, TRANSACTION_TICKET_NO,TRANSACTION_TOTAL_TTC, TRANSACTION_DATE_CREATED};
+        String selection = TRANSACTION_TICKET_NO + " LIKE ?";
+        String[] selectionArgs = {"%" + selectedItem + "%"};
+        String sortOrder = TRANSACTION_DATE_CREATED + " DESC";
+        return db.query(TRANSACTION_HEADER_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+
+
+
+    public Cursor getTransactionDetails(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String[] columns = {
+                TRANSACTION_ID,
+                TRANSACTION_DATE,
+                QUANTITY,
+                TOTAL_PRICE
+                // Add more columns as needed
+        };
+
+        String selection = TRANSACTION_ID + "=?";
+        String[] selectionArgs = { transactionId };
+
+        return db.query(
+                TRANSACTION_TABLE_NAME,
+                columns,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+    }
+    public String getTransactionStatus(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = { TRANSACTION_STATUS };
+        String selection = TRANSACTION_TICKET_NO + "=?";
+        String[] selectionArgs = { transactionId };
+
+        Cursor cursor = db.query(TRANSACTION_HEADER_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        String status = null;
+
+        if (cursor != null && cursor.moveToFirst()) {
+            status = cursor.getString(cursor.getColumnIndex(TRANSACTION_STATUS));
+            cursor.close();
+        }
+
+        return status;
+    }
+    public Cursor getAllTransactions(String transactionId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
+                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
+                " WHERE th." + TRANSACTION_ID + "=? " +
+                "ORDER BY t." + TRANSACTION_DATE + " ASC";
+
+        String[] selectionArgs = {transactionId};
+
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        if (cursor == null || !cursor.moveToFirst()) {
+            // There are no in-progress transactions.
+            // Return zero.
+            return null;
+        } else {
+            // There are in-progress transactions.
+            // Return the Cursor object.
+            return cursor;
+        }
+    }
 }
 
 
