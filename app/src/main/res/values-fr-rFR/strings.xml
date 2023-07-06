@@ -432,6 +432,7 @@
     <string name="AllReceipt">All Receipts</string>
     <string name="transaction_prefix">Transaction id:</string>
     <string name="date">Date of Transaction</string>
+    <string name="Select_Receipt">Select Receipt</string>
 
 
 </resources>

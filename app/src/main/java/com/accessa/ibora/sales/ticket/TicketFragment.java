@@ -1,5 +1,6 @@
 package com.accessa.ibora.sales.ticket;
 
+import static androidx.core.app.ActivityCompat.recreate;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
@@ -347,25 +348,8 @@ private TextView textViewVATs,textViewTotals;
 
         updateTransactionStatus();
         generateNewTransactionId();
-        // Create and show a Dialog for 1 second
-        final Dialog dialog = new Dialog(getActivity());
-        dialog.setContentView(R.layout.popup_layout); // Replace with your custom layout
-        dialog.show();
+        recreate(getActivity());
 
-// Delay the intent to start the MainActivity
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Start the MainActivity after the delay
-                Intent mainIntent = new Intent(getActivity(), MainActivity.class);
-                mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(mainIntent);
-
-                // Dismiss the dialog
-                dialog.dismiss();
-            }
-        }, 2000); // Delay of 1 second (1000 milliseconds)
     }
     public void updateTransactionStatus() {
 
@@ -538,10 +522,10 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
                 @Override
                 public void run() {
                     // Start the MainActivity after the delay
-                    Intent mainIntent = new Intent(getActivity(), MainActivity.class);
-                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(mainIntent);
-
+                  //  Intent mainIntent = new Intent(getActivity(), MainActivity.class);
+                  //  mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                 //   startActivity(mainIntent);
+                    recreate(getActivity());
                     // Dismiss the dialog
                     dialog.dismiss();
                 }

@@ -92,8 +92,9 @@
         <activity android:name=".printer.externalprinterlibrary2.PrinterSelectActivity"/>
         <activity android:name=".printer.cloudPrinter.bluetoothPrinter"/>
         <activity android:name=".Report.ReportActivity"/>
+        <activity android:name=".ReceiptActivity.ReceiptActivity"/>
+        <activity android:name=".ReceiptActivity.TransactionDetailsActivity"/>
         <activity android:name=".Receipt.ReceiptActivity"/>
-        <activity android:name=".Receipt.TransactionDetailsActivity"/>
 
         <receiver android:name="sunmi.ds.MsgReceiver"
             android:exported="true">

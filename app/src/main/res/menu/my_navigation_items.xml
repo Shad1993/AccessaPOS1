@@ -9,7 +9,7 @@
         android:title="@string/Sales" />
     <item
         android:id="@+id/Receipts"
-        android:icon="@drawable/receipt"
+        android:icon="@drawable/receipts"
         android:title="@string/Receipts" />
     <item
         android:id="@+id/Shift"

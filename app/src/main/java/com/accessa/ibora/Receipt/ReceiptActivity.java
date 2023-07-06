@@ -1,241 +1,184 @@
 package com.accessa.ibora.Receipt;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatImageView;
-import androidx.appcompat.widget.SearchView;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
-import com.accessa.ibora.product.items.DBManager;
-import com.accessa.ibora.product.items.DatabaseHelper;
-import com.bumptech.glide.Glide;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.Settings.SettingsMenuFragment.OnMenufragListener;
+import com.accessa.ibora.login.login;
+import com.accessa.ibora.product.menu.BodyActivity;
+import com.accessa.ibora.product.menu.BodyFragment;
+import com.accessa.ibora.product.menu.Product;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.navigation.NavigationView;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class ReceiptActivity extends AppCompatActivity {
-    private EditText searchEditText;
-    FloatingActionButton mAddFab;
-    private SearchView mSearchView;
-    private DBManager dbManager;
-    private ReceiptAdapter mAdapter;
-    private RecyclerView mRecyclerView;
-    private SimpleCursorAdapter adapter;
-    private Spinner spinner;
-    private ImageView arrow;
-    private DatabaseHelper mDatabaseHelper;
-
-    final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
-    final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
+public class ReceiptActivity extends AppCompatActivity implements OnMenufragListener {
+    private MaterialToolbar toolbar;
+    private boolean doubleBackToExitPressedOnce = false;
+    private String cashorId;
+    private String cashorName;
+    private TextView name;
+    private TextView CashorId;
+    private SharedPreferences sharedPreferences;
+    private TextView CompanyName;
+    private String Company_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.receipt_activity);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setContentView(R.layout.receipt_dashboard);
 
-        spinner = findViewById(R.id.spinner);
-        arrow = findViewById(R.id.spinner_icon);
-        mDatabaseHelper = new DatabaseHelper(ReceiptActivity.this);
-        Cursor cursor = mDatabaseHelper.getAllReceipt();
+        // Retrieve the shared preferences
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        List<String> Receipt = new ArrayList<>();
-        Receipt.add(getString(R.string.AllReceipt));
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
 
-        if (cursor.moveToFirst()) {
-            do {
-                String receipt = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TICKET_NO));
-                Receipt.add(receipt);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
+        //toolbar
+        toolbar = findViewById(R.id.topAppBar);
+        toolbar.setTitle(R.string.Receipts);
+        setSupportActionBar(toolbar);
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(ReceiptActivity.this, 0, Receipt) {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = getLayoutInflater().inflate(android.R.layout.simple_spinner_item, parent, false);
-                }
 
-                TextView textView = convertView.findViewById(android.R.id.text1);
-                textView.setTextColor(ContextCompat.getColor(ReceiptActivity.this, R.color.white));
 
-                textView.setText(getItem(position));
 
-                return convertView;
-            }
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.navigation_view);
 
-            @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = getLayoutInflater().inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-                }
+        // Get the header view from the NavigationView
+        View headerView = navigationView.getHeaderView(0);
 
-                TextView textView = convertView.findViewById(android.R.id.text1);
-                textView.setTextColor(ContextCompat.getColor(ReceiptActivity.this, R.color.white));
+        // Find the TextView within the header view
+        name = headerView.findViewById(R.id.name);
+        CashorId = headerView.findViewById(R.id.CashorId);
 
-                textView.setText(getItem(position));
+        // Set the user ID and name in the TextViews
+        CashorId.setText(cashorId);
+        name.setText(cashorName);
+        CompanyName = headerView.findViewById(R.id.Company_name);
 
-                return convertView;
-            }
-        };
 
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedItem = (String) parent.getItemAtPosition(position);
-                filterRecyclerView(selectedItem);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                filterRecyclerView(null);
-            }
-        });
-
-        arrow.setOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                spinner.performClick();
+                drawerLayout.openDrawer(GravityCompat.START);
             }
         });
 
-        mRecyclerView = findViewById(R.id.recycler_view);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(ReceiptActivity.this));
-
-        mDatabaseHelper = new DatabaseHelper(ReceiptActivity.this);
-        Cursor ReceiptCursor = mDatabaseHelper.getAllReceipt();
-        mAdapter = new ReceiptAdapter(ReceiptActivity.this, ReceiptCursor);
-        mRecyclerView.setAdapter(mAdapter);
-
-        AppCompatImageView imageView = findViewById(R.id.empty_image_view);
-        Glide.with(ReceiptActivity.this).asGif()
-                .load(R.drawable.folderwalk)
-                .into(imageView);
-        FrameLayout emptyFrameLayout = findViewById(R.id.empty_frame_layout);
-        if (mAdapter.getItemCount() <= 0) {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
-        } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
-        }
-
-        mSearchView = findViewById(R.id.search_view);
-        searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-        searchEditText.setHintTextColor(ContextCompat.getColor(ReceiptActivity.this, android.R.color.white));
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @SuppressLint("NonConstantResourceId")
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                drawerLayout.closeDrawer(GravityCompat.START);
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchReceipt(newText);
-                mAdapter.swapCursor(newCursor);
-                if (newText.isEmpty()) {
-                    searchEditText.setTextColor(ContextCompat.getColor(ReceiptActivity.this, android.R.color.white));
-                } else {
-                    searchEditText.setTextColor(ContextCompat.getColor(ReceiptActivity.this, android.R.color.white));
+                if (id == R.id.Sales) {
+                    Intent intent = new Intent(ReceiptActivity.this, MainActivity.class);
+                    startActivity(intent);
+                } else if (id == R.id.Receipts) {
+                    Intent intent = new Intent(ReceiptActivity.this, ReceiptActivity.class);
+                    startActivity(intent);
+                } else if (id == R.id.Shift) {
+                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.Items) {
+                    Intent intent = new Intent(ReceiptActivity.this, Product.class);
+                    startActivity(intent);
+                    return true;
+                } else if (id == R.id.Settings) {
+                    Intent intent = new Intent(ReceiptActivity.this, SettingsDashboard.class);
+                    startActivity(intent);
+                } else if (id == R.id.nav_logout) {
+                    logout();
+                } else if (id == R.id.Help) {
+                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_Admin) {
+                    Intent intent = new Intent(ReceiptActivity.this, AdminActivity.class);
+                    startActivity(intent);
                 }
                 return true;
             }
         });
-
-        dbManager = new DBManager(ReceiptActivity.this);
-        dbManager.open();
-        Cursor cursor1 = dbManager.fetch();
-
-
-        adapter = new SimpleCursorAdapter(ReceiptActivity.this, R.layout.activity_view_record, cursor1, froms, tos, 0);
-        adapter.notifyDataSetChanged();
-
-        mRecyclerView.addOnItemTouchListener(
-                new RecyclerDepartmentClickListener(ReceiptActivity.this, mRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
-
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView DeptNameEditText = view.findViewById(R.id.name_text_view);
-                        TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
-                        TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
-
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String name = DeptNameEditText.getText().toString();
-                        String DeptCode = DeptCodeEditText.getText().toString();
-
-
-
-                        Intent modifyIntent = new Intent(ReceiptActivity.this, TransactionDetailsActivity.class);
-
-                        modifyIntent.putExtra("id", name);
-
-                        startActivity(modifyIntent);
-                    }
-
-                    @Override
-                    public void onLongItemClick(View view, int position) {
-                        // Do whatever you want on long item click
-                    }
-                })
-        );
-
-
     }
 
-    private void filterRecyclerView(String selectedItem) {
-        Cursor filteredCursor;
-        if (selectedItem == null || selectedItem.equals(getString(R.string.AllReceipt))) {
-            filteredCursor = mDatabaseHelper.getAllReceipt();
-        } else {
-            filteredCursor = mDatabaseHelper.searchReceipt(selectedItem);
+
+    private void logout() {
+        // Perform any necessary cleanup or logout actions here
+        // For example, you can clear session data, close database connections, etc.
+        // Create an editor to modify the preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        // Clear all the stored values
+        editor.clear();
+
+        // Apply the changes
+        editor.apply();
+
+        // Redirect to the login activity
+        Intent intent = new Intent(this, login.class);
+        startActivity(intent);
+        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+    }
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
         }
-        mAdapter.swapCursor(filteredCursor);
 
-        showEmptyState(mAdapter.getItemCount() <= 0);
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, 2000); // Wait for 2 seconds before resetting the double back press flag
+
+        // Replace the code below with the intent to navigate to the login screen
+        Intent intent = new Intent(this, login.class);
+        startActivity(intent);
     }
 
-    private void showEmptyState(boolean showEmpty) {
-        AppCompatImageView imageView = findViewById(R.id.empty_image_view);
-        Glide.with(ReceiptActivity.this).asGif()
-                .load(R.drawable.folderwalk)
-                .into(imageView);
-        FrameLayout emptyFrameLayout = findViewById(R.id.empty_frame_layout);
-        if (showEmpty) {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
+    private void setToolbarTitle(String title) {
+        toolbar.setTitle(title);
+    }
+
+
+
+    @Override
+    public void onMenufrag(String s) {
+        BodyFragment fragment1 = (BodyFragment) getSupportFragmentManager().findFragmentById(R.id.bodyFragment);
+        if (fragment1 != null && fragment1.isInLayout()) {
+            fragment1.setText(s);
         } else {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
+            Intent intent = new Intent(this, BodyActivity.class);
+            intent.putExtra("value", s);
+            startActivity(intent);
         }
+
     }
-
-
 }
-
