@@ -25,30 +25,7 @@
 
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
-    <FrameLayout
-        android:id="@+id/empty_frame_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:layout_centerInParent="true"
-        android:gravity="center">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/empty_image_view"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No item found!"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="16dp"
-            android:layout_gravity="center" />
-
-    </FrameLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -201,23 +178,61 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+
+
+                        <TextView
+
+                            android:id="@+id/total__text_view"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Total : "
+                            android:layout_weight="1"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            />
+                        <TextView
+                            android:id="@+id/total_price_text_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Rs.0.00"
+                            android:layout_marginEnd="10dp"
+                            android:layout_gravity="end"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/vattypeslabel_price_text_view"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Vat Types: "
+                            android:textSize="14sp" />
 
                     <TextView
-                        android:id="@+id/total_price_text_view"
+                        android:id="@+id/vatamount_price_text_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
                         android:layout_marginStart="10dp"
-                        android:text="Total Price: "
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/vattypes_price_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="Vat Types: "
+                        android:text="Rs0.00 "
+                        android:layout_gravity="end"
                         android:textSize="14sp" />
+                    </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
@@ -226,16 +241,30 @@
                         android:layout_marginTop="5dp"
                         android:layout_marginEnd="10dp"
                         android:background="@color/black" />
-
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
                     <TextView
                         android:id="@+id/total_paid_text_view"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:text="Total Amount Paid: "
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
+                        <TextView
+                            android:id="@+id/total_tender_text_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Rs0.00 "
+                            android:layout_marginEnd="10dp"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                     <TextView
                         android:id="@+id/total_pain_bymethod_text_view"
                         android:layout_width="wrap_content"

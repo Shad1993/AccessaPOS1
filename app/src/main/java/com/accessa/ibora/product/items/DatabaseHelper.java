@@ -33,7 +33,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String _ID = "_id";
 
     // Items table columns
-    // Items table columns
     public static final String Name = "name";
     public static final String Category = "category";
     public static final String DESC = "description";
@@ -124,7 +123,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TOTAL_PRICE = "TotalPrice";
 
     private static final String TRANSACTION_SHOP_NO = "ShopNo";
-    private static final String TRANSACTION_TERMINAL_NO = "TerminalNo";
+    public static final String TRANSACTION_TERMINAL_NO = "TerminalNo";
     public static final String TRANSACTION_DATE_CREATED = "DateCreated";
     private static final String TRANSACTION_DATE_MODIFIED = "DateModified";
     public static final String TRANSACTION_TIME_CREATED = "TimeCreated";
@@ -155,7 +154,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TRANSACTION_MEMBER_CARD = "MemberCard";
     private static final String TRANSACTION_SUB_TOTAL = "SubTotal";
-    private static final String TRANSACTION_CASHIER_CODE = "CashierCode";
+    public static final String TRANSACTION_CASHIER_CODE = "CashierCode";
 
 
     public static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
@@ -688,6 +687,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = { "%" + barcode + "%" };
         return db.query(TABLE_NAME, null, selection, selectionArgs, null, null, null);
     }
+    public Cursor getCashierByid(int id) {
+        SQLiteDatabase db = getReadableDatabase();
+        String selection =  "cashorid LIKE ?";
+        String[] selectionArgs = { "%" + id + "%" };
+        return db.query(TABLE_NAME_Users, null, selection, selectionArgs, null, null, null);
+    }
     public Cursor getAllUsers() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME_Users, null, null, null, null, null, null);
@@ -1139,6 +1144,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TRANSACTION_ID,
                 TRANSACTION_DATE,
                 QUANTITY,
+                TRANSACTION_TERMINAL_NO,
                 TOTAL_PRICE
                 // Add more columns as needed
         };
@@ -1194,6 +1200,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return cursor;
         }
     }
+
+    public Cursor getPaymentmethodamounts(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String[] columns = {DatabaseHelper.SETTLEMENT_AMOUNT,SETTLEMENT_PAYMENT_NAME};
+        String selection = DatabaseHelper.SETTLEMENT_INVOICE_ID + " = ?";
+        String[] selectionArgs = {transactionId};
+        String orderBy = DatabaseHelper.SETTLEMENT_PAYMENT_NAME + " ASC";
+
+        return db.query(true, DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.VAT_Type, null, orderBy, null);
+    }
+
+
+
 }
 
 
