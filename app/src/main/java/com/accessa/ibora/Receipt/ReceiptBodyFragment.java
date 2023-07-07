@@ -27,12 +27,12 @@ public class ReceiptBodyFragment extends Fragment {
 
     private boolean doubleBackToExitPressedOnce = false;
     private RecyclerView mRecyclerView;
-    private TicketAdapter mAdapter;
+    private CompletedTransactionsAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
     private String cashierName,cashierId;
     private String cashorlevel,CompanyName,LogoPath;
     private double totalAmount,TaxtotalAmount;
-    private  String DateCreated,timeCreated;
+    private  String DateCreated,timeCreated,TenderAmount,CashReturn;
     private  int CashiorId;
 private String transactionId;
     // onCreate
@@ -96,7 +96,11 @@ private String transactionId;
                 TextView CashierName= view.findViewById(R.id.cashior_text_view);
                 TextView PosNo= view.findViewById(R.id.POS_text_view);
                 TextView VatTypes= view.findViewById(R.id.vattypeslabel_price_text_view);
+                TextView VatAMount= view.findViewById(R.id.vatamount_price_text_view);
                 TextView TenderTextview= view.findViewById(R.id.total_tender_text_view);
+                TextView AmountPerMethodLabel=view.findViewById(R.id.total_pain_bymethod_text_view);
+                TextView AmountPerMethodAmount=view.findViewById(R.id.total_tender_by_method_text_view);
+                TextView CashReturnAmount=view.findViewById(R.id.cash_return_amount_text_view);
 
 
                 ImageView logo= view.findViewById(R.id.logoImageView);
@@ -140,6 +144,8 @@ private String transactionId;
                     int columnIndexTimeCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
                     int columnIndexDateCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
                      int CashiorIdindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_CASHIER_CODE);
+                    int TotalTenderindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_PAID);
+                    int CashReturnindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_CASH_RETURN);
                      int cashierId1 = cursor1.getInt(CashiorIdindex);
 
 
@@ -158,7 +164,8 @@ private String transactionId;
                     TaxtotalAmount = cursor1.getDouble(columnIndexTotalTaxAmount);
                     DateCreated = cursor1.getString(columnIndexDateCreated);
                     timeCreated = cursor1.getString(columnIndexTimeCreated);
-
+                    TenderAmount = cursor1.getString(TotalTenderindex);
+                    CashReturn=cursor1.getString(CashReturnindex);
 
                     String formattedTotalAmount = String.format("%.2f", totalAmount);
                     String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
@@ -168,8 +175,10 @@ private String transactionId;
 
                     String TotalValue = "Rs " + formattedTotalAmount;
                     String TotalVAT = "Rs " + formattedTotalTAXAmount;
-                    totalPriceTextView.setText(String.valueOf(TotalVAT));
-
+                    totalPriceTextView.setText(TotalValue);
+                    VatAMount.setText(TotalVAT);
+                    TenderTextview.setText("Rs " + TenderAmount);
+                    CashReturnAmount.setText("Rs " + CashReturn);
 
 
                 }
@@ -202,24 +211,31 @@ private String transactionId;
                 }
 
                 Cursor TenderCursor = mDatabaseHelper.getPaymentmethodamounts(transactionId);
+                StringBuilder labelBuilder = new StringBuilder();
+                StringBuilder amountBuilder = new StringBuilder();
+                String Totalpaid="",TotalAmountPaid="";
                 if (TenderCursor != null && TenderCursor.moveToFirst()) {
-                    StringBuilder vatTypesBuilder = new StringBuilder();
                     do {
                         int columnIndexPaymentName = TenderCursor.getColumnIndex(DatabaseHelper.SETTLEMENT_PAYMENT_NAME);
                         int columnIndexPaymentamount = TenderCursor.getColumnIndex(DatabaseHelper.SETTLEMENT_AMOUNT);
                         String PaymentName = TenderCursor.getString(columnIndexPaymentName);
                         String PaymentAmount = TenderCursor.getString(columnIndexPaymentamount);
-                        String Totalpaid= "Amount Paid in " + PaymentName;
-                        String TotalAmountPaid= "Rs " + PaymentAmount;
-                        TenderTextview.setText(TotalAmountPaid);
+                         Totalpaid= "Amount Paid in " + PaymentName;
+                         TotalAmountPaid= "Rs " + PaymentAmount;
+// Append the label and amount to their respective builders
+                        labelBuilder.append(Totalpaid).append("\n");
+                        amountBuilder.append(TotalAmountPaid).append("\n");
 
                     } while (TenderCursor.moveToNext());
+
                     TenderCursor.close();
-
-
-
-
                 }
+
+// Set the StringBuilder content to the TextViews
+
+                AmountPerMethodLabel.setText(labelBuilder.toString());
+                AmountPerMethodAmount.setText(amountBuilder.toString());
+
 
             } else {
                 Toast.makeText(getContext(), "No data found", Toast.LENGTH_SHORT).show();
@@ -227,7 +243,7 @@ private String transactionId;
 
             mDatabaseHelper = new DatabaseHelper(getContext());
             Cursor cursor1 = mDatabaseHelper.getAllTransactions(transactionId);
-            mAdapter = new TicketAdapter(getContext(), cursor1);
+            mAdapter = new CompletedTransactionsAdapter(getContext(), cursor1);
             mRecyclerView.setAdapter(mAdapter);
 
         return view;

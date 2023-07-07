@@ -565,7 +565,6 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             double totalAmount = 0.0;
             double taxTotalAmount = 0.0;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
-            ticketFragment.updateheader(totalAmount, taxTotalAmount);
            displayOnLCD();
         }
 

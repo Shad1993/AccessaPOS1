@@ -52,6 +52,7 @@ public class validateticketDialogFragment extends DialogFragment {
     private static final String ARG_Transaction_id = "transactionId";
     private String Transaction_Id;
     private String cashierId;
+    private double cashReturn;
     private Set<String> selectedItems; // Store selected items
     private TextView IDselectedQRTextView;
     private double totalAmount, TaxtotalAmount;
@@ -263,6 +264,8 @@ public class validateticketDialogFragment extends DialogFragment {
                 if (totalAmountEntered >= totalAmount) {
                     double cashReturn = totalAmountEntered - totalAmount;
                     cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
+
+
                     textViewCashReturnAmount.setVisibility(View.VISIBLE);
                     cashReturnTextView.setVisibility(View.VISIBLE);
                     validateButton.setVisibility(View.VISIBLE);
@@ -308,15 +311,20 @@ public class validateticketDialogFragment extends DialogFragment {
                     }
                 }
 
+// Update the table with settlement details
+
                 // Update the table with settlement details
                 for (SettlementItem settlementItem : settlementItems) {
+
                     boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(),Transaction_Id);
                     if (updated) {
+
                         Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
                     }
                 }
+
                 // Declare a variable to hold the total amount
                 double totalAmountinserted = 0.0;
 
@@ -327,14 +335,14 @@ public class validateticketDialogFragment extends DialogFragment {
 
                 // Print or use the total amount as needed
 
-                Toast.makeText(getContext(), "Total Amount: "  + totalAmountinserted, Toast.LENGTH_SHORT).show();
+
                 double cashReturn= totalAmountinserted- totalAmount;
                 // Pass the amount received and settlement items as extras to the print activity
                 Intent intent = new Intent(getActivity(), printerSetup.class);
                 intent.putExtra("amount_received", totalAmountinserted);
                 intent.putExtra("cash_return", cashReturn);
                 intent.putExtra("settlement_items", settlementItems);
-
+                insertCashReturn(cashReturn,totalAmountinserted);
                 startActivity(intent);
             }
 
@@ -348,7 +356,16 @@ public class validateticketDialogFragment extends DialogFragment {
 
 
 
+public void  insertCashReturn(double cashReturn,double totalAmountinserted){
 
+    // Insert the cash return value to the header table
+    boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id);
+    if (cashReturnUpdated) {
+        Toast.makeText(getActivity(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
+    } else {
+        Toast.makeText(getActivity(), "Failed to insert cash return amount: " + cashReturn, Toast.LENGTH_SHORT).show();
+    }
+}
     public void returnHome() {
         Intent home_intent1 = new Intent(getActivity(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -156,6 +156,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_SUB_TOTAL = "SubTotal";
     public static final String TRANSACTION_CASHIER_CODE = "CashierCode";
 
+   public static final String TRANSACTION_TOTAL_PAID="TenderAmount";
+
+    public static final String TRANSACTION_CASH_RETURN ="CashReturn";
 
     public static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
     private static final String TRANSACTION_TOTAL_TX_2 = "Total_Tx_2";
@@ -414,6 +417,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TIME_TRANSACTION + " TEXT, " +
             TRANSACTION_TOTAL_HT_A + " DECIMAL(10, 2), " +
             TRANSACTION_TOTAL_TTC + " DECIMAL(10, 2), " +
+            TRANSACTION_TOTAL_PAID + " DECIMAL(10, 2), " +
+            TRANSACTION_CASH_RETURN + " DECIMAL(10, 2), " +
             TRANSACTION_VAT_BEFORE_DISC + " DECIMAL(10, 2), " +
             TRANSACTION_VAT_AFTER_DISC + " DECIMAL(10, 2), " +
             TRANSACTION_TOTAL_TX_1 + " DECIMAL(10, 2), " +
@@ -1209,9 +1214,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {transactionId};
         String orderBy = DatabaseHelper.SETTLEMENT_PAYMENT_NAME + " ASC";
 
-        return db.query(true, DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.VAT_Type, null, orderBy, null);
+        return db.query(true, DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME, columns, selection, selectionArgs, DatabaseHelper.SETTLEMENT_PAYMENT_NAME, null, orderBy, null);
     }
 
+
+    public boolean insertcashReturn(double cashReturn,double tenderamount, String transaction_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_CASH_RETURN, cashReturn);
+        values.put(TRANSACTION_TOTAL_PAID, tenderamount);
+
+        String selection = TRANSACTION_TICKET_NO + " = ?";
+        String[] selectionArgs = {transaction_id};
+
+        int rowsAffected = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
+        return rowsAffected > 0;
+    }
 
 
 }
