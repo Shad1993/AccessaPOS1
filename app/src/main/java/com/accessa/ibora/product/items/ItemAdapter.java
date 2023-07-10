@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,9 +65,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
 
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
-        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
         String longDescription = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String availableForSale = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.AvailableForSale));
+        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
 
         if (availableForSale.equals("true")) {
             holder.Available.setText("Available ");
@@ -116,6 +117,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         mCursor = newCursor;
 
         if (newCursor != null) {
+
+
             notifyDataSetChanged();
         }
     }

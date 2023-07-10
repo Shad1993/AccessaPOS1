@@ -1,17 +1,14 @@
 package com.accessa.ibora.product.items;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ABBREV;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_1;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_2;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_3;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_BRN_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_COMPANY_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_DEF_SUPPLIER_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_FAX_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Logo;
-import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_NO_PRICES;
-import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_NO_STOCK;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_PAYMENT_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_QR_CODE_NUM;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TEL_NO;
@@ -929,10 +926,7 @@ public class DBManager {
         Company company = null;
 
         String[] columns = new String[]{
-                COLUMN_ABBREV,
-                COLUMN_NO_STOCK,
-                COLUMN_NO_PRICES,
-                COLUMN_DEF_SUPPLIER_CODE,
+                COLUMN_SHOPNAME,
                 COLUMN_VAT_NO,
                 COLUMN_BRN_NO,
                 COLUMN_ADR_1,
@@ -949,10 +943,7 @@ public class DBManager {
         Cursor cursor = database.query(TABLE_NAME_STD_ACCESS, columns, null, null, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             company = new Company(); // Instantiate the company object
-            company.setAbv(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ABBREV)));
-            company.setStockNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NO_STOCK)));
-            company.setPriceNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NO_PRICES)));
-            company.setDefSupplierCode(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DEF_SUPPLIER_CODE)));
+            company.setShopName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SHOPNAME)));
             company.setVATNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VAT_NO)));
             company.setBRNNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BRN_NO)));
             company.setADR1(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_1)));
@@ -975,14 +966,11 @@ public class DBManager {
     }
 
 
-    public boolean updateCompanyInfo(String abv, String stock, String lastModified, String userId, String price, String defSupplierCode, String vatNo, String brnNo, String adr1, String adr2, String adr3, String telNo, String faxNo, String companyName, String image) {
+    public boolean updateCompanyInfo(String abv,  String lastModified, String userId,   String vatNo, String brnNo, String adr1, String adr2, String adr3, String telNo, String faxNo, String companyName, String image) {
         ContentValues values = new ContentValues();
-        values.put(COLUMN_ABBREV, abv);
-        values.put(COLUMN_NO_STOCK, stock);
+        values.put(COLUMN_SHOPNAME, abv);
         values.put(LastModified, lastModified);
         values.put(COLUMN_CASHOR_id, userId);
-        values.put(COLUMN_NO_PRICES, price);
-        values.put(COLUMN_DEF_SUPPLIER_CODE, defSupplierCode);
         values.put(COLUMN_VAT_NO, vatNo);
         values.put(COLUMN_BRN_NO, brnNo);
         values.put(COLUMN_ADR_1, adr1);

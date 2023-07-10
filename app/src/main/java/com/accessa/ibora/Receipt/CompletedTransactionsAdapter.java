@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -63,6 +64,7 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
         public TextView PriceTextView;
         public TextView QuantityTextView;
         private TextView ItemIdTextView;
+        private TextView UnitPriceTextView;
 
 
 
@@ -72,6 +74,7 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
+            UnitPriceTextView = itemView.findViewById(R.id.unit_price_text_view);
 
 
         }
@@ -94,6 +97,7 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+        String UnitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
 
 // Limit the description length to a certain number of characters
         int maxDescriptionLength = 20; // Change this value to your desired length
@@ -107,9 +111,16 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
         String totalPriceString = decimalFormat.format(totalPrice);
 
 
+        // Format the unit price to two decimal places
+        double formattedUnitPrice = Double.parseDouble(price);
+        double totalUnitPrice = formattedUnitPrice ;
+        String totalUnitPriceString = decimalFormat.format(totalUnitPrice);
+
+
         holder.ItemIdTextView.setText(id);
         holder.nameTextView.setText(description);
-        holder.QuantityTextView.setText("x  " + quantity ); // Add a multiplication sign after the quantity value
+        holder.UnitPriceTextView.setText(" x  Rs " + totalUnitPriceString);
+        holder.QuantityTextView.setText( quantity ); // Add a multiplication sign after the quantity value
         holder.PriceTextView.setText("Rs " + totalPriceString);
 
     }
@@ -136,4 +147,6 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
     public class TicketViewHolder {
 
     }
+
+
 }

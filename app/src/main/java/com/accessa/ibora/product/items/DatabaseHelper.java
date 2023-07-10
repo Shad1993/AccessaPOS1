@@ -200,10 +200,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME_STD_ACCESS = "std_access";
     private static final String COLUMN_STD_ACCESS_ID = "std_access_id";
-    public static final String COLUMN_ABBREV = "abbrev";
-    public static final String COLUMN_NO_STOCK = "no_stock";
-    public static final String COLUMN_NO_PRICES = "no_prices";
-    public static final String COLUMN_DEF_SUPPLIER_CODE = "def_supplier_code";
+    public static final String COLUMN_SHOPNAME = "ShopName";
     public static final String COLUMN_VAT_NO = "vat_no";
     public static final String COLUMN_BRN_NO = "brn_no";
     public static final String COLUMN_ADR_1 = "adr_1";
@@ -212,6 +209,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TEL_NO = "tel_no";
     public static final String COLUMN_FAX_NO = "fax_no";
     public static String VAT_Type= "VatType";
+    public static String COLUMN_TerminalNo="TerminalNumber";
     public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
 
@@ -234,7 +232,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String PAYMENT_METHOD_TABLE_NAME= "PaymentMethodTable";
     public static String OpenDrawer = "OpenDrawer";
 
+// POS Table
 
+    private static final String TABLE_NAME_POS_ACCESS = "POSTable";
+    private static final String COLUMN_POS_ID = "id";
 
 
     // Creating Department table query
@@ -461,12 +462,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             SETTLEMENT_CHEQUE_NO + " TEXT, " +
             "FOREIGN KEY (" + SETTLEMENT_INVOICE_ID + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
+
     private static final String CREATE_STD_ACCESS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_STD_ACCESS + " ("
             + COLUMN_STD_ACCESS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + COLUMN_ABBREV + " TEXT, "
-            + COLUMN_NO_STOCK + " INTEGER, "
-            + COLUMN_NO_PRICES + " INTEGER, "
-            + COLUMN_DEF_SUPPLIER_CODE + " TEXT, "
+            + COLUMN_SHOPNAME + " TEXT, "
             + COLUMN_Logo + " TEXT, "
             + COLUMN_VAT_NO + " TEXT, "
             + COLUMN_BRN_NO + " TEXT, "
@@ -483,6 +482,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + ")";
 
 
+    private static final String CREATE_POS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_POS_ACCESS + " ("
+            + COLUMN_POS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_TerminalNo + " TEXT, "
+            + COLUMN_COMPANY_NAME + " TEXT, "
+            + COLUMN_CASHOR_id + " INTEGER, "
+            + LastModified + " TEXT, "
+            + DateCreated + " TEXT, "
+            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
+            + ")";
 
 
     private static final String CREATE_PAYMENT_METHOD_TABLE = "CREATE TABLE IF NOT EXISTS " + PAYMENT_METHOD_TABLE_NAME + " ("
@@ -517,6 +525,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_STD_ACCESS_TABLE);
         db.execSQL(CREATE_PAYMENTBYQY_TABLE);
         db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
+        db.execSQL(CREATE_POS_TABLE);
     }
 
     @Override
@@ -535,6 +544,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_STD_ACCESS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PAYMENTBYQY);
         db.execSQL("DROP TABLE IF EXISTS " + PAYMENT_METHOD_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_POS_ACCESS);
 
         onCreate(db);
     }
@@ -768,7 +778,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public Cursor searchItems(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {_ID, Name, LongDescription, Category, Price};
+        String[] projection = {_ID, Name, LongDescription,AvailableForSale, Category, Price};
         String selection = LongDescription + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LongDescription + " ASC";
@@ -1126,9 +1136,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getAllReceipt() {
         SQLiteDatabase db = getReadableDatabase();
-        String sortOrder = TRANSACTION_DATE_CREATED + " DESC";
+        String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
         return db.query(TRANSACTION_HEADER_TABLE_NAME, null, null, null, null, null, sortOrder);
     }
+
 
 
     public Cursor searchReceipt(String selectedItem) {
@@ -1230,6 +1241,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         int rowsAffected = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
         return rowsAffected > 0;
+    }
+
+
+    public Cursor searchTransactions(String newText) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {_ID, TRANSACTION_TICKET_NO, TRANSACTION_DATE_CREATED, TRANSACTION_TOTAL_TTC};
+        String selection = TRANSACTION_DATE_CREATED + " LIKE ?";
+        String[] selectionArgs = {"%" + newText + "%"};
+        String sortOrder = TRANSACTION_DATE_CREATED + " ASC";
+        return db.query(TRANSACTION_HEADER_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+
+    public Cursor getAllDistinctReceipt() {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = new String[] { "DISTINCT " + TRANSACTION_DATE_CREATED };
+        String sortOrder = TRANSACTION_DATE_CREATED + " DESC";
+        return db.query( TRANSACTION_HEADER_TABLE_NAME, columns, null, null, null, null, sortOrder);
     }
 
 

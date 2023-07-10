@@ -15,9 +15,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.Admin.CompanyInfo.FormPager.InsertCompanyDataActivity;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
-import com.accessa.ibora.company.InsertCompanyDataActivity;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;

@@ -24,10 +24,8 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 
 public class InsertCompanyDataActivity extends Activity {
 
-    private EditText editAbbrev;
-    private EditText editNoStock;
-    private EditText editNoPrices;
-    private EditText editDefSupplierCode;
+    private EditText SHOPNAME;
+
     private ImageView imageLogo;
     private Button btnUploadImage;
     private EditText editVATNo;
@@ -56,10 +54,7 @@ public class InsertCompanyDataActivity extends Activity {
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getWritableDatabase();
 
-        editAbbrev = findViewById(R.id.editAbbrev);
-        editNoStock = findViewById(R.id.editNoStock);
-        editNoPrices = findViewById(R.id.editNoPrices);
-        editDefSupplierCode = findViewById(R.id.editDefSupplierCode);
+        SHOPNAME = findViewById(R.id.editAbbrev);
         imageLogo = findViewById(R.id.imageLogo);
         btnUploadImage = findViewById(R.id.btnUploadImage);
         editVATNo = findViewById(R.id.editVATNo);
@@ -105,10 +100,7 @@ public class InsertCompanyDataActivity extends Activity {
     }
 
     private void insertData() {
-        String abbrev = editAbbrev.getText().toString();
-        int noStock = Integer.parseInt(editNoStock.getText().toString());
-        int noPrices = Integer.parseInt(editNoPrices.getText().toString());
-        String defSupplierCode = editDefSupplierCode.getText().toString();
+        String abbrev = SHOPNAME.getText().toString();
         String vatNo = editVATNo.getText().toString();
         String brnNo = editBRNNo.getText().toString();
         String adr1 = editADR1.getText().toString();
@@ -122,9 +114,6 @@ public class InsertCompanyDataActivity extends Activity {
 
         ContentValues values = new ContentValues();
         values.put("Abbrev", abbrev);
-        values.put("No_Stock", noStock);
-        values.put("No_Prices", noPrices);
-        values.put("Def_Supplier_Code", defSupplierCode);
         values.put("Logo", logoPath);
         values.put("VAT_No", vatNo);
         values.put("BRN_No", brnNo);
@@ -164,10 +153,7 @@ public class InsertCompanyDataActivity extends Activity {
         if (result != -1) {
             Toast.makeText(InsertCompanyDataActivity.this, "Data inserted successfully", Toast.LENGTH_SHORT).show();
             // Clear input fields
-            editAbbrev.setText("");
-            editNoStock.setText("");
-            editNoPrices.setText("");
-            editDefSupplierCode.setText("");
+            SHOPNAME.setText("");
             imageLogo.setImageResource(R.drawable.accessalogo);
             imageUri = null;
             imageLogo.setVisibility(View.GONE);

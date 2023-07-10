@@ -11,6 +11,7 @@
     <color name="primaryTextColor">#00a5ff</color>
     <color name="whiteTextColor">#00a5ff</color>
     <color name="textviewextColor">#DAE2F3</color>
+    <color name="grey"> #808080</color>
 
 
 </resources>

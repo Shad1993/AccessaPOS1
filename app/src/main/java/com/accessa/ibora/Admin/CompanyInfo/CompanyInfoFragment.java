@@ -96,9 +96,6 @@ public class CompanyInfoFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.edit_company_info, container, false);
         Abv = view.findViewById(R.id.editAbbrev);
-        StockNo = view.findViewById(R.id.textNoStock);
-        PriceNo = view.findViewById(R.id.editNoPrices);
-        DefSupplierCode = view.findViewById(R.id.editDefSupplierCode);
         VATNo = view.findViewById(R.id.editVATNo);
         BRNNo = view.findViewById(R.id.editBRNNo);
         ADR1 = view.findViewById(R.id.editADR1);
@@ -129,10 +126,8 @@ public class CompanyInfoFragment extends Fragment {
 
         Company company = dbManager.getCompanyInfo();
         if (company != null) {
-            Abv.setText(company.getAbv());
-            StockNo.setText(company.getStockNo());
-            PriceNo.setText(company.getPriceNo());
-            DefSupplierCode.setText(company.getDefSupplierCode());
+            Abv.setText(company.getShopName());
+
             VATNo.setText(company.getVATNo());
             BRNNo.setText(company.getBRNNo());
             ADR1.setText(company.getADR1());
@@ -218,7 +213,7 @@ public class CompanyInfoFragment extends Fragment {
 
 
 
-        boolean isUpdated = dbManager.updateCompanyInfo( abv,stock, lastmodified, UserId, price,defSupplierCode,vatNo,brnNo,adr1,adr2,adr3,telNo,faxNo,companyName,image);
+        boolean isUpdated = dbManager.updateCompanyInfo( abv, lastmodified, UserId,vatNo,brnNo,adr1,adr2,adr3,telNo,faxNo,companyName,image);
             int rowsAffected = database.update("Users", value, null, null);
             dbManager.close();
             SharedPreferences.Editor editor = sharedPreferences.edit();

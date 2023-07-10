@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -42,7 +44,9 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
     private SharedPreferences sharedPreferences;
     private TextView CompanyName;
     private String Company_name;
-
+    private ReceiptAdapter receiptAdapter;
+    private SearchView searchView;
+    private Spinner dateFilterSpinner;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,6 +125,10 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
                 return true;
             }
         });
+
+
+
+
     }
 
 

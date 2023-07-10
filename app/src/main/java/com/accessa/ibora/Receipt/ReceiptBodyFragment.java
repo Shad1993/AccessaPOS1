@@ -8,12 +8,15 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,6 +37,9 @@ public class ReceiptBodyFragment extends Fragment {
     private double totalAmount,TaxtotalAmount;
     private  String DateCreated,timeCreated,TenderAmount,CashReturn;
     private  int CashiorId;
+    private ReceiptAdapter receiptAdapter;
+    private SearchView searchView;
+    private Spinner dateFilterSpinner;
 private String transactionId;
     // onCreate
     @Override
@@ -60,8 +66,13 @@ private String transactionId;
             mRecyclerView = view.findViewById(R.id.recycler_view);
             mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        searchView = view.findViewById(R.id.search_view);
+        dateFilterSpinner = view.findViewById(R.id.date_filter_spinner);
 
-            // Initialize the database helper
+
+
+
+        // Initialize the database helper
             mDatabaseHelper = new DatabaseHelper(getContext());
         SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -85,7 +96,6 @@ private String transactionId;
                 // Set the transaction details to TextViews or any other views in your layout
                 TextView transactionIdTextView = view.findViewById(R.id.transaction_id_text_view);
                 TextView transactionDateTextView = view.findViewById(R.id.transaction_date_text_view);
-                TextView quantityTextView = view.findViewById(R.id.quantity_text_view);
                 TextView totalPriceTextView = view.findViewById(R.id.total_price_text_view);
                 TextView companyTextView = view.findViewById(R.id.companyName_text_view);
                 TextView company1TextView = view.findViewById(R.id.companyName1_text_view);
@@ -186,7 +196,6 @@ private String transactionId;
 
                 transactionIdTextView.setText(String.valueOf(transactionId));
                 transactionDateTextView.setText(transactionDate);
-                quantityTextView.setText(String.valueOf(quantity));
 
                 PosNo.setText(POSNo);
                 // Close the cursor
@@ -269,4 +278,5 @@ private String transactionId;
         fragment.setArguments(args);
         return fragment;
     }
+
 }

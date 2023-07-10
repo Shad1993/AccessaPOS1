@@ -2,10 +2,7 @@ package com.accessa.ibora.company;
 
 
 public class Company {
-    private String Abv;
-    private String StockNo;
-    private String PriceNo;
-    private String DefSupplierCode;
+    private String Shopname;
     private String VATNo;
     private String BRNNo;
     private String ADR1;
@@ -19,10 +16,7 @@ public class Company {
     private String imagelink;
 
     public Company() {
-        this.Abv = Abv;
-        this.StockNo = StockNo;
-        this.PriceNo = PriceNo;
-        this.DefSupplierCode = DefSupplierCode;
+        this.Shopname = Shopname;
         this.VATNo = VATNo;
         this.BRNNo = BRNNo;
         this.ADR1 = ADR1;
@@ -39,37 +33,14 @@ public class Company {
 
     // Getter and Setter methods for all fields
 
-    public String getAbv() {
-        return Abv;
+    public String getShopName() {
+        return Shopname;
     }
 
-    public void setAbv(String Abv) {
-        this.Abv = Abv;
+    public void setShopName(String Shopname) {
+        this.Shopname = Shopname;
     }
 
-    public String getStockNo() {
-        return StockNo;
-    }
-
-    public void setStockNo(String StockNo) {
-        this.StockNo = StockNo;
-    }
-
-    public String getPriceNo() {
-        return PriceNo;
-    }
-
-    public void setPriceNo(String PriceNo) {
-        this.PriceNo = PriceNo;
-    }
-
-    public String getDefSupplierCode() {
-        return DefSupplierCode;
-    }
-
-    public void setDefSupplierCode(String DefSupplierCode) {
-        this.DefSupplierCode = DefSupplierCode;
-    }
 
     public String getVATNo() {
         return VATNo;
