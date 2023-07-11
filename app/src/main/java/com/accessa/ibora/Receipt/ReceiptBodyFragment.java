@@ -33,11 +33,12 @@ public class ReceiptBodyFragment extends Fragment {
     private CompletedTransactionsAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
     private String cashierName,cashierId;
-    private String cashorlevel,CompanyName,LogoPath;
+    private String cashorlevel,ShopName,LogoPath;
     private double totalAmount,TaxtotalAmount;
-    private  String DateCreated,timeCreated,TenderAmount,CashReturn;
+    private  String DateCreated,timeCreated,TenderAmount,CashReturn,PosNum;
     private  int CashiorId;
     private ReceiptAdapter receiptAdapter;
+    private static final String POSNumber="posNumber";
     private SearchView searchView;
     private Spinner dateFilterSpinner;
 private String transactionId;
@@ -78,7 +79,9 @@ private String transactionId;
         cashierId = sharedPreference.getString("cashorId", null);
         cashierName = sharedPreference.getString("cashorName", null);
         cashorlevel = sharedPreference.getString("cashorlevel", null);
-        CompanyName = sharedPreference.getString("CompanyName", null);
+        ShopName = sharedPreference.getString("Shopname", null);
+        SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
 
             // Fetch the transaction details from the database based on the transaction ID
             Cursor cursor = mDatabaseHelper.getTransactionDetails(String.valueOf(transactionId));
@@ -117,7 +120,7 @@ private String transactionId;
                 // ... Initialize other TextViews
 
 
-                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(CompanyName);
+                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
 
                 if (cursorCompany != null && cursorCompany.moveToFirst()) {
                     int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
@@ -197,7 +200,7 @@ private String transactionId;
                 transactionIdTextView.setText(String.valueOf(transactionId));
                 transactionDateTextView.setText(transactionDate);
 
-                PosNo.setText(POSNo);
+                PosNo.setText("POS Number: " + POSNo);
                 // Close the cursor
                 cursor.close();
 

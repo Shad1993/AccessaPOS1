@@ -1,14 +1,19 @@
 package com.accessa.ibora;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.hardware.display.DisplayManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.view.Display;
 import android.view.View;
 import android.view.animation.Animation;
@@ -21,6 +26,9 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.product.items.DatabaseHelper;
+
+import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class SplashActivity extends Activity {
 
@@ -34,7 +42,23 @@ public class SplashActivity extends Activity {
     private Runnable navigateToNextScreenRunnable;
     private MediaPlayer mediaPlayer;
     private int progress = 0; // Current progress value for the loading bar
+    private DatabaseHelper mDatabaseHelper;
+    private static IWoyouService woyouService;
+    private ServiceConnection connService = new ServiceConnection() {
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            woyouService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            woyouService = IWoyouService.Stub.asInterface(service);
+
+            // Call the method to display on the LCD here
+            displayOnLCD();
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +69,14 @@ public class SplashActivity extends Activity {
         logoImageView = findViewById(R.id.logoImageView);
         loadingBar = findViewById(R.id.loadingBar);
 
+
+
+        Intent intent1 = new Intent();
+        intent1.setPackage("woyou.aidlservice.jiuiv5");
+        intent1.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
+        bindService(intent1, connService, Context.BIND_AUTO_CREATE);
+
+        mDatabaseHelper = new DatabaseHelper(this);
         // Apply bouncing animation to the logo image
         Animation bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.bounce_animation);
         bounceAnimation.setInterpolator(new BounceInterpolator());
@@ -106,11 +138,25 @@ public class SplashActivity extends Activity {
 
         } else {
             // Secondary screen not found or not supported
-            Toast.makeText(this, "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            displayOnLCD();
         }
     }
 
+    public  void displayOnLCD() {
+        if (woyouService == null) {
+            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        try {
+
+
+                woyouService.sendLCDDoubleString("Welcome" , "Back " , null);
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
     private Display getPresentationDisplay() {
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
         Display[] displays = displayManager.getDisplays();

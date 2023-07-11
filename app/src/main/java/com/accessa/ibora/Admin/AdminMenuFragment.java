@@ -1,14 +1,27 @@
 package com.accessa.ibora.Admin;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_COMPANY_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TerminalNo;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_POS_ACCESS;
+
 import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -22,8 +35,13 @@ import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.CustomAdapter;
 import com.accessa.ibora.welcome;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class AdminMenuFragment extends Fragment {
@@ -34,7 +52,12 @@ public class AdminMenuFragment extends Fragment {
     private String[] menuList;
     private int[] icons;
 
-
+    private SharedPreferences sharedPreferences;
+    private String cashorId;
+    private String cashorName;
+    private TextView CompanyName;
+    private String ShopName;
+    private DatabaseHelper mDatabaseHelper;
 
     // activity listener
     private OnMenufragListener menufragListener;
@@ -67,13 +90,15 @@ public class AdminMenuFragment extends Fragment {
                 getString(R.string.People),
                 getString(R.string.Rights),
                 getString(R.string.CompanyInfo),
-                getString(R.string.sync)
+                getString(R.string.sync),
+                getString(R.string.POSINFO)
         };
         icons = new int[]{
                 R.drawable.cashier,
                 R.drawable.key,
                 R.drawable.comp,
-                R.drawable.sync
+                R.drawable.sync,
+                R.drawable.pos
         };
 
         setHasOptionsMenu(true);
@@ -87,6 +112,14 @@ public class AdminMenuFragment extends Fragment {
         fragmentTransaction.addToBackStack(newFragment.toString());
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         fragmentTransaction.commit();
+        // Initialize the DatabaseHelper
+        mDatabaseHelper = new DatabaseHelper(getActivity());
+// Retrieve the shared preferences
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+        cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
+        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        ShopName = sharedPreferences.getString("ShopName", null); // Retrieve company name
     }
 
     // onActivityCreated
@@ -183,7 +216,38 @@ public class AdminMenuFragment extends Fragment {
                     });
 
 
-            }else {
+            }else if (position== 4) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.popup_insert_pos_access);
+
+                    // Set up the dialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
+                    EditText editCompanyName = dialog.findViewById(R.id.editCompanyName);
+                    Button btnInsert = dialog.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Get the entered data from the views
+                            String terminalNo = editTerminalNo.getText().toString();
+                            String shopName = ShopName;
+                            String cashOrId = cashorId;
+
+                            // Perform validation and data insertion into the database
+                            if (validateData(terminalNo)) {
+                                insertDataIntoPosAccessTable(terminalNo, shopName, cashOrId);
+                                dialog.dismiss(); // Close the popup
+                            }
+                        }
+                    });
+
+
+                }else {
                     toolbarTitle = getString(R.string.Admin); // Set a default value if needed
                 }
 
@@ -200,7 +264,53 @@ public class AdminMenuFragment extends Fragment {
 
         return view;
     }
+    private boolean validateData(String terminalNo) {
+        // Perform validation checks
+        if (TextUtils.isEmpty(terminalNo)) {
+            // Display an error message or show a Toast indicating that Terminal No is required
+            Toast.makeText(getContext(), "Terminal No is required", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
 
+        // All data is valid
+        return true;
+    }
 
+    private void insertDataIntoPosAccessTable(String terminalNo, String ShopName, String cashOrId) {
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+
+        // Get the current date and time
+        String dateTime = getCurrentDateTime();
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TerminalNo, terminalNo);
+        values.put(COLUMN_SHOPNAME, ShopName);
+        values.put(COLUMN_CASHOR_id, cashOrId);
+        values.put(DatabaseHelper.LastModified, dateTime);
+        values.put(DatabaseHelper.DateCreated, dateTime);
+
+        long result = db.insert(TABLE_NAME_POS_ACCESS, null, values);
+        if (result != -1) {
+            // Data inserted successfully
+            savePosNumber(terminalNo); // Save POS number to SharedPreferences
+            Toast.makeText(getContext(), "POS Number saved", Toast.LENGTH_SHORT).show();
+        } else {
+            // Failed to insert data
+            Toast.makeText(getContext(), "Failed to insert data", Toast.LENGTH_SHORT).show();
+        }
+
+        db.close();
+    }
+    private String getCurrentDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+    private void savePosNumber(String posNumber) {
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("posNumber", posNumber);
+        editor.apply();
+    }
 }

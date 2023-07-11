@@ -1,13 +1,10 @@
 package com.accessa.ibora.sales.Sales;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -23,24 +20,21 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.text.DecimalFormat;
-import com.accessa.ibora.MainActivity;
+
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
-import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import androidx.fragment.app.Fragment;
+
 import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
 
@@ -64,7 +58,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public TextView priceTextView;
     public ImageView productImage;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
-    private String transactionIdInProgress; // Transaction ID for "InProgress" status
+    private static final String POSNumber="posNumber";
+    private String transactionIdInProgress,PosNum; // Transaction ID for "InProgress" status
     private BarcodeListener barcodeListener;
 
 
@@ -89,6 +84,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         int numberOfColumns = 6;
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+
+        SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
 
         // Set the fragment result listener
         getParentFragmentManager().setFragmentResultListener("barcodesearched", this, new FragmentResultListener() {
@@ -240,7 +238,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         double  newTotalPrice = UnitPrice * 1;
 
                         // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
 
                         refreshTicketFragment();
                         refreshTotal();
@@ -250,7 +248,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     double  newTotalPrice = UnitPrice * 1;
 
                     // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType);
+                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType, PosNum);
                     refreshTicketFragment();
                     refreshTotal();
                 }
@@ -366,7 +364,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             double newTotalPrice = UnitPrice * 1;
 
                             // Item has a different transaction ID, insert a new transaction
-                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
+                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
 
                             refreshTicketFragment();
                             refreshTotal();
@@ -377,7 +375,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         double newTotalPrice = UnitPrice * 1;
 
                         // Item not selected, insert a new transaction with quantity 1 and total price
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
                         refreshTicketFragment();
                         refreshTotal();
 
@@ -465,12 +463,6 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         String status = mDatabaseHelper.getTransactionStatus(transactionIdInProgress);
 
-                        if (status != null) {
-                            // Use the transaction status as needed
-                            // For example, display it in a TextView
-                            Toast.makeText(getContext(), "status: " + status, Toast.LENGTH_SHORT).show();
-                        } Toast.makeText(getContext(), "status null: " + status, Toast.LENGTH_SHORT).show();
-
 
                         if (status.equals("InProgress") || status.equals("Saved")  ) {
                             if (transactionIdInProgress == null) {
@@ -534,7 +526,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 double  newTotalPrice = UnitPrice * 1;
 
                                 // Item has a different transaction ID, insert a new transaction
-                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType);
+                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
 
                                 refreshTicketFragment();
                                 refreshTotal();
@@ -544,7 +536,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             double  newTotalPrice = UnitPrice * 1;
 
                             // Item not selected, insert a new transaction with quantity 1 and total price
-                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType);
+                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType,PosNum);
                             refreshTicketFragment();
                             refreshTotal();
                         }
@@ -690,7 +682,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     TaxAmount,
                     quantityItem,
                     cashierId,
-                    transactionStatus
+                    transactionStatus,
+                    PosNum
             );
 
 

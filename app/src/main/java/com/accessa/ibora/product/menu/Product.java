@@ -45,7 +45,7 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
     private TextView CompanyName;
-    private String Company_name;
+    private String ShopName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
+        ShopName = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
@@ -78,11 +78,13 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
+        CompanyName = headerView.findViewById(R.id.Company_name);
+
 
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-        CompanyName = headerView.findViewById(R.id.Company_name);
+        CompanyName.setText(ShopName);
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");

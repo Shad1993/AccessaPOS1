@@ -64,7 +64,7 @@ public class AddPeopleActivity extends Activity {
     private EditText PinTextView;
     private EditText DepartmentTextView;
     private Spinner LevelSpinner;
-    private String companyName;
+    private String ShopName;
     private String cashorId;
     private String cashorName;
     private SharedPreferences sharedPreferences;
@@ -85,7 +85,7 @@ public class AddPeopleActivity extends Activity {
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-         companyName = sharedPreferences.getString("CompanyName", null); // Retrieve cashor's level
+        ShopName = sharedPreferences.getString("Shopame", null); // Retrieve cashor's level
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
@@ -170,7 +170,7 @@ public class AddPeopleActivity extends Activity {
 
 
 
-                        dbManager.insertUser(pin, cashorname, cashierLevel, cashordepartment,companyName, DateCreated, LastModified, mDatabaseHelper);
+                        dbManager.insertUser(pin, cashorname, cashierLevel, cashordepartment,ShopName, DateCreated, LastModified, mDatabaseHelper);
                         dbManager.close();
 
                         // Clear the input fields
@@ -216,7 +216,7 @@ public class AddPeopleActivity extends Activity {
 
 
 
-            dbManager.insertUser(pin,cashorname, cashierLevel, cashordepartment, companyName,DateCreated, LastModified,mDatabaseHelper);
+            dbManager.insertUser(pin,cashorname, cashierLevel, cashordepartment, ShopName,DateCreated, LastModified,mDatabaseHelper);
             dbManager.close();
 
             // Clear the input fields

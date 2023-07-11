@@ -65,11 +65,11 @@ public class printerSetup extends AppCompatActivity {
     private String cashierName,cashierId;
     private double totalAmount,TaxtotalAmount;
     private  String DateCreated,timeCreated;
-    private String cashorlevel,CompanyName,LogoPath;
+    private String cashorlevel,ShopName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
-    private String paymentName ;
-
+    private String paymentName,PosNum ;
+    private static final String POSNumber="posNumber";
     private  ArrayList<SettlementItem> settlementItems = new ArrayList<>();
 
 
@@ -96,7 +96,11 @@ public class printerSetup extends AppCompatActivity {
                     cashierId = sharedPreference.getString("cashorId", null);
                     cashierName = sharedPreference.getString("cashorName", null);
                     cashorlevel = sharedPreference.getString("cashorlevel", null);
-                    CompanyName = sharedPreference.getString("CompanyName", null);
+                    ShopName = sharedPreference.getString("ShopName", null);
+
+
+                    SharedPreferences shardPreference = getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                    PosNum = shardPreference.getString(POSNumber, null);
 
                     // Inflate the custom print layout
                     View customPrintLayout = LayoutInflater.from(getApplicationContext()).inflate(R.layout.print_layout, null);
@@ -106,7 +110,7 @@ public class printerSetup extends AppCompatActivity {
                     titleTextView.setText("Cashier Name: " + cashierName + "\n");
 
                     TextView contentTextView = customPrintLayout.findViewById(R.id.textViewContent);
-                    contentTextView.setText("POS: POS1"+ "\n");
+                    contentTextView.setText("POS Number: "+ PosNum + "\n");
 
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -124,7 +128,7 @@ public class printerSetup extends AppCompatActivity {
 
 
                         // Retrieve the total amount and total tax amount from the transactionheader table
-                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(CompanyName);
+                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
 
                         if (cursorCompany != null && cursorCompany.moveToFirst()) {
                             int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);

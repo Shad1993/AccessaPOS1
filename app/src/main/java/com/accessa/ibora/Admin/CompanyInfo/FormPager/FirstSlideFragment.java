@@ -1,5 +1,6 @@
 package com.accessa.ibora.Admin.CompanyInfo.FormPager;
 
+import static android.app.Activity.RESULT_OK;
 import static com.accessa.ibora.sales.Sales.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
 import android.Manifest;
@@ -8,6 +9,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -15,10 +18,12 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,8 +36,10 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.accessa.ibora.R;
 
-public class FirstSlideFragment extends Fragment {
+import java.io.File;
 
+public class FirstSlideFragment extends Fragment {
+    private static final int REQUEST_IMAGE_GALLERY = 1;
     private EditText editCompanyName;
     private EditText editShopName;
     private static final int PICK_IMAGE_REQUEST = 1;
@@ -65,54 +72,23 @@ public class FirstSlideFragment extends Fragment {
         return view;
     }
 
-    private void openImagePicker() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == PICK_IMAGE_REQUEST) {
-                Uri selectedImageUri = data.getData();
-                imagePath = getImagePathFromUri(selectedImageUri);
-                displaySelectedImage(selectedImageUri);
+    private void openImageOptionsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Image Source");
+        builder.setItems(new CharSequence[]{"Web Link", "Device Memory"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // Web Link
+                        openWebImageDialog();
+                        break;
+                    case 1: // Device Memory
+                        openDeviceImagePicker();
+                        break;
+                }
             }
-        }
-    }
-
-    private String getImagePathFromUri(Uri uri) {
-        String[] projection = { MediaStore.Images.Media.DATA };
-        Cursor cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            String imagePath = cursor.getString(columnIndex);
-            cursor.close();
-            return imagePath;
-        }
-        return null;
-    }
-
-    private void displaySelectedImage(Uri imageUri) {
-        ImageView imageView = getView().findViewById(R.id.imageLogo);
-
-        if (isWebLink(imageUri.toString())) {
-            // Image is from web link
-            logoPath = imageUri.toString();
-            Glide.with(this)
-                    .load(imageUri)
-                    .apply(new RequestOptions().placeholder(R.drawable.accessalogo))
-                    .into(imageView);
-            imageView.setVisibility(View.VISIBLE);
-        } else {
-            // Image is from local storage
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
-            } else {
-                loadLocalImage(imageView, imageUri);
-            }
-        }
+        });
+        builder.show();
     }
 
     private void openWebImageDialog() {
@@ -142,46 +118,94 @@ public class FirstSlideFragment extends Fragment {
         dialog.show();
     }
 
+    private void openDeviceImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_IMAGE_GALLERY);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_GALLERY) {
+                Uri selectedImageUri = data.getData();
+                if (selectedImageUri != null) {
+                    imagePath = getPathFromUri(selectedImageUri);
+                    displaySelectedImage(selectedImageUri);
+                } else {
+                    // Handle the case when selectedImageUri is null
+                    // Display an error message or take appropriate action
+                    Toast.makeText(getContext(), "No image selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private void displaySelectedImage(Uri imageUri) {
+        ImageView imageView = getView().findViewById(R.id.imageLogo); // Initialize imageView
+
+
+        if (isWebLink(String.valueOf(imageUri))) {
+            // Load image from web link
+            Glide.with(this)
+                    .load(imageUri)
+                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .error(R.drawable.iboralogos1)
+                    .into(imageView);
+            imageView.setVisibility(View.VISIBLE);
+        } else {
+            // Load image from local storage
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            } else {
+                loadLocalImage(imageView, String.valueOf(imageUri));
+            }
+        }
+    }
+    private String getPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String imagePath = cursor.getString(columnIndex);
+            cursor.close();
+            return imagePath;
+        }
+        return null;
+    }
+
+    private boolean isWebLink(String url) {
+        return URLUtil.isValidUrl(url);
+    }
+    private void loadLocalImage(ImageView imageView, String imageLocation) {
+        File imageFile = new File(imageLocation);
+        if (imageFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            imageView.setImageBitmap(bitmap);
+        } else {
+            imageView.setImageResource(R.drawable.emptybasket);
+        }
+    }
     private void loadImageFromUrl(String imageUrl) {
         // Implement code to load image from URL
         imagePath = imageUrl;
         // You can also display the selected image here if needed
         ImageView imageView = getView().findViewById(R.id.imageLogo);
+
         Glide.with(this)
                 .load(imageUrl)
-                .into(imageView);
-        imageView.setVisibility(View.VISIBLE);
-    }
-
-    private void openImageOptionsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Select Image Source");
-        builder.setItems(new CharSequence[]{"Web Link", "Device Memory"}, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0: // Web Link
-                        openWebImageDialog();
-                        break;
-                    case 1: // Device Memory
-                        openImagePicker();
-                        break;
-                }
-            }
-        });
-        builder.show();
-    }
-
-    private void loadLocalImage(ImageView imageView, Uri uri) {
-        Glide.with(this)
-                .load(uri)
                 .apply(new RequestOptions().placeholder(R.drawable.accessalogo))
                 .into(imageView);
         imageView.setVisibility(View.VISIBLE);
     }
 
+
+
+
+
     public String getLogoPath() {
-        return logoPath;
+        return imagePath;
     }
 
     public String getCompanyName() {
@@ -192,7 +216,5 @@ public class FirstSlideFragment extends Fragment {
         return editShopName.getText().toString();
     }
 
-    private boolean isWebLink(String url) {
-        return url.startsWith("http://") || url.startsWith("https://");
-    }
+
 }

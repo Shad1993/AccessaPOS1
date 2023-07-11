@@ -32,6 +32,11 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
     private String adr3;
     private String telNo;
     private String faxNo;
+    private String Compadr1;
+    private String Compadr2;
+    private String Compadr3;
+    private String ComptelNo;
+    private String CompfaxNo;
     private String LogoPath;
 
     @Override
@@ -42,7 +47,6 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         btnNext = findViewById(R.id.btnNext);
         btnPrevious = findViewById(R.id.btnPrevious);
-
         pagerAdapter = new CompanyPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(pagerAdapter);
 
@@ -83,6 +87,15 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
                     telNo = pagerAdapter.getEighthSlideData();
                     faxNo = pagerAdapter.getNinthSlideData();
 
+                    viewPager.setCurrentItem(3); // Move to the third slide
+                }else if (currentSlide == 3) {
+                    // Save data from the third slide
+                    Compadr1 = pagerAdapter.getTenthSlideData();
+                    Compadr2 = pagerAdapter.getEleventhSlideData();
+                    Compadr3 = pagerAdapter.gettwelveSlideData();
+                    ComptelNo = pagerAdapter.getThirteenSlideData();
+                    CompfaxNo = pagerAdapter.getForteenSlideData();
+
                     // Call the method to insert the data
                     insertData();
 
@@ -112,9 +125,14 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         values.put("adr_3", adr3);
         values.put("tel_no", telNo);
         values.put("fax_no", faxNo);
+        values.put("ComPanyAdress1", Compadr1);
+        values.put("ComPanyAdress2", Compadr2);
+        values.put("ComPanyAdress3", Compadr3);
+        values.put("ComPanyphoneNumber", ComptelNo);
+        values.put("ComPanyFaxNumber", CompfaxNo);
 
         ContentValues value = new ContentValues();
-        value.put("CompanyName", companyName);
+        value.put("ShopName", shopName);
 
 
         long result = database.insert("std_access", null, values);
@@ -122,7 +140,6 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         database.close();
 
         if (result != -1) {
-            Toast.makeText(InsertCompanyDataActivity.this, "Data inserted successfully", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, RegistorCashor.class);
             startActivity(intent);
         } else {

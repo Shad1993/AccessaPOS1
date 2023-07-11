@@ -45,6 +45,7 @@ import com.accessa.ibora.CustomerLcd.TextDisplay;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
@@ -67,6 +68,7 @@ import android.widget.VideoView;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
@@ -86,10 +88,11 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private static IWoyouService woyouService;
     private TextView cashorNameTextView;
     private TextView cashorIdTextView;
+    private List<String> data ;
     private String cashorId;
     private String cashorName;
     private TextView CompanyName;
-    private String Company_name;
+    private String Shopname;
     private static MainActivity instance;
     private SharedPreferences sharedPreferences;
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
+        Shopname = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
 
 
@@ -207,7 +210,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-        CompanyName.setText(Company_name);
+        CompanyName.setText(Shopname);
 
         // Initialize the TicketFragment
         ticketFragment = new TicketFragment();
@@ -299,10 +302,25 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             textView.setText(text);
         } else {
             // Secondary screen not found or not supported
-            Toast.makeText(this, "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+
+            displayOnLCd();
         }
     }
+    public  void displayOnLCd() {
+        if (woyouService == null) {
+            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        try {
+
+
+            woyouService.sendLCDDoubleString("Welcome" , "Back " , null);
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
     private Display getPresentationDisplay() {
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
         Display[] displays = displayManager.getDisplays();
@@ -470,36 +488,70 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         }
     }
 
-    @Override
-    public  void onItemDeleted() {
-        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
+    public void onItemDeleted() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
-       // CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (ticketFragment != null) {
             double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
             double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
-            customerLcdFragment.displayOnLCD();
+
+
+                showSecondaryScreen1(data);
 
         }
-
-
     }
+
     @Override
     public void onAmountModified() {
-        CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
             double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
             double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
-            customerLcdFragment.displayOnLCD();
+
+
+                showSecondaryScreen1(data);
 
         }
+    }
 
-    } private void displayQROnLCD(String code, String name) {
+    public void showSecondaryScreen1(List<String> data) {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplays();
+
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            TransactionDisplay secondaryDisplay = new TransactionDisplay(this, presentationDisplay);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+
+            // Update the RecyclerView data on the secondary screen
+            secondaryDisplay.updateRecyclerViewData(data);
+        } else {
+
+            // Secondary screen not found or not supported
+            displayOnLCD();
+        }
+    }
+
+    private Display getPresentationDisplays() {
+        DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        for (Display display : displays) {
+            if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                return display;
+            }
+        }
+        return null;
+    }
+
+
+    private void displayQROnLCD(String code, String name) {
         if (woyouService == null) {
             Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
             return;

@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.Fragment;
 
 import com.accessa.ibora.R;
+import com.bumptech.glide.Glide;
 
 public class SecondSlideFragment extends Fragment {
 
@@ -26,7 +28,13 @@ public class SecondSlideFragment extends Fragment {
 
         editVATNo = view.findViewById(R.id.editVATNo);
         editBRNNo = view.findViewById(R.id.editBRNNo);
+        AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
 
+        // Load the GIF using Glide
+        Glide.with(this)
+                .asGif()
+                .load(R.drawable.letter)
+                .into(gifImageView);
         return view;
     }
 

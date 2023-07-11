@@ -98,7 +98,7 @@ public class RegistorAdmin extends AppCompatActivity {
                 SQLiteDatabase database = databaseHelper.getWritableDatabase();
 
 
-                String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
+                String ShopName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("ShopName"));
                 long currentTimeMillis = System.currentTimeMillis();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
                 String DateModified = dateFormat.format(new Date(currentTimeMillis));
@@ -110,7 +110,7 @@ public class RegistorAdmin extends AppCompatActivity {
                 String departmentCode = DBManager.getAutoIncrementedDepartmentCode(database);
                 ContentValues values = new ContentValues();
                 ContentValues values1 = new ContentValues();
-                values.put("CompanyName", companyName);
+                values.put("Shopname", ShopName);
                 values.put("pin", enteredPIN);
                 values.put("cashorname", cashorname);
                 values.put("cashorDepartment", cashordepartment);

@@ -77,7 +77,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Column names
 
     public static final String COLUMN_CASHOR_id = "cashorid";
-    public static final String COLUMN_CASHOR_COMPANY ="CompanyName" ;
+    public static final String COLUMN_CASHOR_Shop ="ShopName" ;
     public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
     public static final String TRANSACTION_STATUS_INPROGRESS = "InProgress";
     public static final String COLUMN_PIN = "pin";
@@ -208,6 +208,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ADR_3 = "adr_3";
     public static final String COLUMN_TEL_NO = "tel_no";
     public static final String COLUMN_FAX_NO = "fax_no";
+    private static String COLUMN_Comp_ADR_1= "ComPanyAdress1";
+    private static String COLUMN_Comp_ADR_2 ="ComPanyAdress2";
+    private static String COLUMN_Comp_ADR_3= "ComPanyAdress3";
+    private static String COLUMN_Comp_TEL_NO= "ComPanyphoneNumber";
+    private static String COLUMN_Comp_FAX_NO= "ComPanyFaxNumber";
     public static String VAT_Type= "VatType";
     public static String COLUMN_TerminalNo="TerminalNumber";
     public static final String COLUMN_Logo = "Logo";
@@ -234,7 +239,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 // POS Table
 
-    private static final String TABLE_NAME_POS_ACCESS = "POSTable";
+    public static final String TABLE_NAME_POS_ACCESS = "POSTable";
     private static final String COLUMN_POS_ID = "id";
 
 
@@ -313,7 +318,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_PIN + " TEXT, "
             + COLUMN_CASHOR_LEVEL + " INTEGER, "
             + COLUMN_CASHOR_NAME + " TEXT, "
-            + COLUMN_CASHOR_COMPANY + " TEXT, "
+            + COLUMN_CASHOR_Shop + " TEXT, "
             + COLUMN_CASHOR_DEPARTMENT + " TEXT,"
             + DateCreated + " DATETIME NOT NULL,"
             + LastModified + " DATETIME NOT NULL) ";
@@ -463,8 +468,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "FOREIGN KEY (" + SETTLEMENT_INVOICE_ID + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
+
     private static final String CREATE_STD_ACCESS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_STD_ACCESS + " ("
             + COLUMN_STD_ACCESS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_Comp_ADR_1 + " TEXT, "
+            + COLUMN_Comp_ADR_2 + " TEXT, "
+            + COLUMN_Comp_ADR_3 + " TEXT, "
+            + COLUMN_Comp_TEL_NO + " TEXT, "
+            + COLUMN_Comp_FAX_NO + " TEXT, "
             + COLUMN_SHOPNAME + " TEXT, "
             + COLUMN_Logo + " TEXT, "
             + COLUMN_VAT_NO + " TEXT, "
@@ -478,18 +489,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_CASHOR_id + " INTEGER, "
             + LastModified + " TEXT, "
             + DateCreated + " TEXT, "
-            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
+            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_Shop + ")"
             + ")";
 
 
     private static final String CREATE_POS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_POS_ACCESS + " ("
             + COLUMN_POS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_TerminalNo + " TEXT, "
-            + COLUMN_COMPANY_NAME + " TEXT, "
+            + COLUMN_SHOPNAME + " TEXT, "
             + COLUMN_CASHOR_id + " INTEGER, "
             + LastModified + " TEXT, "
             + DateCreated + " TEXT, "
-            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_COMPANY + ")"
+            + "FOREIGN KEY(" + COLUMN_SHOPNAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_Shop + ")"
             + ")";
 
 
@@ -552,7 +563,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
-                                  String vatType) {
+                                  String vatType, String posNum) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -566,10 +577,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_TOTAL_HT_A, priceWithoutVat);
         values.put(TRANSACTION_TOTAL_TTC, totalPrice);
         values.put(VAT_Type, vatType);
+        values.put(TRANSACTION_TERMINAL_NO, posNum);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
     public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
-                                         String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus) {
+                                         String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus, String posNum) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Check if the transaction ID already exists
@@ -596,6 +608,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_ITEM_QUANTITY, quantityItem);
         values.put(TRANSACTION_CASHIER_CODE, cashierId);
         values.put(TRANSACTION_STATUS, transactionStatus);
+        values.put(TRANSACTION_TERMINAL_NO, posNum);
 
 
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
@@ -787,7 +800,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchUser(String query) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {COLUMN_CASHOR_id, COLUMN_CASHOR_NAME, COLUMN_CASHOR_DEPARTMENT, COLUMN_CASHOR_LEVEL, COLUMN_CASHOR_COMPANY};
+        String[] projection = {COLUMN_CASHOR_id, COLUMN_CASHOR_NAME, COLUMN_CASHOR_DEPARTMENT, COLUMN_CASHOR_LEVEL, COLUMN_CASHOR_Shop};
         String selection = COLUMN_CASHOR_NAME + " LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = COLUMN_CASHOR_NAME + " ASC";
@@ -904,14 +917,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, selectionArgs);
     }
-    public Cursor getCompanyInfo(String companyName) {
+    public Cursor getCompanyInfo(String shopName) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         String query = "SELECT * FROM " + TABLE_NAME_STD_ACCESS +
-                " WHERE " + COLUMN_COMPANY_NAME + " = ?";
+                " WHERE " + COLUMN_SHOPNAME + " = ?";
 
-        if (companyName != null) {
-            return db.rawQuery(query, new String[]{companyName});
+        if (shopName != null) {
+            return db.rawQuery(query, new String[]{shopName});
         } else {
             // Handle the case where transactionId is null
             // You can choose to return null or an empty cursor, depending on your requirements
@@ -1103,12 +1116,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
         return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
-    public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId) {
+    public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId,String PosNum) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SETTLEMENT_PAYMENT_NAME, paymentName);
         values.put(SETTLEMENT_AMOUNT, settlementAmount);
         values.put(SETTLEMENT_INVOICE_ID  , SettlementId);
+        values.put(SETTLEMENT_TERMINAL_NO,PosNum);
 
         // Insert the values into the table
         long newRowId = db.insert(INVOICE_SETTLEMENT_TABLE_NAME, null, values);

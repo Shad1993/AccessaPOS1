@@ -98,14 +98,14 @@ public class DBManager {
         costContentValue.put(DatabaseHelper.Cost, Cost);
         database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
-    public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String CompanyName, String dateCreated, String lastModified, DatabaseHelper databaseHelper) {
+    public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String ShopName, String dateCreated, String lastModified, DatabaseHelper databaseHelper) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.COLUMN_PIN, pin);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_NAME, cashorname);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_LEVEL, cashierLevel);
         contentValue.put(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT, cashordepartment);
-        contentValue.put(DatabaseHelper.COLUMN_CASHOR_COMPANY, CompanyName);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_Shop, ShopName);
         contentValue.put(DateCreated, dateCreated);
         contentValue.put(LastModified, lastModified);
 

@@ -3,6 +3,8 @@ package com.accessa.ibora.login;
 
 
 
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_Shop;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -108,7 +110,7 @@ public class login extends AppCompatActivity {
             String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
             String cashorId = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id));
             String cashorlevel = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
-            String CompanyName = cursor.getString(cursor.getColumnIndex(COLUMN_COMPANY_NAME));
+            String ShopName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_Shop));
 
             // Create and show the AlertDialog with the welcome message and cashor's name
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -120,7 +122,7 @@ public class login extends AppCompatActivity {
             editor.putString("cashorName", cashorName); // Store cashor's name
             editor.putString("cashorId", cashorId); // Store cashor's ID
             editor.putString("cashorlevel", cashorlevel); // Store cashor's level
-            editor.putString("CompanyName", CompanyName); // Store company name
+            editor.putString("ShopName", ShopName); // Store company name
             editor.apply();
 
             // Inflate the custom view for the AlertDialog
@@ -153,7 +155,7 @@ public class login extends AppCompatActivity {
             final Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra("cashorName", cashorName); // Pass cashorName to MainActivity
             intent.putExtra("cashorId", cashorId); // Pass cashorId to MainActivity
-            intent.putExtra("CompanyName", CompanyName); // Pass cashorId to MainActivity
+            intent.putExtra("ShopName", ShopName); // Pass cashorId to MainActivity
             // Use a Handler to delay the redirection
             new Handler().postDelayed(new Runnable() {
                 @Override

@@ -403,7 +403,7 @@ private TextView textViewVATs,textViewTotals;
     }
 
 
-    private void showSecondaryScreen(List<String> data) {
+    public void showSecondaryScreen(List<String> data) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
 

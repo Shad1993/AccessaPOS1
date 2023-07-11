@@ -173,11 +173,8 @@ public class CompanyInfoFragment extends Fragment {
             // Get the current timestamp
             long currentTimeMillis = System.currentTimeMillis();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-            String stock = StockNo.getText().toString().trim();
             String lastmodified = dateFormat.format(new Date(currentTimeMillis));
             String UserId = cashorId;
-            String price = PriceNo.getText().toString().trim();
-            String defSupplierCode = DefSupplierCode.getText().toString().trim();
             String vatNo = VATNo.getText().toString().trim();
             String brnNo = BRNNo.getText().toString().trim();
             String adr1 = ADR1.getText().toString().trim();
@@ -196,8 +193,7 @@ public class CompanyInfoFragment extends Fragment {
 
             }
 
-            if (abv.isEmpty() || stock.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || price.isEmpty()
-                    || defSupplierCode.isEmpty() || vatNo.isEmpty() || brnNo.isEmpty()
+            if (abv.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
                     || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty()
                     || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty()) {
                 Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();

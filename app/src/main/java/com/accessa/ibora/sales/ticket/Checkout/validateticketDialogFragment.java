@@ -50,7 +50,8 @@ public class validateticketDialogFragment extends DialogFragment {
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
-    private String Transaction_Id;
+    private static final String POSNumber="posNumber";
+    private String Transaction_Id,PosNum;
     private String cashierId;
     private double cashReturn;
     private Set<String> selectedItems; // Store selected items
@@ -75,6 +76,9 @@ public class validateticketDialogFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         selectedItems = new HashSet<>(); // Initialize the set
+
+        SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
     }
 
     @NonNull
@@ -316,7 +320,7 @@ public class validateticketDialogFragment extends DialogFragment {
                 // Update the table with settlement details
                 for (SettlementItem settlementItem : settlementItems) {
 
-                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(),Transaction_Id);
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(),Transaction_Id,PosNum);
                     if (updated) {
 
                         Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();

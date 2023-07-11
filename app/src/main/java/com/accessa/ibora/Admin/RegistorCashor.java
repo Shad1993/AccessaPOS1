@@ -16,6 +16,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.accessa.ibora.Admin.CompanyInfo.POSINFO.PosInfo;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.R;
 import com.accessa.ibora.company.InsertCompanyDataActivity;
@@ -155,7 +156,7 @@ public class RegistorCashor extends AppCompatActivity {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
                 String DateModified = dateFormat.format(new Date(currentTimeMillis));
                 String LastModified = dateFormat.format(new Date(currentTimeMillis));
-                String companyName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("company_name"));
+                String ShopName = stdAccessCursor.getString(stdAccessCursor.getColumnIndexOrThrow("ShopName"));
                 // Auto-increment the department code
                 String departmentCode = DBManager.getAutoIncrementedDepartmentCode(database);
                 String cashorname = editTextCashor.getText().toString();
@@ -168,7 +169,7 @@ public class RegistorCashor extends AppCompatActivity {
 
                 ContentValues values = new ContentValues();
                 ContentValues values1 = new ContentValues();
-                values.put("CompanyName", companyName);
+                values.put("ShopName", ShopName);
                 values.put("pin", enteredPIN);
                 values.put("cashorname", cashorname);
                 values.put("cashorDepartment", cashordepartment);
@@ -203,15 +204,13 @@ public class RegistorCashor extends AppCompatActivity {
                 dbManager.open();
                 Cursor cursor1 = dbManager.Registor(pin, cashierLevel, cashorname, cashordepartment,DateModified,LastModified);
 
-
-                Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(RegistorCashor.this, AdminActivity.class);
+                Intent intent = new Intent(RegistorCashor.this, PosInfo.class);
                 startActivity(intent);
                 return;
             }
 
             // User data has been inserted, proceed to AdminActivity or any other desired activity
-            Intent intent = new Intent(RegistorCashor.this, AdminActivity.class);
+            Intent intent = new Intent(RegistorCashor.this, PosInfo.class);
             startActivity(intent);
         }
         database.close();
