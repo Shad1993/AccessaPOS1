@@ -145,4 +145,10 @@ public class CompanyPagerAdapter extends FragmentPagerAdapter {
         }
         return "";
     }
+    public String getFifteenSlideData() {
+        if (fourthSlideFragment != null) {
+            return fourthSlideFragment.getOpeningHours();
+        }
+        return "";
+    }
 }

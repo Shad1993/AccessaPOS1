@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.Admin.RegistorCashor;
 import com.accessa.ibora.R;
+import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
@@ -118,7 +119,7 @@ public class PosInfo extends AppCompatActivity {
             // Data inserted successfully
 
             savePosNumber(terminalNo); // Save POS number to SharedPreferences
-            Intent intent = new Intent(this, AdminActivity.class);
+            Intent intent = new Intent(this, login.class);
             startActivity(intent);
         } else {
             // Failed to insert data

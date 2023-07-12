@@ -1,5 +1,11 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_1;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_2;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_3;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_FAX_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_TEL_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Opening_Hours;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_1;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_2;
@@ -932,11 +938,17 @@ public class DBManager {
                 COLUMN_ADR_1,
                 COLUMN_ADR_2,
                 COLUMN_ADR_3,
+                COLUMN_Comp_ADR_1,
+                COLUMN_Comp_ADR_2,
+                COLUMN_Comp_ADR_3,
                 COLUMN_TEL_NO,
                 COLUMN_FAX_NO,
+                COLUMN_Comp_TEL_NO,
+                COLUMN_Comp_FAX_NO,
                 COLUMN_COMPANY_NAME,
                 COLUMN_CASHOR_id,
                 LastModified,
+                COLUMN_Opening_Hours,
                 COLUMN_Logo
         };
 
@@ -949,11 +961,18 @@ public class DBManager {
             company.setADR1(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_1)));
             company.setADR2(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_2)));
             company.setADR3(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_3)));
+            company.setCompADR(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Comp_ADR_1)));
+            company.setCompADR2(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Comp_ADR_2)));
+            company.setCompADR3(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Comp_ADR_3)));
             company.setTelNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEL_NO)));
             company.setFaxNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FAX_NO)));
             company.setCompanyName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COMPANY_NAME)));
             company.setCashorId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CASHOR_id)));
             company.setLastModified(cursor.getString(cursor.getColumnIndexOrThrow(LastModified)));
+            company.setOpeninghours(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Opening_Hours)));
+            company.setImage(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Logo)));
+            company.setComptel(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Comp_TEL_NO)));
+            company.setCompFax(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Comp_FAX_NO)));
             company.setImage(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_Logo)));
 
         }
@@ -966,23 +985,33 @@ public class DBManager {
     }
 
 
-    public boolean updateCompanyInfo(String abv,  String lastModified, String userId,   String vatNo, String brnNo, String adr1, String adr2, String adr3, String telNo, String faxNo, String companyName, String image) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_SHOPNAME, abv);
-        values.put(LastModified, lastModified);
-        values.put(COLUMN_CASHOR_id, userId);
-        values.put(COLUMN_VAT_NO, vatNo);
-        values.put(COLUMN_BRN_NO, brnNo);
-        values.put(COLUMN_ADR_1, adr1);
-        values.put(COLUMN_ADR_2, adr2);
-        values.put(COLUMN_ADR_3, adr3);
-        values.put(COLUMN_TEL_NO, telNo);
-        values.put(COLUMN_FAX_NO, faxNo);
-        values.put(COLUMN_COMPANY_NAME, companyName);
-        values.put(COLUMN_Logo, image);
 
-        int rowsAffected = database.update(TABLE_NAME_STD_ACCESS, values, null, null);
-        return rowsAffected > 0;
-    }
+
+
+
+    public boolean updateCompanyInfo(String abv, String lastModified, String userId, String vatNo, String brnNo, String adr1, String adr2, String adr3, String compAdr, String compAdr2, String compAdr3, String telNo, String faxNo, String companyName, String image, String openhour, String comptel, String compfax) {
+
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_SHOPNAME, abv);
+            values.put(LastModified, lastModified);
+            values.put(COLUMN_CASHOR_id, userId);
+            values.put(COLUMN_VAT_NO, vatNo);
+            values.put(COLUMN_BRN_NO, brnNo);
+            values.put(COLUMN_ADR_1, adr1);
+            values.put(COLUMN_ADR_2, adr2);
+            values.put(COLUMN_ADR_3, adr3);
+            values.put(COLUMN_Comp_ADR_1, compAdr);
+            values.put(COLUMN_Comp_ADR_2, compAdr2);
+            values.put(COLUMN_Comp_ADR_3, compAdr3);
+            values.put(COLUMN_TEL_NO, telNo);
+            values.put(COLUMN_FAX_NO, faxNo);
+            values.put(COLUMN_COMPANY_NAME, companyName);
+            values.put(COLUMN_Logo, image);
+            values.put(COLUMN_Opening_Hours, openhour);
+             values.put(COLUMN_Comp_TEL_NO, comptel);
+          values.put(COLUMN_Comp_FAX_NO, compfax);
+
+            int rowsAffected = database.update(TABLE_NAME_STD_ACCESS, values, null, null);
+            return rowsAffected > 0;}
 
 }

@@ -435,6 +435,13 @@
     <string name="Select_Receipt">Select Receipt</string>
     <string name="unitPrice">Unit Price</string>
     <string name="POSINFO">POS Number</string>
+    <string name="ShopAdress">Shop Address</string>
+    <string name="CompanyAdress">Company Address</string>
+    <string name="vatnbrnnum">VAT and BRN Number</string>
+    <string name="Compandshopname">Company and Shop name</string>
+    <string name="Contacts">Contacts</string>
+    <string name="shopContacts">Shop contacts</string>
+    <string name="update">Update Sucessfull</string>
 
 
 </resources>

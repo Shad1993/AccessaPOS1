@@ -42,12 +42,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private RecyclerView mRecyclerView;
     private ItemGridAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
-    private String cashierId;
+    private String cashierId,shopname;
     private ItemAddedListener itemAddedListener;
     private double totalAmount,TaxtotalAmount;
     private DBManager dbManager;
     private  String existingTransactionId;
     private double UnitPrice;
+    private int transactionCounter = 1;
     private String VatVall;
     private String price;
     private  String barcode;
@@ -57,6 +58,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public TextView idTextView;
     public TextView priceTextView;
     public ImageView productImage;
+    private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String POSNumber="posNumber";
     private String transactionIdInProgress,PosNum; // Transaction ID for "InProgress" status
@@ -84,6 +86,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         int numberOfColumns = 6;
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+
+
+
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
@@ -122,6 +127,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
+        shopname=sharedPreference.getString("ShopName",null);
         dbManager = new DBManager(getContext());
         dbManager.open();
 
@@ -130,6 +136,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
 
         mDatabaseHelper = new DatabaseHelper(getContext());
+        actualdate = mDatabaseHelper.getCurrentDate();
         Cursor cursor = mDatabaseHelper.getAllItems();
 
         mAdapter = new ItemGridAdapter(getContext(), cursor);
@@ -692,14 +699,28 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
 
 
-
     private String generateNewTransactionId() {
-        // Implement your logic to generate a unique transaction ID
-        // For example, you can use a combination of timestamp and a random number
-        long timestamp = System.currentTimeMillis();
-        int random = new Random().nextInt(10000);
-        return "TXN-" + timestamp + "-" + random;
+        // Retrieve the last used counter value from shared preferences
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
+        int lastCounter = sharedPreferences.getInt("counter", 1);
+
+        // Increment the counter for the next transaction
+        int currentCounter = lastCounter + 1;
+
+        // Save the updated counter value in shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("counter", currentCounter);
+        editor.apply();
+
+        // Extract the first three letters from companyName
+        String companyLetters = shopname.substring(0, Math.min(shopname.length(), 3)).toUpperCase();
+        String posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+
+        // Generate the transaction ID by combining the three letters and the counter
+        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
+
+
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());

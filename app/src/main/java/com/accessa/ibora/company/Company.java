@@ -8,12 +8,20 @@ public class Company {
     private String ADR1;
     private String ADR2;
     private String ADR3;
+    private String CompADR;
+    private String CompADR2;
+    private String CompADR3;
     private String TelNo;
     private String FaxNo;
     private String CompanyName;
     private String cashiorid;
     private String lastmodified;
     private String imagelink;
+    private String Comptel;
+    private String CompFax;
+
+
+    private String Openinghours;
 
     public Company() {
         this.Shopname = Shopname;
@@ -22,12 +30,18 @@ public class Company {
         this.ADR1 = ADR1;
         this.ADR2 = ADR2;
         this.ADR3 = ADR3;
+        this.CompADR = CompADR;
+        this.CompADR2 = CompADR2;
+        this.CompADR3 = CompADR3;
         this.TelNo = TelNo;
         this.FaxNo = FaxNo;
         this.CompanyName = CompanyName;
         this.cashiorid = cashiorid;
         this.lastmodified = lastmodified;
         this.imagelink=imagelink;
+        this.Openinghours=Openinghours;
+        this.Comptel=Comptel;
+        this.CompFax=CompFax;
 
     }
 
@@ -116,6 +130,43 @@ public class Company {
     }
     public void setImage(String imagelink) {
         this.imagelink = imagelink;
+    }
+    public void setCompADR(String CompADR) {
+        this.CompADR = CompADR;
+    }
+    public void setCompADR2(String CompADR2) {
+        this.CompADR2 = CompADR2;
+    }
+    public void setCompADR3(String CompADR3) {
+        this.CompADR3 = CompADR3;
+    }
+    public void setOpeninghours(String Openinghours) {
+        this.Openinghours = Openinghours;
+    }
+    public void setComptel(String Comptel) {
+        this.Comptel = Comptel;
+    }
+    public void setCompFax(String CompFax) {
+        this.CompFax = CompFax;
+    }
+
+    public String getCompADR() {
+        return CompADR;
+    }
+    public String getCompADR2() {
+        return CompADR2;
+    }
+    public String getCompADR3() {
+        return CompADR3;
+    }
+    public String getOpeninghours() {
+        return Openinghours;
+    }
+    public String getComptel() {
+        return Comptel;
+    }
+    public String getCompFax() {
+        return CompFax;
     }
 }
 

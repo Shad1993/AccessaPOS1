@@ -57,6 +57,7 @@ import com.accessa.ibora.printer.externalprinterlibrary2.CloudPrinterActivity;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
@@ -69,17 +70,20 @@ public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickL
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
 
-    private String cashierId,cashierLevel;
+    private String cashierId,cashierLevel,shopname;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
-    private  String ItemId;
+    private  String ItemId,PosNum;
+    private static final String POSNumber="posNumber";
 private String transactionIdInProgress;
+    private int transactionCounter = 1;
 private TextView textViewVATs,textViewTotals;
     private SoundPool soundPool;
     private int soundId;
     private IWoyouService woyouService;
     private Toolbar toolbar;
+    private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
      private  List<String> data ;
     private ServiceConnection connService = new ServiceConnection() {
@@ -210,6 +214,7 @@ private TextView textViewVATs,textViewTotals;
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         mDatabaseHelper = new DatabaseHelper(getContext());
         Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
+        actualdate = mDatabaseHelper.getCurrentDate();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
         mRecyclerView.setAdapter(mAdapter);
@@ -227,6 +232,11 @@ private TextView textViewVATs,textViewTotals;
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
         cashierLevel = sharedPreference.getString("cashorlevel", null);
+        shopname = sharedPreference.getString("ShopName", null);
+
+        SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
+
 
 
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
@@ -348,7 +358,11 @@ private TextView textViewVATs,textViewTotals;
 
         updateTransactionStatus();
         generateNewTransactionId();
-        recreate(getActivity());
+      //  recreate(getActivity());
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged();
+
 
     }
     public void updateTransactionStatus() {
@@ -365,8 +379,27 @@ private TextView textViewVATs,textViewTotals;
         // Apply the changes
         editor.apply();
 
+    }
 
+    private String generateNewTransactionId() {
+        // Retrieve the last used counter value from shared preferences
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
+        int lastCounter = sharedPreferences.getInt("counter", 1);
 
+        // Increment the counter for the next transaction
+        int currentCounter = lastCounter + 1;
+
+        // Save the updated counter value in shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("counter", currentCounter);
+        editor.apply();
+
+        // Extract the first three letters from companyName
+        String companyLetters = shopname.substring(0, Math.min(shopname.length(), 3)).toUpperCase();
+        String posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+
+        // Generate the transaction ID by combining the three letters and the counter
+        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
     public void clearTransact(){
         // Create an instance of the DatabaseHelper class
@@ -395,11 +428,13 @@ private TextView textViewVATs,textViewTotals;
               displayOnLCD();
               showSecondaryScreen(data);
 
-
-
+     //   recreate(getActivity());
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged();
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
 
-        generateNewTransactionId();
+
     }
 
 
@@ -478,7 +513,6 @@ private TextView textViewVATs,textViewTotals;
     }
 public void updateheader(double totalAmount, double TaxtotalAmount){
 
-    Toast.makeText(getContext(), "total= " + " " + totalAmount + " "+ TaxtotalAmount , Toast.LENGTH_SHORT).show();
         // Get the current date and time
         String currentDate = mDatabaseHelper.getCurrentDate();
         String currentTime = mDatabaseHelper.getCurrentTime();
@@ -536,21 +570,14 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
 }
 
-    private String generateNewTransactionId() {
-        // Implement your logic to generate a unique transaction ID
-        // For example, you can use a combination of timestamp and a random number
-        long timestamp = System.currentTimeMillis();
-        int random = new Random().nextInt(10000);
-        return "TXN-" + timestamp + "-" + random;
-    }
 
 
     public  void refreshData(double totalAmount, double TaxtotalAmount) {
 
+
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
-
 
         // Scroll to the last item in the RecyclerView
         int itemCount = mAdapter.getItemCount();

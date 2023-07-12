@@ -68,6 +68,10 @@ public class printerSetup extends AppCompatActivity {
     private String cashorlevel,ShopName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
+
+    private String    OpeningHours;
+    private   String      TelNum,compTelNum,compFaxNum;
+    private  String  FaxNum;
     private String paymentName,PosNum ;
     private static final String POSNumber="posNumber";
     private  ArrayList<SettlementItem> settlementItems = new ArrayList<>();
@@ -132,29 +136,59 @@ public class printerSetup extends AppCompatActivity {
 
                         if (cursorCompany != null && cursorCompany.moveToFirst()) {
                             int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
-                            int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_1);
-                            int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_2);
+                            int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_1);
+                            int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_2);
+                            int columnCompanyAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_3);
+                            int columnShopNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNAME);
+                            int columnShopAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_1);
+                            int columnShopAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_2);
+                            int columnShopAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_ADR_3);
                             int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
                             int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
                             int columnLogoPathIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Logo);
+                            int columnOpeningHoursIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Opening_Hours);
+                            int columncompTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_TEL_NO);
+                            int columncompFaxIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_FAX_NO);
+                            int columnTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_TEL_NO);
+                            int columnFaxIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_FAX_NO);
+
                             String companyName = cursorCompany.getString(columnCompanyNameIndex);
                             String CompanyAdress1= cursorCompany.getString(columnCompanyAddressIndex);
                             String CompanyAdress2= cursorCompany.getString(columnCompanyAddress2Index);
+                            String CompanyAdress3= cursorCompany.getString(columnCompanyAddress3Index);
+                            String shopName = cursorCompany.getString(columnShopNameIndex);
+                            String ShopAdress= cursorCompany.getString(columnShopAddressIndex);
+                            String ShopAdress2= cursorCompany.getString(columnShopAddress2Index);
+                            String ShopAdress3= cursorCompany.getString(columnShopAddress3Index);
                             String CompanyVatNo= cursorCompany.getString(columnCompanyVATIndex);
                             String CompanyBRNNo= cursorCompany.getString(columnCompanyBRNIndex);
+                             OpeningHours= cursorCompany.getString(columnOpeningHoursIndex);
+                             TelNum= cursorCompany.getString(columnTelNumIndex);
+                             FaxNum= cursorCompany.getString(columnFaxIndex);
+                            compTelNum= cursorCompany.getString(columncompTelNumIndex);
+                            compFaxNum= cursorCompany.getString(columncompFaxIndex);
+
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
 
                             printLogoAndReceipt(service,LogoPath);
 
 
-
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
                             // Create the formatted companyAddress1Line  line
-                            String companyAddress1Line = CompanyAdress1 + "\n\n";
-                            String Add1andAdd2 = CompanyAdress1 + ", " + CompanyAdress2 + "\n";
+
+                            String CompAdd1andAdd2 = CompanyAdress1 + ", " + CompanyAdress2 + "\n";
+                            String CompAdd3 = CompanyAdress3 + "\n";
+                            String Add1andAdd2 = ShopAdress + ", " + ShopAdress2 + "\n";
+                            String shopAdress3 = ShopAdress3+ "\n";
                             String CompVatNo= getString(R.string.Vat) + "  : " + CompanyVatNo + "\n";
-                            String CompBRNNo= getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n";
+                            String CompBRNNo= getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n\n";
+                            String shopname=  shopName + "\n";
+                            String Tel= "Tel : " + TelNum ;
+                            String Fax= "Fax : " + FaxNum ;
+                            String compTel= "Tel : " + compTelNum ;
+                            String compFax= "Fax : " + compFaxNum ;
+
                             // Enable bold text
                             byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                             service.sendRAWData(boldOnBytes, null);
@@ -169,10 +203,16 @@ public class printerSetup extends AppCompatActivity {
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
                             // Print the formatted company name line
-                            service.printText(companyAddress1Line, null);
+                            service.printText(CompAdd1andAdd2, null);
+                            service.printText(CompAdd3, null);
+                            service.printText(compTel + "\n", null);
+                            service.printText(compFax + "\n\n", null);
                             // Print the formatted company name line
-                            service.printText(companyNameLine, null);
+                            service.printText(shopname, null);
                             service.printText(Add1andAdd2, null);
+                            service.printText(shopAdress3, null);
+                            service.printText(Tel + "\n", null);
+                            service.printText(Fax + "\n", null);
                             service.printText(CompVatNo, null);
                             service.printText(CompBRNNo, null);
 
@@ -184,6 +224,8 @@ public class printerSetup extends AppCompatActivity {
 
                         // Print the custom layout
                         service.printText(titleTextView.getText().toString(), null);
+                        String cashierid= "Cashier Id: " + cashierId ;
+                        service.printText(cashierid + "\n", null);
                         service.printText(contentTextView.getText().toString(), null);
 
                         // Print a line separator
@@ -357,6 +399,9 @@ public class printerSetup extends AppCompatActivity {
                         String FooterText = getString(R.string.Footer_See_You);
                         String Footer1Text = getString(R.string.Footer_Have);
                         String Footer2Text = getString(R.string.Footer_OpenHours);
+                        String Openinghours= Footer2Text + OpeningHours ;
+
+
 
 
                         // Print the centered footer text
@@ -368,8 +413,10 @@ public class printerSetup extends AppCompatActivity {
 
 
 
+
                         // Print the centered footer2 text
-                        service.printText(Footer2Text + "\n", null);
+                        service.printText(Openinghours + "\n", null);
+
                         service.setAlignment(0, null); // Align left
                         // Concatenate the formatted date and time
                         String dateTime = DateCreated + " " + timeCreated;

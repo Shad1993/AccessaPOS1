@@ -20,6 +20,8 @@ public class ForthSlideFragment extends Fragment {
     private EditText editADR3;
     private EditText editTelNo;
     private EditText editFaxNo;
+    private EditText editOpeninghours;
+
 
     public ForthSlideFragment() {
         // Required empty public constructor
@@ -35,6 +37,7 @@ public class ForthSlideFragment extends Fragment {
         editADR3 = view.findViewById(R.id.editADR3);
         editTelNo = view.findViewById(R.id.editTelNo);
         editFaxNo = view.findViewById(R.id.editFaxNo);
+        editOpeninghours=view.findViewById(R.id.editOpeninghours);
         // Get a reference to the AppCompatImageView
         AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
 
@@ -65,6 +68,9 @@ public class ForthSlideFragment extends Fragment {
 
     public String getCompFaxNo() {
         return editFaxNo.getText().toString();
+    }
+    public String getOpeningHours() {
+        return editOpeninghours.getText().toString();
     }
 }
 

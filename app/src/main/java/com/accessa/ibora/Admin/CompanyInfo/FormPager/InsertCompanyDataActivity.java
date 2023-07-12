@@ -37,6 +37,8 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
     private String Compadr3;
     private String ComptelNo;
     private String CompfaxNo;
+
+    private String OpenningHours;
     private String LogoPath;
 
     @Override
@@ -95,6 +97,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
                     Compadr3 = pagerAdapter.gettwelveSlideData();
                     ComptelNo = pagerAdapter.getThirteenSlideData();
                     CompfaxNo = pagerAdapter.getForteenSlideData();
+                    OpenningHours = pagerAdapter.getFifteenSlideData();
 
                     // Call the method to insert the data
                     insertData();
@@ -130,6 +133,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         values.put("ComPanyAdress3", Compadr3);
         values.put("ComPanyphoneNumber", ComptelNo);
         values.put("ComPanyFaxNumber", CompfaxNo);
+        values.put("OpenningHours", OpenningHours);
 
         ContentValues value = new ContentValues();
         value.put("ShopName", shopName);

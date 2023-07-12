@@ -33,8 +33,8 @@
             style="@style/centreLocatorCardDesign"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="?attr/actionBarSize"
             android:layout_marginStart="200dp"
+            android:layout_marginTop="?attr/actionBarSize"
             android:layout_marginEnd="200dp"
             android:layout_marginBottom="10dp"
             android:elevation="8dp">
@@ -43,8 +43,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
                 android:layout_marginTop="10dp"
+                android:gravity="center"
                 android:orientation="vertical">
 
                 <ImageView
@@ -64,18 +64,39 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/addr1_text_view"
+                    android:id="@+id/compaddr1n2_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Adresse 1: "
+                    android:text="Adresse 1 , 2: "
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/companyName1_text_view"
+                    android:id="@+id/compaddr3_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adresse 3: "
+                    android:textSize="14sp" />
+                <TextView
+
+                    android:id="@+id/comptel_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tel : "
+                    android:textSize="14sp" />
+                <TextView
+
+                    android:id="@+id/compfax_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fax : "
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/shopName_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="30dp"
-                    android:text="Company name: "
+                    android:text="shop name: "
                     android:textSize="14sp" />
 
                 <TextView
@@ -83,6 +104,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="ADR1,ADR2"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/adr3_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ADR3"
+                    android:textSize="14sp" />
+                <TextView
+
+                    android:id="@+id/tel_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:text="Tel : "
+                    android:textSize="14sp" />
+                <TextView
+
+                    android:id="@+id/fax_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:text="Fax : "
                     android:textSize="14sp" />
 
                 <TextView
@@ -119,6 +163,16 @@
                         />
 
                     <TextView
+                        android:id="@+id/cashiorid_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="Cashier ID :"
+                        android:textSize="14sp"
+
+                        />
+
+                    <TextView
                         android:id="@+id/POS_text_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -149,9 +203,9 @@
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="1"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
                     android:divider="@null"
                     android:dividerHeight="0dp" />
 
@@ -175,11 +229,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
 
 
                         <TextView
@@ -188,22 +242,21 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Total : "
                             android:layout_weight="1"
+                            android:text="Total : "
                             android:textSize="14sp"
-                            android:textStyle="bold"
-                            />
+                            android:textStyle="bold" />
+
                         <TextView
                             android:id="@+id/total_price_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:text="Rs.0.00"
-                            android:layout_marginEnd="10dp"
                             android:layout_gravity="end"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="10dp"
+                            android:text="Rs.0.00"
                             android:textSize="14sp"
-                            android:textStyle="bold"
-                            />
+                            android:textStyle="bold" />
 
                     </LinearLayout>
 
@@ -211,24 +264,25 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
+
                         <TextView
                             android:id="@+id/vattypeslabel_price_text_view"
                             android:layout_width="0dp"
-                            android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
+                            android:layout_weight="1"
                             android:text="Vat Types: "
                             android:textSize="14sp" />
 
-                    <TextView
-                        android:id="@+id/vatamount_price_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginStart="10dp"
-                        android:text="Rs0.00 "
-                        android:layout_gravity="end"
-                        android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/vatamount_price_text_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="10dp"
+                            android:text="Rs0.00 "
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <View
@@ -238,80 +292,93 @@
                         android:layout_marginTop="5dp"
                         android:layout_marginEnd="10dp"
                         android:background="@color/black" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-                    <TextView
-                        android:id="@+id/total_paid_text_view"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="Total Amount Paid: "
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/total_paid_text_view"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:text="Total Amount Paid: "
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/total_tender_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Rs0.00 "
                             android:layout_marginEnd="10dp"
+                            android:text="Rs0.00 "
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </LinearLayout>
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-                    <TextView
-                        android:id="@+id/total_pain_bymethod_text_view"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="Amount Paid in Method: "
-                        android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/total_pain_bymethod_text_view"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:text="Amount Paid in Method: "
+                            android:textSize="14sp" />
+
                         <TextView
                             android:id="@+id/total_tender_by_method_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Rs0.00 "
                             android:layout_marginEnd="10dp"
-                            android:textSize="14sp"
-                             />
+                            android:layout_gravity="end"
+                            android:text="Rs0.00 "
+                            android:textSize="14sp" />
+
 
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/cash_return_line"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="5dp"
+                        android:visibility="gone"
                         android:layout_marginEnd="10dp"
                         android:background="@color/black" />
+
                     <LinearLayout
+                        android:id="@+id/cash_return_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:visibility="visible"
                         android:orientation="horizontal">
+
                         <TextView
                             android:id="@+id/cash_return_text_view"
                             android:layout_width="0dp"
-                            android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
+                            android:layout_weight="1"
                             android:text="Cash_Return: "
                             android:textSize="14sp" />
+
                         <TextView
                             android:id="@+id/cash_return_amount_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Rs0.00 "
                             android:layout_marginEnd="10dp"
+                            android:text="Rs0.00 "
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -334,14 +401,16 @@
                         android:layout_marginEnd="10dp"
                         android:background="@color/black" />
                 </LinearLayout>
+
                 <TextView
-                    android:layout_marginTop="10dp"
                     android:id="@+id/seeyoy_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
                     android:text="See You Again!!"
                     android:textSize="14sp" />
+
                 <TextView
 
                     android:id="@+id/niceday_text_view"
@@ -349,8 +418,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:text="Have a Nice Day "
-                    android:textSize="14sp"
-                    />
+                    android:textSize="14sp" />
 
                 <TextView
 
@@ -359,14 +427,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:text="Opening Hours between: "
-                    android:textSize="14sp"
-                    />
+                    android:textSize="14sp" />
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
 
 
                     <TextView
@@ -375,25 +442,24 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="Transaction Date: "
                         android:layout_weight="1"
-                        android:textSize="14sp"
-                         />
+                        android:text="Transaction Date: "
+                        android:textSize="14sp" />
+
                     <TextView
                         android:id="@+id/transaction_id_text_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="Transaction ID: "
-                        android:layout_marginEnd="10dp"
                         android:layout_gravity="end"
-                        android:textSize="14sp"
-                        />
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="Transaction ID: "
+                        android:textSize="14sp" />
 
                 </LinearLayout>
 
 
-                </LinearLayout>
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
     </ScrollView>
 

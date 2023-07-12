@@ -208,15 +208,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ADR_3 = "adr_3";
     public static final String COLUMN_TEL_NO = "tel_no";
     public static final String COLUMN_FAX_NO = "fax_no";
-    private static String COLUMN_Comp_ADR_1= "ComPanyAdress1";
-    private static String COLUMN_Comp_ADR_2 ="ComPanyAdress2";
-    private static String COLUMN_Comp_ADR_3= "ComPanyAdress3";
-    private static String COLUMN_Comp_TEL_NO= "ComPanyphoneNumber";
-    private static String COLUMN_Comp_FAX_NO= "ComPanyFaxNumber";
+    public static String COLUMN_Comp_ADR_1= "ComPanyAdress1";
+    public static String COLUMN_Comp_ADR_2 ="ComPanyAdress2";
+    public static String COLUMN_Comp_ADR_3= "ComPanyAdress3";
+    public static String COLUMN_Comp_TEL_NO= "ComPanyphoneNumber";
+    public static String COLUMN_Comp_FAX_NO= "ComPanyFaxNumber";
     public static String VAT_Type= "VatType";
     public static String COLUMN_TerminalNo="TerminalNumber";
     public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
+
+    public static String COLUMN_Opening_Hours ="OpenningHours";
 
     // payment by qr
 
@@ -485,6 +487,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_ADR_3 + " TEXT, "
             + COLUMN_TEL_NO + " TEXT, "
             + COLUMN_FAX_NO + " TEXT, "
+            + COLUMN_Opening_Hours + " TEXT, "
             + COLUMN_COMPANY_NAME + " TEXT, "
             + COLUMN_CASHOR_id + " INTEGER, "
             + LastModified + " TEXT, "

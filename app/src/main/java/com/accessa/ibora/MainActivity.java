@@ -92,12 +92,15 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private String cashorId;
     private String cashorName;
     private TextView CompanyName;
-    private String Shopname;
+    private String Shopname,PosNum;
+    private static final String POSNumber="posNumber";
     private static MainActivity instance;
     private SharedPreferences sharedPreferences;
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private TicketFragment ticketFragment;
     private CustomerLcdFragment customerLcdFragment;
+    private int transactionCounter = 1;
+    private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     @Override
     public void onDataPass(String name, String id, String QR) {
@@ -170,28 +173,17 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         Shopname = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
 
+        SharedPreferences shardPreference = getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
+
+
+        actualdate = mDatabaseHelper.getCurrentDate();
 
         String transactionId;
         String transactionStatus = "Started";
         String transactionSaved = "Saved";
 
-        if (transactionStatus.equals("Started")|| transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
-            if (transactionIdInProgress == null) {
-                transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
-                // Store the transaction ID in SharedPreferences
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
-                editor.apply();
 
-
-
-            }
-            transactionId = transactionIdInProgress;
-
-        } else {
-            transactionId = generateNewTransactionId(); // Generate a new transaction ID
-
-        }
 
         //toolbar
         MaterialToolbar toolbar = findViewById(R.id.topAppBar);
@@ -419,13 +411,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     }
 
 
-    private String generateNewTransactionId() {
-        // Implement your logic to generate a unique transaction ID
-        // For example, you can use a combination of timestamp and a random number
-        long timestamp = System.currentTimeMillis();
-        int random = new Random().nextInt(10000);
-        return "TXN-" + timestamp + "-" + random;
-    }
+
     @Override
     public void onItemAdded() {
 

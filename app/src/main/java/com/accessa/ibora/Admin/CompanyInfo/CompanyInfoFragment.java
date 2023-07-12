@@ -50,6 +50,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.company.Company;
+import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
@@ -70,7 +71,7 @@ import java.util.Locale;
 
 public class CompanyInfoFragment extends Fragment {
 
-    private EditText Abv, StockNo, PriceNo, DefSupplierCode, VATNo, BRNNo, ADR1, ADR2, ADR3, TelNo, FaxNo, CompanyName, cashior, date, lastmodified;
+    private EditText Abv, StockNo, PriceNo, DefSupplierCode, VATNo, BRNNo, ADR1, ADR2, ADR3, TelNo, FaxNo, CompanyName,CompAd1,CompAd2,CompAd3, cashior, date, lastmodified, openinghours;
     private DatabaseHelper mDatabaseHelper;
     private DBManager dbManager;
     private SharedPreferences sharedPreferences;
@@ -79,6 +80,8 @@ public class CompanyInfoFragment extends Fragment {
     private Button buttonUpdate;
     private Button buttonDelete;
     private String imagePath;
+    private EditText editCompFaxNo;
+    private EditText editCompTelNo;
     private String ImageLink;
     private  ImageView imageView;
     private View view; // Variable to store the inflated fragment view
@@ -101,11 +104,18 @@ public class CompanyInfoFragment extends Fragment {
         ADR1 = view.findViewById(R.id.editADR1);
         ADR2 = view.findViewById(R.id.editADR2);
         ADR3 = view.findViewById(R.id.editADR3);
+        CompAd1 =view.findViewById(R.id.editCompADR1);
+        CompAd2 =view.findViewById(R.id.editCompADR2);
+        CompAd3 =view.findViewById(R.id.editCompADR3);
         TelNo = view.findViewById(R.id.editTelNo);
         FaxNo = view.findViewById(R.id.editFaxNo);
         CompanyName = view.findViewById(R.id.editCompanyName);
         cashior = view.findViewById(R.id.editCahiorNameid);
         lastmodified = view.findViewById(R.id.lastmod);
+        lastmodified = view.findViewById(R.id.lastmod);
+        openinghours =view.findViewById(R.id.editOpeninghours);
+        editCompTelNo=view.findViewById(R.id.editcompTelNo);
+        editCompFaxNo=view.findViewById(R.id.editcompFaxNo);
          imageView = view.findViewById(R.id.image_view);
 
         sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -133,9 +143,18 @@ public class CompanyInfoFragment extends Fragment {
             ADR1.setText(company.getADR1());
             ADR2.setText(company.getADR2());
             ADR3.setText(company.getADR3());
+            CompAd1.setText(company.getCompADR());
+            CompAd2.setText(company.getCompADR2());
+            CompAd3.setText(company.getCompADR3());
+
             TelNo.setText(company.getTelNo());
             FaxNo.setText(company.getFaxNo());
+            editCompTelNo.setText(company.getComptel());
+            editCompFaxNo.setText(company.getCompFax());
+
             CompanyName.setText(company.getCompanyName());
+            openinghours.setText(company.getOpeninghours());
+
 
             ImageLink= company.getImage();
 
@@ -180,9 +199,16 @@ public class CompanyInfoFragment extends Fragment {
             String adr1 = ADR1.getText().toString().trim();
             String adr2 = ADR2.getText().toString().trim();
             String adr3 = ADR3.getText().toString().trim();
+            String CompAdr = CompAd1.getText().toString().trim();
+            String CompAdr2 = CompAd2.getText().toString().trim();
+            String CompAdr3 = CompAd3.getText().toString().trim();
             String telNo = TelNo.getText().toString().trim();
             String faxNo = FaxNo.getText().toString().trim();
             String companyName = CompanyName.getText().toString().trim();
+            String openhour = openinghours.getText().toString().trim();
+            String comptel = editCompTelNo.getText().toString().trim();
+            String compfax = editCompFaxNo.getText().toString().trim();
+
 
             String image ;
             if( imagePath== null) {
@@ -194,14 +220,14 @@ public class CompanyInfoFragment extends Fragment {
             }
 
             if (abv.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
-                    || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty()
-                    || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty()) {
+                    || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty() || CompAdr.isEmpty()|| CompAdr2.isEmpty()|| CompAdr3.isEmpty()
+                    || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty() || openhour.isEmpty() || comptel.isEmpty() || compfax.isEmpty()) {
                 Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             ContentValues value = new ContentValues();
-            value.put("CompanyName", companyName);
+            value.put("ShopName", abv);
             // Insert the record into the database
             DBManager dbManager = new DBManager(getContext());
             dbManager.open();
@@ -209,7 +235,7 @@ public class CompanyInfoFragment extends Fragment {
 
 
 
-        boolean isUpdated = dbManager.updateCompanyInfo( abv, lastmodified, UserId,vatNo,brnNo,adr1,adr2,adr3,telNo,faxNo,companyName,image);
+        boolean isUpdated = dbManager.updateCompanyInfo( abv, lastmodified, UserId,vatNo,brnNo,adr1,adr2,adr3, CompAdr,CompAdr2,CompAdr3,telNo,faxNo,companyName,image,openhour,comptel,compfax);
             int rowsAffected = database.update("Users", value, null, null);
             dbManager.close();
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -218,12 +244,14 @@ public class CompanyInfoFragment extends Fragment {
             editor.putString("cashorlevel", cashierlevel); // Store cashor's level
             editor.putString("CompanyName", companyName); // Store company name
             editor.apply();
-        returnHome();
+
         if (isUpdated) {
-            Toast.makeText(getContext(), getString(R.string.updateDept), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.update), Toast.LENGTH_SHORT).show();
             getActivity().finish();
+            Intent intent = new Intent(getContext(), login.class);
+            startActivity(intent);
         } else {
-            Toast.makeText(getContext(), getString(R.string.failedupdateDept), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.failedupdate), Toast.LENGTH_SHORT).show();
         }
     }
     private void openImageOptionsDialog() {
@@ -340,12 +368,7 @@ public class CompanyInfoFragment extends Fragment {
         ImageView imageView = view.findViewById(R.id.image_view);
         Glide.with(this).load(imageUrl).into(imageView);
     }
-    public void returnHome() {
-        Intent home_intent1 = new Intent(getContext(), AdminActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "Company_info_fragment");
-        startActivity(home_intent1);
-    }
+
 
 
 

@@ -62,8 +62,27 @@
                         android:layout_gravity="center"
                         />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/Compandshopname" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Company Name" />
 
-
+                    <EditText
+                        android:id="@+id/editCompanyName"
+                        style="@style/modifiedEditText"
+                        android:hint="Company Name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
 
 
                     <TextView
@@ -81,7 +100,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
-
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/vatnbrnnum" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -111,13 +136,19 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="numberDecimal" />
-
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/ShopAdress" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="ADR 1" />
+                        android:text="Address Line 1" />
 
                     <EditText
                         android:id="@+id/editADR1"
@@ -125,19 +156,19 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:hint="ADR 1" />
+                        android:hint="Address Line 1" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="ADR 2" />
+                        android:text="Address Line 2" />
 
                     <EditText
                         android:id="@+id/editADR2"
                         style="@style/modifiedEditText"
-                        android:hint="ADR 2"
+                        android:hint="Address Line 2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"/>
@@ -148,15 +179,85 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="ADR 3" />
+                        android:text="Address Line 3" />
 
                     <EditText
                         android:id="@+id/editADR3"
                         style="@style/modifiedEditText"
-                        android:hint="ADR 3"
+                        android:hint="Address Line 3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/CompanyAdress" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Address Line 1" />
+
+                    <EditText
+                        android:id="@+id/editCompADR1"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:hint="Address Line 1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Address Line 2" />
+
+                    <EditText
+                        android:id="@+id/editCompADR2"
+                        style="@style/modifiedEditText"
+                        android:hint="Address Line 2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Address Line 3" />
+
+                    <EditText
+                        android:id="@+id/editCompADR3"
+                        style="@style/modifiedEditText"
+                        android:hint="Address Line 3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/Contacts" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/shopContacts" />
+
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -186,20 +287,69 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/shopContacts" />
+
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="Company Name" />
+                        android:text="Tel No" />
 
                     <EditText
-                        android:id="@+id/editCompanyName"
+                        android:id="@+id/editcompTelNo"
                         style="@style/modifiedEditText"
-                        android:hint="Company Name"
+                        android:hint="Tel No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Fax No" />
+
+                    <EditText
+                        android:id="@+id/editcompFaxNo"
+                        style="@style/modifiedEditText"
+                        android:hint="Fax No"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Opening hours" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Opening hours" />
+
+                    <EditText
+                        android:id="@+id/editOpeninghours"
+                        style="@style/modifiedEditText"
+                        android:textColorHint="@android:color/holo_red_dark"
+                        android:hint="06h00-18h00"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+
 
 
                     <EditText

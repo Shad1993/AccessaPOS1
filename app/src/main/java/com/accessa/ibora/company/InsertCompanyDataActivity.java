@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.RegistorCashor;
@@ -35,6 +36,7 @@ public class InsertCompanyDataActivity extends Activity {
     private EditText editADR3;
     private EditText editTelNo;
     private EditText editFaxNo;
+
     private EditText editCompanyName;
     private Spinner spinnerCashierLevel;
     private Button btnInsertData;

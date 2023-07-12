@@ -39,6 +39,7 @@ import androidx.fragment.app.Fragment;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
@@ -59,13 +60,17 @@ import woyou.aidlservice.jiuiv5.IWoyouService;
 public class CustomerLcdFragment extends Fragment {
 
     private static final String TRANSACTION_TICKET_NO = "";
-
+    private static final String POSNumber="posNumber";
     private DatabaseHelper mDatabaseHelper;
     private IWoyouService woyouService;
-
+    private int transactionCounter = 1;
+    private String cashierId,shopname,PosNum;
+    private DBManager dbManager;
     private TicketClearedListener ticketclearedListener;
     private double totalAmount, taxTotalAmount;
     private String transactionIdInProgress;
+
+    private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private TicketReloadListener ticketReloadListener;
 
@@ -167,6 +172,16 @@ public class CustomerLcdFragment extends Fragment {
         intent.setPackage("woyou.aidlservice.jiuiv5");
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
+
+        SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorId", null);
+        shopname=sharedPreference.getString("ShopName",null);
+
+        SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        PosNum = shardPreference.getString(POSNumber, null);
+
+        dbManager = new DBManager(getContext());
+        actualdate = mDatabaseHelper.getCurrentDate();
     }
 
     public void displayOnLCD() {
@@ -383,7 +398,7 @@ public void clearTransact(){
     }
     Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
 
-    generateNewTransactionId();
+
 }
     public static Bitmap textToBitmap(String text, float textSize) {
         // Create a Paint object
@@ -439,13 +454,7 @@ public void clearTransact(){
     }
 
 
-    private String generateNewTransactionId() {
-        // Implement your logic to generate a unique transaction ID
-        // For example, you can use a combination of timestamp and a random number
-        long timestamp = System.currentTimeMillis();
-        int random = new Random().nextInt(10000);
-        return "TXN-" + timestamp + "-" + random;
-    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
