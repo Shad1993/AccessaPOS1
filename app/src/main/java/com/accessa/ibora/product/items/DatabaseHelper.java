@@ -656,7 +656,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] whereArgs = {TRANSACTION_STATUS_IN_PROGRESS};
         db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
     }
-    public boolean updateTransactionHeader(String transactionIdInProgress, double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem, double totaltax, String cashierId) {
+    public boolean updateTransactionHeader( double totalAmount, String currentDate, String currentTime, double totalHT_a, double totalTTC, int quantityItem, double totaltax, String cashierId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -672,8 +672,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_CASHIER_CODE, cashierId);
 
 
-        String selection = TRANSACTION_TICKET_NO + " = ?";
-        String[] selectionArgs = {transactionIdInProgress};
+        String selection = TRANSACTION_STATUS  + " = ?";
+        String[] selectionArgs = {"InProgress"};
 
         int rowsAffected = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
         return rowsAffected > 0;
@@ -934,20 +934,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return null;
         }
     }
-    public Cursor getTransactionHeader(String transactionId) {
+    public Cursor getTransactionHeader() {
         SQLiteDatabase db = this.getReadableDatabase();
 
         String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+                " WHERE " + TRANSACTION_STATUS + " = 'InProgress'";
 
-        if (transactionId != null) {
-            return db.rawQuery(query, new String[]{transactionId});
-        } else {
-            // Handle the case where transactionId is null
-            // You can choose to return null or an empty cursor, depending on your requirements
-            return null;
-        }
+        return db.rawQuery(query, null);
     }
+
 
     public double getItemPrice(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1276,7 +1271,103 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = TRANSACTION_DATE_CREATED + " DESC";
         return db.query( TRANSACTION_HEADER_TABLE_NAME, columns, null, null, null, null, sortOrder);
     }
+    public String getLatestItemId(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TRANSACTION_TABLE_NAME,
+                new String[]{ITEM_ID},
+                TRANSACTION_ID + " = ?",
+                new String[]{transactionId},
+                null,
+                null,
+                _ID + " DESC",
+                "1"
+        );
 
+        String latestItemId = "";
+
+        if (cursor.moveToFirst()) {
+            latestItemId = cursor.getString(cursor.getColumnIndex(ITEM_ID));
+        }
+
+        cursor.close();
+        return latestItemId;
+    }
+
+    public void deleteDataByInProgressStatus() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Get the transaction IDs with status "InProgress"
+        String query = "SELECT " + TRANSACTION_TICKET_NO + " FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{"InProgress"});
+
+        // Delete corresponding rows from both tables using the obtained transaction IDs
+        while (cursor.moveToNext()) {
+            String transactionId = cursor.getString(cursor.getColumnIndex(TRANSACTION_TICKET_NO));
+
+            // Delete from TRANSACTION_HEADER_TABLE_NAME where TRANSACTION_TICKET_NO is the obtained transactionId
+            db.delete(TRANSACTION_HEADER_TABLE_NAME, TRANSACTION_TICKET_NO + " = ?", new String[]{transactionId});
+
+            // Delete from TRANSACTION_TABLE_NAME where TRANSACTION_ID is the obtained transactionId
+            db.delete(TRANSACTION_TABLE_NAME, TRANSACTION_ID + " = ?", new String[]{transactionId});
+        }
+
+        cursor.close();
+        db.close();
+    }
+
+    // Update the transaction ID in the transaction table
+    // Update the transaction ID in the transaction table for a specific transaction
+
+
+    public void updateHeaderTransactionIdInProgress(String newTransactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_TICKET_NO, newTransactionId);
+        db.update(TRANSACTION_HEADER_TABLE_NAME, values, TRANSACTION_STATUS + " = ?", new String[]{DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS});
+    }
+
+
+
+    public void updateTransactionTransactionIdInProgress(String oldTransactionId, String newTransactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_ID, newTransactionId);
+
+        db.update(
+                TRANSACTION_TABLE_NAME,
+                values,
+                TRANSACTION_ID + " = ?",
+                new String[]{oldTransactionId}
+        );
+        db.close();
+    }
+
+
+    public Cursor getTransactionHeaderForReceipt(String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+
+        if (transactionId != null) {
+            return db.rawQuery(query, new String[]{transactionId});
+        } else {
+            // Handle the case where transactionId is null
+            // You can choose to return null or an empty cursor, depending on your requirements
+            return null;
+        }
+    }
+    public Cursor getReceiptsByStatus(String status) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = ?";
+
+        return db.rawQuery(query, new String[]{status});
+    }
 
 }
 

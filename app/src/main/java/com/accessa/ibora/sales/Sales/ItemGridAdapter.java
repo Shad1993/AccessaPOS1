@@ -172,7 +172,20 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         if (imageLocation != null && !imageLocation.isEmpty()) {
             File imageFile = new File(imageLocation);
             if (imageFile.exists()) {
-                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                // Calculate the image's dimensions without loading it into memory
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+
+                // Calculate the desired sample size to scale down the image
+                options.inSampleSize = calculateInSampleSize(options, 200, 200); // Replace desiredWidth and desiredHeight with the desired dimensions
+
+                // Set options to load the scaled-down version of the image
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565; // Adjust this based on your requirements
+
+                // Load the image with the updated options
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
                 imageView.setImageBitmap(bitmap);
             } else {
                 imageView.setImageResource(R.drawable.emptybasket);
@@ -181,6 +194,26 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             imageView.setImageResource(R.drawable.emptybasket);
         }
     }
+
+    private static int calculateInSampleSize(BitmapFactory.Options options, int desiredWidth, int desiredHeight) {
+        final int imageWidth = options.outWidth;
+        final int imageHeight = options.outHeight;
+        int inSampleSize = 1;
+
+        if (imageHeight > desiredHeight || imageWidth > desiredWidth) {
+            final int halfHeight = imageHeight / 2;
+            final int halfWidth = imageWidth / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // the width and height larger than the desired dimensions.
+            while ((halfHeight / inSampleSize) >= desiredHeight && (halfWidth / inSampleSize) >= desiredWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
     private Item getItemFromCursor(Cursor cursor) {
         // Retrieve the item data from the cursor and create an Item object
         // Modify this code based on your cursor structure and item class

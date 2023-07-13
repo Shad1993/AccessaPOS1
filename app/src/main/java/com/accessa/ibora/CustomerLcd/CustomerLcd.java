@@ -90,7 +90,7 @@ public class CustomerLcd extends AppCompatActivity {
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);

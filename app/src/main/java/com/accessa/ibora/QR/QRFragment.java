@@ -139,7 +139,7 @@ public class QRFragment extends Fragment {
 
             // Show the secondary display
             secondaryDisplay.show();
-            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);

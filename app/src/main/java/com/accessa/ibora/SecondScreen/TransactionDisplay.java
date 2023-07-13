@@ -115,7 +115,7 @@ public class TransactionDisplay extends Presentation {
         }
         // Retrieve the total amount and total tax amount from the transactionheader table
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
-        Cursor cursor3 = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+        Cursor cursor3 = mDatabaseHelper.getTransactionHeader();
 
         if (cursor3 != null && cursor3.moveToFirst()) {
             int columnIndexTotalAmount = cursor3.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);

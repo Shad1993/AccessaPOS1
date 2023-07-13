@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -44,6 +45,7 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
         public TextView TransdateTextView;
         public TextView statusTextView;
         public TextView dateTitleTextView;
+        public ImageView Imageview;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
@@ -53,6 +55,7 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             TransdateTextView = itemView.findViewById(R.id.transdate_edittex);
             statusTextView = itemView.findViewById(R.id.status_text_view);
             dateTitleTextView = itemView.findViewById(R.id.date_separator_text_view);
+            Imageview = itemView.findViewById(R.id.image);
         }
     }
 
@@ -131,27 +134,41 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
         if (status.equals("Saved")) {
             holder.statusTextView.setText("Saved");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+
             Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.saved);
             if (drawable != null) {
                 drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
             }
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            // Change the image in the ImageView
+            holder.Imageview.setImageResource(R.drawable.saves);
         } else if (status.equals("InProgress")) {
             holder.statusTextView.setText("In Progress");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.OrangeAccessa));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.OrangeAccessa));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.OrangeAccessa));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.OrangeAccessa));
             Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.inprog);
             if (drawable != null) {
                 drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
             }
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            holder.Imageview.setImageResource(R.drawable.syncs);
         } else if (status.equals("Completed")) {
             holder.statusTextView.setText("Completed");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.green));
             Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.check);
             if (drawable != null) {
                 drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
             }
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            holder.Imageview.setImageResource(R.drawable.receipts);
         }
 
     }

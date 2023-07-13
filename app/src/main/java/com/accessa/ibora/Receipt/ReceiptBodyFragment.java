@@ -178,7 +178,7 @@ public class ReceiptBodyFragment extends Fragment {
 
 
         // Retrieve the total amount and total tax amount from the transactionheader table
-        Cursor cursor1 = mDatabaseHelper.getTransactionHeader(transactionId);
+        Cursor cursor1 = mDatabaseHelper.getTransactionHeaderForReceipt(transactionId);
 
         if (cursor1 != null && cursor1.moveToFirst()) {
             int columnIndexTotalAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);

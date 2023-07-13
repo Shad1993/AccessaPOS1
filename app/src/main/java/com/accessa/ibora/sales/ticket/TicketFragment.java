@@ -52,15 +52,19 @@ import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.SplashActivity;
 
+import com.accessa.ibora.SplashFlashActivity;
 import com.accessa.ibora.printer.cloudPrinter.bluetoothPrinter;
 import com.accessa.ibora.printer.externalprinterlibrary2.CloudPrinterActivity;
 import com.accessa.ibora.printer.printerSetup;
+import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Random;
 
@@ -75,6 +79,7 @@ public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickL
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
     private  String ItemId,PosNum;
+    private String VatVall;
     private static final String POSNumber="posNumber";
 private String transactionIdInProgress;
     private int transactionCounter = 1;
@@ -83,6 +88,7 @@ private TextView textViewVATs,textViewTotals;
     private int soundId;
     private IWoyouService woyouService;
     private Toolbar toolbar;
+    private DBManager dbManager;
     private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
      private  List<String> data ;
@@ -219,6 +225,9 @@ private TextView textViewVATs,textViewTotals;
         mAdapter = new TicketAdapter(getActivity(), cursor1);
         mRecyclerView.setAdapter(mAdapter);
 
+        dbManager = new DBManager(getContext());
+        dbManager.open();
+
         textViewVATs=view.findViewById(R.id.textViewVATs);
         textViewTotals=view.findViewById(R.id.textViewTotals);
         textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");
@@ -242,7 +251,7 @@ private TextView textViewVATs,textViewTotals;
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
         // Retrieve the total amount and total tax amount from the transactionheader table
-        Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+        Cursor cursor = mDatabaseHelper.getTransactionHeader();
         if (cursor != null && cursor.moveToFirst()) {
             int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
             int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -349,22 +358,49 @@ private TextView textViewVATs,textViewTotals;
         return view;
     }
 
-    private void SaveTransaction(double totalAmount,double TaxtotalAmount) {
-        // Update the transaction status for all in-progress transactions to "saved"
-        mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_Saved);
+    private void SaveTransaction(double totalAmount, double TaxtotalAmount) {
+
 
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
 
+        // Get the latest transaction counter value from SharedPreferences
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+        int latestTransactionCounter = sharedPreferences.getInt("transaction_counter_memo", 0);
+
+        SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+        // Increment the transaction counter
+        latestTransactionCounter++;
+
+        // Generate the transaction ID with the format "MEMO-integer"
+        String newTransactionId = "MEMO-" + latestTransactionCounter;
+        // Update the transaction ID in the transaction table for transactions with status "InProgress"
+        mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+        // Update the transaction ID in the header table for transactions with status "InProgress"
+        mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+
+
+
+        // Update the transaction counter in SharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("transaction_counter_memo", latestTransactionCounter);
+        editor.apply();
+        // Update the transaction status for all in-progress transactions to "saved"
+        mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_Saved);
         updateTransactionStatus();
-        generateNewTransactionId();
-      //  recreate(getActivity());
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
-        mAdapter.swapCursor(cursor);
-        mAdapter.notifyDataSetChanged();
-
-
+        Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
+        startActivity(intent);
+        getActivity().finish();
     }
+
+
+
+
+
+
     public void updateTransactionStatus() {
 
         // Retrieve the SharedPreferences
@@ -381,53 +417,19 @@ private TextView textViewVATs,textViewTotals;
 
     }
 
-    private String generateNewTransactionId() {
-        // Retrieve the last used counter value from shared preferences
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
-        int lastCounter = sharedPreferences.getInt("counter", 1);
 
-        // Increment the counter for the next transaction
-        int currentCounter = lastCounter + 1;
-
-        // Save the updated counter value in shared preferences
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("counter", currentCounter);
-        editor.apply();
-
-        // Extract the first three letters from companyName
-        String companyLetters = shopname.substring(0, Math.min(shopname.length(), 3)).toUpperCase();
-        String posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
-
-        // Generate the transaction ID by combining the three letters and the counter
-        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
-    }
     public void clearTransact(){
         // Create an instance of the DatabaseHelper class
 
-        DatabaseHelper dbHelper = new DatabaseHelper(requireContext()); // Replace 'context' with the appropriate context for your application
-
-// Get a writable database instance
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.putNull(TRANSACTION_TICKET_NO); // Set the field to null
-        String whereClause = _ID + " = ?";
-        String[] whereArgs = {String.valueOf(transactionIdInProgress)}; // Replace transactionHeaderId with the actual header ID
-        db.delete(TRANSACTION_HEADER_TABLE_NAME, whereClause, whereArgs);
-
-        // Delete corresponding data in the transaction table
-        whereClause = TRANSACTION_ID + " = ?";
-        String[] whereArgs1 = {String.valueOf(transactionIdInProgress)};
-        db.delete(TRANSACTION_TABLE_NAME, whereClause, whereArgs1);
+        mDatabaseHelper.deleteDataByInProgressStatus();
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
 // Notify the listener that an item is added
 
-           refreshData(calculateTotalAmount(), calculateTotalTax());
-           updateheader(calculateTotalAmount(), calculateTotalTax());
+        // Refresh the data in the RecyclerView
+        refreshData(totalAmount, TaxtotalAmount);
               displayOnLCD();
               showSecondaryScreen(data);
-
      //   recreate(getActivity());
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         mAdapter.swapCursor(cursor);
@@ -478,7 +480,7 @@ private TextView textViewVATs,textViewTotals;
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -511,7 +513,7 @@ private TextView textViewVATs,textViewTotals;
 
         return TaxtotalAmount;
     }
-public void updateheader(double totalAmount, double TaxtotalAmount){
+public void updateheader(double totalAmount, double TaxtotalAmount) {
 
         // Get the current date and time
         String currentDate = mDatabaseHelper.getCurrentDate();
@@ -529,7 +531,7 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
 
         // Save the transaction details in the TRANSACTION_HEADER table
         boolean success = mDatabaseHelper.updateTransactionHeader(
-                transactionIdInProgress,
+
                 totalAmount,
                 currentDate,
                 currentTime,
@@ -543,33 +545,17 @@ public void updateheader(double totalAmount, double TaxtotalAmount){
         if (success) {
             showSecondaryScreen(data);
         } else {
-            // Failed to save transaction header, handle the error
 
-            // Create and show a Dialog for 1 second
-            final Dialog dialog = new Dialog(getActivity());
-            dialog.setContentView(R.layout.popup_layout); // Replace with your custom layout
-            dialog.show();
+            Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
+            startActivity(intent);
+            getActivity().finish();
 
-// Delay the intent to start the MainActivity
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Start the MainActivity after the delay
-                  //  Intent mainIntent = new Intent(getActivity(), MainActivity.class);
-                  //  mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                 //   startActivity(mainIntent);
-                    recreate(getActivity());
-                    // Dismiss the dialog
-                    dialog.dismiss();
-                }
-            }, 2000); // Delay of 1 second (1000 milliseconds)
 
         }
 
 
 }
-
 
 
     public  void refreshData(double totalAmount, double TaxtotalAmount) {

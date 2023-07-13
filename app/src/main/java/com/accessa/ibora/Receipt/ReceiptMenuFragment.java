@@ -47,6 +47,7 @@ public class ReceiptMenuFragment extends Fragment {
     private SearchView mSearchView;
     private EditText searchEditText;
     private Spinner spinner;
+    private Spinner statusFilterSpinner;
     private RecyclerView mRecyclerView;
     // onCreate
     @Override
@@ -120,6 +121,8 @@ public class ReceiptMenuFragment extends Fragment {
 
         // Spinner
         spinner = view.findViewById(R.id.date_filter_spinner);
+        statusFilterSpinner = view.findViewById(R.id.status_filter_spinner);
+
 
         // Retrieve the items from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
@@ -199,6 +202,19 @@ public class ReceiptMenuFragment extends Fragment {
             }
         });
 
+        statusFilterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedStatus = (String) parent.getItemAtPosition(position);
+                filterRecyclerViews(selectedStatus);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+                filterRecyclerViews(null); // Remove any applied filter
+            }
+        });
 
 
         mDatabaseHelper = new DatabaseHelper(getContext());
@@ -246,6 +262,18 @@ public class ReceiptMenuFragment extends Fragment {
         );
 
         return view;
+    }
+    private void filterRecyclerViews(String selectedStatus) {
+        Cursor filteredCursor;
+        if (selectedStatus == null || selectedStatus.equals("All")) {
+            filteredCursor = mDatabaseHelper.getAllReceipt();
+        } else {
+            filteredCursor = mDatabaseHelper.getReceiptsByStatus(selectedStatus);
+        }
+        mAdapter.swapCursor(filteredCursor);
+
+        // Show or hide the empty state
+        showEmptyState(mAdapter.getItemCount() <= 0);
     }
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;

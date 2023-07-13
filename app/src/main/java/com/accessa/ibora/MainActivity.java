@@ -424,7 +424,6 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, TaxtotalAmount);
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
-                Toast.makeText(instance, "total= " + " " + totalAmount + " "+ TaxtotalAmount , Toast.LENGTH_SHORT).show();
                 CustomerLcd instance = new CustomerLcd();
                 displayOnLCD();
             }
@@ -439,7 +438,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader(transactionIdInProgress);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
