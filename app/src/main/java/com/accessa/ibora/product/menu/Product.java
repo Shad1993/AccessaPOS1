@@ -13,6 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Receipt.ReceiptActivity;
+import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
@@ -135,9 +137,13 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                     Intent intent = new Intent(Product.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Product.this, ReceiptActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Product.this, SalesReportActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Items) {
                     Intent intent = new Intent(Product.this, Product.class);
                     startActivity(intent);
@@ -146,20 +152,38 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                     Intent intent = new Intent(Product.this, SettingsDashboard.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
-                    Toast.makeText(getApplicationContext(), "Logout is Clicked", Toast.LENGTH_SHORT).show();
-
+                    logout();
+                    return true;
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(Product.this, AdminActivity.class);
                     startActivity(intent);
+                    return true;
                 }
                 return true;
             }
         });
     }
 
+    public void logout() {
+        // Perform any necessary cleanup or logout actions here
+        // For example, you can clear session data, close database connections, etc.
+        // Create an editor to modify the preferences
+        SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
+        // Clear all the stored values
+        editor.clear();
+
+        // Apply the changes
+        editor.apply();
+
+        // Redirect to the login activity
+        Intent intent = new Intent(this, login.class);
+        startActivity(intent);
+        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+    }
 
     @Override
     public void onBackPressed() {

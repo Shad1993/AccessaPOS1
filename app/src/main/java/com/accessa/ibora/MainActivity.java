@@ -44,6 +44,7 @@ import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
+import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
@@ -241,7 +242,9 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                     Intent intent = new Intent(MainActivity.this, ReceiptActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, SalesReportActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Items) {
                     Intent intent = new Intent(MainActivity.this, Product.class);
                     startActivity(intent);
@@ -257,6 +260,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(MainActivity.this, AdminActivity.class);
                     startActivity(intent);
+                    return true;
                 }
                 return true;
             }

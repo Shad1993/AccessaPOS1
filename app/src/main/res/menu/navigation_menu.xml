@@ -26,5 +26,8 @@
     <item
         android:id="@+id/Report"
         android:title="@string/Report" />
+    <item
+        android:id="@+id/SalesReport"
+        android:title="@string/salesreport" />
 
 </menu>

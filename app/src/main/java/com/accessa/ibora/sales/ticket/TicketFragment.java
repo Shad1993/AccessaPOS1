@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
+import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
@@ -169,6 +170,19 @@ private TextView textViewVATs,textViewTotals;
             if(level >= 6){
                 Context context = getContext(); // Get the Context object
                 Intent intent = new Intent(context, ReportActivity.class);
+                startActivity(intent);
+
+            }else {
+                Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+            }
+
+            return true;
+        }else if
+        (id == R.id.SalesReport) {
+            int level= Integer.parseInt(cashierLevel);
+            if(level >= 6){
+                Context context = getContext(); // Get the Context object
+                Intent intent = new Intent(context, SalesReportActivity.class);
                 startActivity(intent);
 
             }else {

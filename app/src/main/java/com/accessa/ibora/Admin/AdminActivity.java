@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
+import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.menu.BodyActivity;
 import com.accessa.ibora.product.menu.BodyFragment;
@@ -43,10 +44,11 @@ import com.google.android.material.navigation.NavigationView;
 public class AdminActivity extends AppCompatActivity implements AdminMenuFragment.OnMenufragListener {
     private MaterialToolbar toolbar;
     private boolean doubleBackToExitPressedOnce = false;
-    private String cashorId;
+    private String cashorId,Shopname;
     private String cashorName;
     private TextView name;
     private TextView CashorId;
+    private TextView CompanyName;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -61,6 +63,7 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        Shopname = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
@@ -79,10 +82,13 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
+        CompanyName = headerView.findViewById(R.id.Company_name);
+
 
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
+        CompanyName.setText(Shopname);
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
@@ -130,11 +136,12 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (id == R.id.Sales) {
-                    Toast.makeText(getApplicationContext(), "Sales is Clicked", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(AdminActivity.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(AdminActivity.this, ReceiptActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Shift) {
                     Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.Items) {
@@ -146,6 +153,7 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
+                    return true;
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {

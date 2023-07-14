@@ -23,6 +23,8 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Receipt.ReceiptActivity;
+import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
 import com.accessa.ibora.login.login;
@@ -62,7 +64,7 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
+        Company_name = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
@@ -81,11 +83,12 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
+        CompanyName = headerView.findViewById(R.id.Company_name);
 
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-        CompanyName = headerView.findViewById(R.id.Company_name);
+        CompanyName.setText(Company_name);
 
         // Get the intent extra
         String fragmentKey = getIntent().getStringExtra("fragment");
@@ -118,10 +121,15 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
                 if (id == R.id.Sales) {
                     Intent intent = new Intent(SettingsDashboard.this, MainActivity.class);
                     startActivity(intent);
+                    return true;
                 } else if (id == R.id.Receipts) {
-                    Toast.makeText(getApplicationContext(), "Receipts is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(SettingsDashboard.this, ReceiptActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(SettingsDashboard.this, SalesReportActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Items) {
                     Intent intent = new Intent(SettingsDashboard.this, Product.class);
                     startActivity(intent);
@@ -129,13 +137,16 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
                 } else if (id == R.id.Settings) {
                     Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
                     startActivity(intent);
+                    return true;
                 } else if (id == R.id.nav_logout) {
                     logout();
+                    return true;
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(SettingsDashboard.this, AdminActivity.class);
                     startActivity(intent);
+                    return true;
                 }
                 return true;
             }

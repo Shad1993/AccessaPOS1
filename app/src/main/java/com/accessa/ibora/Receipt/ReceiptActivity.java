@@ -25,6 +25,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.Settings.SettingsMenuFragment.OnMenufragListener;
 import com.accessa.ibora.login.login;
@@ -43,7 +44,7 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
     private TextView CompanyName;
-    private String Company_name;
+    private String Shopname;
     private ReceiptAdapter receiptAdapter;
     private SearchView searchView;
     private Spinner dateFilterSpinner;
@@ -59,7 +60,7 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        Company_name = sharedPreferences.getString("CompanyName", null); // Retrieve company name
+        Shopname = sharedPreferences.getString("ShopName", null); // Retrieve company name
 
         //toolbar
         toolbar = findViewById(R.id.topAppBar);
@@ -78,11 +79,12 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
         CashorId = headerView.findViewById(R.id.CashorId);
+        CompanyName = headerView.findViewById(R.id.Company_name);
 
         // Set the user ID and name in the TextViews
         CashorId.setText(cashorId);
         name.setText(cashorName);
-        CompanyName = headerView.findViewById(R.id.Company_name);
+        CompanyName.setText(Shopname);
 
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -106,7 +108,9 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
                     Intent intent = new Intent(ReceiptActivity.this, ReceiptActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ReceiptActivity.this, SalesReportActivity.class);
+                    startActivity(intent);
+                    return true;
                 } else if (id == R.id.Items) {
                     Intent intent = new Intent(ReceiptActivity.this, Product.class);
                     startActivity(intent);
@@ -114,8 +118,10 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
                 } else if (id == R.id.Settings) {
                     Intent intent = new Intent(ReceiptActivity.this, SettingsDashboard.class);
                     startActivity(intent);
+                    return true;
                 } else if (id == R.id.nav_logout) {
                     logout();
+                    return true;
                 } else if (id == R.id.Help) {
                     Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_Admin) {

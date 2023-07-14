@@ -11,7 +11,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.accessa.ibora.Constants;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -1369,6 +1371,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery(query, new String[]{status});
     }
 
-}
+    public Cursor getDistinctStatusCursor() {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT DISTINCT " + TRANSACTION_STATUS + " FROM " + TRANSACTION_HEADER_TABLE_NAME;
+        return db.rawQuery(query, null);
+    }
+
+
+    public Cursor getReceiptsByStatusAndDate(String status, String date) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] projection = {
+                // specify the columns you need to retrieve
+                _ID,
+                TRANSACTION_TICKET_NO,
+                TRANSACTION_TOTAL_TTC,
+                TRANSACTION_DATE_CREATED
+
+                // ... other columns ...
+        };
+
+        String selection = TRANSACTION_STATUS + " = ? AND " + TRANSACTION_DATE_CREATED + " = ?";
+        String[] selectionArgs = {status, date};
+
+        return db.query(TRANSACTION_HEADER_TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+    }
+}
 

@@ -12,6 +12,7 @@
     <color name="whiteTextColor">#00a5ff</color>
     <color name="textviewextColor">#DAE2F3</color>
     <color name="grey"> #808080</color>
-
+    <color name="contentTextColor">#020000</color>
+    <color name="purple">#D970F5</color>
 
 </resources>

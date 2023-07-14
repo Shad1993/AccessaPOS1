@@ -448,12 +448,11 @@
     <string name="shopContacts">Shop contacts</string>
     <string name="update">Update Sucessfull</string>
     <string name="saving">Saving Transaction</string>
+    <string name="AllStatus">All Status</string>
+    <string name="inprogress">In Progress</string>
+    <string name="Saved">Saved</string>
+    <string name="completed">Completed</string>
+    <string name="salesreport">Sales Report</string>
 
-    <string-array name="status_filter_options">
-        <item>All</item>
-        <item>Saved</item>
-        <item>In Progress</item>
-        <item>Completed</item>
-    </string-array>
 
 </resources>
