@@ -30,10 +30,12 @@
             android:layout_toRightOf="@id/salesImageView">
 
             <TextView
+                android:id="@+id/paymentNameTextView"
                 style="@style/reportContentText"
                 android:text="Cash"
                 android:textColor="@color/white"/>
             <TextView
+                android:id="@+id/amountPaidTextView"
                 style="@style/viewParent.headerText"
                 android:textSize="21sp"
                 android:text="Rs 1000.22"

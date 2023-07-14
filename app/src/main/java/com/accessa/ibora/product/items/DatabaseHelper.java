@@ -29,7 +29,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_UNIT_PRICE = "UnitPrice";
 
 
-    private static final String INVOICE_SETTLEMENT_TABLE_NAME = "InvoiceSettlement";
+    public static final String INVOICE_SETTLEMENT_TABLE_NAME = "InvoiceSettlement";
 
     // Common column names
     public static final String _ID = "_id";
