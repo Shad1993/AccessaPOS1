@@ -319,8 +319,11 @@ public class validateticketDialogFragment extends DialogFragment {
 
                 // Update the table with settlement details
                 for (SettlementItem settlementItem : settlementItems) {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
 
-                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(),Transaction_Id,PosNum);
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum,transactionDate);
+
                     if (updated) {
 
                         Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();

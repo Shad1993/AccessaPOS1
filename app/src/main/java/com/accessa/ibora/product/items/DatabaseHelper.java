@@ -2,6 +2,7 @@ package com.accessa.ibora.product.items;
 
 
 
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,7 +10,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.accessa.ibora.Constants;
+import com.accessa.ibora.Report.PaymentItem;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1116,13 +1119,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
         return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
-    public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId,String PosNum) {
+    public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId, String PosNum, String transactionDate) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SETTLEMENT_PAYMENT_NAME, paymentName);
         values.put(SETTLEMENT_AMOUNT, settlementAmount);
         values.put(SETTLEMENT_INVOICE_ID  , SettlementId);
         values.put(SETTLEMENT_TERMINAL_NO,PosNum);
+        values.put(SETTLEMENT_DATE_TRANSACTION  , transactionDate);
+        values.put(SETTLEMENT_DATE_CREATED  , transactionDate);
 
         // Insert the values into the table
         long newRowId = db.insert(INVOICE_SETTLEMENT_TABLE_NAME, null, values);
@@ -1396,5 +1401,121 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.query(TRANSACTION_HEADER_TABLE_NAME, projection, selection, selectionArgs, null, null, null);
     }
+
+    public List<PaymentItem> getFilteredPaymentItems(String startDate, String endDate) {
+        List<PaymentItem> paymentItems = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+
+        // Query the database to get the filtered payment items
+        Cursor cursor = db.rawQuery("SELECT " + SETTLEMENT_PAYMENT_NAME + ", SUM(" + SETTLEMENT_AMOUNT + ") AS totalAmount, " + SETTLEMENT_DATE_TRANSACTION +
+                " FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " BETWEEN ? AND ?" +
+                " GROUP BY " + SETTLEMENT_PAYMENT_NAME, new String[]{startDate, endDate});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String paymentName = cursor.getString(cursor.getColumnIndex(SETTLEMENT_PAYMENT_NAME));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndex("totalAmount"));
+                String transactionDateString = cursor.getString(cursor.getColumnIndex(SETTLEMENT_DATE_TRANSACTION));
+                Date transactionDate = parseDate(transactionDateString);
+
+                PaymentItem item = new PaymentItem(paymentName, totalAmount, transactionDate);
+                paymentItems.add(item);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return paymentItems;
+    }
+    private Date parseDate(String dateString) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            return dateFormat.parse(dateString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public double getTotalSaleAmount(String startDate, String endDate) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        // Query the database to calculate the total sale amount
+        Cursor cursor = db.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " BETWEEN ? AND ?", new String[]{startDate, endDate});
+
+        double totalAmount = 0.0;
+
+        if (cursor.moveToFirst()) {
+            totalAmount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+        db.close();
+
+        return totalAmount;
+    }
+
+    public List<PaymentItem> getFilteredPaymentItemsByCashier(String startDateString, String endDateString, String selectedCashier) {
+        List<PaymentItem> paymentItems = new ArrayList<>();
+
+        // Query the database to get the filtered payment items for the specified date range and cashier
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_PAYMENT_NAME + ", SUM(" + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_AMOUNT + ") AS totalAmount, " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION +
+                " FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                " INNER JOIN " + TRANSACTION_TABLE_NAME + " ON " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + TRANSACTION_ID + " = " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_ID +
+                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
+                TRANSACTION_TABLE_NAME + "." + COLUMN_CASHOR_NAME + " = ?" +
+                " GROUP BY " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_PAYMENT_NAME;
+
+        Cursor cursor = db.rawQuery(query, new String[]{startDateString, endDateString, selectedCashier});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String paymentName = cursor.getString(cursor.getColumnIndex(SETTLEMENT_PAYMENT_NAME));
+                double totalAmount = cursor.getDouble(cursor.getColumnIndex("totalAmount"));
+                String transactionDateString = cursor.getString(cursor.getColumnIndex(SETTLEMENT_DATE_TRANSACTION));
+                Date transactionDate = parseDate(transactionDateString); // Parse the date string to a Date object
+
+                PaymentItem item = new PaymentItem(paymentName, totalAmount, transactionDate);
+                paymentItems.add(item);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return paymentItems;
+    }
+
+    public double getTotalSaleAmountByCashier(String startDateString, String endDateString, String selectedCashier) {
+        double totalAmount = 0.0;
+
+        // Query the database to calculate the total sale amount for the specified date range and cashier
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT SUM(" + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_AMOUNT + ") " +
+                "FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                " INNER JOIN " + TRANSACTION_TABLE_NAME + " ON " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + TRANSACTION_ID + " = " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_ID +
+                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
+                TRANSACTION_TABLE_NAME + "." + COLUMN_CASHOR_NAME + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{startDateString, endDateString, selectedCashier});
+
+        if (cursor.moveToFirst()) {
+            totalAmount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+        db.close();
+
+        return totalAmount;
+    }
+
+
 }
 
