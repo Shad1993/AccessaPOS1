@@ -1466,11 +1466,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_PAYMENT_NAME + ", SUM(" + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_AMOUNT + ") AS totalAmount, " +
                 INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION +
                 " FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                " INNER JOIN " + TRANSACTION_TABLE_NAME + " ON " +
-                INVOICE_SETTLEMENT_TABLE_NAME + "." + TRANSACTION_ID + " = " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_ID +
-                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
-                TRANSACTION_TABLE_NAME + "." + COLUMN_CASHOR_NAME + " = ?" +
+                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " ON " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_INVOICE_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_TICKET_NO +
+                " WHERE " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
+                TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE + " = ?" +
                 " GROUP BY " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_PAYMENT_NAME;
+
 
         Cursor cursor = db.rawQuery(query, new String[]{startDateString, endDateString, selectedCashier});
 
@@ -1499,10 +1501,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         String query = "SELECT SUM(" + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_AMOUNT + ") " +
                 "FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                " INNER JOIN " + TRANSACTION_TABLE_NAME + " ON " +
-                INVOICE_SETTLEMENT_TABLE_NAME + "." + TRANSACTION_ID + " = " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_ID +
-                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
-                TRANSACTION_TABLE_NAME + "." + COLUMN_CASHOR_NAME + " = ?";
+                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " ON " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_INVOICE_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE +
+                " WHERE " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " +
+                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
+                TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE + " = ?";
 
         Cursor cursor = db.rawQuery(query, new String[]{startDateString, endDateString, selectedCashier});
 
@@ -1515,6 +1518,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return totalAmount;
     }
+
 
 
 }

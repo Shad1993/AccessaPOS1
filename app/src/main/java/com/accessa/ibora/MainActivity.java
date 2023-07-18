@@ -42,6 +42,7 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
+import com.accessa.ibora.POP.POP;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
@@ -256,7 +257,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, POP.class);
+                    startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(MainActivity.this, AdminActivity.class);
                     startActivity(intent);

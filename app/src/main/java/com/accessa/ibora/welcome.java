@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Admin.RegistorAdmin;
+import com.accessa.ibora.Sync.connectToMssql;
 import com.accessa.ibora.company.InsertCompanyDataActivity;
 
 public class welcome extends AppCompatActivity {
@@ -53,6 +54,8 @@ public class welcome extends AppCompatActivity {
                 buttonSynchronize.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Intent intent = new Intent(welcome.this, connectToMssql.class);
+                        startActivity(intent);
                         dialog.dismiss(); // Close the dialog
                     }
                 });

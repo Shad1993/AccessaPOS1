@@ -35,6 +35,8 @@ import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 
+import com.accessa.ibora.Report.SalesReportActivity;
+import com.accessa.ibora.Sync.connectToMssql;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.CustomAdapter;
 import com.accessa.ibora.welcome;
@@ -211,7 +213,9 @@ public class AdminMenuFragment extends Fragment {
                     buttonSynchronize.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            dialog.dismiss(); // Close the dialog
+
+                            Intent intent = new Intent(getContext(), connectToMssql.class);
+                            startActivity(intent);
                         }
                     });
 

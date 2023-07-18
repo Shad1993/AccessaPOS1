@@ -2,6 +2,7 @@ package com.accessa.ibora.Report;
 
 import static com.accessa.ibora.Constants.DB_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
 import static com.accessa.ibora.product.items.DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_AMOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_DATE_TRANSACTION;
@@ -21,6 +22,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.ImageView;
@@ -159,20 +161,21 @@ public class SalesReportActivity extends AppCompatActivity {
         name.setText(cashorName);
         CompanyName.setText(Shopname);
 
-// Retrieve the list of users from the database
-        List<String> userList = getUsersFromDatabase();
+        // Retrieve the list of users from the database
+        List<Cashier> userList = getUsersFromDatabase();
 
-// Create an ArrayAdapter using the userList
-        ArrayAdapter<String> userAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, userList);
+        // Create an ArrayAdapter using the userList
+        ArrayAdapter<Cashier> userAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, userList);
 
-// Set the dropdown layout resource for the ArrayAdapter
+        // Set the dropdown layout resource for the ArrayAdapter
         userAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-// Get the Spinner view
+        // Get the Spinner view
         Spinner cashierSpinner = findViewById(R.id.cashierSpinner);
 
-// Set the ArrayAdapter on the Spinner
+        // Set the ArrayAdapter on the Spinner
         cashierSpinner.setAdapter(userAdapter);
+
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -261,6 +264,41 @@ public class SalesReportActivity extends AppCompatActivity {
                 showDatePickerDialog();
             }
         });
+
+
+        cashierSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Get the selected cashier from the spinner
+                String selectedCashier = parent.getItemAtPosition(position).toString();
+
+                // Get the current selected start and end dates
+                String startDateString = dateTextView.getText().toString();
+                String endDateString = enddateTextView.getText().toString();
+
+                // Convert the start and end dates to Date objects
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+                Date startDate;
+                Date endDate;
+                try {
+                    startDate = dateFormat.parse(startDateString);
+                    endDate = dateFormat.parse(endDateString);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    // Handle the parsing error if needed
+                    return;
+                }
+
+                // Update the data based on the selected cashier and date range
+                updateDataForDateRangeAndCashier(startDate, endDate, selectedCashier);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case where nothing is selected, if needed
+            }
+        });
+
 
     }
 
@@ -353,6 +391,21 @@ public class SalesReportActivity extends AppCompatActivity {
         startDatePickerDialog.show(); // Show the start date picker dialog last
     }
 
+    private void updateDataForDateRangeAndCashier(Date startDate, Date endDate, String selectedCashier) {
+        // Format the start and end dates as strings
+        String startDateString = formatDateTimes(startDate);
+        String endDateString = formatDateTimes(endDate);
+
+        // Query the database to get the filtered payment items and total sale amount for the selected cashier
+        List<PaymentItem> filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItemsByCashier(startDateString, endDateString, selectedCashier);
+        double totalSaleAmount = mDatabaseHelper.getTotalSaleAmountByCashier(startDateString, endDateString, selectedCashier);
+
+        // Update the RecyclerView adapter with the filtered payment items
+        paymentAdapter.updateItems(filteredPaymentItems);
+
+        // Set the total sale amount to the TextView
+        TotalSaleAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " " + formatAmount(totalSaleAmount));
+    }
 
     private void updateDataForDateRange(Date startDate, Date endDate) {
         // Format the start and end dates as strings
@@ -486,16 +539,19 @@ public class SalesReportActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         return dateFormat.format(date);
     }
-    private List<String> getUsersFromDatabase() {
-        List<String> userList = new ArrayList<>();
+    private List<Cashier> getUsersFromDatabase() {
+        List<Cashier> userList = new ArrayList<>();
 
         SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
         Cursor cursor = mDatabaseHelper.getAllUsers();
 
         if (cursor.moveToFirst()) {
             do {
+                String cashorId = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id));
                 String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
-                userList.add(cashorName);
+
+                Cashier cashier = new Cashier(cashorId, cashorName);
+                userList.add(cashier);
             } while (cursor.moveToNext());
         }
 
@@ -504,6 +560,7 @@ public class SalesReportActivity extends AppCompatActivity {
 
         return userList;
     }
+
 
     private List<PaymentItem> getPaymentItems() {
         List<PaymentItem> paymentItems = new ArrayList<>();
