@@ -76,6 +76,7 @@ public class QRFragment extends Fragment {
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
 
         mDatabaseHelper = new DatabaseHelper(getContext());
+        loadQRData();
         Cursor cursor = mDatabaseHelper.getAllQR();
 
         mAdapter = new QRGridAdapter(getContext(), cursor);
@@ -103,8 +104,6 @@ public class QRFragment extends Fragment {
                 TextView NameEditText = view.findViewById(R.id.name_text_view);
                 TextView QrEditText = view.findViewById(R.id.code);
 
-
-
                 String id1 = idTextView.getText().toString();
                 String id = idTextView.getText().toString();
                 String QR = QrEditText.getText().toString();
@@ -112,9 +111,6 @@ public class QRFragment extends Fragment {
 
                 dataPassListener.onDataPass(name, id, QR);
                 showSecondaryScreen(name, QR);
-
-
-
             }
 
             @Override
@@ -127,7 +123,6 @@ public class QRFragment extends Fragment {
         return view;
 
     }
-
 
     private void showSecondaryScreen(String name, String QR) {
         // Obtain a real secondary screen
@@ -147,10 +142,8 @@ public class QRFragment extends Fragment {
                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                 double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
 
-                 formattedTaxAmount = String.format("%.2f", taxTotalAmount);
-                 formattedTotalAmount = String.format("%.2f", totalAmount);
-
-
+                formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                formattedTotalAmount = String.format("%.2f", totalAmount);
             }
             // Get the selected item from the RecyclerView
             String selectedName = name;
@@ -158,7 +151,7 @@ public class QRFragment extends Fragment {
             // Convert the QR code string to a Bitmap
             Bitmap qrBitmap = generateQRCodeBitmap(selectedQR);
             // Update the text and QR code on the secondary screen
-            secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap,formattedTaxAmount,formattedTotalAmount);
+            secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap, formattedTaxAmount, formattedTotalAmount);
         } else {
             // Secondary screen not found or not supported
             Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
@@ -186,6 +179,7 @@ public class QRFragment extends Fragment {
 
         return qrBitmap;
     }
+
     private Display getPresentationDisplay() {
         DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
         Display[] displays = displayManager.getDisplays();
@@ -198,6 +192,21 @@ public class QRFragment extends Fragment {
         }
         return null;
     }
+
+    private void loadQRData() {
+        // Retrieve data from the database, including the default item
+        Cursor cursor = mDatabaseHelper.getAllQR();
+
+        // Check if the adapter is null
+        if (mAdapter != null) {
+            // Add the cursor position for the default item
+            cursor.moveToPosition(-1); // Move to before the first position
+
+            // Set the adapter with the cursor
+            mAdapter.swapCursor(cursor);
+        }
+    }
+
     private void showItemDialog(String searchText) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -215,14 +224,13 @@ public class QRFragment extends Fragment {
         ItemAdapter dialogAdapter = new ItemAdapter(getActivity(), itemCursor);
         dialogRecyclerView.setAdapter(dialogAdapter);
 
-        // Set the OnItemTouchListener on the RecyclerView{
+        // Set the OnItemTouchListener on the RecyclerView
         dialogRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), dialogRecyclerView,
                 new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-
-
-
+                        // Handle item click
+                        // ...
                     }
 
                     @Override
@@ -237,8 +245,6 @@ public class QRFragment extends Fragment {
         dialog.show();
     }
 
-
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -248,8 +254,4 @@ public class QRFragment extends Fragment {
             throw new ClassCastException(context.toString() + " must implement DataPassListener");
         }
     }
-
-
-
-
 }

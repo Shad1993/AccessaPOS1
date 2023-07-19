@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -51,7 +52,7 @@ public class QRGridAdapter extends RecyclerView.Adapter<QRGridAdapter.ItemViewHo
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView nameTextView;
-
+        private ImageView imageView;
         public TextView idTextView,Code;
 
 
@@ -62,6 +63,7 @@ public class QRGridAdapter extends RecyclerView.Adapter<QRGridAdapter.ItemViewHo
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             Code= itemView.findViewById(R.id.code);
+            imageView=itemView.findViewById(R.id.image_view);
 
 
         }
@@ -89,6 +91,12 @@ public class QRGridAdapter extends RecyclerView.Adapter<QRGridAdapter.ItemViewHo
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.Code.setText(code);
+        // Set the image resource based on the ID and name
+        if (id.equals("1") && name.equals("POP")) {
+            holder.imageView.setImageResource(R.drawable.poplogo);
+        } else {
+            holder.imageView.setImageResource(R.drawable.purpleqr);
+        }
         holder.itemView.setTag(id);
     }
 

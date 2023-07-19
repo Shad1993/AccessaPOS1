@@ -3,11 +3,15 @@ package com.accessa.ibora.product.items;
 
 
 
+import static android.provider.DocumentsContract.Document.COLUMN_LAST_MODIFIED;
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.Report.PaymentItem;
@@ -248,6 +252,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME_POS_ACCESS = "POSTable";
     private static final String COLUMN_POS_ID = "id";
+
+    //default qr
+
+    private static final String DEFAULT_PAYMENT_METHOD = "POP";
+    private static final String DEFAULT_CASHOR_ID = "0";
+    private static final String DEFAULT_DATE_CREATED = "null";
+    private static final String DEFAULT_LAST_MODIFIED = "null";
+    private static final String DEFAULT_QR_CODE_NUM = "QRCodeNum";
+
 
 
     // Creating Department table query
@@ -545,6 +558,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_PAYMENTBYQY_TABLE);
         db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
         db.execSQL(CREATE_POS_TABLE);
+        addDefaultItem(db);
     }
 
     @Override
@@ -568,7 +582,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    private void addDefaultItem(SQLiteDatabase db) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_PAYMENT_METHOD, DEFAULT_PAYMENT_METHOD);
+        values.put(COLUMN_CASHOR_id , DEFAULT_CASHOR_ID);
+        values.put(DateCreated , DEFAULT_DATE_CREATED);
+        values.put(LastModified , DEFAULT_LAST_MODIFIED);
+        values.put(COLUMN_QR_CODE_NUM, DEFAULT_QR_CODE_NUM);
 
+        long result = db.insert(TABLE_NAME_PAYMENTBYQY, null, values);
+        if (result == -1) {
+            Log.e(TAG, "Error inserting default item into the database");
+        }
+    }
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
                                   String vatType, String posNum) {
@@ -1519,6 +1545,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return totalAmount;
     }
 
+    public boolean updateQRCodeNum(String tableName, String id, String paymentMethod, String qrCodeNum) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_QR_CODE_NUM, qrCodeNum);
+
+        String whereClause = COLUMN_PAYMENT_ID + " = ? AND " + COLUMN_PAYMENT_METHOD + " = ?";
+        String[] whereArgs = {id, paymentMethod};
+
+        int rowsAffected = db.update(tableName, values, whereClause, whereArgs);
+        db.close();
+
+        return rowsAffected > 0;
+    }
 
 
 }

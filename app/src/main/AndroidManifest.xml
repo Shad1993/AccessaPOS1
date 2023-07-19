@@ -103,6 +103,9 @@
         <activity android:name=".Report.SalesReportActivity"/>
         <activity android:name=".Sync.connectToMssql"/>
         <activity android:name=".POP.POP"/>
+        <activity android:name=".POP.MerchantValidationActivity"/>
+        <activity android:name=".POP.EncryptionActivity"/>
+        <activity android:name=".POP.RSAEncryptionActivity"/>
 
 
         <receiver android:name="sunmi.ds.MsgReceiver"

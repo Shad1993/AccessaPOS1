@@ -1,6 +1,7 @@
 package com.accessa.ibora.sales.ticket;
 
 import static androidx.core.app.ActivityCompat.recreate;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
@@ -45,6 +46,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.QR.QRGenerator;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
@@ -539,7 +541,13 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         double totaltax = TaxtotalAmount;
         double totalHT_A = totalTTC - totaltax;
 
-
+    String amount = String.valueOf(totalAmount);
+    String billNumber = transactionIdInProgress;
+    String loyaltyNumber = "987654321";
+    String qrString = QRGenerator.generateQRString(amount, billNumber, loyaltyNumber);
+    // Update the QR code in the PAYMENTBYQY table
+    boolean qrCodeUpdateSuccess = mDatabaseHelper.updateQRCodeNum(TABLE_NAME_PAYMENTBYQY, "1", "POP", qrString);
+    System.out.println(qrString);
         // Get the total quantity of items in the transaction
         int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
 
@@ -556,8 +564,9 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
                 cashierId
         );
 
-        if (success) {
+        if (success && qrCodeUpdateSuccess) {
             showSecondaryScreen(data);
+
         } else {
 
             Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
