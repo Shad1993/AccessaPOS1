@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,12 +29,14 @@ public class QrAdaptor extends RecyclerView.Adapter<QrAdaptor.ItemViewHolder> {
 
         public TextView nameTextView;
         public TextView idTextView;
+        private ImageView imageView;
 
 
         public ItemViewHolder(View itemView) {
             super(itemView);
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
+            imageView=itemView.findViewById(R.id.image);
 
 
         }
@@ -60,6 +63,12 @@ public class QrAdaptor extends RecyclerView.Adapter<QrAdaptor.ItemViewHolder> {
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
+        // Set the image resource based on the ID and name
+        if (id.equals("1") && name.equals("POP")) {
+            holder.imageView.setImageResource(R.drawable.poplogo);
+        } else {
+            holder.imageView.setImageResource(R.drawable.purpleqr);
+        }
         holder.itemView.setTag(id);
     }
 

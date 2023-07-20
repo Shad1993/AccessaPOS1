@@ -1,0 +1,255 @@
+{
+	"info": {
+		"_postman_id": "c51f5679-78eb-4b1e-8e75-bae84cf5da2e",
+		"name": "Intermart Merchant Integration API v1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17652824"
+	},
+	"item": [
+		{
+			"name": "1 - Encrypt Plain Request",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json(),\r",
+							"    enReq = JSON.stringify(response);\r",
+							"pm.collectionVariables.set(\"ReqRefId\",pm.response.headers.get(\"ReqRefId\"));\r",
+							"pm.collectionVariables.set(\"enReq\",enReq);\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "/*{\r\n    \"outletId\":\"2992\",\r\n    \"tillId\":\"100009\",\r\n    \"tranId\":\"86867\",\r\n    \"amount\":\"100.00\",\r\n    \"requestType\":\"QR\",\r\n    \"requestValue\":\"00020101021126630009mu.maucas0112BKONMUM0XXXX021101080013777031500000000000004953034805802MU5906Mobius621502112305259027863046A6D\"\r\n}\r\n*/\r\n\r\n {\r\n   \"tranId\": \"87879\",\r\n   \"popReqId\": \"2333\"\r\n }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-dev.bankone.mu:8243/MW/api/ED/EncReq",
+					"protocol": "https",
+					"host": [
+						"api-dev",
+						"bankone",
+						"mu"
+					],
+					"port": "8243",
+					"path": [
+						"MW",
+						"api",
+						"ED",
+						"EncReq"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2- Validate QR with encrypted data",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json(),\r",
+							"    encRequest = JSON.stringify(response);\r",
+							"pm.collectionVariables.set(\"encRequest\",encRequest);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "ReqRefId",
+						"value": "{{ReqRefId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{enReq}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-dev.bankone.mu:8243/MW/api/MW/ValidateQR",
+					"protocol": "https",
+					"host": [
+						"api-dev",
+						"bankone",
+						"mu"
+					],
+					"port": "8243",
+					"path": [
+						"MW",
+						"api",
+						"MW",
+						"ValidateQR"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3 - Acknowledge Payment with encrypted data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json(),\r",
+							"    encRequest = JSON.stringify(response);\r",
+							"pm.collectionVariables.set(\"encRequest\",encRequest);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "ReqRefId",
+						"value": "{{ReqRefId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{enReq}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-dev.bankone.mu:8243/MW/api/MW/AckPayment",
+					"protocol": "https",
+					"host": [
+						"api-dev",
+						"bankone",
+						"mu"
+					],
+					"port": "8243",
+					"path": [
+						"MW",
+						"api",
+						"MW",
+						"AckPayment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4 - Decrypt encrypted response to plain text",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "ReqRefId",
+						"value": "{{ReqRefId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{encRequest}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-dev.bankone.mu:8243/MW/api/ED/DycResponse",
+					"protocol": "https",
+					"host": [
+						"api-dev",
+						"bankone",
+						"mu"
+					],
+					"port": "8243",
+					"path": [
+						"MW",
+						"api",
+						"ED",
+						"DycResponse"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "ReqRefId",
+			"value": ""
+		},
+		{
+			"key": "enReq",
+			"value": ""
+		},
+		{
+			"key": "encRequest",
+			"value": ""
+		}
+	]
+}

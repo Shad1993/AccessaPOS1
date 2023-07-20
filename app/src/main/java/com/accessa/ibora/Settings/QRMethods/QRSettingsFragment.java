@@ -225,6 +225,11 @@ private  EditText searchEditText;
                         String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
                         String name = NameEditText.getText().toString();
+                        // Add the condition here
+                        if (id.equals("1") && name.equals("POP")) {
+                            // Elements with id="1" and name="POP" are non-clickable, so just return
+                            return;
+                        }
 
 
                         Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyQRActivity.class);
