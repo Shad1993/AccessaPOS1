@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="5"
+    android:padding="5dp"
+    android:layout_marginTop="2dp"
+    >
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="#ffffff"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:text="1"
+        android:id="@+id/lblproid"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="4"
+        android:textColor="#ffffff"
+        android:textSize="15sp"
+        android:text="MOTOROLA"
+        android:id="@+id/lblproname"/>
+
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:textColor="#ffffff"
+        android:textSize="0sp"
+        android:text="MOTOROLA"
+        android:id="@+id/lblprodesc"/>
+</LinearLayout>

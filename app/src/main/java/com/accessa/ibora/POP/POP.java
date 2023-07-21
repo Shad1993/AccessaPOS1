@@ -33,9 +33,11 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.RSAPublicKeySpec;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.crypto.Cipher;
@@ -48,6 +50,7 @@ public class POP extends Activity {
 
     private TextView resultTextView;
     private TextView requestDataTextView;
+   private String key,IV;
 
     private static final String USERNAME = "im_api_usr";
     private static final String PASSWORD = "6ef9f8fa32eddba5d33a0e4e81b60";
@@ -63,18 +66,21 @@ public class POP extends Activity {
 
         // Replace "public_key" with your XML file name in res/raw folder
         String publicKeyPath = "public_key";
-       // String jsonRequestBody = "{ \"outletId\": \"001\", \"tillId\": \"Till-145\", \"tranId\": \"12345\", \"amount\": 1.10, \"requestType\": \"Mobile\", \"requestValue\": \"23057949579\",\", \"currency\": \"MUR\", \"txnChannel\": \"eComm\", \"remarks\": \"KioskAPI_DevEnv\", \"expiry\": 5, \"cartDetails\": [ { \"productname\": \"DairyMilk\", \"sku\": \"SKU\", \"numberofitem\": 5, \"typeofgoods\": \"TYPE\", \"category\": \"CAT\", \"unitamount\": 10.00, \"totalamount\": 50.00, \"description\": \"Cadbury\", \"weight\": \"5g\", \"dimension\": \"200X200X200\", \"extData1\": \"\", \"extData2\": \"\", \"extData3\": \"\", \"extData4\": \"\", \"extData5\": \"\" }, { \"productname\": \"Snickers\", \"sku\": \"SKU\", \"numberofitem\": 10, \"typeofgoods\": \"TYPE\", \"category\": \"CAT\", \"unitamount\": 50.00, \"totalamount\": 500.00, \"description\": \"Cadbury\", \"weight\": \"10g\", \"dimension\": \"200X200X200\", \"extData1\": \"\", \"extData2\": \"\", \"extData3\": \"\",\"extData4\": \"\", \"extData5\": \"\" } ] }";
-        String jsonRequestBody = "{\"outletId\":\"051\",\"tillId\":\"Till-356\",\"tranId\":\"12445\",\"amount\":1.10,\"requestType\":\"Mobile\",\"requestValue\":\"23057031248\"}";
-       String apiRequestBody = "{\"header\": {\"apiversion\": \"string\", \"clientID\": \"string\", \"timeStamp\": \"string\", \"hCheckValue\": \"string\", \"requestUUID\": \"string\" }, \"request\": \"string\"}";
+        String jsonRequestBody = "{\"outletId\":\"956\",\"tillId\":\"Till-356\",\"tranId\":\"808\",\"amount\":366.0,\"requestType\":\"Mobile\",\"requestValue\":\"23058261326\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
+
+        String apiRequestBody = "{\"header\": {\"apiversion\": \"string\", \"clientID\": \"string\", \"timeStamp\": \"string\", \"hCheckValue\": \"string\", \"requestUUID\": \"string\" }, \"request\": \"string\"}";
         //String apiRequestBody = "{ \"header\": { \"apiversion\": \"v1\", \"clientID\": \"ead65173-250b-4453-a0d0-5fdf8d770eb5\", \"timeStamp\": \"20230719072015205\", \"hCheckValue\": \"205BF6246206DC744906111D9B8A40B4E7AC0F8DFC1A60165F10CAB417C7E506\", \"requestUUID\": \"L7tpJOeh7ezi5pOtRcKB0DKs\" }, \"request\": \"DqEtT3xTvamKtPHO3hCXzt3ZBpDXMmTpzjlD7tQvF9E2tWvQpbjlVifmuFpmggbMDC4X2QnFn4+5W07RTRn9XEdm\\/rOhMgNV2XrDmUuVD2xzVvRyp\\/dV088oDl5soMHk\\/IMhMyiAPUBPfal+U40nC3qWZJUpxgaa2a5iRXLJK4Wr6+251V1QXUrf5\\/Nr9ODosQD8LsXVgDOPOIu9XfiZO0mXw5yz7yVEBtF6UxgDKC5KZUGO7Q0Jv6v+Cj1ifTsSjHVPK0FNjNV5f2zo8jVdgDpE7Z9qwryMakwdxsivcQ7FNGf2+fjQtgopadztNvgjlnyG8sJJJY2Kamm\\/CGc7klqj43SMIdAAY8i8qOw1MjLdsBEcgUpbM1BcRf0abvX+7a7pSwGrpi03LOB5X0o3vJnOy18nnYDRVwGoaGRshEh7CleplTueq\\/SUziGTsaVPy+DqN2tOTkPgCTFNXCsKCWLnrLpLZwohK1+GkSGNPd1z\\/uxaja7QXX\\/8GA+Hw6EJbG1o0yFXxozAmUnvjNvZYajAE7+6QmiTCGz\\/leFLrwldDtD6QckLOka7RBboTad2pACMgPnd31SwKOpioGiz\\/YoQx++noxS4tov50CVUfvt8Ctscl9n7AURL5TSUt9BBsxgO\\/wl9bOfEDVT4E+w6KrwCJaz5kq2xLv6JKIGPoospNgy2dtbFi2IQPne0KEbwlKqJs6X6d66Th8FxG2WJ7d78jCJMyBrmWypXQY2wLMZP0RUvG1Qt19dyBrY21Orqku+POHNXBPzLyrnLz9RlxEGZqCB3GMHvj2g8KoysLd6WehDKrkKb2uscrCY+YRysOHBbSmBliPNfBgT+YB578kq2f6PGcbTz+v4tlnQfeauW6LBzRTyVHVTNdHXKCk3pHivHUaTdaB1g+k5OoRyAJcX7dFo7M1dVZ3WFuHfM95h14FI3CpEiTt8gU1jLxgAia5vWb+wXryAYrf4mNgNA43BRBRB4iQGQURSduB9AKJ3v0AVwmE\\/sCV4ug8dKKwt20QAAVNjmdclNwMPnwybI9IxyBr3Z9EpopTJujxQLJ9B7J0LFaNUpkPdA6Y41EBtp\\/1DQpe82EMWotnlVg3Y09O81OTtdbl0gmVyrX+fe+yXKTwTHapxIZ9uHlv\\/14fLdGRNzlmHC2Idbl7xhYuwkMk7i75MG0ojPafgU+ecQ0880bdz8oI2heUAB71rczeGH2W4FR7XI+GCzzWG8cBqMgaeFJ94jRktdhKv8SYf8yNWe0jgQlmW5y6hyR\\/OV2541\\/Y6IKtW9VEE82kwhUhvrBHV0cxrJsWo366bBfnCDV2uEcjk1uR6blHppmTnyvIz7HzpzSrKrPecUeBZe\\/48XqOfnQGtfkn7asQ041D+4L0eDGXcS\\/eZbGWJi4NkhFd3HOTAGARqrY6TI1e0Js5t4ZH77kSg01\\/NGz07UMpzC\\/urwoVZW4jaegOMwGr9d6UqwZPiDxDZX50skIWpm1dR54vVhEVLz7eaCdzqY0hzWsYV9pNRr59Ty8E00Il6s3Ny+RjWqtewNmDu99RbGMUWEXQK7cJyVRn8294TyTcAaXTaxaVjzNcp9YvtjAIjqDEfrGypqrdh5XmMnC3BskkqIca5iKzvGNsV0TuClK8o0TRs1g5KXWCzz+Sj01TWDqhTPdKdBgiRsRdUolQdI11soXtkaACvymxRf7e\\/m2YFwZNXEYRv2ytZDGFjGON8VjCcLinHtmMHbsfYIRzFwtq3DA4hTufxCnUOY8mIXVPAtdeO+UZmfIyHTiB8zef97c8K50T1rxTRPHK\\/1OapbWDMn6wCdruRX4ZfoZ3tlKSHTQXg=\"}";
 
 
         Context context = POP.this;
+// Generate random KEY and IV
+        key = generateRandomString(32);
+        IV = generateRandomString(16);
 
         String publicKeyContent = loadPublicKey(context, publicKeyPath);
         String clientID = loadClientID(context);
-        String reqRefId = generateReqRefId(publicKeyContent);
-        String encryptedRequest = createEncryptedRequest(publicKeyContent, clientID, jsonRequestBody);
+        String reqRefId = generateReqRefId(publicKeyContent,key,IV);
+        String encryptedRequest = createEncryptedRequest(publicKeyContent, clientID, jsonRequestBody,key,IV);
       //  String hCheckValue = generateHCheckValue(jsonRequestBody);
         String hCheckValue ="c16b5d4af11fa5517250d191d2e2594efc5884159969e00d2cf079d8967e84da";
 
@@ -91,7 +97,7 @@ public class POP extends Activity {
                 "Encrypted Request: " + encryptedRequest + "\n" +
                 "hCheckValue: " + hCheckValue;
 
-        requestDataTextView.setText(encryptedRequest); // Display the sent data
+        requestDataTextView.setText(apiRequest); // Display the sent data
 
 // Create a HashMap to store header parameters
         Map<String, String> headerParameters = new HashMap<>();
@@ -215,11 +221,10 @@ public class POP extends Activity {
         }
     }
 
-    public static String generateReqRefId(String publicKeyContent) {
+    public static String generateReqRefId(String publicKeyContent, String key, String iv) {
         try {
             // Generate random KEY and IV
-            String key = generateRandomString(32);
-            String iv = generateRandomString(16);
+
 
             // Concatenate KEY and IV with a pipe separator
             String concatenatedKeyIv = key + "|" + iv;
@@ -238,19 +243,24 @@ public class POP extends Activity {
         }
     }
 
-    public static String createEncryptedRequest(String publicKeyContent, String clientID, String requestBody) {
+    public static String createEncryptedRequest(String publicKeyContent, String clientID, String requestBody, String key, String IV) {
         try {
-            // Generate random KEY and IV
-            String key = generateRandomString(32);
-            String iv = generateRandomString(16);
-            String requestUUID = UUID.randomUUID().toString();
+
+// Generate random KEY and IV
+
+            String requestUUID = generateRandomString(24);;
 
             // Encrypt the request body using AES 256 Algorithm (CBC Mode)
-            String encryptedRequest = encryptWithAES(key, iv, requestBody);
+            String encryptedRequest = encryptWithAES(key, IV, requestBody);
+            Log.d("request", encryptedRequest);
 
             // Create the JSON object containing the header and encrypted request
-            String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getCurrentTimestamp() + "\",\"hCheckValue\":\"" + generateHCheckValue(requestBody) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptedRequest + "\"}";
+            String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(requestBody) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptedRequest + "\"}";
 
+
+           String time = String.valueOf(getUTCEpochTime());
+
+            Log.d("timestamp", time );
             // Remove line breaks and whitespace characters
             jsonRequest = jsonRequest.replace("\n", "").replace("\r", "").replace("\t", "").replaceAll("\\s+", " ");
 
@@ -361,8 +371,21 @@ public class POP extends Activity {
         return stringBuilder.toString();
     }
 
-    public static String getCurrentTimestamp() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        return sdf.format(new Date());
+
+
+    public static long getUTCEpochTime() {
+        // Get the current timestamp in milliseconds
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // Convert the current timestamp to UTC timezone
+        TimeZone utcTimeZone = TimeZone.getTimeZone("UTC");
+        Calendar calendar = Calendar.getInstance(utcTimeZone);
+        calendar.setTimeInMillis(currentTimeMillis);
+
+        // Get the UTC timestamp in seconds (epoch time)
+        long utcEpochTime = calendar.getTimeInMillis() / 1000;
+
+        return utcEpochTime;
     }
+
 }

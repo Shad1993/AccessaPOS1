@@ -18,10 +18,13 @@ public class Item {
     private String image;
     private String SKU;
     private String variant;
+    private String UserId;
+    private String DateCreated;
+    private String LastModified;
     private float cost;
     private boolean AvailableForSale;
 
-    public Item(int id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String VAT, String soldBy, Boolean AvailableForSale) {
+    public Item(int id, String name, String description, float price, String longDescription, float quantity, String category, String department, String subDepartment, String barcode, float weight, String expiryDate, String VAT, String soldBy, Boolean AvailableForSale,String UserId, String DateCreated,String LastModified) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -37,6 +40,9 @@ public class Item {
         this.VAT = VAT;
         this.soldBy = soldBy;
         this.AvailableForSale = AvailableForSale;
+        this.UserId = UserId;
+        this.DateCreated = DateCreated;
+        this.LastModified = LastModified;
     }
 
     public Item(String title, String description, int quantity) {
@@ -61,6 +67,9 @@ public class Item {
         this.VAT = VAT;
         this.soldBy = soldBy;
         this.AvailableForSale = AvailableForSale;
+        this.UserId = UserId;
+        this.DateCreated = DateCreated;
+        this.LastModified = LastModified;
     }
 
     public Item(String name, String id, String price, String description, String productImageName) {
@@ -210,8 +219,29 @@ public class Item {
         this.variant = variant;
     }
 
+    public String getUserId() {
+        return UserId;
+    }
+
+    public void setUserId(String UserId) {
+        this.UserId = UserId;
+    }
     public float getCost() {
         return cost;
+    }
+
+    public void setDateCreated(String DateCreated) {
+        this.DateCreated = DateCreated;
+    }
+    public String getDateCreated() {
+        return DateCreated;
+    }
+
+    public void setLastModified(String LastModified) {
+        this.LastModified = LastModified;
+    }
+    public String getLastModified() {
+        return LastModified;
     }
 
     public void setCost(float cost) {

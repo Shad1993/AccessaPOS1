@@ -37,6 +37,8 @@ import com.accessa.ibora.R;
 
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Sync.connectToMssql;
+import com.accessa.ibora.Sync.signup;
+import com.accessa.ibora.Sync.signuptest;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.CustomAdapter;
 import com.accessa.ibora.welcome;

@@ -510,7 +510,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_CASHOR_id + " INTEGER, "
             + LastModified + " TEXT, "
             + DateCreated + " TEXT, "
-            + "FOREIGN KEY(" + COLUMN_COMPANY_NAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_Shop + ")"
+            + "FOREIGN KEY(" + COLUMN_SHOPNAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_Shop + ")"
             + ")";
 
 
@@ -1560,5 +1560,50 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    // Step 1: Define an update method in the DatabaseHelper class
+    public void updateLocalData(Item localData) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Step 2: Map the properties of the Item object to the database columns
+        values.put(Barcode, localData.getBarcode());
+        values.put(Name, localData.getName());
+        values.put(DESC, localData.getDescription());
+        values.put(Category, localData.getCategory());
+        values.put(Quantity, localData.getQuantity());
+        values.put(Department, localData.getDepartment());
+        values.put(LongDescription, localData.getLongDescription());
+        values.put(SubDepartment, localData.getSubDepartment());
+        values.put(Price, localData.getPrice());
+        values.put(VAT, localData.getVAT());
+        values.put(ExpiryDate, localData.getExpiryDate());
+        values.put(AvailableForSale, localData.getAvailableForSale());
+        values.put(SoldBy, localData.getSoldBy());
+        values.put(Image, localData.getImage());
+        values.put(SKU, localData.getSKU());
+        values.put(Variant, localData.getVariant());
+        values.put(Cost, localData.getCost());
+        values.put(Weight, localData.getWeight());
+        values.put(UserId, localData.getUserId());
+        values.put(DateCreated, localData.getDateCreated());
+        values.put(LastModified, localData.getLastModified());
+
+        // Step 3: Perform the update operation
+        // Replace "your_table" with the actual table name in the SQLite database
+        // Assuming you have an '_ID' column as the primary key to uniquely identify records
+        int rowsAffected = db.update("your_table", values, _ID + "=?", new String[]{String.valueOf(localData.getId())});
+
+        // Step 4: Check the result of the update operation
+        if (rowsAffected > 0) {
+            // Update successful
+            Log.d("DATABASE", "Local data updated successfully: " + localData.getId());
+        } else {
+            // Update failed
+            Log.e("DATABASE", "Failed to update local data: " + localData.getId());
+        }
+
+        // Step 5: Close the database connection
+        db.close();
+    }
 }
 

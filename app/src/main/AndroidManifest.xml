@@ -106,6 +106,9 @@
         <activity android:name=".POP.MerchantValidationActivity"/>
         <activity android:name=".POP.EncryptionActivity"/>
         <activity android:name=".POP.RSAEncryptionActivity"/>
+        <activity android:name=".Sync.signuptest"/>
+        <activity android:name=".Sync.AddProducts"/>
+        <activity android:name=".Sync.signup"/>
 
 
         <receiver android:name="sunmi.ds.MsgReceiver"
