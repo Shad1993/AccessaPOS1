@@ -1,14 +1,33 @@
+<!-- activity_main.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    tools:context=".EncryptionActivity">
+    android:padding="16dp">
 
     <TextView
-        android:id="@+id/encryptedRequestTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/plainTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp" />
+        android:text="Plain Text: Hello, this is the data to be encrypted!"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/encryptedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Encrypted Text:"
+        android:textSize="16sp"
+        android:layout_below="@id/plainTextView"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/logTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Logs:"
+        android:textSize="16sp"
+        android:layout_below="@id/encryptedTextView"
+        android:layout_marginBottom="16dp"/>
 
 </RelativeLayout>
