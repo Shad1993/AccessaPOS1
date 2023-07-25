@@ -1,13 +1,19 @@
 package com.accessa.ibora.POP;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
 
+import androidx.fragment.app.DialogFragment;
+
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DatabaseHelper;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -60,8 +66,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class POP extends Activity {
-
+    private DatabaseHelper mDatabaseHelper;
     private TextView resultTextView;
+
     private TextView requestDataTextView;
    private String key,IV;
     private String ReqRefId;
@@ -82,11 +89,20 @@ private  String jsonRequestBody;
         }
         return null;
     }
-
+    private void showCustomDialog(String apiRequest) {
+        MyCustomDialogFragment dialogFragment = MyCustomDialogFragment.newInstance(apiRequest);
+        dialogFragment.show(getFragmentManager(), "custom_dialog");
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.pop);
+        // Instead of setting the content view to pop.xml, we'll create a Dialog and set its content view to pop.xml
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.pop);
+        mDatabaseHelper = new DatabaseHelper(this);
+
+        // Get the mobile number extra from the Intent
+        String mobileNumber = getIntent().getStringExtra("EXTRA_MOBILE_NUMBER");
 
         resultTextView = findViewById(R.id.resultTextView);
         requestDataTextView = findViewById(R.id.requestDataTextView);
@@ -129,7 +145,7 @@ private  String jsonRequestBody;
 
         String clientID = loadClientID(context);
 
-        String encryptedRequest = createEncryptedRequest( clientID, jsonRequestBody,key,IV);
+        String encryptedRequest = createEncryptedRequest(mDatabaseHelper,mobileNumber, context,clientID, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
@@ -140,12 +156,13 @@ private  String jsonRequestBody;
 
         // Construct the API request with the obtained values
         String apiRequest =
+                "mobilenumber: " + mobileNumber + "\n" +
                 "ReqRefId: " + ReqRefId + "\n" +
                 "Encrypted Request: " + encryptedRequest + "\n" +
                 "hCheckValue: " + hCheckValue;
 
-        requestDataTextView.setText(apiRequest); // Display the sent data
 
+        showCustomDialog(apiRequest);
 // Create a HashMap to store header parameters
         Map<String, String> headerParameters = new HashMap<>();
         headerParameters.put("clientID", clientID);
@@ -205,6 +222,9 @@ private  String jsonRequestBody;
                 }
             }
         });
+
+        // Show the dialog as a popup
+        dialog.show();
     }
 
     public static String readTextFile(Context context, int resourceId) {
@@ -278,34 +298,54 @@ private  String jsonRequestBody;
     }
 
 
-    public static String createEncryptedRequest( String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String mobilenumber,Context  context, String clientID, String requestBody, String key, String IV) {
         try {
 
-            // Generate random KEY and IV
+            // Retrieve the total amount and total tax amount from the transactionheader table
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+                 String transactionIdInProgress;
+                  String TRANSACTION_ID_KEY = "transaction_id";
 
-            String requestUUID = generateRandomString(24);;
+                // Generate random KEY and IV
+                String requestUUID = generateRandomString(24);
 
-            // Encrypt the request body using AES 256 Algorithm (CBC Mode)
-            String encryptedRequest = encryptWithAES(key, IV, requestBody);
-            Log.d("request", encryptedRequest);
+                // Encrypt the request body using AES 256 Algorithm (CBC Mode)
+                String encryptedRequest = encryptWithAES(key, IV, requestBody);
+                Log.d("request", encryptedRequest);
+                String Till_id = readTextFile(context, R.raw.till_id);
+                String Outlet_id = readTextFile(context, R.raw.outlet);
+                SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                 transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
-           String jsonRequestBody = "{\"outletId\":\"956\",\"tillId\":\"Till-356\",\"tranId\":\"808\",\"amount\":6.0,\"requestType\":\"Mobile\",\"requestValue\":\"23057031248\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
+// Remove hyphens from the transactionIdInProgress string
+                transactionIdInProgress = transactionIdInProgress.replaceAll("-", "");
 
-            // Create the JSON object containing the header and encrypted request
-            String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" +  generateHCheckValue(requestBody) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBody,key,IV) + "\"}";
 
-           String time = String.valueOf(getUTCEpochTime());
+                String jsonRequestBodymobile = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":" + formattedTotalAmount + ",\"requestType\":\"Mobile\",\"requestValue\":\"" + mobilenumber +"\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
+                String jsonRequestBodyqr = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":505.04,\"requestType\":\"QR\",\"requestValue\":\"00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054074235.285802MU5912IntermartOne6015Agalega North I622202112305786280707031436304BE4F \n\n\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
 
-            Log.d("timestamp", time );
-            // Remove line breaks and whitespace characters
-            jsonRequest = jsonRequest.replace("\n", "").replace("\r", "").replace("\t", "").replaceAll("\\s+", " ");
+                  // Create the JSON object containing the header and encrypted request
+                String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBodymobile) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBodymobile, key, IV) + "\"}";
 
-            return jsonRequest;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+                String time = String.valueOf(getUTCEpochTime());
+
+                Log.d("timestamp", time);
+                // Remove line breaks and whitespace characters
+                jsonRequest = jsonRequest.replace("\n", "").replace("\r", "").replace("\t", "").replaceAll("\\s+", " ");
+                Log.d("plain request", jsonRequestBodymobile);
+                return jsonRequest;
+            }else {
+                return "";
+            }
+            } catch(Exception e){
+                e.printStackTrace();
+                return null;
+            }
         }
-    }
 
 
     public static String generateHCheckValue(String requestBody) {

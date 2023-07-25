@@ -6,6 +6,8 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageSwitcher;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -30,6 +32,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
 
         public TextView nameTextView;
         public TextView idTextView,iconTextView,Opens;
+        private ImageView imageView;
 
 
         public ItemViewHolder(View itemView) {
@@ -38,6 +41,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
             nameTextView = itemView.findViewById(R.id.name_text_view);
             iconTextView= itemView.findViewById(R.id.icon_text_view);
             Opens = itemView.findViewById(R.id.Available_text_view);
+            imageView=itemView.findViewById(R.id.image);
 
         }
     }
@@ -85,6 +89,33 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.iconTextView.setText(icon);
+        // Set the image resource based on the ID and name
+        if (id.equals("1") && name.equals("POP")) {
+            holder.imageView.setImageResource(R.drawable.poplogo);
+        } else {
+            holder.imageView.setImageResource(R.drawable.payment);
+        }
+        if (id.equals("2") && name.equals("Cheque")) {
+            holder.imageView.setImageResource(R.drawable.cheque);
+        } else {
+            holder.imageView.setImageResource(R.drawable.payment);
+        }
+        if (id.equals("3") && name.equals("Cash")) {
+            holder.imageView.setImageResource(R.drawable.baseline_monetization_on_24);
+        } else {
+            holder.imageView.setImageResource(R.drawable.payment);
+        }
+        if (id.equals("4") && name.equals("Credit Card")) {
+            holder.imageView.setImageResource(R.drawable.credit);
+        } else {
+            holder.imageView.setImageResource(R.drawable.payment);
+        }
+        if (id.equals("5") && name.equals("Debit Card")) {
+            holder.imageView.setImageResource(R.drawable.debit);
+        } else {
+            holder.imageView.setImageResource(R.drawable.payment);
+        }
+
         holder.itemView.setTag(id);
     }
 

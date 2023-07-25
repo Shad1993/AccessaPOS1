@@ -257,8 +257,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DEFAULT_PAYMENT_METHOD = "POP";
     private static final String DEFAULT_CASHOR_ID = "0";
-    private static final String DEFAULT_DATE_CREATED = "null";
-    private static final String DEFAULT_LAST_MODIFIED = "null";
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT);
+    private static String getCurrentDateTime() {
+
+
+        Date currentDate = new Date();
+        return dateFormatter.format(currentDate);
+    }
+    private static final String DEFAULT_DATE_CREATED = getCurrentDateTime();;
+    private static final String DEFAULT_LAST_MODIFIED = getCurrentDateTime();;
     private static final String DEFAULT_QR_CODE_NUM = "QRCodeNum";
 
 
@@ -559,6 +567,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
         db.execSQL(CREATE_POS_TABLE);
         addDefaultItem(db);
+        // Insert cheque details
+        addDefaultPaymentMethod(db, "POP", "1");
+
+        // Insert cheque details
+        addDefaultPaymentMethod(db, "Cheque", "1");
+
+        // Insert cash details
+        addDefaultPaymentMethod(db, "Cash", "1");
+
+        // Insert credit card details
+        addDefaultPaymentMethod(db, "Credit Card", "1");
+
+        // Insert debit card details
+        addDefaultPaymentMethod(db, "Debit Card", "1");
+
     }
 
     @Override
@@ -595,6 +618,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.e(TAG, "Error inserting default item into the database");
         }
     }
+
+    private void addDefaultPaymentMethod(SQLiteDatabase db, String paymentMethod, String cashOrId) {
+        ContentValues values = new ContentValues();
+        values.put(PAYMENT_METHOD_COLUMN_NAME, paymentMethod);
+        values.put(PAYMENT_METHOD_COLUMN_CASHOR_ID, cashOrId);
+        values.put(PAYMENT_METHOD_COLUMN_DATE_CREATED, getCurrentDateTime());
+        values.put(PAYMENT_METHOD_COLUMN_LAST_MODIFIED, getCurrentDateTime());
+
+        long result = db.insert(PAYMENT_METHOD_TABLE_NAME, null, values);
+        if (result == -1) {
+            Log.e(TAG, "Error inserting default item into the database");
+        }
+    }
+
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
                                   String vatType, String posNum) {
@@ -648,6 +685,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
         return result != -1;
     }
+
 
     public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat, String vatType) {
         SQLiteDatabase db = this.getWritableDatabase();

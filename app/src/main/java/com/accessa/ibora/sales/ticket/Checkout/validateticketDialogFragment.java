@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.POP.POP;
 import com.accessa.ibora.QR.QRGridAdapter;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
@@ -60,6 +61,8 @@ public class validateticketDialogFragment extends DialogFragment {
     private DatabaseHelper mDatabaseHelper;
     private LinearLayout containerLayout; // Added
     private  Button validateButton;
+    private static final String EXTRA_MOBILE_NUMBER = "extra_mobile_number";
+
 
     private View view; // Declare the view variable
 
@@ -157,6 +160,10 @@ public class validateticketDialogFragment extends DialogFragment {
 
                     // Add the EditText to the container layout
                     containerLayout.addView(editText);
+                    // Check if id is "1" and name is "POP"
+                    if (id.equals("1") && name.equals("POP")) {
+                        showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
+                    }
                 }
             }
 
@@ -361,7 +368,58 @@ public class validateticketDialogFragment extends DialogFragment {
     }
 
 
+    private void showPopOptionsDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Payment Method");
+        String[] options = {"Pay by mobile number", "Pay by QR code"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                  androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_num);
 
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
+                    EditText editCompanyName = dialogmob.findViewById(R.id.editCompanyName);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Get the entered data from the views
+                            String mobileNo = editTerminalNo.getText().toString();
+
+                            // Create the Intent to launch the "POP" activity
+                            Intent popIntent = new Intent(getContext(), POP.class);
+
+                            // Add the mobile number as an extra to the Intent
+                            popIntent.putExtra("EXTRA_MOBILE_NUMBER", mobileNo);
+
+                            // Start the "POP" activity with the Intent
+                            startActivity(popIntent);
+
+                            // Dismiss the dialog
+                            dialogmob.dismiss();
+
+
+                        }
+                    });
+                } else if (which == 1) {
+                    // User selected "Pay by QR code"
+                    // Perform the action for this option
+                    // For example, open a QR code scanner activity
+                }
+            }
+        });
+        builder.show();
+    }
 
 public void  insertCashReturn(double cashReturn,double totalAmountinserted){
 

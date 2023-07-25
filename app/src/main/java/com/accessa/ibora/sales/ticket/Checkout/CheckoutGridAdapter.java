@@ -1,13 +1,21 @@
 package com.accessa.ibora.sales.ticket.Checkout;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -50,7 +58,7 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
         public TextView nameTextView;
 
         public TextView idTextView,Icon;
-
+        private Button button;
 
 
         public ItemViewHolder(View itemView) {
@@ -59,6 +67,7 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             Icon= itemView.findViewById(R.id.icon);
+            button=itemView.findViewById(R.id.button);
 
 
         }
@@ -86,9 +95,36 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
         holder.Icon.setText(icon);
+        // Check if id is "1" and name is "POP"
+        if (id.equals("1") && name.equals("POP")) {
+            Drawable resizedPopLogo = resizeDrawable(mContext, R.drawable.poplogo, 50, 50);
+            if (resizedPopLogo != null) {
+                holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, resizedPopLogo, null);
+                holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
+
+            }
+        } else {
+            // Set the default drawableEnd for other cases here
+            holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.cash, 0);
+            holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
+        }
+
         holder.itemView.setTag(id);
     }
 
+
+
+
+
+    private Drawable resizeDrawable(Context context, int drawableResId, int width, int height) {
+        Drawable drawable = ContextCompat.getDrawable(context, drawableResId);
+        if (drawable != null) {
+            Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+            return new BitmapDrawable(context.getResources(), resizedBitmap);
+        }
+        return null;
+    }
 
     public int getItemCount() {
         return (mCursor != null) ? mCursor.getCount() : 0;
