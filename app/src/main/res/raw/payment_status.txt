@@ -1,0 +1,1 @@
+https://apimprod.bankone.mu/MW/api/MW/Teller/PaymentStatus/v1.0

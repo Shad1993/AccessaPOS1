@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.POP.POP;
+import com.accessa.ibora.POP.PopMobileDialogFragment;
 import com.accessa.ibora.QR.QRGridAdapter;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
@@ -393,20 +394,17 @@ public class validateticketDialogFragment extends DialogFragment {
                     btnInsert.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            // Get the entered data from the views
-                            String mobileNo = editTerminalNo.getText().toString();
+                            // Retrieve the entered mobile number from the EditText
+                            String mobileNumber = editTerminalNo.getText().toString();
 
-                            // Create the Intent to launch the "POP" activity
-                            Intent popIntent = new Intent(getContext(), POP.class);
+                            // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                            PopMobileDialogFragment popMobileDialogFragment = PopMobileDialogFragment.newInstance(mobileNumber);
 
-                            // Add the mobile number as an extra to the Intent
-                            popIntent.putExtra("EXTRA_MOBILE_NUMBER", mobileNo);
-
-                            // Start the "POP" activity with the Intent
-                            startActivity(popIntent);
+                            // Show the PopMobileDialogFragment
+                            popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
 
                             // Dismiss the dialog
-                            dialogmob.dismiss();
+                            dialog.dismiss();
 
 
                         }

@@ -12,8 +12,8 @@
         <pl.droidsonroids.gif.GifImageView
             android:layout_width="400dp"
             android:layout_height="200dp"
-            android:src="@drawable/paymethods"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true"
+            android:src="@drawable/paymethods" />
     </RelativeLayout>
     <TextView
         android:id="@+id/textViewTotalAmount"
