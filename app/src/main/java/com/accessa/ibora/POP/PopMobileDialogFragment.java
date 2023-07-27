@@ -55,6 +55,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -209,7 +210,11 @@ public class PopMobileDialogFragment extends DialogFragment {
         headerParameters.put("ReqRefId", ReqRefId);
 
 // Send the API request using OkHttp with the header parameters
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS) // Increase the connection timeout
+                .readTimeout(60, TimeUnit.SECONDS) // Increase the read timeout
+                .build();
+
 
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8"); // Specify the content type and charset
         RequestBody requestBody = RequestBody.create(mediaType, encryptedRequest);
@@ -265,17 +270,102 @@ public class PopMobileDialogFragment extends DialogFragment {
                                 // Extract the response field
                                 String responseData = jsonObject.getString("response");
                                 // Extract the hcheckValue field
+                                // Extract the status object
+                                JSONObject statusObject = jsonObject.getJSONObject("status");
+
+                                // Extract the value of "m" (message)
+                                String errormsg = statusObject.getString("m");
+
 
                             String decryptedresponse=  decryptResponse(responseData, key, IV);
 
                                 // Validate hCheckValue
                                 String responsehCheckValue = generateHCheckValue(decryptedresponse);
+                                switch (errormsg) {
+                                    case "Customer not found.":
+                                        // Show Customer Not Found pop-up
+                                        showCustomerNotFoundPopup();
 
+                                        dismiss();
+                                        break;
+                                    case "TillCode not found.":
+                                        // Show Customer Not Found pop-up
+                                        showTillNotFoundPopup();
+                                        dismiss();
+                                        break;
+                                    case "OutletId:The OutletId field is required.":
+                                        // Show OutletId is Required pop-up
+                                        showOutletIdRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "TillId:The TillId field is required.":
+                                        // Show TillId is Required pop-up
+                                        showTillIdRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "TranId:The TranId field is required.":
+                                        // Show TranId is Required pop-up
+                                        showTranIdRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "Amount:The Amount field is required.":
+                                        // Show Amount is Required pop-up
+                                        showAmountRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "RequestType:The RequestType field is required.":
+                                        // Show RequestType is Required pop-up
+                                        showRequestTypeRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "RequestValue:The RequestValue field is required.":
+                                        // Show RequestValue is Required pop-up
+                                        showRequestValueRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "Currency:The Currency field is required.":
+                                        // Show Currency is Required pop-up
+                                        showCurrencyRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "TxnChannel:The TxnChannel field is required.":
+                                        // Show TxnChannel is Required pop-up
+                                        showTxnChannelRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "Remarks:The Remarks field is required.":
+                                        // Show Remarks is Required pop-up
+                                        showRemarksRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "Expiry:The Expiry field is required.":
+                                        // Show Expiry is Required pop-up
+                                        showExpiryRequiredPopup();
+                                        dismiss();
+                                        break;
+                                    case "TranId must be alphanumeric string. The Amount field is required. Enter valid positive amount up to 2 decimals.":
+                                        // Show Invalid TranId and Amount pop-up
+                                        showInvalidTranIdAmountPopup();
+                                        dismiss();
+                                        break;
+                                    case "Failed to decrypt the response/An error occurred while processing your request. Please try again later.":
+                                        // Show Decryption Error pop-up
+                                        showDecryptionErrorPopup();
+                                        dismiss();
+                                        break;
+                                    case "Unable to process the request. Please contact to system administrator.":
+                                        // Show System Error pop-up
+                                        showSystemErrorPopup();
+                                        dismiss();
+                                        break;
+                                    default:
 
-
-                                if (responsehCheckValue.equals(recievedhCheckValue)) {
+                                        dismiss();
+                                        break;
+                                }
+                            if (responsehCheckValue.equals(recievedhCheckValue)) {
                                     // hCheckValue is valid, proceed with decrypting the response
-                                    Toast.makeText(getContext(), "Payment Request sent to " + mobileNumber, Toast.LENGTH_SHORT).show();
+
                                     validatemobpop.setVisibility(View.VISIBLE);
                                     validateButton.setVisibility(View.VISIBLE);
                                     resultTextView.setVisibility(View.GONE);
@@ -283,13 +373,13 @@ public class PopMobileDialogFragment extends DialogFragment {
                                     try {
                                         JSONObject jsonObject1 = new JSONObject(decryptedresponse);
                                         String popReqId = jsonObject1.getString("popReqId");
-                                        Log.d("popReqId", "from decrypted: " + popReqId);
+
                                         // Create the ValidatePOPDialogFragment instance and pass the mobile number, key, and IV as arguments
                                         ValidatePOPDialogFragment popMobileDialogFragment = ValidatePOPDialogFragment.newInstance(popReqId, key, IV);
 
                                         // Show the ValidatePOPDialogFragment
                                         popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
-                                        Log.d("PopMobileDialog", "validateButton clicked");
+
                                         // Dismiss the dialog
                                         dismiss();
                                     } catch (JSONException e) {
@@ -335,6 +425,218 @@ public class PopMobileDialogFragment extends DialogFragment {
                 .setView(view)
                 .create();
     }
+    private void showCustomerNotFoundPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Customer Not Found");
+        builder.setMessage("The customer is not found.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showTillNotFoundPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("TillCode Not Found");
+        builder.setMessage("The TillCode is not found.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showOutletIdRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("OutletId is Required");
+        builder.setMessage("The OutletId field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showTillIdRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("TillId is Required");
+        builder.setMessage("The TillId field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showTranIdRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("TranId is Required");
+        builder.setMessage("The TranId field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showAmountRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Amount is Required");
+        builder.setMessage("The Amount field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showRequestTypeRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("RequestType is Required");
+        builder.setMessage("The RequestType field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showRequestValueRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("RequestValue is Required");
+        builder.setMessage("The RequestValue field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showCurrencyRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Currency is Required");
+        builder.setMessage("The Currency field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showTxnChannelRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("TxnChannel is Required");
+        builder.setMessage("The TxnChannel field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showRemarksRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Remarks is Required");
+        builder.setMessage("The Remarks field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showExpiryRequiredPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Expiry is Required");
+        builder.setMessage("The Expiry field is required.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showInvalidTranIdAmountPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Invalid TranId and Amount");
+        builder.setMessage("TranId must be an alphanumeric string. Enter a valid positive amount up to 2 decimals.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showDecryptionErrorPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Decryption Error");
+        builder.setMessage("Failed to decrypt the response or an error occurred while processing your request. Please try again later.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showSystemErrorPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("System Error");
+        builder.setMessage("Unable to process the request. Please contact the system administrator.");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+
+
     private void showInvalidHCheckValuePopup() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Invalid hCheckValue")
@@ -645,4 +947,5 @@ public class PopMobileDialogFragment extends DialogFragment {
 
         return utcEpochTime;
     }
+
 }

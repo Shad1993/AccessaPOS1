@@ -112,7 +112,12 @@ public class validateticketDialogFragment extends DialogFragment {
                 String id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
                 String name = nameTextView.getText().toString();
-                if (id != null && !selectedItems.contains(id)) {
+                if(id !=null && (id.equals("1") && name.equals("POP")))
+                {
+                    showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
+
+                }
+                else if (id != null && !selectedItems.contains(id)) {
                     selectedItems.add(id);
                     // Create a new TextView
                     TextView textView = new TextView(getContext());
@@ -162,9 +167,7 @@ public class validateticketDialogFragment extends DialogFragment {
                     // Add the EditText to the container layout
                     containerLayout.addView(editText);
                     // Check if id is "1" and name is "POP"
-                    if (id.equals("1") && name.equals("POP")) {
-                        showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
-                    }
+
                 }
             }
 

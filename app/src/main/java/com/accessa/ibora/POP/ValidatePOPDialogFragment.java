@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,10 +19,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.DialogFragment;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.bumptech.glide.Glide;
+import com.squareup.picasso.Picasso;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -54,6 +58,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -81,19 +86,24 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     private GifImageView     loadingGifImageView;
     private String key,IV;
     private String ReqRefId;
+    private SoundPool soundPool;
+    private int soundId;
     private  String encryptedRequest;
     private  String popreqid;
     // Add a handler as a class member
     private final Handler handler = new Handler();
 
     // Add a constant for the check interval in milliseconds
-    private static final long CHECK_INTERVAL = 10000; // 10 seconds
+    private static final long CHECK_INTERVAL = 5000; // 10 seconds
     private  String jsonRequestBody;
+    private String clientID;
     private String   apiLink;
-    private static final String USERNAME = "im_api_usr";
-    private static final String PASSWORD = "6ef9f8fa32eddba5d33a0e4e81b60";
-    private static final String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
-    // Add a method to retrieve the mobile number from arguments
+    private Context context;
+
+    private AlertDialog alertDialog; // Declare the member variable
+
+    private   String USERNAME,PASSWORD, status;
+   // Add a method to retrieve the mobile number from arguments
     public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV) {
         ValidatePOPDialogFragment fragment = new ValidatePOPDialogFragment();
         Bundle args = new Bundle();
@@ -129,8 +139,33 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         // Get the mobile number from the arguments
         popreqid = getArguments().getString("popReqId");
-    }
+        // Initialize the SoundPool and load the sound file
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(1)
+                .build();
+        soundId = soundPool.load(getActivity(), R.raw.notif, 1);
 
+// Play the sound effect when an item is added
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                if (status == 0) {
+                    soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
+                }
+            }
+        });
+
+    }
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Call showStatusPopup() when the fragment is properly attached to its activity.
+        // Ensure that the view is not null and the fragment is attached to the activity.
+        if (getView() != null && isAdded()) {
+            showStatusPopup(status,context); // Pass the status you want to show
+        }
+    }
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -164,7 +199,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         String apiRequestBody = "{\"header\": {\"apiversion\": \"string\", \"clientID\": \"string\", \"timeStamp\": \"string\", \"hCheckValue\": \"string\", \"requestUUID\": \"string\" }, \"request\": \"string\"}";
 
         encryptRequest(jsonRequestBody,key,IV);
-        Context context = getContext();
+         context = getContext();
 
 
 
@@ -192,7 +227,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         }
 
 
-        String clientID = loadClientID(context);
+         clientID = loadClientID(context);
 
          encryptedRequest = createEncryptedRequest(mDatabaseHelper,popreqid, context,clientID, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
@@ -212,129 +247,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         requestDataTextView.setText(apiRequest);
 
-// Create a HashMap to store header parameters
-        Map<String, String> headerParameters = new HashMap<>();
-        headerParameters.put("clientID", clientID);
-        headerParameters.put("ReqRefId", ReqRefId);
-
-// Send the API request using OkHttp with the header parameters
-        OkHttpClient client = new OkHttpClient();
-
-        MediaType mediaType = MediaType.parse("application/json; charset=utf-8"); // Specify the content type and charset
-        RequestBody requestBody = RequestBody.create(mediaType, encryptedRequest);
-
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(apiLink)
-                .post(requestBody)
-                .addHeader("Authorization", AUTHORIZATION_HEADER); // Set the Authorization header for Basic Authentication
-
-
-
-// Add the header parameters to the request
-        for (Map.Entry<String, String> entry : headerParameters.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue());
-        }
-
-        Request request = requestBuilder.build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-                // Handle request failure
-                // Hide the loading GIF animation
-                loadingGifImageView.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    final String responseData = response.body().string();
-                    // Handle successful response
-                    Log.d("API Response", responseData);
-
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            // Hide the loading GIF animation
-                            loadingGifImageView.setVisibility(View.GONE);
-                            resultTextView.setVisibility(View.VISIBLE);
-                            requestDataTextView.setVisibility(View.VISIBLE);
-
-                            try {
-                                // Parse the JSON data
-                                JSONObject jsonObject = new JSONObject(responseData);
-
-
-
-                                // Extract the response field
-                                String responseData = jsonObject.getString("response");
-                                // Extract the hcheckValue field
-
-                            String decryptedresponse=  decryptResponse(responseData, key, IV);
-
-                            resultTextView.setVisibility(View.VISIBLE);
-                            resultTextView.setText(decryptedresponse);
-
-                                try {
-                                    // Parse the JSON data
-                                    JSONObject jsonObject1 = new JSONObject(decryptedresponse);
-
-                                    // Extract the status field from the response
-                                    String status = jsonObject1.getString("status");
-
-                                    // Show the status in a pop-up dialog
-
-                                    Log.e("status",status);
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                                    builder.setTitle("Payment Status")
-                                            .setMessage(status)
-                                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int id) {
-                                                    dialog.dismiss();
-                                                    if ("Payment request Pending".equals(status)) {
-                                                        // If the status is "Payment request Pending," schedule the next check
-                                                        schedulePeriodicCheck();
-                                                    }
-                                                }
-                                            });
-
-                                    // Create and show the AlertDialog
-                                    AlertDialog dialog = builder.create();
-                                    dialog.show();
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-
-
-
-                        }
-                    });
-                } else {
-                    // Handle response error
-                    final String errorResponse = response.body().string(); // Retrieve the error response body
-
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            resultTextView.setVisibility(View.VISIBLE);
-                            requestDataTextView.setVisibility(View.VISIBLE);
-                            Log.e("API Response Error", "Response was not successful. Code: " + response.code() + ", Error: " + errorResponse);
-                            resultTextView.setText("Error: " + errorResponse); // Display the error message on the TextView
-                            // Hide the loading GIF animation
-                            loadingGifImageView.setVisibility(View.GONE);
-                        }
-                    });
-                }
-            }
-
-        });
+            resendApiRequest(clientID,context);
 
         return new AlertDialog.Builder(getActivity())
                 .setView(view)
@@ -349,26 +262,33 @@ public class ValidatePOPDialogFragment extends DialogFragment {
             @Override
             public void run() {
                 // Resend the API request
-                resendApiRequest();
+                resendApiRequest(clientID,context);
             }
         }, CHECK_INTERVAL);
     }
 
     // Method to resend the API request
-    // Method to resend the API request
-    private void resendApiRequest() {
-        Context context = getContext();
-        String clientID = loadClientID(context);
+    private void resendApiRequest( String clientID,Context context) {
+
         // Create a HashMap to store header parameters
         Map<String, String> headerParameters = new HashMap<>();
         headerParameters.put("clientID", clientID);
         headerParameters.put("ReqRefId", ReqRefId);
         // Create and send the API request again
         // Send the API request using OkHttp with the header parameters
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS) // Increase the connection timeout
+                .readTimeout(60, TimeUnit.SECONDS) // Increase the read timeout
+                .build();
+
 
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8"); // Specify the content type and charset
         RequestBody requestBody = RequestBody.create(mediaType, encryptedRequest);
+
+        USERNAME =readTextFile(context, R.raw.api_user);
+        PASSWORD = readTextFile(context, R.raw.password);
+        String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
+
 
         Request.Builder requestBuilder = new Request.Builder()
                 .url(apiLink)
@@ -428,26 +348,18 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
                                     // Extract the status field from the response
                                     String status = jsonObject1.getString("status");
-
+                                    if ("Payment request Pending".equals(status)) {
+                                        // If the status is "Payment request Pending," schedule the next check
+                                        schedulePeriodicCheck();
+                                    }
                                     // Show the status in a pop-up dialog
 
                                     Log.e("status",status);
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                                    builder.setTitle("Payment Status")
-                                            .setMessage(status)
-                                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int id) {
-                                                    dialog.dismiss();
-                                                    if ("Payment request Pending".equals(status)) {
-                                                        // If the status is "Payment request Pending," schedule the next check
-                                                        schedulePeriodicCheck();
-                                                    }
-                                                }
-                                            });
 
-                                    // Create and show the AlertDialog
-                                    AlertDialog dialog = builder.create();
-                                    dialog.show();
+
+
+                                    showStatusPopup(status,context);
+
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -481,7 +393,84 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         });
     }
 
+    private void showStatusPopup(String status,Context context) {
 
+
+        // Dismiss the previous AlertDialog if it exists and is showing
+        if (alertDialog != null && alertDialog.isShowing()) {
+            alertDialog.dismiss();
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Payment Status")
+                .setMessage(status)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+
+                    }
+                });
+        // Set the custom view to the AlertDialog
+        View view = LayoutInflater.from(context).inflate(R.layout.payment_status, null);
+        builder.setView(view);
+        builder.setCancelable(false);
+        // Initialize the AlertDialog object
+        alertDialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .create();
+
+        // Store the AlertDialog instance in the member variable
+        alertDialog = builder.create();
+
+        // Get a reference to the AppCompatImageView
+        AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
+        Button cancelBtn= view.findViewById(R.id.btncancel);
+        if ("Payment request Pending".equals(status)) {
+            // If the status is "Payment request Pending," schedule the next check
+            // Load the GIF using Glide
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.pendinggif)
+                    .into(gifImageView);
+
+
+        } else if ("Payment request Declined".equals(status)) {
+            // Play the sound effect
+            playSoundEffect();
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.paymentcancelgif)
+                    .into(gifImageView);
+
+
+            cancelBtn.setVisibility(View.GONE);
+        }else if("Payment request Expired".equals(status)){
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.expiredgif)
+                    .into(gifImageView);
+        }
+        else {
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.pendinggif)
+                    .into(gifImageView);
+
+        }
+        validateButton.setVisibility(View.GONE);
+        // Set the status text in the popup
+        TextView statusTextView = view.findViewById(R.id.statusTextView);
+        statusTextView.setText(status);
+
+
+        alertDialog.show();
+    }
+
+    private void dismissStatusPopup() {
+        // Dismiss the AlertDialog
+        if (alertDialog != null && alertDialog.isShowing()) {
+            alertDialog.dismiss();
+        }
+    }
     public static String encryptRequest(String jsonformat, String key, String iv) {
         try {
             byte[] plainTextBytes = jsonformat.getBytes(StandardCharsets.UTF_8);
@@ -561,10 +550,10 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     }
 
 
-
     public static String loadClientID(Context context) {
+        Context applicationContext = context.getApplicationContext();
         try {
-            InputStream inputStream = context.getResources().openRawResource(R.raw.client_id);
+            InputStream inputStream = applicationContext.getResources().openRawResource(R.raw.client_id);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             StringBuilder clientIDBuilder = new StringBuilder();
@@ -775,5 +764,9 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         long utcEpochTime = calendar.getTimeInMillis() / 1000;
 
         return utcEpochTime;
+    }
+
+    private void playSoundEffect() {
+        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }
 }
