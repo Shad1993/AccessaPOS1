@@ -1,6 +1,7 @@
 package com.accessa.ibora.QR;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -11,6 +12,9 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,12 +27,14 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.POP.PopMobileDialogFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -108,9 +114,14 @@ public class QRFragment extends Fragment {
                 String id = idTextView.getText().toString();
                 String QR = QrEditText.getText().toString();
                 String name = NameEditText.getText().toString();
+                if(id !=null && (id.equals("1") && name.equals("POP")))
+                {
+                  showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
-                dataPassListener.onDataPass(name, id, QR);
-                showSecondaryScreen(name, QR);
+                }else {
+                    dataPassListener.onDataPass(name, id, QR);
+                    showSecondaryScreen(name, QR);
+                }
             }
 
             @Override
@@ -123,7 +134,59 @@ public class QRFragment extends Fragment {
         return view;
 
     }
+    private void showPopOptionsDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Payment Method");
+        String[] options = {"Pay by mobile number", "Pay by QR code"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_num);
 
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
+                    EditText editCompanyName = dialogmob.findViewById(R.id.editCompanyName);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Retrieve the entered mobile number from the EditText
+                            String mobileNumber = editTerminalNo.getText().toString();
+
+                            // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                            PopMobileDialogFragment popMobileDialogFragment = PopMobileDialogFragment.newInstance(mobileNumber);
+                            // Hide the keyboard before showing the dialog
+                            InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+                            // Show the PopMobileDialogFragment
+                            popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
+
+                            // Dismiss the dialog
+                            dialog.dismiss();
+                            // Dismiss the dialogmob
+                            dialogmob.dismiss();
+
+                        }
+                    });
+                } else if (which == 1) {
+                    // User selected "Pay by QR code"
+                    // Perform the action for this option
+                    // For example, open a QR code scanner activity
+                }
+            }
+        });
+        builder.show();
+    }
     private void showSecondaryScreen(String name, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();

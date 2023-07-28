@@ -21,14 +21,13 @@
         android:textColor="@android:color/black"
         android:visibility="visible"
         android:text="status"
-        android:layout_below="@id/btnvalidate"
+
         android:layout_marginTop="16dp" />
     <Button
         android:id="@+id/btncancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:drawableLeft="@drawable/cancel"
-        android:layout_below="@id/validategif"
         android:visibility="visible"
         android:layout_centerInParent="true"
         android:text="Cancel Transaction" />

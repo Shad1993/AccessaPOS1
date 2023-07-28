@@ -111,6 +111,15 @@
         <activity android:name=".Sync.signup"/>
         <activity android:name=".POP.PopMobileDialogFragment"/>
 
+        <service
+            android:name=".PrintService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".CancelService"
+            android:enabled="true"
+            android:exported="false" />
 
         <receiver android:name="sunmi.ds.MsgReceiver"
             android:exported="true">

@@ -13,24 +13,9 @@
         android:src="@drawable/loading"
         android:visibility="visible" />
 
-    <pl.droidsonroids.gif.GifImageView
-        android:id="@+id/validategif"
-        android:layout_width="400dp"
-        android:layout_height="200dp"
-        android:layout_centerInParent="true"
-        android:src="@drawable/validatepopmob"
-        android:visibility="visible"
-        android:layout_below="@id/loadapiresponse" />
 
-    <Button
-        android:id="@+id/btnvalidate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/check"
-        android:layout_below="@id/validategif"
-        android:visibility="visible"
-        android:layout_centerInParent="true"
-        android:text="Validate" />
+
+
 
     <TextView
         android:id="@+id/resultTextView"
@@ -39,7 +24,6 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@android:color/black"
         android:visibility="gone"
-        android:layout_below="@id/btnvalidate"
         android:layout_marginTop="16dp" />
 
     <TextView

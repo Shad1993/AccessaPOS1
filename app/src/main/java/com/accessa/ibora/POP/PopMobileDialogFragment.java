@@ -81,7 +81,7 @@ public class PopMobileDialogFragment extends DialogFragment {
     private TextView resultTextView;
 
     private TextView requestDataTextView;
-    private Button validateButton;
+    private Button Btncancel;
     private String key,IV;
     private String ReqRefId;
     private  String mobileNumber;
@@ -131,7 +131,7 @@ public class PopMobileDialogFragment extends DialogFragment {
         mDatabaseHelper = new DatabaseHelper(getContext());
         // Get a reference to the GifImageView
         GifImageView loadingGifImageView = view.findViewById(R.id.loadapiresponse);
-        GifImageView validatemobpop = view.findViewById(R.id.validategif);
+
 
         // Show the loading GIF animation
         loadingGifImageView.setVisibility(View.VISIBLE);
@@ -142,8 +142,8 @@ public class PopMobileDialogFragment extends DialogFragment {
 
         resultTextView = view.findViewById(R.id.resultTextView);
         requestDataTextView = view.findViewById(R.id.requestDataTextView);
-        validateButton=view.findViewById(R.id.btnvalidate);
-        validateButton.setVisibility(View.GONE);
+
+
         resultTextView.setVisibility(View.GONE);
         requestDataTextView.setVisibility(View.GONE);
 // Generate random KEY and IV
@@ -366,8 +366,8 @@ public class PopMobileDialogFragment extends DialogFragment {
                             if (responsehCheckValue.equals(recievedhCheckValue)) {
                                     // hCheckValue is valid, proceed with decrypting the response
 
-                                    validatemobpop.setVisibility(View.VISIBLE);
-                                    validateButton.setVisibility(View.VISIBLE);
+
+
                                     resultTextView.setVisibility(View.GONE);
                                     requestDataTextView.setVisibility(View.GONE);
                                     try {

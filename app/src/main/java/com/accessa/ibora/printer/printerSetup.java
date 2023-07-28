@@ -20,6 +20,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -48,8 +49,12 @@ import com.sunmi.peripheral.printer.InnerPrinterManager;
 import com.sunmi.peripheral.printer.InnerResultCallback;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
 import nl.dionsegijn.konfetti.KonfettiView;
 import nl.dionsegijn.konfetti.models.Shape;
 import nl.dionsegijn.konfetti.models.Size;
@@ -347,22 +352,29 @@ public class printerSetup extends AppCompatActivity {
 
 
 
-
+                        String formattedTotalTenderpop = String.format("%.2f", totalAmount);
+                        String formattedtenderpop= "Rs "  + formattedTotalTenderpop;
 
 
                         int lineWidths= 41;
                         int TenderTypesPadding = lineWidths - formattedtender.length() - TenderTotalAmount.length();
+                        int TenderTypesPaddingpop = lineWidths - formattedtenderpop.length() - TenderTotalAmount.length();
                         service.printText(singlelineSeparator + "\n", null);
 
                         // Enable bold text and set font size to 30
                         byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
                         service.setFontSize(28, null);
+                        if (paymentName.equals("POP")) {
 
+                            String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPaddingpop)) + formattedtenderpop;
+                            service.printText(TenderTypesLine + "\n", null);
 
-                        String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
-                        service.printText(TenderTypesLine + "\n", null);
+                        }else {
 
+                            String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
+                            service.printText(TenderTypesLine + "\n", null);
+                        }
 
                         // Disable bold text and reset font size
                         byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
@@ -384,7 +396,32 @@ public class printerSetup extends AppCompatActivity {
                                 String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
                                 service.printText(TenderItemsTypesLine + "\n", null);
                             }
-                        }
+                        } else if (paymentName.equals("POP")) {
+                            paymentName = "POP";
+                            settlementAmount = totalAmount;
+                            String formattedSettlementAmount = String.format("%.2f", settlementAmount);
+                            String TenderAmount= "Amount Paid with  " + paymentName ;
+                            String formatteditemtender= "Rs "  + formattedSettlementAmount;
+                            int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
+                            String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
+                            service.printText(TenderItemsTypesLine + "\n", null);
+                            // Update the table with settlement details
+
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                                String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
+
+                                boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate);
+
+
+                                if (updated) {
+
+                                    Toast.makeText(getApplicationContext(), "Settlement amount insert for " + paymentName, Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Failed to insert settlement amount for " + paymentName, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+
 
                         if(cashReturn >0) {
                             service.printText(singlelineSeparator + "\n", null);
@@ -537,8 +574,14 @@ public class printerSetup extends AppCompatActivity {
 
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
 
+    // Retrieve the extras from the intent
+        Intent intent = getIntent();
+        if (intent != null) {
+            String Pop = intent.getStringExtra("POP");
+            amountReceived=totalAmount;
+            paymentName= "POP";
 
-
+        }
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
 

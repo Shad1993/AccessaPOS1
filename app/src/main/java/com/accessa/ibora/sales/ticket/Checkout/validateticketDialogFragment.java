@@ -16,6 +16,7 @@ import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -402,13 +403,17 @@ public class validateticketDialogFragment extends DialogFragment {
 
                             // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
                             PopMobileDialogFragment popMobileDialogFragment = PopMobileDialogFragment.newInstance(mobileNumber);
+                            // Hide the keyboard before showing the dialog
+                            InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
                             // Show the PopMobileDialogFragment
                             popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
 
                             // Dismiss the dialog
                             dialog.dismiss();
-
+                            // Dismiss the dialogmob
+                            dialogmob.dismiss();
 
                         }
                     });

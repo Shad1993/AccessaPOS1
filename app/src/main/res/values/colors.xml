@@ -14,5 +14,7 @@
     <color name="grey"> #808080</color>
     <color name="contentTextColor">#020000</color>
     <color name="purple">#D970F5</color>
+    <color name="dynamic_button_color">#1D242C</color> <!-- Change this to your desired color for POP -->
+    <color name="default_button_color">#D970F5</color> <!-- Change this to your desired default color -->
 
 </resources>

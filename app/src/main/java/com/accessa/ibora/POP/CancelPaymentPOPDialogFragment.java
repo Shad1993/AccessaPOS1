@@ -15,7 +15,6 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -24,14 +23,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.DialogFragment;
 
-import com.accessa.ibora.CancelService;
 import com.accessa.ibora.PrintService;
 import com.accessa.ibora.R;
-import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
-import com.squareup.picasso.Picasso;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -83,12 +78,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import pl.droidsonroids.gif.GifImageView;
 
-public class ValidatePOPDialogFragment extends DialogFragment {
+public class CancelPaymentPOPDialogFragment extends DialogFragment {
     private DatabaseHelper mDatabaseHelper;
     private TextView resultTextView;
 
     private TextView requestDataTextView;
-
+    private Button validateButton;
     private GifImageView     loadingGifImageView;
     private String key,IV;
     private String ReqRefId;
@@ -105,21 +100,26 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     private String clientID;
     private String   apiLink;
     private Context context;
-    private Button btn;
 
     private AlertDialog alertDialog; // Declare the member variable
 
     private   String USERNAME,PASSWORD, status;
-   // Add a method to retrieve the mobile number from arguments
-    public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV) {
-        ValidatePOPDialogFragment fragment = new ValidatePOPDialogFragment();
-        Bundle args = new Bundle();
-        args.putString("popReqId", popReqId);
-        args.putString("key", key);
-        args.putString("IV", IV);
-        fragment.setArguments(args);
-        return fragment;
+
+
+    // Member variable to store the popreqid
+
+
+    // Constructor to accept the popreqid as an argument
+    public CancelPaymentPOPDialogFragment(String popreqid) {
+        this.popreqid = popreqid;
     }
+
+    // Method to get the value from the DialogFragment
+    public String getPopreqid() {
+        return popreqid;
+    }
+
+
 
 
     private byte[] encryptWithPublicKey(String plainText, PublicKey publicKey) {
@@ -189,20 +189,18 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
 
         // Retrieve the mobile number from the arguments
-        popreqid = getArguments().getString("popReqId");
-        key = getArguments().getString("key");
-        IV = getArguments().getString("IV");
+        popreqid = getArguments().getString("popreqid");
+
 
         resultTextView = view.findViewById(R.id.resultTextView);
         requestDataTextView = view.findViewById(R.id.requestDataTextView);
 
-
+        validateButton.setVisibility(View.GONE);
         resultTextView.setVisibility(View.GONE);
         requestDataTextView.setVisibility(View.GONE);
 
-
         // Replace "public_key" with your XML file name in res/raw folder
-        jsonRequestBody = "{ \"tranId\": \"12345\", \"popReqId\": \"20210806000013\"}";
+        jsonRequestBody = "{ \"tillId\":\"Till-178\", \"tranId\":\"12345\", \"popReqId\": \"20210806000013\", \"remark\":\"Cancel Payment\" }";
 
         String apiRequestBody = "{\"header\": {\"apiversion\": \"string\", \"clientID\": \"string\", \"timeStamp\": \"string\", \"hCheckValue\": \"string\", \"requestUUID\": \"string\" }, \"request\": \"string\"}";
 
@@ -229,7 +227,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         // Display encrypted data in log
         if (encryptedData != null) {
             ReqRefId= Base64.encodeToString(encryptedData, Base64.DEFAULT);
-
+            Log.d("Reqrefid", ReqRefId);
         } else {
             Log.e("Encryption Error", "Failed to encrypt data.");
         }
@@ -244,7 +242,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         // Remove newline characters from the reqRefId value
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
-         apiLink = readTextFile(context, R.raw.payment_status);
+         apiLink = readTextFile(context, R.raw.cancelpoptransact);
 
         // Construct the API request with the obtained values
         String apiRequest =
@@ -432,20 +430,6 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         // Get a reference to the AppCompatImageView
         AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
         Button cancelBtn= view.findViewById(R.id.btncancel);
-
-        cancelBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent serviceIntent = new Intent(context, CancelService.class);
-                serviceIntent.putExtra("popreqid", popreqid);
-                context.startService(serviceIntent);
-                // Dismiss the dialog
-                alertDialog.dismiss();
-
-
-            }
-        });
         if ("Payment request Pending".equals(status)) {
             // If the status is "Payment request Pending," schedule the next check
             // Load the GIF using Glide
@@ -470,7 +454,6 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     .asGif()
                     .load(R.drawable.expiredgif)
                     .into(gifImageView);
-            cancelBtn.setVisibility(View.GONE);
         }else if("Payment Request not found.".equals(status)){
             Glide.with(context)
                     .asGif()
@@ -494,7 +477,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     .into(gifImageView);
 
         }
-
+        validateButton.setVisibility(View.GONE);
         // Set the status text in the popup
         TextView statusTextView = view.findViewById(R.id.statusTextView);
         statusTextView.setText(status);
@@ -637,8 +620,8 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 // Remove hyphens from the transactionIdInProgress string
                 transactionIdInProgress = transactionIdInProgress.replaceAll("-", "");
 
-               String jsonRequestBody = "{ \"tranId\": \""+ transactionIdInProgress +"\", \"popReqId\": \"" + popreqid + "\"}";
 
+                String jsonRequestBody =  jsonRequestBody = "{ \"tillId\":\""+ Till_id +"\", \"tranId\":\""+ transactionIdInProgress + "\", \"popReqId\": \""+popreqid+"\", \"remark\":\"Cancel Payment\" }";
                 // Create the JSON object containing the header and encrypted request
                 String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBody) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBody, key, IV) + "\"}";
 

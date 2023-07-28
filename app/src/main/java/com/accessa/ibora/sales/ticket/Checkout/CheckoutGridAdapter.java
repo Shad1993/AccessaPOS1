@@ -101,7 +101,7 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
             if (resizedPopLogo != null) {
                 holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, resizedPopLogo, null);
                 holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
-
+                holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
             }
         } else {
             // Set the default drawableEnd for other cases here
