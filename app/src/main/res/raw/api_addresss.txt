@@ -1,1 +1,0 @@
-https://apimprod.bankone.mu/MW/api/MW/Teller/ValidateQR/v1.0

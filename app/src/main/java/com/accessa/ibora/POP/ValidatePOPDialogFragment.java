@@ -2,9 +2,11 @@ package com.accessa.ibora.POP;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.SoundPool;
@@ -18,11 +20,13 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.DialogFragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.accessa.ibora.CancelService;
 import com.accessa.ibora.PrintService;
@@ -111,6 +115,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
     private   String USERNAME,PASSWORD, status;
    // Add a method to retrieve the mobile number from arguments
+
     public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV) {
         ValidatePOPDialogFragment fragment = new ValidatePOPDialogFragment();
         Bundle args = new Bundle();
@@ -179,6 +184,8 @@ public class ValidatePOPDialogFragment extends DialogFragment {
          view = LayoutInflater.from(getActivity()).inflate(R.layout.pop, null);
         mDatabaseHelper = new DatabaseHelper(getContext());
 
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(dismissReceiver,
+                new IntentFilter("com.accessa.ibora.DISMISS_DIALOG"));
         Log.d("ValidatePOPDialog", "onCreateDialog called");
         // Get a reference to the GifImageView
          loadingGifImageView = view.findViewById(R.id.loadapiresponse);
@@ -359,6 +366,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                                     if ("Payment request Pending".equals(status)) {
                                         // If the status is "Payment request Pending," schedule the next check
                                         schedulePeriodicCheck();
+
                                     }
                                     // Show the status in a pop-up dialog
 
@@ -439,43 +447,24 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
                 Intent serviceIntent = new Intent(context, CancelService.class);
                 serviceIntent.putExtra("popreqid", popreqid);
+                serviceIntent.putExtra("key", key);
+                serviceIntent.putExtra("IV", IV);
                 context.startService(serviceIntent);
-                // Dismiss the dialog
-                alertDialog.dismiss();
-
 
             }
         });
-        if ("Payment request Pending".equals(status)) {
-            // If the status is "Payment request Pending," schedule the next check
-            // Load the GIF using Glide
-            Glide.with(context)
-                    .asGif()
-                    .load(R.drawable.pendinggif)
-                    .into(gifImageView);
-
-
-        } else if ("Payment request Declined".equals(status)) {
-            // Play the sound effect
-            playSoundEffect();
-            Glide.with(context)
-                    .asGif()
-                    .load(R.drawable.paymentcancelgif)
-                    .into(gifImageView);
-
-
-            cancelBtn.setVisibility(View.GONE);
-        }else if("Payment request Expired".equals(status)){
-            Glide.with(context)
-                    .asGif()
-                    .load(R.drawable.expiredgif)
-                    .into(gifImageView);
-            cancelBtn.setVisibility(View.GONE);
-        }else if("Payment Request not found.".equals(status)){
+        if("Payment Request not found.".equals(status)){
             Glide.with(context)
                     .asGif()
                     .load(R.drawable.paynotfound)
                     .into(gifImageView);
+            cancelBtn.setVisibility(View.GONE);
+        }else if("Payment request Cancelled".equals(status)){
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.paycancelgif)
+                    .into(gifImageView);
+            cancelBtn.setVisibility(View.GONE);
         }else if("null".equals(status)){
             Glide.with(context)
                     .asGif()
@@ -803,7 +792,23 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         return utcEpochTime;
     }
+    // In the ValidatePOPDialogFragment
 
+    // Local broadcast receiver to dismiss the dialog
+    private BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Dismiss the dialog
+            dismiss();
+        }
+    };
+
+    @Override
+    public void onDestroyView() {
+        // Unregister the local broadcast receiver
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(dismissReceiver);
+        super.onDestroyView();
+    }
     private void playSoundEffect() {
         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }

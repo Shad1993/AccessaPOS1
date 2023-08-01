@@ -1,5 +1,6 @@
 package com.accessa.ibora.POP;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -14,7 +15,12 @@ import com.accessa.ibora.R;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -25,16 +31,14 @@ import okhttp3.Response;
 
 public class MerchantValidationActivity extends AppCompatActivity {
     private Button btnValidatePayment;
+    private Context context;
     private TextView tvResponse,tvSentData;
     private static final String TAG = MerchantValidationActivity.class.getSimpleName();
     private static final String VALIDATE_URL = "https://apimprod.bankone.mu/MW/api/MW/Teller/ValidateQR/v1.0";
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private static final String CLIENT_ID = "ead65173-250b-4453-a0d0-5fdf8d770eb5";
-    private static final String USERNAME = "im_api_usr";
-    private static final String PASSWORD = "6ef9f8fa32eddba5d33a0e4e81b60";
-    private static final String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
-
+    private   String USERNAME,PASSWORD, status;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +47,7 @@ public class MerchantValidationActivity extends AppCompatActivity {
         btnValidatePayment = findViewById(R.id.btnValidatePayment);
         tvResponse = findViewById(R.id.tvResponse);
         tvSentData= findViewById(R.id.tvsent);
-
+        context = this;
         btnValidatePayment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,6 +58,12 @@ public class MerchantValidationActivity extends AppCompatActivity {
 
     private void validateMerchantPayment() {
         try {
+
+            USERNAME =readTextFile(context, R.raw.api_user);
+            PASSWORD = readTextFile(context, R.raw.password);
+            String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
+
+
             // Create JSON request body
             JSONObject requestBody = createValidationRequestBody();
 
@@ -161,5 +171,23 @@ public class MerchantValidationActivity extends AppCompatActivity {
             }
         });
     }
+    public static String readTextFile(Context context, int resourceId) {
+        try {
+            InputStream inputStream = context.getResources().openRawResource(resourceId);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

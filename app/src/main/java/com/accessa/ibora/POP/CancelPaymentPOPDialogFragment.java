@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -80,17 +81,15 @@ import pl.droidsonroids.gif.GifImageView;
 
 public class CancelPaymentPOPDialogFragment extends DialogFragment {
     private DatabaseHelper mDatabaseHelper;
-    private TextView resultTextView;
 
-    private TextView requestDataTextView;
-    private Button validateButton;
     private GifImageView     loadingGifImageView;
     private String key,IV;
     private String ReqRefId;
     private SoundPool soundPool;
     private int soundId;
     private  String encryptedRequest;
-    private  String popreqid;
+    private static final String ARG_POPREQID = "popreqid";
+    private String popreqid;
     // Add a handler as a class member
     private final Handler handler = new Handler();
 
@@ -104,16 +103,27 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
     private AlertDialog alertDialog; // Declare the member variable
 
     private   String USERNAME,PASSWORD, status;
+    private String transactionIdInProgress;
+    private static final String TRANSACTION_ID_KEY = "transaction_id";
 
 
     // Member variable to store the popreqid
 
+    // Default constructor with no arguments
 
     // Constructor to accept the popreqid as an argument
     public CancelPaymentPOPDialogFragment(String popreqid) {
         this.popreqid = popreqid;
     }
-
+    public static CancelPaymentPOPDialogFragment newInstance(String popreqid,String key, String IV) {
+        CancelPaymentPOPDialogFragment fragment = new CancelPaymentPOPDialogFragment(popreqid);
+        Bundle args = new Bundle();
+        args.putString(ARG_POPREQID, popreqid);
+        args.putString("key", key);
+        args.putString("IV", IV);
+        fragment.setArguments(args);
+        return fragment;
+    }
     // Method to get the value from the DialogFragment
     public String getPopreqid() {
         return popreqid;
@@ -146,6 +156,8 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
         // Get the mobile number from the arguments
         popreqid = getArguments().getString("popReqId");
+        key = getArguments().getString("key");
+        IV = getArguments().getString("IV");
         // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
                 .setMaxStreams(1)
@@ -176,9 +188,9 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-         view = LayoutInflater.from(getActivity()).inflate(R.layout.pop, null);
+        view = LayoutInflater.from(getActivity()).inflate(R.layout.loading_cancel, null);
         mDatabaseHelper = new DatabaseHelper(getContext());
-
+        context = getContext();
         Log.d("ValidatePOPDialog", "onCreateDialog called");
         // Get a reference to the GifImageView
          loadingGifImageView = view.findViewById(R.id.loadapiresponse);
@@ -190,22 +202,20 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
         // Retrieve the mobile number from the arguments
         popreqid = getArguments().getString("popreqid");
+        key = getArguments().getString("key");
+        IV = getArguments().getString("IV");
 
+        String Till_id = readTextFile(context, R.raw.till_id);
+        String Outlet_id = readTextFile(context, R.raw.outlet);
 
-        resultTextView = view.findViewById(R.id.resultTextView);
-        requestDataTextView = view.findViewById(R.id.requestDataTextView);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
-        validateButton.setVisibility(View.GONE);
-        resultTextView.setVisibility(View.GONE);
-        requestDataTextView.setVisibility(View.GONE);
-
-        // Replace "public_key" with your XML file name in res/raw folder
-        jsonRequestBody = "{ \"tillId\":\"Till-178\", \"tranId\":\"12345\", \"popReqId\": \"20210806000013\", \"remark\":\"Cancel Payment\" }";
-
+        String jsonRequestBody =  "{ \"tillId\":\""+ Till_id +"\", \"tranId\":\""+ transactionIdInProgress + "\", \"popReqId\": \""+popreqid+"\", \"remark\":\"Cancel Payment\" }";
         String apiRequestBody = "{\"header\": {\"apiversion\": \"string\", \"clientID\": \"string\", \"timeStamp\": \"string\", \"hCheckValue\": \"string\", \"requestUUID\": \"string\" }, \"request\": \"string\"}";
 
         encryptRequest(jsonRequestBody,key,IV);
-         context = getContext();
+
 
 
 
@@ -251,7 +261,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                         "Encrypted Request: " + encryptedRequest + "\n" +
                         "hCheckValue: " + hCheckValue;
 
-        requestDataTextView.setText(apiRequest);
+
 
             resendApiRequest(clientID,context);
 
@@ -263,15 +273,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
 
     // Schedule periodic checks
-    private void schedulePeriodicCheck() {
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Resend the API request
-                resendApiRequest(clientID,context);
-            }
-        }, CHECK_INTERVAL);
-    }
+
 
     // Method to resend the API request
     private void resendApiRequest( String clientID,Context context) {
@@ -315,6 +317,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                 // Handle request failure
                 // Hide the loading GIF animation
                 loadingGifImageView.setVisibility(View.GONE);
+                dismiss();
             }
 
             @Override
@@ -330,8 +333,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
                             // Hide the loading GIF animation
                             loadingGifImageView.setVisibility(View.GONE);
-                            resultTextView.setVisibility(View.VISIBLE);
-                            requestDataTextView.setVisibility(View.VISIBLE);
+                                dismiss();
 
                             try {
                                 // Parse the JSON data
@@ -345,8 +347,6 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
                                 String decryptedresponse=  decryptResponse(responseData, key, IV);
 
-                                resultTextView.setVisibility(View.VISIBLE);
-                                resultTextView.setText(decryptedresponse);
 
                                 try {
                                     // Parse the JSON data
@@ -354,10 +354,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
                                     // Extract the status field from the response
                                     String status = jsonObject1.getString("status");
-                                    if ("Payment request Pending".equals(status)) {
-                                        // If the status is "Payment request Pending," schedule the next check
-                                        schedulePeriodicCheck();
-                                    }
+
                                     // Show the status in a pop-up dialog
 
                                     Log.e("status",status);
@@ -386,12 +383,11 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            resultTextView.setVisibility(View.VISIBLE);
-                            requestDataTextView.setVisibility(View.VISIBLE);
+
                             Log.e("API Response Error", "Response was not successful. Code: " + response.code() + ", Error: " + errorResponse);
-                            resultTextView.setText("Error: " + errorResponse); // Display the error message on the TextView
-                            // Hide the loading GIF animation
+                          // Hide the loading GIF animation
                             loadingGifImageView.setVisibility(View.GONE);
+                            dismiss();
                         }
                     });
                 }
@@ -454,11 +450,19 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                     .asGif()
                     .load(R.drawable.expiredgif)
                     .into(gifImageView);
+            cancelBtn.setVisibility(View.GONE);
         }else if("Payment Request not found.".equals(status)){
             Glide.with(context)
                     .asGif()
                     .load(R.drawable.paynotfound)
                     .into(gifImageView);
+            cancelBtn.setVisibility(View.GONE);
+        }else if("Payment request Cancelled".equals(status)){
+            Glide.with(context)
+                    .asGif()
+                    .load(R.drawable.cancel)
+                    .into(gifImageView);
+            cancelBtn.setVisibility(View.GONE);
         }else if("null".equals(status)){
             Glide.with(context)
                     .asGif()
@@ -477,7 +481,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                     .into(gifImageView);
 
         }
-        validateButton.setVisibility(View.GONE);
+
         // Set the status text in the popup
         TextView statusTextView = view.findViewById(R.id.statusTextView);
         statusTextView.setText(status);
@@ -539,7 +543,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
             // Convert decrypted bytes to plaintext (request)
             String decryptedRequest = new String(decryptedBytes, StandardCharsets.UTF_8);
-            resultTextView.setText(decryptedRequest);
+
             // Display the encrypted request in the log
             Log.d("Decrypted request", decryptedRequest);
             return decryptedRequest;
@@ -621,7 +625,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                 transactionIdInProgress = transactionIdInProgress.replaceAll("-", "");
 
 
-                String jsonRequestBody =  jsonRequestBody = "{ \"tillId\":\""+ Till_id +"\", \"tranId\":\""+ transactionIdInProgress + "\", \"popReqId\": \""+popreqid+"\", \"remark\":\"Cancel Payment\" }";
+                String jsonRequestBody =  "{ \"tillId\":\""+ Till_id +"\", \"tranId\":\""+ transactionIdInProgress + "\", \"popReqId\": \""+popreqid+"\", \"remark\":\"Cancel Payment\" }";
                 // Create the JSON object containing the header and encrypted request
                 String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBody) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBody, key, IV) + "\"}";
 

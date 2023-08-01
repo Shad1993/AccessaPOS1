@@ -448,6 +448,9 @@
     <string name="Saved">Saved</string>
     <string name="completed">Completed</string>
     <string name="salesreport">Sales Report</string>
+    <string name="PopSettings">POP Settings</string>
+    <string name="headerInfo">Header Info</string>
+    <string name="till_info">Till/Outlet Info</string>
 
 
 </resources>

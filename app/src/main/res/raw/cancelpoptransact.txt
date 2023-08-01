@@ -1,1 +1,0 @@
-https://apimprod.bankone.mu/MW/api/MW/Teller/CancelPayment/v1.0

@@ -1,9 +1,11 @@
 package com.accessa.ibora;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -42,10 +44,12 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
+import com.accessa.ibora.POP.CancelPaymentPOPDialogFragment;
 import com.accessa.ibora.POP.EncryptionActivity;
 import com.accessa.ibora.POP.MerchantValidationActivity;
 import com.accessa.ibora.POP.POP;
 import com.accessa.ibora.POP.RSAEncryptionActivity;
+import com.accessa.ibora.POP.ValidatePOPDialogFragment;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
@@ -107,6 +111,18 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private int transactionCounter = 1;
     private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
+    private BroadcastReceiver cancelReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String popreqid = intent.getStringExtra("popreqid");
+            String key = intent.getStringExtra("key");
+            String IV = intent.getStringExtra("IV");
+
+            // Show the CancelPaymentPOPDialogFragment passing the popreqid
+            CancelPaymentPOPDialogFragment dialogFragment = CancelPaymentPOPDialogFragment.newInstance(popreqid,key,IV);
+            dialogFragment.show(getSupportFragmentManager(), "CancelPaymentDialog");
+        }
+    };
     @Override
     public void onDataPass(String name, String id, String QR) {
         // Handle the passed data here
@@ -187,7 +203,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         String transactionId;
         String transactionStatus = "Started";
         String transactionSaved = "Saved";
-
+        // Register the BroadcastReceiver to receive the broadcast
+        registerReceiver(cancelReceiver, new IntentFilter("com.accessa.ibora.CANCEL_ACTION"));
 
 
         //toolbar
@@ -625,5 +642,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             customPresentation.dismiss();
             customPresentation = null;
         }
+        unregisterReceiver(cancelReceiver);
     }
+
 }

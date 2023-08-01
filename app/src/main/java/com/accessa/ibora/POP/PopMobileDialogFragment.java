@@ -87,9 +87,8 @@ public class PopMobileDialogFragment extends DialogFragment {
     private  String mobileNumber;
     private  String jsonRequestBody;
     private static final String EXTRA_MOBILE_NUMBER = "extra_mobile_number";
-    private static final String USERNAME = "im_api_usr";
-    private static final String PASSWORD = "6ef9f8fa32eddba5d33a0e4e81b60";
-    private static final String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
+    private   String USERNAME,PASSWORD, status;
+
     // Add a method to retrieve the mobile number from arguments
     public static PopMobileDialogFragment newInstance(String mobileNumber) {
         PopMobileDialogFragment fragment = new PopMobileDialogFragment();
@@ -194,6 +193,10 @@ public class PopMobileDialogFragment extends DialogFragment {
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
         String apiLink = readTextFile(context, R.raw.api_addresss);
+        USERNAME =readTextFile(context, R.raw.api_user);
+        PASSWORD = readTextFile(context, R.raw.password);
+        String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
+
 
         // Construct the API request with the obtained values
         String apiRequest =

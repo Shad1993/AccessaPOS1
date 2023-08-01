@@ -110,6 +110,10 @@
         <activity android:name=".Sync.AddProducts"/>
         <activity android:name=".Sync.signup"/>
         <activity android:name=".POP.PopMobileDialogFragment"/>
+        <activity
+            android:name="com.accessa.ibora.POP.CancelPaymentPOPDialogFragment"
+            android:exported="false"
+            tools:ignore="Instantiatable" />
 
         <service
             android:name=".PrintService"
@@ -120,6 +124,9 @@
             android:name=".CancelService"
             android:enabled="true"
             android:exported="false" />
+
+
+
 
         <receiver android:name="sunmi.ds.MsgReceiver"
             android:exported="true">
