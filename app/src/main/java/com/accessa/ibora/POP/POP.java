@@ -33,6 +33,7 @@ import okhttp3.Response;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -101,6 +102,15 @@ private  String jsonRequestBody;
 
         resultTextView = findViewById(R.id.resultTextView);
         requestDataTextView = findViewById(R.id.requestDataTextView);
+        // Read the content from internal storage files
+        String validate = readTextFromFile("api_addresss.txt");
+        String status = readTextFromFile("payment_status.txt");
+        String cancel = readTextFromFile("cancelpoptransact.txt");
+        String username = readTextFromFile("api_user.txt");
+        String passwordValue = readTextFromFile("password.txt");
+        String tillnum = readTextFromFile("till_id.txt");
+        String outletnum = readTextFromFile("outlet.txt");
+        String clientId = readTextFromFile("client_id.txt");
 // Generate random KEY and IV
         key = generateRandomString(32);
         IV = generateRandomString(16);
@@ -138,16 +148,16 @@ private  String jsonRequestBody;
         }
 
 
-        String clientID = loadClientID(context);
+        String clientID = clientId;
 
-        String encryptedRequest = createEncryptedRequest(mDatabaseHelper,mobileNumber, context,clientID, jsonRequestBody,key,IV);
+        String encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,mobileNumber, context,clientID, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
         // Remove newline characters from the reqRefId value
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
-        String apiLink = readTextFile(context, R.raw.api_addresss);
+        String apiLink = validate;
 
         // Construct the API request with the obtained values
         String apiRequest =
@@ -243,25 +253,6 @@ private  String jsonRequestBody;
 
 
 
-    public static String loadClientID(Context context) {
-        try {
-            InputStream inputStream = context.getResources().openRawResource(R.raw.client_id);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            StringBuilder clientIDBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                clientIDBuilder.append(line);
-            }
-
-            bufferedReader.close();
-
-            return clientIDBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public static String encryptRequest(String jsonformat, String key, String iv) {
         try {
@@ -292,7 +283,7 @@ private  String jsonRequestBody;
     }
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String mobilenumber,Context  context, String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id, String Outlet_id,String mobilenumber,Context  context, String clientID, String requestBody, String key, String IV) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
@@ -310,8 +301,7 @@ private  String jsonRequestBody;
                 // Encrypt the request body using AES 256 Algorithm (CBC Mode)
                 String encryptedRequest = encryptWithAES(key, IV, requestBody);
                 Log.d("request", encryptedRequest);
-                String Till_id = readTextFile(context, R.raw.till_id);
-                String Outlet_id = readTextFile(context, R.raw.outlet);
+
                 SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                  transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
@@ -488,5 +478,23 @@ private  String jsonRequestBody;
 
         return utcEpochTime;
     }
+    private String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = getApplication().openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

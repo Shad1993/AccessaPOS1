@@ -48,6 +48,7 @@ import org.xml.sax.InputSource;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -115,7 +116,11 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
     private   String USERNAME,PASSWORD, status;
    // Add a method to retrieve the mobile number from arguments
-
+   @Override
+   public void onAttach(@NonNull Context context) {
+       super.onAttach(context);
+       this.context = context;
+   }
     public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV) {
         ValidatePOPDialogFragment fragment = new ValidatePOPDialogFragment();
         Bundle args = new Bundle();
@@ -206,7 +211,14 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         resultTextView.setVisibility(View.GONE);
         requestDataTextView.setVisibility(View.GONE);
+        // Read the content from internal storage files
+        String validate = readTextFromFile("api_addresss.txt");
+        String status = readTextFromFile("payment_status.txt");
 
+
+        String tillnum = readTextFromFile("till_id.txt");
+        String outletnum = readTextFromFile("outlet.txt");
+        String clientId = readTextFromFile("client_id.txt");
 
         // Replace "public_key" with your XML file name in res/raw folder
         jsonRequestBody = "{ \"tranId\": \"12345\", \"popReqId\": \"20210806000013\"}";
@@ -242,16 +254,16 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         }
 
 
-         clientID = loadClientID(context);
+         clientID = clientId;
 
-         encryptedRequest = createEncryptedRequest(mDatabaseHelper,popreqid, context,clientID, jsonRequestBody,key,IV);
+         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
         // Remove newline characters from the reqRefId value
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
-         apiLink = readTextFile(context, R.raw.payment_status);
+         apiLink = status;
 
         // Construct the API request with the obtained values
         String apiRequest =
@@ -299,9 +311,10 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8"); // Specify the content type and charset
         RequestBody requestBody = RequestBody.create(mediaType, encryptedRequest);
-
-        USERNAME =readTextFile(context, R.raw.api_user);
-        PASSWORD = readTextFile(context, R.raw.password);
+        String username = readTextFromFile("api_user.txt");
+        String passwordValue = readTextFromFile("password.txt");
+        USERNAME =username;
+        PASSWORD = passwordValue;
         String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
 
 
@@ -577,30 +590,10 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     }
 
 
-    public static String loadClientID(Context context) {
-        Context applicationContext = context.getApplicationContext();
-        try {
-            InputStream inputStream = applicationContext.getResources().openRawResource(R.raw.client_id);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            StringBuilder clientIDBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                clientIDBuilder.append(line);
-            }
-
-            bufferedReader.close();
-
-            return clientIDBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
@@ -618,8 +611,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                 // Encrypt the request body using AES 256 Algorithm (CBC Mode)
                 String encryptedRequest = encryptWithAES(key, IV, requestBody);
                 Log.d("request", encryptedRequest);
-                String Till_id = readTextFile(context, R.raw.till_id);
-                String Outlet_id = readTextFile(context, R.raw.outlet);
+
                 SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                 transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
@@ -692,7 +684,25 @@ public class ValidatePOPDialogFragment extends DialogFragment {
         }
     }
 
+    private String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = context.openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static String generateRandomString(int length) {
         String allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         SecureRandom secureRandom = new SecureRandom();

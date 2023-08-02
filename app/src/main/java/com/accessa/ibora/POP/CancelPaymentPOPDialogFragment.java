@@ -40,6 +40,7 @@ import org.xml.sax.InputSource;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -205,8 +206,15 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
         key = getArguments().getString("key");
         IV = getArguments().getString("IV");
 
-        String Till_id = readTextFile(context, R.raw.till_id);
-        String Outlet_id = readTextFile(context, R.raw.outlet);
+
+        String cancel = readTextFromFile("cancelpoptransact.txt");
+
+        String tillnum = readTextFromFile("till_id.txt");
+        String outletnum = readTextFromFile("outlet.txt");
+        String clientId = readTextFromFile("client_id.txt");
+
+        String Till_id = tillnum;
+        String Outlet_id = outletnum;
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -243,16 +251,16 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
         }
 
 
-         clientID = loadClientID(context);
+         clientID = clientId;
 
-         encryptedRequest = createEncryptedRequest(mDatabaseHelper,popreqid, context,clientID, jsonRequestBody,key,IV);
+         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
         // Remove newline characters from the reqRefId value
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
-         apiLink = readTextFile(context, R.raw.cancelpoptransact);
+         apiLink = cancel;
 
         // Construct the API request with the obtained values
         String apiRequest =
@@ -293,8 +301,11 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8"); // Specify the content type and charset
         RequestBody requestBody = RequestBody.create(mediaType, encryptedRequest);
 
-        USERNAME =readTextFile(context, R.raw.api_user);
-        PASSWORD = readTextFile(context, R.raw.password);
+        String username = readTextFromFile("api_user.txt");
+        String passwordValue = readTextFromFile("password.txt");
+
+        USERNAME =username;
+        PASSWORD = passwordValue;
         String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
 
 
@@ -575,30 +586,10 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
     }
 
 
-    public static String loadClientID(Context context) {
-        Context applicationContext = context.getApplicationContext();
-        try {
-            InputStream inputStream = applicationContext.getResources().openRawResource(R.raw.client_id);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            StringBuilder clientIDBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                clientIDBuilder.append(line);
-            }
-
-            bufferedReader.close();
-
-            return clientIDBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
@@ -616,8 +607,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                 // Encrypt the request body using AES 256 Algorithm (CBC Mode)
                 String encryptedRequest = encryptWithAES(key, IV, requestBody);
                 Log.d("request", encryptedRequest);
-                String Till_id = readTextFile(context, R.raw.till_id);
-                String Outlet_id = readTextFile(context, R.raw.outlet);
+
                 SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                 transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
@@ -704,7 +694,25 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
         return stringBuilder.toString();
     }
 
+    private String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = context.openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     private PublicKey getPublicKeyFromPEM(String pemKey) {
         try {
             PemReader pemReader = new PemReader(new StringReader(pemKey));

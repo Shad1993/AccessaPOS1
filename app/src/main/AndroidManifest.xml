@@ -110,6 +110,7 @@
         <activity android:name=".Sync.AddProducts"/>
         <activity android:name=".Sync.signup"/>
         <activity android:name=".POP.PopMobileDialogFragment"/>
+        <activity android:name=".product.items.Loadfromusb"/>
         <activity
             android:name="com.accessa.ibora.POP.CancelPaymentPOPDialogFragment"
             android:exported="false"

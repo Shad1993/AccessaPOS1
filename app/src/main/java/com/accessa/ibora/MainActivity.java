@@ -60,6 +60,7 @@ import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
+import com.accessa.ibora.product.items.Loadfromusb;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
@@ -277,7 +278,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Intent intent = new Intent(MainActivity.this, POP.class);
+                    Intent intent = new Intent(MainActivity.this, Loadfromusb.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(MainActivity.this, AdminActivity.class);

@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.POP.PopMobileDialogFragment;
+import com.accessa.ibora.POP.PopQRDialogFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.product.items.DBManager;
@@ -40,6 +42,13 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.util.Locale;
 
 
 public class QRFragment extends Fragment {
@@ -182,11 +191,56 @@ public class QRFragment extends Fragment {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+
+                        double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+
+                        // Format the double to a string with two decimal places
+                        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                        String formattedTotalAmount = decimalFormat.format(totalAmount);
+                        Log.e("total amount", formattedTotalAmount);
+                        String fileNameMerchName = "merch_name.txt";
+                        String fileNamePhone = "mob_num.txt";
+                        String fileNametill = "till_num.txt";
+
+                        String MerchantName = readTextFromFile(fileNameMerchName);
+                        String TillNo = readTextFromFile(fileNametill);
+                        String PhoneNum = readTextFromFile(fileNamePhone);
+                        String amountsVariation = countAndConcatenate(formattedTotalAmount);
+                        String QR=    "00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054" +amountsVariation+"5802MU5912"+MerchantName+"6015Agalega North I62220211"+PhoneNum+"0703"+TillNo+"6304BE4F";
+                        Log.e("qrstring", QR);
+                        showSecondaryScreen("POP",QR);
+
+
+                        // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                        PopQRDialogFragment popMobileDialogFragment = PopQRDialogFragment.newInstance(QR);
+                        // Hide the keyboard before showing the dialog
+                        InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        inputMethodManager.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
+                        // Show the PopMobileDialogFragment
+                        popMobileDialogFragment.show(getChildFragmentManager(), "pop_qr_dialog");
+
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+
+
                 }
             }
         });
         builder.show();
     }
+
+
+    public static String countAndConcatenate(String input) {
+        int charCount = input.length();
+        String formattedCharCount = String.format("%02d", charCount);
+        return formattedCharCount + input;
+    }
+
     private void showSecondaryScreen(String name, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -307,7 +361,25 @@ public class QRFragment extends Fragment {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+    private  String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = getContext().openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);

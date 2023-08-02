@@ -39,6 +39,14 @@
                         android:layout_gravity="center_horizontal"
                         android:text="@string/PopSettings" />
 
+                    <ImageView
+                        android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/poplogo"
+                    android:scaleType="centerCrop"
+                    android:adjustViewBounds="true"
+                    android:layout_marginTop="16dp" />
 
 
 
@@ -159,7 +167,94 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/ClientID" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Client ID"/>
 
+                    <EditText
+                        android:id="@+id/editclientId"
+                        style="@style/modifiedEditText"
+                        android:hint="Client ID"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="24sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/PopSettings" />
+
+                    <ImageView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_gravity="center_horizontal"
+                        android:src="@drawable/poplogo"
+                        android:scaleType="centerCrop"
+                        android:adjustViewBounds="true"
+                        android:layout_marginTop="16dp" />
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="italic"
+                        android:layout_gravity="center_horizontal"
+                        android:text="@string/QRParams" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Merchant Name" />
+
+                    <EditText
+                        android:id="@+id/editmerchantname"
+                        style="@style/modifiedEditText"
+                        android:hint="Merchant Name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Mobile Number" />
+
+                    <EditText
+                        android:id="@+id/editmobilenum"
+                        style="@style/modifiedEditText"
+                        android:hint="Mobile Number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="Till Number" />
+                    <EditText
+                        android:id="@+id/editTillNumber"
+                        style="@style/modifiedEditText"
+                        android:hint="Till Number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"/>
 
 
                 </LinearLayout>

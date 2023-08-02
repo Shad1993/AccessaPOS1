@@ -78,7 +78,7 @@ import java.util.Locale;
 
 public class POPSettingsFragment extends Fragment {
 
-    private EditText LinkValidate, LinkStatus, LinkCancel, user, password, TllNo, OutletNo;
+    private EditText LinkValidate, LinkStatus, LinkCancel, user, password, TllNo, OutletNo,ClientID,MerchantName,PhoneNumber,TillNum;
     private DatabaseHelper mDatabaseHelper;
     private DBManager dbManager;
     private SharedPreferences sharedPreferences;
@@ -111,6 +111,10 @@ private  Context context;
         password = view.findViewById(R.id.editpassword);
         TllNo = view.findViewById(R.id.editTillNo);
         OutletNo = view.findViewById(R.id.editOutletNo);
+        ClientID = view.findViewById(R.id.editclientId);
+        MerchantName= view.findViewById(R.id.editmerchantname);
+        PhoneNumber= view.findViewById(R.id.editmobilenum);
+        TillNum= view.findViewById(R.id.editTillNumber);
 
         sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -131,6 +135,10 @@ private  Context context;
         String passwordValue = readTextFromFile("password.txt");
         String tillnum = readTextFromFile("till_id.txt");
         String outletnum = readTextFromFile("outlet.txt");
+        String clientId = readTextFromFile("client_id.txt");
+        String MerchName = readTextFromFile("merch_name.txt");
+        String mobile_num = readTextFromFile("mob_num.txt");
+        String Till_num = readTextFromFile("till_num.txt");
 
         // Set the text to the corresponding EditText fields
         LinkValidate.setText(validate);
@@ -140,6 +148,10 @@ private  Context context;
         password.setText(passwordValue);
         TllNo.setText(tillnum);
         OutletNo.setText(outletnum);
+        ClientID.setText(clientId);
+        MerchantName.setText(MerchName);
+        PhoneNumber.setText(mobile_num);
+        TillNum.setText(Till_num);
 
         buttonUpdate = view.findViewById(R.id.btn_update);
         buttonUpdate.setOnClickListener(new View.OnClickListener() {
@@ -162,6 +174,10 @@ private  Context context;
         password = view.findViewById(R.id.editpassword);
         TllNo = view.findViewById(R.id.editTillNo);
         OutletNo =view.findViewById(R.id.editOutletNo);
+        ClientID=view.findViewById(R.id.editclientId);
+        MerchantName=view.findViewById(R.id.editmerchantname);
+        PhoneNumber=view.findViewById(R.id.editmobilenum);
+        TillNum=view.findViewById(R.id.editTillNumber);
 
 
         String linkval = LinkValidate.getText().toString().trim();
@@ -171,10 +187,10 @@ private  Context context;
         String Password = password.getText().toString().trim();
         String tillnum = TllNo.getText().toString().trim();
         String outletnum = OutletNo.getText().toString().trim();
-
-
-
-
+        String Client_Id = ClientID.getText().toString().trim();
+        String Merch_name = MerchantName.getText().toString().trim();
+        String Phone_num = PhoneNumber.getText().toString().trim();
+        String Til_number = TillNum.getText().toString().trim();
 
 
 
@@ -186,6 +202,10 @@ private  Context context;
         String fileNamePassword = "password.txt";
         String fileNameTllNo = "till_id.txt";
         String fileNameOutletNo = "outlet.txt";
+        String fileNameclientId = "client_id.txt";
+        String fileNameMerchName = "merch_name.txt";
+        String fileNamePhone = "mob_num.txt";
+        String fileNametill = "till_num.txt";
 
         // Write the updated content to internal storage with custom file names
         writeToInternalStorage(fileNameLinkValidate, linkval);
@@ -195,14 +215,13 @@ private  Context context;
         writeToInternalStorage(fileNamePassword, Password);
         writeToInternalStorage(fileNameTllNo, tillnum);
         writeToInternalStorage(fileNameOutletNo, outletnum);
+        writeToInternalStorage(fileNameclientId, Client_Id);
+        writeToInternalStorage(fileNameMerchName, Merch_name);
+        writeToInternalStorage(fileNamePhone, Phone_num);
+        writeToInternalStorage(fileNametill, Til_number);
 
         // Show a toast indicating that the update was successful
         Toast.makeText(getContext(), "Settings updated successfully!", Toast.LENGTH_SHORT).show();
-
-
-
-
-
 
 
     }

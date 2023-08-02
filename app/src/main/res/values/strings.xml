@@ -456,6 +456,8 @@
     <string name="PopSettings">POP Settings</string>
     <string name="headerInfo">Header Info</string>
     <string name="till_info">Till/Outlet Info</string>
+    <string name="ClientID">Client ID</string>
+    <string name="QRParams">QR Params</string>
 
 
 </resources>

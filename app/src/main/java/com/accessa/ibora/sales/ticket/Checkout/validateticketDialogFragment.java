@@ -7,12 +7,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,10 +37,15 @@ import com.accessa.ibora.POP.POP;
 import com.accessa.ibora.POP.PopMobileDialogFragment;
 import com.accessa.ibora.QR.QRGridAdapter;
 import com.accessa.ibora.R;
+import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -421,12 +429,99 @@ public class validateticketDialogFragment extends DialogFragment {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
+
+                        // User selected "Pay by QR code"
+                        // Perform the action for this option
+                        // For example, open a QR code scanner activity
+                        showSecondaryScreen("POP","00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054071927.035802MU5912IntermartOne6015Agalega North I622202112305786280707031436304BE4F");
+
                 }
             }
         });
         builder.show();
     }
+    private void showSecondaryScreen(String name, String QR) {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
+        String formattedTaxAmount = null,formattedTotalAmount = null;
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
 
+            // Show the secondary display
+            secondaryDisplay.show();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                formattedTotalAmount = String.format("%.2f", totalAmount);
+            }
+            // Get the selected item from the RecyclerView
+            String selectedName = name;
+            String selectedQR = QR;
+            // Convert the QR code string to a Bitmap
+            Bitmap qrBitmap = generateQRCodeBitmap(selectedQR);
+            // Update the text and QR code on the secondary screen
+            secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap, formattedTaxAmount, formattedTotalAmount);
+        } else {
+            // Secondary screen not found or not supported
+            Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Bitmap generateQRCodeBitmap(String qrCode) {
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        int width = 400;
+        int height = 400;
+        BitMatrix bitMatrix;
+        try {
+            bitMatrix = qrCodeWriter.encode(qrCode, BarcodeFormat.QR_CODE, width, height);
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        Bitmap qrBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                qrBitmap.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+            }
+        }
+
+        return qrBitmap;
+    }
+
+    private Display getPresentationDisplay() {
+        DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        for (Display display : displays) {
+            if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                return display;
+            }
+        }
+        return null;
+    }
+
+    private void loadQRData() {
+        // Retrieve data from the database, including the default item
+        Cursor cursor = mDatabaseHelper.getAllQR();
+
+        // Check if the adapter is null
+        if (mAdapter != null) {
+            // Add the cursor position for the default item
+            cursor.moveToPosition(-1); // Move to before the first position
+
+            // Set the adapter with the cursor
+            mAdapter.swapCursor(cursor);
+        }
+    }
 public void  insertCashReturn(double cashReturn,double totalAmountinserted){
 
     // Insert the cash return value to the header table

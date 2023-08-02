@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -58,9 +59,13 @@ public class MerchantValidationActivity extends AppCompatActivity {
 
     private void validateMerchantPayment() {
         try {
+// Read the content from internal storage files
 
-            USERNAME =readTextFile(context, R.raw.api_user);
-            PASSWORD = readTextFile(context, R.raw.password);
+            String username = readTextFromFile("api_user.txt");
+            String passwordValue = readTextFromFile("password.txt");
+
+            USERNAME =username;
+            PASSWORD = passwordValue;
             String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
 
 
@@ -170,6 +175,25 @@ public class MerchantValidationActivity extends AppCompatActivity {
                 tvResponse.setText(responseText);
             }
         });
+    }
+    private String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = context.openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     public static String readTextFile(Context context, int resourceId) {
         try {
