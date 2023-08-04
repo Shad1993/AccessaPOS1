@@ -128,8 +128,8 @@ public class QRFragment extends Fragment {
                   showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
                 }else {
-                    dataPassListener.onDataPass(name, id, QR);
-                    showSecondaryScreen(name, QR);
+
+                    showSecondaryScreen(name,id, QR);
                 }
             }
 
@@ -211,7 +211,7 @@ public class QRFragment extends Fragment {
                         String amountsVariation = countAndConcatenate(formattedTotalAmount);
                         String QR=    "00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054" +amountsVariation+"5802MU5912"+MerchantName+"6015Agalega North I62220211"+PhoneNum+"0703"+TillNo+"6304BE4F";
                         Log.e("qrstring", QR);
-                        showSecondaryScreen("POP",QR);
+                        showSecondaryScreen("POP","1",QR);
 
 
                         // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
@@ -241,7 +241,7 @@ public class QRFragment extends Fragment {
         return formattedCharCount + input;
     }
 
-    private void showSecondaryScreen(String name, String QR) {
+    private void showSecondaryScreen(String name,String id, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
         String formattedTaxAmount = null,formattedTotalAmount = null;
@@ -271,7 +271,9 @@ public class QRFragment extends Fragment {
             secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap, formattedTaxAmount, formattedTotalAmount);
         } else {
             // Secondary screen not found or not supported
-            Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            dataPassListener.onDataPass(name, id, QR);
+
         }
     }
 

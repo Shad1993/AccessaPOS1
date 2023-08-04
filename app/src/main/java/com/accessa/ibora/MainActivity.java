@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -13,6 +14,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -23,6 +25,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,12 +35,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.Admin.AdminActivity;
@@ -57,20 +62,26 @@ import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.login.login;
+import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.items.Loadfromusb;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
+import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.TicketFragment;
+import com.accessa.ibora.sales.ticket.Transaction;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.sunmi.peripheral.printer.InnerPrinterCallback;
+import com.sunmi.peripheral.printer.SunmiPrinterService;
 
 import android.hardware.display.DisplayManager;
 import android.view.Display;
@@ -78,7 +89,10 @@ import android.widget.VideoView;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
@@ -119,11 +133,17 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             String key = intent.getStringExtra("key");
             String IV = intent.getStringExtra("IV");
 
-            // Show the CancelPaymentPOPDialogFragment passing the popreqid
-            CancelPaymentPOPDialogFragment dialogFragment = CancelPaymentPOPDialogFragment.newInstance(popreqid,key,IV);
-            dialogFragment.show(getSupportFragmentManager(), "CancelPaymentDialog");
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Show the CancelPaymentPOPDialogFragment after a short delay
+                    CancelPaymentPOPDialogFragment dialogFragment = CancelPaymentPOPDialogFragment.newInstance(popreqid, key, IV);
+                    dialogFragment.show(getSupportFragmentManager(), "CancelPaymentDialog");
+                }
+            }, 100); // Adjust the delay time as needed
         }
     };
+
     @Override
     public void onDataPass(String name, String id, String QR) {
         // Handle the passed data here
@@ -301,12 +321,6 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             // Show the secondary display
             secondaryDisplay.show();
 
-            // Update the content displayed on the secondary screen
-            // Example: Displaying an image
-            //ImageView imageView = secondaryDisplay.findViewById(R.id.presentation_image);
-            // imageView.setVisibility(View.VISIBLE);
-          //   imageView.setImageResource(R.drawable.accessalogo); // Replace with the actual image resource
-
             // Example: Displaying a video
             VideoView videoView = secondaryDisplay.findViewById(R.id.presentation_video);
             videoView.setVisibility(View.VISIBLE);
@@ -327,7 +341,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     }
     public  void displayOnLCd() {
         if (woyouService == null) {
-            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+
             return;
         }
 
@@ -397,8 +411,10 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
                     customPresentation.show();
                 } else {
-                    // Permission not granted, handle the situation or show an error message
-                    Toast.makeText(instance, "No Second screen", Toast.LENGTH_SHORT).show();
+                    if (!isFinishing()) {
+                        // Permission not granted, handle the situation or show an error message
+                        Toast.makeText(instance, "No Second screen", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }
@@ -411,8 +427,9 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         }
 
         this.doubleBackToExitPressedOnce = true;
-        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
-
+        if (!isFinishing()) {
+            Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+        }
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -459,7 +476,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
     public  void displayOnLCD() {
         if (woyouService == null) {
-            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+
             return;
         }
 
@@ -565,56 +582,133 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
     private void displayQROnLCD(String code, String name) {
         if (woyouService == null) {
-            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+
             return;
         }
 
         try {
+            if (name.equals("POP")) {
+                int qrCodeSize = 50; // Set your desired QR code size
+                BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+                int qrCodeWidth = qrCodeMatrix.getWidth();
+                int qrCodeHeight = qrCodeMatrix.getHeight();
 
-            int fontSize = 10; // Set your desired font size
-            int textColor = Color.WHITE; // Set your desired text color
-            Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
-
-            // Generate QR code bitmap
-            int qrCodeSize = 50; // Set your desired QR code size
-            BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
-            int qrCodeWidth = qrCodeMatrix.getWidth();
-            int qrCodeHeight = qrCodeMatrix.getHeight();
-
-            Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
-            for (int x = 0; x < qrCodeWidth; x++) {
-                for (int y = 0; y < qrCodeHeight; y++) {
-                    qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+// Create a new bitmap with height and width swapped to rotate the QR code by 90 degrees
+                Bitmap qrCodeRotatedBitmap = Bitmap.createBitmap(qrCodeHeight, qrCodeWidth, Bitmap.Config.ARGB_8888);
+                for (int x = 0; x < qrCodeWidth; x++) {
+                    for (int y = 0; y < qrCodeHeight; y++) {
+                        qrCodeRotatedBitmap.setPixel(y, qrCodeWidth - 1 - x, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                    }
                 }
+
+// Calculate the offset to move the QR code upwards
+                int offset = -2; // Set your desired offset (use a negative value to move upwards)
+
+// Resize the QR code bitmap to the desired size
+                int newQrCodeWidth = 60; // Set your desired width
+                int newQrCodeHeight = 45; // Set your desired height
+                Bitmap resizedQrCodeBitmap = Bitmap.createScaledBitmap(qrCodeRotatedBitmap, newQrCodeWidth, newQrCodeHeight, false);
+
+// Create a new bitmap with the required height to accommodate the offset and draw the resized QR code
+                Bitmap compositeBitmap = Bitmap.createBitmap(newQrCodeWidth, newQrCodeHeight + Math.abs(offset), Bitmap.Config.ARGB_8888);
+                Canvas compositeCanvas = new Canvas(compositeBitmap);
+
+// Draw a white background
+                compositeCanvas.drawColor(Color.WHITE);
+
+// Draw the resized and rotated QR code on the canvas with the offset
+                compositeCanvas.drawBitmap(resizedQrCodeBitmap, 0, offset, null);
+
+                woyouService.sendLCDBitmap(compositeBitmap, null);
+                InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
+                    @Override
+                    protected void onConnected(SunmiPrinterService service) {
+
+                        int lineWidth = 48; // Adjust this value according to the width of your paper
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+
+
+
+                                try {
+
+                                        service.printText(compositeBitmap + "\n" , null);
+                                        service.printBitmap(compositeBitmap , null);
+
+
+                                    // Cut the paper
+                                    service.cutPaper(null);
+
+
+
+                                } catch (RemoteException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDisconnected() {
+                        // Printer service is disconnected, you cannot print
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Toast.makeText(printerSetup.this, "Printer disconnected", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                };
+
             }
+            else {
+    int fontSize = 10; // Set your desired font size
+    int textColor = Color.WHITE; // Set your desired text color
+    Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
 
-            // Generate text bitmap
-            Paint textPaint = new Paint();
-            textPaint.setTextSize(fontSize);
-            textPaint.setColor(textColor);
-            textPaint.setTypeface(typeface);
+    // Generate QR code bitmap
+    int qrCodeSize = 50; // Set your desired QR code size
+    BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+    int qrCodeWidth = qrCodeMatrix.getWidth();
+    int qrCodeHeight = qrCodeMatrix.getHeight();
 
-            Rect textBounds = new Rect();
-            textPaint.getTextBounds(name, 0, name.length(), textBounds);
-            int textWidth = textBounds.width();
-            int textHeight = textBounds.height();
+    Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+    for (int x = 0; x < qrCodeWidth; x++) {
+        for (int y = 0; y < qrCodeHeight; y++) {
+            qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+        }
+    }
 
-            Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
-            Canvas textCanvas = new Canvas(textBitmap);
-            textCanvas.drawText(name, 0, textHeight, textPaint);
+    // Generate text bitmap
+    Paint textPaint = new Paint();
+    textPaint.setTextSize(fontSize);
+    textPaint.setColor(textColor);
+    textPaint.setTypeface(typeface);
 
-            // Create composite bitmap
-            int compositeWidth = qrCodeWidth + textWidth;
-            int compositeHeight = Math.max(qrCodeHeight, textHeight);
+    Rect textBounds = new Rect();
+    textPaint.getTextBounds(name, 0, name.length(), textBounds);
+    int textWidth = textBounds.width();
+    int textHeight = textBounds.height();
 
-            Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
-            Canvas compositeCanvas = new Canvas(compositeBitmap);
-            compositeCanvas.drawColor(Color.BLACK);
+    Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+    Canvas textCanvas = new Canvas(textBitmap);
+    textCanvas.drawText(name, 0, textHeight, textPaint);
 
-            compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
-            compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+    // Create composite bitmap
+    int compositeWidth = qrCodeWidth + textWidth;
+    int compositeHeight = Math.max(qrCodeHeight, textHeight);
 
-            woyouService.sendLCDBitmap(compositeBitmap, null);
+    Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+    Canvas compositeCanvas = new Canvas(compositeBitmap);
+    compositeCanvas.drawColor(Color.BLACK);
+
+    compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+    compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+    woyouService.sendLCDBitmap(compositeBitmap, null);
+}
         } catch (RemoteException | WriterException e) {
             e.printStackTrace();
         }

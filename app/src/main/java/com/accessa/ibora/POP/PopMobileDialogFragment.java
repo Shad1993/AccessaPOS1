@@ -747,29 +747,6 @@ public class PopMobileDialogFragment extends DialogFragment {
     }
 
 
-    public static String readTextFile(Context context, int resourceId) {
-        try {
-            InputStream inputStream = context.getResources().openRawResource(resourceId);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-
-            bufferedReader.close();
-
-            return stringBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-
-
 
 
 

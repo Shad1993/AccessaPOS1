@@ -92,7 +92,7 @@ public class printerSetup extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(printerSetup.this, "Printer connected", Toast.LENGTH_SHORT).show();
+
 
 
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
@@ -415,9 +415,9 @@ public class printerSetup extends AppCompatActivity {
 
                                 if (updated) {
 
-                                    Toast.makeText(getApplicationContext(), "Settlement amount insert for " + paymentName, Toast.LENGTH_SHORT).show();
+                                 //   Toast.makeText(getApplicationContext(), "Settlement amount insert for " + paymentName, Toast.LENGTH_SHORT).show();
                                 } else {
-                                    Toast.makeText(getApplicationContext(), "Failed to insert settlement amount for " + paymentName, Toast.LENGTH_SHORT).show();
+                                  //  Toast.makeText(getApplicationContext(), "Failed to insert settlement amount for " + paymentName, Toast.LENGTH_SHORT).show();
                                 }
                             }
 
@@ -535,14 +535,19 @@ public class printerSetup extends AppCompatActivity {
                                 builder.setPositiveButton("Next Customer", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-
                                         Intent intent = new Intent(printerSetup.this, MainActivity.class);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear the activity stack
+
                                         startActivity(intent);
                                     }
                                 });
+
                                 builder.setCancelable(false); // Prevent dialog from being dismissed by clicking outside
-                                builder.show();
+
+// Show the dialog using the builder's context
+                                AlertDialog alertDialog = builder.create();
+                                alertDialog.show();
+
+
                             }
                         });
                     } catch (RemoteException e) {
@@ -558,7 +563,7 @@ public class printerSetup extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(printerSetup.this, "Printer disconnected", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(printerSetup.this, "Printer disconnected", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -634,9 +639,9 @@ public class printerSetup extends AppCompatActivity {
         }
 
         if (result) {
-            Toast.makeText(this, "Printer service initialization successful", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "Printer service initialization successful", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "Printer service initialization failed", Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(this, "Printer service initialization failed", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -644,7 +649,7 @@ public class printerSetup extends AppCompatActivity {
         try {
             // Check if the service is connected
             if (service == null) {
-                Toast.makeText(this, "Printer service is not connected", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Printer service is not connected", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -657,7 +662,25 @@ public class printerSetup extends AppCompatActivity {
             Bitmap logoBitmap = BitmapFactory.decodeFile(logoPath, options);
 
             if (logoBitmap == null) {
-                Toast.makeText(this, "Failed to load company logo", Toast.LENGTH_SHORT).show();
+                // Assuming 'context' is the reference to your activity or application context
+                int resourceId = R.drawable.accessalogo;
+
+                // Get the resource name (without the extension) from the resource ID
+                String resourceName = this.getResources().getResourceEntryName(resourceId);
+
+            // Get the resource type (e.g., "drawable") from the resource ID
+                String resourceType = this.getResources().getResourceTypeName(resourceId);
+
+                // Now you can construct the path as "android.resource://your_package_name/resource_type/resource_name"
+                String imagePath = "android.resource://" + this.getPackageName() + "/" + resourceType + "/" + resourceName;
+
+                // Provide the path to the logo image
+                 logoPath = imagePath;
+
+                // Load the logo image as a Bitmap with options that preserve transparency
+                BitmapFactory.Options options1 = new BitmapFactory.Options();
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                 logoBitmap = BitmapFactory.decodeFile(logoPath, options1);
                 return;
             }
 

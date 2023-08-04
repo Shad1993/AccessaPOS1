@@ -23,6 +23,8 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.sunmi.peripheral.printer.InnerPrinterException;
+import com.sunmi.peripheral.printer.InnerPrinterManager;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
@@ -53,56 +55,103 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
 
     private void displayQROnLCD(String code, String name) {
         if (woyouService == null) {
-            Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+         //   Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
+            if (name.equals("POP")){
+                int fontSize = 10; // Set your desired font size
+                int textColor = Color.WHITE; // Set your desired text color
+                Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
 
-            int fontSize = 10; // Set your desired font size
-            int textColor = Color.WHITE; // Set your desired text color
-            Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
+                // Generate QR code bitmap
+                int qrCodeSize = 20; // Set your desired QR code size
+                BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+                int qrCodeWidth = qrCodeMatrix.getWidth();
+                int qrCodeHeight = qrCodeMatrix.getHeight();
 
-            // Generate QR code bitmap
-            int qrCodeSize = 50; // Set your desired QR code size
-            BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
-            int qrCodeWidth = qrCodeMatrix.getWidth();
-            int qrCodeHeight = qrCodeMatrix.getHeight();
-
-            Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
-            for (int x = 0; x < qrCodeWidth; x++) {
-                for (int y = 0; y < qrCodeHeight; y++) {
-                    qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+                for (int x = 0; x < qrCodeWidth; x++) {
+                    for (int y = 0; y < qrCodeHeight; y++) {
+                        qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                    }
                 }
+
+                // Generate text bitmap
+                Paint textPaint = new Paint();
+                textPaint.setTextSize(fontSize);
+                textPaint.setColor(textColor);
+                textPaint.setTypeface(typeface);
+
+                Rect textBounds = new Rect();
+                textPaint.getTextBounds(name, 0, name.length(), textBounds);
+                int textWidth = textBounds.width();
+                int textHeight = textBounds.height();
+
+                Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+                Canvas textCanvas = new Canvas(textBitmap);
+                textCanvas.drawText(name, 0, textHeight, textPaint);
+
+                // Create composite bitmap
+                int compositeWidth = qrCodeWidth + textWidth;
+                int compositeHeight = Math.max(qrCodeHeight, textHeight);
+
+                Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+                Canvas compositeCanvas = new Canvas(compositeBitmap);
+                compositeCanvas.drawColor(Color.BLACK);
+
+                compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+                compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+                woyouService.sendLCDBitmap(compositeBitmap, null);
+
+            }else {
+                int fontSize = 10; // Set your desired font size
+                int textColor = Color.WHITE; // Set your desired text color
+                Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
+
+                // Generate QR code bitmap
+                int qrCodeSize = 50; // Set your desired QR code size
+                BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+                int qrCodeWidth = qrCodeMatrix.getWidth();
+                int qrCodeHeight = qrCodeMatrix.getHeight();
+
+                Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+                for (int x = 0; x < qrCodeWidth; x++) {
+                    for (int y = 0; y < qrCodeHeight; y++) {
+                        qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                    }
+                }
+
+                // Generate text bitmap
+                Paint textPaint = new Paint();
+                textPaint.setTextSize(fontSize);
+                textPaint.setColor(textColor);
+                textPaint.setTypeface(typeface);
+
+                Rect textBounds = new Rect();
+                textPaint.getTextBounds(name, 0, name.length(), textBounds);
+                int textWidth = textBounds.width();
+                int textHeight = textBounds.height();
+
+                Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+                Canvas textCanvas = new Canvas(textBitmap);
+                textCanvas.drawText(name, 0, textHeight, textPaint);
+
+                // Create composite bitmap
+                int compositeWidth = qrCodeWidth + textWidth;
+                int compositeHeight = Math.max(qrCodeHeight, textHeight);
+
+                Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+                Canvas compositeCanvas = new Canvas(compositeBitmap);
+                compositeCanvas.drawColor(Color.BLACK);
+
+                compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+                compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+                woyouService.sendLCDBitmap(compositeBitmap, null);
             }
-
-            // Generate text bitmap
-            Paint textPaint = new Paint();
-            textPaint.setTextSize(fontSize);
-            textPaint.setColor(textColor);
-            textPaint.setTypeface(typeface);
-
-            Rect textBounds = new Rect();
-            textPaint.getTextBounds(name, 0, name.length(), textBounds);
-            int textWidth = textBounds.width();
-            int textHeight = textBounds.height();
-
-            Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
-            Canvas textCanvas = new Canvas(textBitmap);
-            textCanvas.drawText(name, 0, textHeight, textPaint);
-
-            // Create composite bitmap
-            int compositeWidth = qrCodeWidth + textWidth;
-            int compositeHeight = Math.max(qrCodeHeight, textHeight);
-
-            Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
-            Canvas compositeCanvas = new Canvas(compositeBitmap);
-            compositeCanvas.drawColor(Color.BLACK);
-
-            compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
-            compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
-
-            woyouService.sendLCDBitmap(compositeBitmap, null);
         } catch (RemoteException | WriterException e) {
             e.printStackTrace();
         }
@@ -123,6 +172,8 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
 
         mDatabaseHelper = new DatabaseHelper(this); // Initialize DatabaseHelper
 
+        // Initialize the printer service
+        boolean result = false;
 
     }
 

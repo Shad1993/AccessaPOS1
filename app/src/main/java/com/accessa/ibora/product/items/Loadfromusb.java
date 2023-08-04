@@ -309,7 +309,7 @@ public class Loadfromusb extends AppCompatActivity {
             if (values.length > 1 && values[0] == -1) {
                 // Show an error message for incorrectly formatted data
                 int lineNumber = values[1];
-                Toast.makeText(Loadfromusb.this, "Error in CSV format at line " + lineNumber, Toast.LENGTH_SHORT).show();
+
                 String errorMessage = "Error in CSV format at line " + lineNumber;
                 showErrorDialog(errorMessage);
             } else {

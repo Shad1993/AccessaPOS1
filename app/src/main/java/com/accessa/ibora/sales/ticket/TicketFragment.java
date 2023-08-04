@@ -107,7 +107,7 @@ private TextView textViewVATs,textViewTotals;
             woyouService = IWoyouService.Stub.asInterface(service);
 
             // Call the method to display on the LCD here
-            displayOnLCD();
+            showSecondaryScreen(data);
         }
     };
 
@@ -444,7 +444,7 @@ private TextView textViewVATs,textViewTotals;
 
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
-              displayOnLCD();
+
               showSecondaryScreen(data);
      //   recreate(getActivity());
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
@@ -471,7 +471,7 @@ private TextView textViewVATs,textViewTotals;
             secondaryDisplay.updateRecyclerViewData(data);
         } else {
             // Secondary screen not found or not supported
-            Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            displayOnLCD();
         }
     }
 
@@ -490,7 +490,7 @@ private TextView textViewVATs,textViewTotals;
 
     public void displayOnLCD() {
         if (woyouService == null) {
-            Toast.makeText(requireContext(), "Service not ready", Toast.LENGTH_SHORT).show();
+
             return;
         }
 
