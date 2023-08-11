@@ -17,13 +17,12 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -31,11 +30,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.accessa.ibora.CancelService;
 import com.accessa.ibora.PrintService;
 import com.accessa.ibora.R;
-import com.accessa.ibora.printer.printerSetup;
+import com.accessa.ibora.proceedPOPService;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
-import com.squareup.picasso.Picasso;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -100,7 +98,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     private SoundPool soundPool;
     private int soundId;
     private  String encryptedRequest;
-    private  String popreqid;
+    private  String popreqid,amount;
     // Add a handler as a class member
     private final Handler handler = new Handler();
 
@@ -121,12 +119,13 @@ public class ValidatePOPDialogFragment extends DialogFragment {
        super.onAttach(context);
        this.context = context;
    }
-    public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV) {
+    public static ValidatePOPDialogFragment newInstance(String popReqId, String key, String IV, String amount) {
         ValidatePOPDialogFragment fragment = new ValidatePOPDialogFragment();
         Bundle args = new Bundle();
         args.putString("popReqId", popReqId);
         args.putString("key", key);
         args.putString("IV", IV);
+        args.putString("amount", amount);
         fragment.setArguments(args);
         return fragment;
     }
@@ -156,6 +155,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
         // Get the mobile number from the arguments
         popreqid = getArguments().getString("popReqId");
+        amount = getArguments().getString("amount");
         // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
                 .setMaxStreams(1)
@@ -377,8 +377,11 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                                     // Extract the status field from the response
                                     String status = jsonObject1.getString("status");
                                     if ("Payment request Pending".equals(status)) {
+
+
                                         // If the status is "Payment request Pending," schedule the next check
                                         schedulePeriodicCheck();
+
 
                                     }
                                     // Show the status in a pop-up dialog
@@ -478,22 +481,75 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     .load(R.drawable.paycancelgif)
                     .into(gifImageView);
             cancelBtn.setVisibility(View.GONE);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+                if(formattedTotalAmount.equals(amount)) {
+                    // Pass the amount received and settlement items as extras to the print activity
+                    Intent serviceIntent = new Intent(context, PrintService.class);
+                    serviceIntent.putExtra("POP", "POP");
+                    context.startService(serviceIntent);
+
+                }else{
+
+                    Intent serviceIntent = new Intent(context, proceedPOPService.class);
+                    String transactionIdInProgress;
+                    String TRANSACTION_ID_KEY = "transaction_id";
+                    SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                    transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+                    serviceIntent.putExtra("transaction_id", TRANSACTION_ID_KEY);
+                    serviceIntent.putExtra("amount", amount);
+                    // Create and show the dialog fragment with the data
+                    String popFraction= "popfraction";
+                    serviceIntent.putExtra("popFraction", popFraction);
+                    context.startService(serviceIntent);
+
+
+
+                }
+            }
         }else if("null".equals(status)){
             Glide.with(context)
                     .asGif()
                     .load(R.drawable.paymentsucessgif)
                     .into(gifImageView);
-            // Pass the amount received and settlement items as extras to the print activity
-            Intent serviceIntent = new Intent(context, PrintService.class);
-            serviceIntent.putExtra("POP", "POP");
-            context.startService(serviceIntent);
-            cancelBtn.setVisibility(View.GONE);
+            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+                if(formattedTotalAmount.equals(amount)) {
+                    // Pass the amount received and settlement items as extras to the print activity
+                    Intent serviceIntent = new Intent(context, PrintService.class);
+                    serviceIntent.putExtra("POP", "POP");
+                    context.startService(serviceIntent);
+                    cancelBtn.setVisibility(View.GONE);
+                }else{
+                    String transactionIdInProgress;
+                    String TRANSACTION_ID_KEY = "transaction_id";
+                    SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                    transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+                    // Get the activity associated with the fragment
+                    AppCompatActivity activity = (AppCompatActivity) requireActivity();
+
+                    // Create and show the dialog fragment with the data
+                    String popFraction= "popfraction";
+                    String result=null;
+                    validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(transactionIdInProgress,amount,popFraction, result);
+                    dialogFragment.setTargetFragment(ValidatePOPDialogFragment.this, 0);
+                    dialogFragment.show(activity.getSupportFragmentManager(), "validate_transaction_dialog");
+                }
+            }
+
         }
         else {
             Glide.with(context)
                     .asGif()
                     .load(R.drawable.pendinggif)
                     .into(gifImageView);
+
 
         }
 

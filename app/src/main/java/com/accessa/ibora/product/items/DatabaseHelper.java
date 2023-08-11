@@ -144,7 +144,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_DISCOUNT = "Discount";
     private static final String TRANSACTION_VAT_BEFORE_DISC = "VAT_Before_Disc";
     private static final String TRANSACTION_VAT_AFTER_DISC = "VAT_After_Disc";
-    private static final String TRANSACTION_TOTAL_HT_A ="TOTALHT_A" ;
+    public static final String TRANSACTION_TOTAL_HT_A ="TOTALHT_A" ;
     public static final String TRANSACTION_TOTAL_TTC =  "TotalTTC";
 
     private static final String TRANSACTION_IS_TAXABLE = "IsTaxable";

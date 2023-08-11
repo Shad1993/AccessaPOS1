@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.POP.PopMobileAmountDialogFragment;
 import com.accessa.ibora.POP.PopMobileDialogFragment;
 import com.accessa.ibora.POP.PopQRDialogFragment;
 import com.accessa.ibora.R;
@@ -125,7 +126,8 @@ public class QRFragment extends Fragment {
                 String name = NameEditText.getText().toString();
                 if(id !=null && (id.equals("1") && name.equals("POP")))
                 {
-                  showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
+                    showPopAmountOptionsDialog();
+                 // showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
                 }else {
 
@@ -143,6 +145,45 @@ public class QRFragment extends Fragment {
         return view;
 
     }
+
+    private void showPopAmountOptionsDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Amount");
+        String[] options = {"Pay part of amount  by POP", "Pay Full amount by POP"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_amount);
+
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editamount = dialogmob.findViewById(R.id.editAmount);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Retrieve the entered amount from the EditText
+                            String amountInserted = editamount.getText().toString();
+                            showPopOptionsWithAmountDialog(amountInserted);
+
+                        }
+                    });
+                } else if (which == 1) {
+                   showPopOptionsDialog();
+                }
+            }
+        });
+        builder.show();
+    }
+
     private void showPopOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Select Payment Method");
@@ -161,7 +202,7 @@ public class QRFragment extends Fragment {
 
                     // Get references to the views in the popup layout
                     EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
-                    EditText editCompanyName = dialogmob.findViewById(R.id.editCompanyName);
+                    EditText editamount = dialogmob.findViewById(R.id.editCompanyName);
                     Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
 
                     // Set up button click listener
@@ -233,7 +274,99 @@ public class QRFragment extends Fragment {
         });
         builder.show();
     }
+    private void showPopOptionsWithAmountDialog(String Amount) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Payment Method");
+        String[] options = {"Pay by mobile number", "Pay by QR code"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_num_amount);
 
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
+                    EditText editamount = dialogmob.findViewById(R.id.editAmount);
+                     editamount.setText(Amount);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Retrieve the entered mobile number from the EditText
+                            String mobileNumber = editTerminalNo.getText().toString();// Retrieve the entered amount from the EditText
+                            String amountInserted = editamount.getText().toString();
+
+
+                            // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                            PopMobileAmountDialogFragment popMobileAmountDialogFragment = PopMobileAmountDialogFragment.newInstance(mobileNumber,amountInserted);
+                            // Hide the keyboard before showing the dialog
+                            InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+                            // Show the PopMobileDialogFragment
+                            popMobileAmountDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
+
+                            // Dismiss the dialog
+                            dialog.dismiss();
+                            // Dismiss the dialogmob
+                            dialogmob.dismiss();
+
+                        }
+                    });
+                } else if (which == 1) {
+                    // User selected "Pay by QR code"
+                    // Perform the action for this option
+                    // For example, open a QR code scanner activity
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+
+                        double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+
+                        // Format the double to a string with two decimal places
+                        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                        String formattedTotalAmount = decimalFormat.format(totalAmount);
+                        Log.e("total amount", formattedTotalAmount);
+                        String fileNameMerchName = "merch_name.txt";
+                        String fileNamePhone = "mob_num.txt";
+                        String fileNametill = "till_num.txt";
+
+                        String MerchantName = readTextFromFile(fileNameMerchName);
+                        String TillNo = readTextFromFile(fileNametill);
+                        String PhoneNum = readTextFromFile(fileNamePhone);
+                        String amountsVariation = countAndConcatenate(formattedTotalAmount);
+                        String QR=    "00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054" +amountsVariation+"5802MU5912"+MerchantName+"6015Agalega North I62220211"+PhoneNum+"0703"+TillNo+"6304BE4F";
+                        Log.e("qrstring", QR);
+                        showSecondaryScreen("POP","1",QR);
+
+
+                        // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                        PopQRDialogFragment popMobileDialogFragment = PopQRDialogFragment.newInstance(QR);
+                        // Hide the keyboard before showing the dialog
+                        InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        inputMethodManager.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
+                        // Show the PopMobileDialogFragment
+                        popMobileDialogFragment.show(getChildFragmentManager(), "pop_qr_dialog");
+
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+
+
+                }
+            }
+        });
+        builder.show();
+    }
 
     public static String countAndConcatenate(String input) {
         int charCount = input.length();

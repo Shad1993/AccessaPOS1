@@ -1,20 +1,10 @@
 package com.accessa.ibora.sales.ticket;
 
-import static androidx.core.app.ActivityCompat.recreate;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
-import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
-import android.app.Dialog;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.ServiceConnection;
-import android.database.sqlite.SQLiteDatabase;
 import android.hardware.display.DisplayManager;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Display;
@@ -45,31 +35,24 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.QR.QRGenerator;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
-import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.SplashActivity;
 
 import com.accessa.ibora.SplashFlashActivity;
-import com.accessa.ibora.printer.cloudPrinter.bluetoothPrinter;
-import com.accessa.ibora.printer.externalprinterlibrary2.CloudPrinterActivity;
-import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
-import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
-import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Random;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
@@ -311,14 +294,9 @@ private TextView textViewVATs,textViewTotals;
         checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), Mra.class);
+                startActivity(intent);
 
-                // Get the activity associated with the fragment
-                AppCompatActivity activity = (AppCompatActivity) requireActivity();
-
-                // Create and show the dialog fragment with the data
-                validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(transactionIdInProgress);
-                dialogFragment.setTargetFragment(TicketFragment.this, 0);
-                dialogFragment.show(activity.getSupportFragmentManager(), "validate_transaction_dialog");
             }
         });
 

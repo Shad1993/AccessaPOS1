@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,9 +34,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MainActivity;
-import com.accessa.ibora.POP.POP;
 import com.accessa.ibora.POP.PopMobileDialogFragment;
-import com.accessa.ibora.QR.QRGridAdapter;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.printer.printerSetup;
@@ -54,15 +53,17 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class validateticketDialogFragment extends DialogFragment {
+public class validateticketDialogFragment extends DialogFragment  {
+
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
     private CheckoutGridAdapter mAdapter;
+    private static final int QR_CODE_REQUEST_CODE = 1;
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
     private static final String POSNumber="posNumber";
-    private String Transaction_Id,PosNum;
+    private String qrMra,Transaction_Id,PosNum,amountpaid,pop;
     private String cashierId;
     private double cashReturn;
     private Set<String> selectedItems; // Store selected items
@@ -71,16 +72,27 @@ public class validateticketDialogFragment extends DialogFragment {
     private DatabaseHelper mDatabaseHelper;
     private LinearLayout containerLayout; // Added
     private  Button validateButton;
-    private static final String EXTRA_MOBILE_NUMBER = "extra_mobile_number";
-
+    private static final String amounts = "amount";
+    private static final String popFragment = "popfragment";
+    private static final String MRAQR="mraqr";
 
     private View view; // Declare the view variable
 
-    public static validateticketDialogFragment newInstance(String transactionId) {
+    private String receivedQRCode; // Declare a member variable
+
+
+
+    // You can create a public method to get the stored QR code string
+
+
+    public static validateticketDialogFragment newInstance(String transactionId, String amount, String popFraction, String result) {
         validateticketDialogFragment fragment = new validateticketDialogFragment();
         Bundle args = new Bundle();
 
         args.putString(ARG_Transaction_id, transactionId);
+        args.putString(amounts, amount);
+        args.putString(popFragment, popFraction);
+        args.putString(MRAQR, result);
         fragment.setArguments(args);
         return fragment;
     }
@@ -92,6 +104,22 @@ public class validateticketDialogFragment extends DialogFragment {
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
+        // Check if intent has data
+        Intent intent = getActivity().getIntent();
+        if (intent != null) {
+            String receivedAmount = intent.getStringExtra("amount");
+            String receivedPopFraction = intent.getStringExtra("popFraction");
+
+            if (receivedAmount != null && receivedPopFraction != null) {
+                // Perform actions based on received data
+                // For example, find and click the button if needed
+                if (receivedPopFraction.equals("SOME_VALUE")) {
+                    // Find the button and programmatically click it
+                    Button button = view.findViewById(R.id.buttonCash);
+                    button.performClick();
+                }
+            }
+        }
     }
 
     @NonNull
@@ -197,6 +225,10 @@ public class validateticketDialogFragment extends DialogFragment {
         Bundle args = getArguments();
         if (args != null) {
             Transaction_Id = args.getString(ARG_Transaction_id);
+            amountpaid = args.getString(amounts);
+            pop= args.getString(popFragment);
+            qrMra=args.getString(MRAQR);
+            Log.d("MRAqr",qrMra);
 
             SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
             transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -308,6 +340,9 @@ public class validateticketDialogFragment extends DialogFragment {
             }
 
             private void printData() {
+
+
+
                 // Get the amount received
                 double amountReceived = 0.0;
                 if (!amountReceivedEditText.getText().toString().isEmpty()) {
@@ -369,6 +404,7 @@ public class validateticketDialogFragment extends DialogFragment {
                 intent.putExtra("amount_received", totalAmountinserted);
                 intent.putExtra("cash_return", cashReturn);
                 intent.putExtra("settlement_items", settlementItems);
+                intent.putExtra("mraQR", qrMra);
                 insertCashReturn(cashReturn,totalAmountinserted);
                 startActivity(intent);
             }
@@ -379,6 +415,7 @@ public class validateticketDialogFragment extends DialogFragment {
                 .setView(view)
                 .create();
     }
+
 
 
     private void showPopOptionsDialog() {
@@ -589,4 +626,8 @@ public void  insertCashReturn(double cashReturn,double totalAmountinserted){
             validateButton.setVisibility(View.GONE);
         }
     }
+
+
+
+
 }

@@ -74,7 +74,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import pl.droidsonroids.gif.GifImageView;
 
-public class PopQRDialogFragment extends DialogFragment {
+public class PopMobileAmountDialogFragment extends DialogFragment {
     private DatabaseHelper mDatabaseHelper;
     private TextView resultTextView;
 
@@ -82,20 +82,22 @@ public class PopQRDialogFragment extends DialogFragment {
     private Button Btncancel;
     private String key,IV;
     private String ReqRefId;
-    private  String qr;
+    private  String mobileNumber,amount;
     private Context context;
     private  String jsonRequestBody;
-    private static final String EXTRA_QR_CODE = "qr_code";
+    private static final String EXTRA_MOBILE_NUMBER = "extra_mobile_number";
+    private static final String EXTRA_AMOUNT = "amount";
     private   String USERNAME,PASSWORD, status;
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         this.context = context;
     }
     // Add a method to retrieve the mobile number from arguments
-    public static PopQRDialogFragment newInstance(String QR) {
-        PopQRDialogFragment fragment = new PopQRDialogFragment();
+    public static PopMobileAmountDialogFragment newInstance(String mobileNumber,String Amount) {
+        PopMobileAmountDialogFragment fragment = new PopMobileAmountDialogFragment();
         Bundle args = new Bundle();
-        args.putString(EXTRA_QR_CODE, QR);
+        args.putString(EXTRA_MOBILE_NUMBER, mobileNumber);
+        args.putString(EXTRA_AMOUNT, Amount);
         fragment.setArguments(args);
         return fragment;
     }
@@ -122,7 +124,8 @@ public class PopQRDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
 
         // Get the mobile number from the arguments
-        qr = getArguments().getString("EXTRA_QR_CODE");
+         mobileNumber = getArguments().getString("EXTRA_MOBILE_NUMBER");
+        amount = getArguments().getString("amount");
     }
 
     @NonNull
@@ -143,7 +146,7 @@ public class PopQRDialogFragment extends DialogFragment {
 
 
         // Retrieve the mobile number from the arguments
-        qr = getArguments().getString(EXTRA_QR_CODE);
+         mobileNumber = getArguments().getString(EXTRA_MOBILE_NUMBER);
 
         resultTextView = view.findViewById(R.id.resultTextView);
         requestDataTextView = view.findViewById(R.id.requestDataTextView);
@@ -166,7 +169,7 @@ public class PopQRDialogFragment extends DialogFragment {
 
 
         // Read RSA public key from raw resource and convert to PEM format
-        String pemKey = convertXMLToPEM(R.raw.qrprepk);
+        String pemKey = convertXMLToPEM(R.raw.public_key);
 
         // Print the PEM format key to the log
         Log.d("PEM Key", pemKey);
@@ -194,7 +197,7 @@ public class PopQRDialogFragment extends DialogFragment {
         String Outlet_id = readTextFromFile("outlet.txt");
 
 
-        String encryptedRequest = createEncryptedRequest(mDatabaseHelper,Till_id,Outlet_id,qr, context,clientId, jsonRequestBody,key,IV);
+        String encryptedRequest = createEncryptedRequest(mDatabaseHelper,amount,Till_id,Outlet_id,mobileNumber, context,clientId, jsonRequestBody,key,IV);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
@@ -202,7 +205,6 @@ public class PopQRDialogFragment extends DialogFragment {
         ReqRefId = ReqRefId.replaceAll("\\n|\\r", "");
         // Read API link from raw file
         String apiLink = validate;
-
         USERNAME =username;
         PASSWORD = passwordValue;
         String AUTHORIZATION_HEADER = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
@@ -210,7 +212,7 @@ public class PopQRDialogFragment extends DialogFragment {
 
         // Construct the API request with the obtained values
         String apiRequest =
-                "qr: " + qr + "\n" +
+                "mobilenumber: " + mobileNumber + "\n" +
                         "ReqRefId: " + ReqRefId + "\n" +
                         "Encrypted Request: " + encryptedRequest + "\n" +
                         "hCheckValue: " + hCheckValue;
@@ -386,10 +388,9 @@ public class PopQRDialogFragment extends DialogFragment {
                                     try {
                                         JSONObject jsonObject1 = new JSONObject(decryptedresponse);
                                         String popReqId = jsonObject1.getString("popReqId");
-                                        String amount="0.0";
 
                                         // Create the ValidatePOPDialogFragment instance and pass the mobile number, key, and IV as arguments
-                                        ValidatePOPDialogFragment popMobileDialogFragment = ValidatePOPDialogFragment.newInstance(popReqId, key, IV, amount);
+                                        ValidatePOPDialogFragment popMobileDialogFragment = ValidatePOPDialogFragment.newInstance(popReqId, key, IV,amount);
 
                                         // Show the ValidatePOPDialogFragment
                                         popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
@@ -747,15 +748,16 @@ public class PopQRDialogFragment extends DialogFragment {
 
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String qr,Context  context, String clientID, String requestBody, String key, String IV) {
+
+
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String amount,String Till_id,String Outlet_id,String mobilenumber,Context  context, String clientID, String requestBody, String key, String IV) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
-            if (cursor != null && cursor.moveToFirst()) {
-                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
-                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
-                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+
+                double parsedAmount = Double.parseDouble(amount);
+                String formattedTotalAmount = String.format("%.2f", parsedAmount);
                 String transactionIdInProgress;
                 String TRANSACTION_ID_KEY = "transaction_id";
 
@@ -774,22 +776,19 @@ public class PopQRDialogFragment extends DialogFragment {
                 transactionIdInProgress = transactionIdInProgress.replaceAll("-", "");
 
 
-               // String jsonRequestBodymobile = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":" + formattedTotalAmount + ",\"requestType\":\"Mobile\",\"requestValue\":\"" + mobilenumber +"\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
-                String jsonRequestBodyqr = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":"+ formattedTotalAmount + ",\"requestType\":\"QR\",\"requestValue\":\""+qr+"\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
+                String jsonRequestBodymobile = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":" + formattedTotalAmount + ",\"requestType\":\"Mobile\",\"requestValue\":\"" + mobilenumber +"\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
+                String jsonRequestBodyqr = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":505.04,\"requestType\":\"QR\",\"requestValue\":\"00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054074235.285802MU5912IntermartOne6015Agalega North I622202112305786280707031436304BE4F \n\n\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
 
                 // Create the JSON object containing the header and encrypted request
-                String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBodyqr) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBodyqr, key, IV) + "\"}";
+                String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBodymobile) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBodymobile, key, IV) + "\"}";
 
                 String time = String.valueOf(getUTCEpochTime());
 
-                Log.d("timestamp", time);
                 // Remove line breaks and whitespace characters
                 jsonRequest = jsonRequest.replace("\n", "").replace("\r", "").replace("\t", "").replaceAll("\\s+", " ");
-                Log.d("plain request", jsonRequestBodyqr);
+                Log.d("plain request", jsonRequestBodymobile);
                 return jsonRequest;
-            }else {
-                return "";
-            }
+
         } catch(Exception e){
             e.printStackTrace();
             return null;

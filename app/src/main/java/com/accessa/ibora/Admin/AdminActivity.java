@@ -14,12 +14,10 @@ import android.widget.Toast;
 
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
+import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.product.menu.BodyActivity;
-import com.accessa.ibora.product.menu.BodyFragment;
-import com.accessa.ibora.product.menu.MenuFragment;
-import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +30,6 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.login.login;
-import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
@@ -155,7 +152,9 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(AdminActivity.this, Mra.class);
+                    startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(AdminActivity.this, AdminActivity.class);
                     startActivity(intent);

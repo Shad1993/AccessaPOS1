@@ -15,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
@@ -390,7 +389,7 @@ public class PopMobileDialogFragment extends DialogFragment {
                                         String popReqId = jsonObject1.getString("popReqId");
 
                                         // Create the ValidatePOPDialogFragment instance and pass the mobile number, key, and IV as arguments
-                                        ValidatePOPDialogFragment popMobileDialogFragment = ValidatePOPDialogFragment.newInstance(popReqId, key, IV);
+                                        ValidatePOPDialogFragment popMobileDialogFragment = ValidatePOPDialogFragment.newInstance(popReqId, key, IV, "0");
 
                                         // Show the ValidatePOPDialogFragment
                                         popMobileDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
@@ -778,7 +777,6 @@ public class PopMobileDialogFragment extends DialogFragment {
 
 
                 String jsonRequestBodymobile = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":" + formattedTotalAmount + ",\"requestType\":\"Mobile\",\"requestValue\":\"" + mobilenumber +"\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
-                String jsonRequestBodyqr = "{\"outletId\":\"" + Outlet_id + "\",\"tillId\":\"" + Till_id + "\",\"tranId\":\"" + transactionIdInProgress +"\",\"amount\":505.04,\"requestType\":\"QR\",\"requestValue\":\"00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054074235.285802MU5912IntermartOne6015Agalega North I622202112305786280707031436304BE4F \n\n\",\"currency\":\"MUR\",\"txnChannel\":\"POS\",\"remarks\":\"IntermartPOP\",\"expiry\":2}";
 
                 // Create the JSON object containing the header and encrypted request
                 String jsonRequest = "{\"header\":{\"apiversion\":\"v1\",\"clientID\":\"" + clientID + "\",\"timeStamp\":\"" + getUTCEpochTime() + "\",\"hCheckValue\":\"" + generateHCheckValue(jsonRequestBodymobile) + "\",\"requestUUID\":\"" + requestUUID + "\"},\"request\":\"" + encryptRequest(jsonRequestBodymobile, key, IV) + "\"}";

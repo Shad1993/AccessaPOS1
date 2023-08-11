@@ -15,6 +15,7 @@
             android:layout_centerInParent="true"
             android:src="@drawable/paymethods" />
     </RelativeLayout>
+
     <TextView
         android:id="@+id/textViewTotalAmount"
         android:layout_width="match_parent"

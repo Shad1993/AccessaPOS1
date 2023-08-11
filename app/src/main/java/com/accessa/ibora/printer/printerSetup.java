@@ -83,6 +83,7 @@ public class printerSetup extends AppCompatActivity {
 
 
     private double settlementAmount ;
+    private String mraqr ;
     private double amountReceived,cashReturn;
     private InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
         @Override
@@ -438,8 +439,10 @@ public class printerSetup extends AppCompatActivity {
                         String Footer2Text = getString(R.string.Footer_OpenHours);
                         String Openinghours= Footer2Text + OpeningHours ;
 
-
-
+                        if (mraqr != null && !mraqr.equals("Request Failed")) {
+                            service.printText("MRA Response" + "\n", null);
+                            service.printQRCode(mraqr + "\n", 5, 1, null);
+                        }
 
                         // Print the centered footer text
                         service.printText(FooterText + "\n", null);
@@ -578,6 +581,7 @@ public class printerSetup extends AppCompatActivity {
 
 
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
+        mraqr = getIntent().getStringExtra("mraQR");
 
     // Retrieve the extras from the intent
         Intent intent = getIntent();
