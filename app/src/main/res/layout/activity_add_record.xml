@@ -63,6 +63,36 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/Nature" />
+
+                <Spinner
+                    android:id="@+id/Nature_spinner"
+                    style="@style/CustomSpinnerStyle"
+                    android:spinnerMode="dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/ItemCode" />
+
+                <EditText
+                    android:id="@+id/IdItemCode_edittext"
+                    style="@style/modifiedEditText"
+                    android:hint="@string/ItemCode"
+                    android:singleLine="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
                 <!-- Add this code within the LinearLayout that contains other fields -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -127,6 +157,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/CurrencySpinner" />
+
+
+
+                <Spinner
+                    android:id="@+id/Currency_spinner"
+                    style="@style/CustomSpinnerStyle"
+                    android:spinnerMode="dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -258,6 +304,19 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:hint="@string/LongDesc" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/discount" />
+
+                <Spinner
+                    android:id="@+id/discount_spinner"
+                    style="@style/CustomSpinnerStyle"
+                    android:spinnerMode="dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -383,6 +442,8 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:layout_gravity="center" />
+
+
 
 
                 <TextView

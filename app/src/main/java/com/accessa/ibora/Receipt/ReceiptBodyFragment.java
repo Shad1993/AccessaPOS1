@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,10 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.bumptech.glide.Glide;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 public class ReceiptBodyFragment extends Fragment {
 
@@ -36,7 +41,7 @@ public class ReceiptBodyFragment extends Fragment {
     private String cashierName,cashierId;
     private String cashorlevel,ShopName,LogoPath;
     private double totalAmount,TaxtotalAmount;
-    private  String DateCreated,timeCreated,TenderAmount,CashReturn,PosNum;
+    private  String DateCreated,timeCreated,TenderAmount,CashReturn,PosNum,TransactionType, TransactionQr;
     private  int CashiorId;
     private ReceiptAdapter receiptAdapter;
     private static final String POSNumber="posNumber";
@@ -72,6 +77,7 @@ public class ReceiptBodyFragment extends Fragment {
         // Set the transaction details to TextViews or any other views in your layout
         TextView transactionIdTextView = view.findViewById(R.id.transaction_id_text_view);
         TextView transactionDateTextView = view.findViewById(R.id.transaction_date_text_view);
+        TextView transactionTypeTextView = view.findViewById(R.id.transacType_text_view);
         TextView totalPriceTextView = view.findViewById(R.id.total_price_text_view);
         TextView companyTextView = view.findViewById(R.id.companyName_text_view);
         TextView compAdressTextView = view.findViewById(R.id.compaddr1n2_text_view);
@@ -96,6 +102,8 @@ public class ReceiptBodyFragment extends Fragment {
         TextView compTelTextview=view.findViewById(R.id.comptel_text_view);
         TextView compFaxTextview=view.findViewById(R.id.compfax_text_view);
         View ReturnCashline=view.findViewById(R.id.cash_return_line);
+        ImageView qrCodeImageView = view.findViewById(R.id.qrCodeImageView);
+
         LinearLayout CashReturnLayout=view.findViewById(R.id.cash_return_layout);
 
         ImageView logo= view.findViewById(R.id.logoImageView);
@@ -182,12 +190,14 @@ public class ReceiptBodyFragment extends Fragment {
 
         if (cursor1 != null && cursor1.moveToFirst()) {
             int columnIndexTotalAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+            int columnIndexTransactType = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_STATUS);
             int columnIndexTotalTaxAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
             int columnIndexTimeCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
             int columnIndexDateCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
             int CashiorIdindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_CASHIER_CODE);
             int TotalTenderindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_PAID);
             int CashReturnindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_CASH_RETURN);
+            int QrCodeindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_MRA_QR);
             int cashierId1 = cursor1.getInt(CashiorIdindex);
 
 
@@ -205,25 +215,51 @@ public class ReceiptBodyFragment extends Fragment {
             if (itemCursor != null) {
                 itemCursor.close();
             }
-
+            TransactionType=cursor1.getString(columnIndexTransactType);
+            TransactionQr=cursor1.getString(QrCodeindex);
             totalAmount = cursor1.getDouble(columnIndexTotalAmount);
             TaxtotalAmount = cursor1.getDouble(columnIndexTotalTaxAmount);
             DateCreated = cursor1.getString(columnIndexDateCreated);
             timeCreated = cursor1.getString(columnIndexTimeCreated);
             TenderAmount = cursor1.getString(TotalTenderindex);
             CashReturn=cursor1.getString(CashReturnindex);
+if(!TransactionType.equals("InProgress")) {
+    // Generate the QR code image
+    Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
 
-            String formattedTotalAmount = String.format("%.2f", totalAmount);
-            String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
+// Display the QR code in the ImageView
+    if (qrCodeBitmap != null) {
+        qrCodeImageView.setImageBitmap(qrCodeBitmap);
+        qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
+    } else {
+        qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
+    }
+}
 
-            String Total = getString(R.string.Total);
-            String TVA = getString(R.string.Vat);
+    String formattedTotalAmount = String.format("%.2f", totalAmount);
+    String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
 
-            String TotalValue = "Rs " + formattedTotalAmount;
-            String TotalVAT = "Rs " + formattedTotalTAXAmount;
+    String Total = getString(R.string.Total);
+    String TVA = getString(R.string.Vat);
+
+    String TotalValue = "Rs " + formattedTotalAmount;
+    String TotalVAT = "Rs " + formattedTotalTAXAmount;
+    if (TransactionType.equals("PRF")) {
+        transactionTypeTextView.setText("Proforma");
+    } else if (TransactionType.equals("CRN")) {
+        transactionTypeTextView.setText("Credit Note");
+    } else if (TransactionType.equals("DRN")) {
+        transactionTypeTextView.setText("Debit Note");
+    } else if (TransactionType.equals("Completed")) {
+        transactionTypeTextView.setText("Duplicata");
+    }else if (TransactionType.equals("InProgress")) {
+        transactionTypeTextView.setText("Duplicata");
+    }
+
             totalPriceTextView.setText(TotalValue);
             VatAMount.setText(TotalVAT);
             TenderTextview.setText("Rs " + TenderAmount);
+
 
             if (CashReturn != null) {
                 int cash = Integer.parseInt(CashReturn);
@@ -320,6 +356,30 @@ public class ReceiptBodyFragment extends Fragment {
         mRecyclerView.setAdapter(mAdapter);
 
         return view;
+    }
+    // Function to generate QR code
+    private Bitmap generateQRCode(String content, int width, int height) {
+        try {
+            QRCodeWriter writer = new QRCodeWriter();
+            BitMatrix bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height);
+            int matrixWidth = bitMatrix.getWidth();
+            int matrixHeight = bitMatrix.getHeight();
+            int[] pixels = new int[matrixWidth * matrixHeight];
+
+            for (int y = 0; y < matrixHeight; y++) {
+                for (int x = 0; x < matrixWidth; x++) {
+                    pixels[y * matrixWidth + x] = bitMatrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF;
+                }
+            }
+
+            Bitmap bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
+            bitmap.setPixels(pixels, 0, matrixWidth, 0, 0, matrixWidth, matrixHeight);
+
+            return bitmap;
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // set text

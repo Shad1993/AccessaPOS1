@@ -3,17 +3,24 @@ package com.accessa.ibora.product.items;
 public class Item {
     private int id;
     private String name;
+    private String ItemCode;
+    private String TaxCode;
     private String description;
     private String longDescription;
     private float quantity;
     private String department;
     private String subDepartment;
     private String category;
-    private float price;
+    private String Nature;
+    private String Discount;
+
+    private float TotalDiscount;
+    private float price, priceAfterDiscount;
     private String barcode;
     private float weight;
     private String expiryDate;
     private String VAT;
+    private String Currency;
     private String soldBy;
     private String image;
     private String SKU;
@@ -43,6 +50,7 @@ public class Item {
         this.UserId = UserId;
         this.DateCreated = DateCreated;
         this.LastModified = LastModified;
+
     }
 
     public Item(String title, String description, int quantity) {
@@ -70,6 +78,8 @@ public class Item {
         this.UserId = UserId;
         this.DateCreated = DateCreated;
         this.LastModified = LastModified;
+        this.priceAfterDiscount = priceAfterDiscount;
+        this.TotalDiscount=TotalDiscount;
     }
 
     public Item(String name, String id, String price, String description, String productImageName) {
@@ -97,6 +107,42 @@ public class Item {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+
+    public String getTaxCode() {
+        return TaxCode;
+    }
+
+    public void setTaxCode(String TaxCode) {
+        this.TaxCode = TaxCode;
+    }
+
+
+    public String getItemCode() {
+        return ItemCode;
+    }
+
+    public void setItemCode(String ItemCode) {
+        this.ItemCode = ItemCode;
+    }
+    public void setNature(String Nature) {
+        this.Nature = Nature;
+    }
+    public String getNature() {
+        return Nature;
+    }
+    public void setCurrency(String Currency) {
+        this.Currency = Currency;
+    }
+    public String getCurrency() {
+        return Currency;
+    }
+    public void setDiscount(String Discount) {
+        this.Discount = Discount;
+    }
+    public String getDiscount() {
+        return Discount;
     }
 
     public String getDescription() {
@@ -153,6 +199,21 @@ public class Item {
 
     public void setPrice(float price) {
         this.price = price;
+    }
+
+    public float getPriceAfterDiscount() {
+        return priceAfterDiscount;
+    }
+
+    public void setPriceAfterDiscount(float priceAfterDiscount) {
+        this.priceAfterDiscount = priceAfterDiscount;
+    }
+    public float getTotalDiscount() {
+        return TotalDiscount;
+    }
+
+    public void setTotalDiscount(float TotalDiscount) {
+        this.TotalDiscount = TotalDiscount;
     }
 
     public String getBarcode() {

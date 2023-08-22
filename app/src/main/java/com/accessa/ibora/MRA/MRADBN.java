@@ -1,6 +1,8 @@
 package com.accessa.ibora.MRA;
 
 
+
+
 import static android.app.PendingIntent.getActivity;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
@@ -20,22 +22,28 @@ import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT_Type;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -82,20 +90,26 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class Mra extends AppCompatActivity {
+public class MRADBN extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private String cashorlevel,ShopName,LogoPath,CompanyName;
     private String cashierName,cashierId;
     private double totalAmount,TaxtotalAmount,TotalHT;
+
+    private static final long SPLASH_DURATION = 1000; // Splash screen duration in milliseconds
+
+    private Handler handler;
+    private Runnable navigateToNextScreenRunnable;
+
     private String aesKey;
-    String selectedBuyerName ;
+    String selectedBuyerName,newtransactionid,selectinvoiceTypeDesc,TransactionType ;
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
     String selectedBuyerType ;
     String selectedBuyerBRN ;
     String selectedBuyerNIC ;
     String selectedBuyerAddresse ;
-    private String transactionIdInProgress;
+
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String TAG = "EncryptionActivity";
 
@@ -142,7 +156,7 @@ public class Mra extends AppCompatActivity {
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
 
                     // Retrieve the total amount and total tax amount from the transactionheader table
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeaderType(TransactionType);
                     int currentCounter = 1; // Default value if no data is present in the table
 
                     if (cursor != null && cursor.moveToFirst()) {
@@ -171,72 +185,71 @@ public class Mra extends AppCompatActivity {
 
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
-if(SelectedBuyerProfile.equals("")) {
+                        if(SelectedBuyerProfile.equals("")) {
 
-    String transactionType = "STD";
-    String VATR="NVTR";
-    String TransactionType="B2C";
-    jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-    jsondetailedtransacs.put("transactionType", TransactionType);
-    jsondetailedtransacs.put("personType", "NVTR");
-    jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-    jsondetailedtransacs.put("currency", "MUR");
-    jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-    jsondetailedtransacs.put("reasonStated", "test");
-    jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-    jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-    jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-    jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
-}  else {
-    String transactionType = "STD";
-    jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-    jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
-    jsondetailedtransacs.put("personType", selectedBuyerType);
-    jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-    jsondetailedtransacs.put("currency", "MUR");
-    jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-    jsondetailedtransacs.put("reasonStated", "test");
-    jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-    jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-    jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-    jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+                            String transactionType = "DRN";
+                            String TransactionTypes="B2C";
+                            jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
+                            jsondetailedtransacs.put("transactionType", TransactionTypes);
+                            jsondetailedtransacs.put("personType", "NVTR");
+                            jsondetailedtransacs.put("invoiceTypeDesc", TransactionType);
+                            jsondetailedtransacs.put("currency", "MUR");
+                            jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
+                            jsondetailedtransacs.put("invoiceRefIdentifier", newtransactionid);
+                            jsondetailedtransacs.put("previousNoteHash", "prevNote");
+                            jsondetailedtransacs.put("reasonStated", "test");
+                            jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
+                            jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
+                            jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
+                            jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+                        }  else {
+                            String transactionType = "DRN";
+                            jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
+                            jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
+                            jsondetailedtransacs.put("personType", selectedBuyerType);
+                            jsondetailedtransacs.put("invoiceTypeDesc", TransactionType);
+                            jsondetailedtransacs.put("currency", "MUR");
+                            jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
+                            jsondetailedtransacs.put("invoiceRefIdentifier", newtransactionid);
+                            jsondetailedtransacs.put("previousNoteHash", "prevNote");
+                            jsondetailedtransacs.put("reasonStated", "test");
+                            jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
+                            jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
+                            jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
+                            jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
 
-}
-
+                        }
 
 
-    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-    if (cursorCompany != null && cursorCompany.moveToFirst()) {
-        int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_1);
-        int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_2);
-        int columnCompanyAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_3);
-        int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
-        int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
-        int columnTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_TEL_NO);
-        int columncompnameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
 
-        String CompanyName = cursorCompany.getString(columncompnameIndex);
-        String CompanyAdress1 = cursorCompany.getString(columnCompanyAddressIndex);
-        String CompanyAdress2 = cursorCompany.getString(columnCompanyAddress2Index);
-        String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
-        String Addresse = CompanyAdress1 + "," + CompanyAdress2 + "," + CompanyAdress3;
-        String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
-        String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
-        String TelNum = cursorCompany.getString(columnTelNumIndex);
-        // Construct the "seller" JSON object
-        JSONObject seller = new JSONObject();
-        seller.put("name", CompanyName);
-        seller.put("tan", CompanyVatNo);
-        seller.put("brn", CompanyBRNNo);
-        seller.put("businessAddr", Addresse);
-        seller.put("businessPhoneNum", TelNum);
-        seller.put("ebsCounterNo", Till_id);
-        jsondetailedtransacs.put("seller", seller);
-    }
+                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                            int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_1);
+                            int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_2);
+                            int columnCompanyAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_3);
+                            int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
+                            int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
+                            int columnTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_TEL_NO);
+                            int columncompnameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
+
+                            String CompanyName = cursorCompany.getString(columncompnameIndex);
+                            String CompanyAdress1 = cursorCompany.getString(columnCompanyAddressIndex);
+                            String CompanyAdress2 = cursorCompany.getString(columnCompanyAddress2Index);
+                            String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
+                            String Addresse = CompanyAdress1 + "," + CompanyAdress2 + "," + CompanyAdress3;
+                            String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
+                            String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
+                            String TelNum = cursorCompany.getString(columnTelNumIndex);
+                            // Construct the "seller" JSON object
+                            JSONObject seller = new JSONObject();
+                            seller.put("name", CompanyName);
+                            seller.put("tan", CompanyVatNo);
+                            seller.put("brn", CompanyBRNNo);
+                            seller.put("businessAddr", Addresse);
+                            seller.put("businessPhoneNum", TelNum);
+                            seller.put("ebsCounterNo", Till_id);
+                            jsondetailedtransacs.put("seller", seller);
+                        }
 
 
                         // Construct the "buyer" JSON object
@@ -342,18 +355,18 @@ if(SelectedBuyerProfile.equals("")) {
                             return "Error response code: " + responsesQRMRA;
                         }
                     }else{
-                    return "Error from sqlite: " ;
+                        return "Error from sqlite: " ;
                     }
 
                 } else {
-                        return "Error response code 1: " + response.code();
-                    }
-
-                } catch(Exception e){
-                    e.printStackTrace();
-                    return "Request Failed: " + e.getMessage();
+                    return "Error response code 1: " + response.code();
                 }
+
+            } catch(Exception e){
+                e.printStackTrace();
+                return "Request Failed: " + e.getMessage();
             }
+        }
 
         @Override
         protected void onPostExecute(String result) {
@@ -363,35 +376,15 @@ if(SelectedBuyerProfile.equals("")) {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
 
-                        String amount = "0";
-                        String popFraction = "novalue";
-
-                        // Create and show the dialog fragment with the data
-                        validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
-                                transactionIdInProgress,
-                                amount,
-                                popFraction,
-                                result
-                        );
-
-                        dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
+                        insertCashReturn(0,0,result);
+                        navigateToNextScreen();
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
 
-                        String amount = "0";
-                        String popFraction = "novalue";
-
-                        // Create and show the dialog fragment with the data
-                        validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
-                                transactionIdInProgress,
-                                amount,
-                                popFraction,
-                                result
-                        );
-
-                        dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
+                        insertCashReturn(0,0,result);
+                        navigateToNextScreen();
                     }
                 }
             });
@@ -404,20 +397,23 @@ if(SelectedBuyerProfile.equals("")) {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.mra);
 
+        setContentView(R.layout.splashflash);
 
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
         if (intent != null) {
-             selectedBuyerName = intent.getStringExtra("selectedBuyerName");
-             selectedBuyerTAN = intent.getStringExtra("selectedBuyerTAN");
-             selectedBuyerCompanyName = intent.getStringExtra("selectedBuyerCompanyName");
-             selectedBuyerType = intent.getStringExtra("selectedBuyerType");
-             selectedBuyerBRN = intent.getStringExtra("selectedBuyerBRN");
-             selectedBuyerNIC = intent.getStringExtra("selectedBuyerNIC");
-             selectedBuyerAddresse = intent.getStringExtra("selectedBuyerAddresse");
-             SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
+            TransactionType= intent.getStringExtra("TransactionType");
+            selectinvoiceTypeDesc = intent.getStringExtra("selectinvoiceTypeDesc");
+            newtransactionid = intent.getStringExtra("newtransactionid");
+            selectedBuyerName = intent.getStringExtra("selectedBuyerName");
+            selectedBuyerTAN = intent.getStringExtra("selectedBuyerTAN");
+            selectedBuyerCompanyName = intent.getStringExtra("selectedBuyerCompanyName");
+            selectedBuyerType = intent.getStringExtra("selectedBuyerType");
+            selectedBuyerBRN = intent.getStringExtra("selectedBuyerBRN");
+            selectedBuyerNIC = intent.getStringExtra("selectedBuyerNIC");
+            selectedBuyerAddresse = intent.getStringExtra("selectedBuyerAddresse");
+            SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
 
 
             // Retrieve other buyer information as needed
@@ -426,8 +422,6 @@ if(SelectedBuyerProfile.equals("")) {
         mDatabaseHelper = new DatabaseHelper(this);
 
 
-        SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
         SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -476,12 +470,21 @@ if(SelectedBuyerProfile.equals("")) {
 
         } catch (Exception e) {
             e.printStackTrace();
-           // textViewResult.setText("Encryption Failed");
+            // textViewResult.setText("Encryption Failed");
             Log.e(TAG, "Encryption Failed", e);
         }
     }
 
+    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra){
 
+        // Insert the cash return value to the header table
+        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra);
+        if (cashReturnUpdated) {
+            Toast.makeText(getApplicationContext(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Failed to insert cash return amount: " + cashReturn, Toast.LENGTH_SHORT).show();
+        }
+    }
 
     public static String extractQrCode(String apiResponse) {
         try {
@@ -588,7 +591,7 @@ if(SelectedBuyerProfile.equals("")) {
         List<Transaction> itemList = new ArrayList<>();
 
         // Replace the following with your actual database query logic
-        Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(mDatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
+        Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(TransactionType, newtransactionid);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -650,6 +653,12 @@ if(SelectedBuyerProfile.equals("")) {
         }
 
         return itemList;
+    }
+    private void navigateToNextScreen() {
+        // Start the next activity (e.g., main activity)
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
 }

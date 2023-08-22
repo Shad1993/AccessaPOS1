@@ -221,9 +221,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
         actualdate = mDatabaseHelper.getCurrentDate();
 
-        String transactionId;
-        String transactionStatus = "Started";
-        String transactionSaved = "Saved";
+
         // Register the BroadcastReceiver to receive the broadcast
         registerReceiver(cancelReceiver, new IntentFilter("com.accessa.ibora.CANCEL_ACTION"));
 

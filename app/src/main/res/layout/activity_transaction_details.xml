@@ -34,9 +34,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="200dp"
-            android:layout_marginTop="?attr/actionBarSize"
+            android:layout_marginTop="200dp"
             android:layout_marginEnd="200dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="-200dp"
             android:elevation="8dp">
 
 
@@ -53,7 +53,14 @@
                     android:layout_height="200dp"
                     android:layout_centerInParent="true"
                     android:src="@drawable/accessalogo" />
-
+                <TextView
+                    android:id="@+id/transacType_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="Transaction Type: "
+                    android:textSize="18sp"
+                    android:textStyle="italic" />
                 <TextView
                     android:id="@+id/companyName_text_view"
                     android:layout_width="wrap_content"
@@ -401,6 +408,22 @@
                         android:layout_marginEnd="10dp"
                         android:background="@color/black" />
                 </LinearLayout>
+                <TextView
+                    android:id="@+id/mra_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:text="MRA Response"
+                    android:textSize="14sp" />
+                <ImageView
+                    android:id="@+id/qrCodeImageView"
+                    android:layout_width="500dp"
+                    android:layout_height="500dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:contentDescription="QR Code"
+                    android:visibility="gone" /> <!-- Initially set to gone -->
 
                 <TextView
                     android:id="@+id/seeyoy_text_view"

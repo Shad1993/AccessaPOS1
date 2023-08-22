@@ -3,6 +3,7 @@ package com.accessa.ibora.sales.ticket;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.ServiceConnection;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
@@ -19,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -27,6 +29,7 @@ import android.view.MenuInflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.Toolbar;
@@ -35,7 +38,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Buyer.Buyer;
+import com.accessa.ibora.MRA.MRADBN;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.QR.QRGenerator;
@@ -49,7 +53,6 @@ import com.accessa.ibora.SplashFlashActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
-import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.bumptech.glide.Glide;
 
 import java.util.List;
@@ -59,7 +62,7 @@ import woyou.aidlservice.jiuiv5.IWoyouService;
 public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
-
+    private Buyer selectedBuyer;
     private String cashierId,cashierLevel,shopname;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
@@ -126,7 +129,22 @@ private TextView textViewVATs,textViewTotals;
                 startActivity(intent);
             }
             return true;
-        } else if
+        }else if (id == R.id.nav_buyer) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle("Select a Buyer");
+
+            List<Buyer> buyerList = mDatabaseHelper.getAllBuyers(); // Retrieve buyers from the database
+
+            ArrayAdapter<Buyer> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, buyerList);
+            builder.setAdapter(adapter, (dialog, which) -> {
+                selectedBuyer = buyerList.get(which); // Assign the selected buyer
+            });
+
+            builder.show();
+            return true;
+        }
+
+        else if
         (id == R.id.nav_logout) {
             MainActivity mainActivity = (MainActivity) requireActivity(); // Get the MainActivity object
             mainActivity.logout(); // Call the logout() function
@@ -294,8 +312,35 @@ private TextView textViewVATs,textViewTotals;
         checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), Mra.class);
-                startActivity(intent);
+                if (selectedBuyer != null) {
+                    // Access selectedBuyer properties here
+                    Intent intent = new Intent(getActivity(), Mra.class);
+                    // Pass the selected buyer's information as an extra
+                    intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
+                    intent.putExtra("selectedBuyerTAN", selectedBuyer.getTan());
+                    intent.putExtra("selectedBuyerCompanyName", selectedBuyer.getCompanyName());
+                    intent.putExtra("selectedBuyerType", selectedBuyer.getBuyerType());
+                    intent.putExtra("selectedBuyerBRN", selectedBuyer.getBrn());
+                    intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
+                    intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
+                    intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
+                    startActivity(intent);
+                }else {
+                    // Handle the case when selectedBuyer is null
+                    Intent intent = new Intent(getActivity(), Mra.class);
+                    // Pass the selected buyer's information as an extra
+                    intent.putExtra("selectedBuyerName", "");
+                    intent.putExtra("selectedBuyerTAN", "");
+                    intent.putExtra("selectedBuyerCompanyName", "");
+                    intent.putExtra("selectedBuyerType", "");
+                    intent.putExtra("selectedBuyerBRN", "");
+                    intent.putExtra("selectedBuyerNIC", "");
+                    intent.putExtra("selectedBuyerAddresse", "");
+                    intent.putExtra("selectedBuyerprofile", "");
+
+                    startActivity(intent);
+                }
+
 
             }
         });
@@ -306,9 +351,7 @@ private TextView textViewVATs,textViewTotals;
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                double totalAmount = calculateTotalAmount();
-                double TaxtotalAmount = calculateTotalTax();
-                SaveTransaction(totalAmount,TaxtotalAmount);
+                showSaveOptionsDialog();
             }
         });
 
@@ -325,8 +368,6 @@ private TextView textViewVATs,textViewTotals;
                         TextView QuantityEditText = view.findViewById(R.id.quantity_text_view);
                         TextView PriceEditText = view.findViewById(R.id.price_text_view);
                         TextView itemIdEditText = view.findViewById(R.id.id_text_view);
-
-
 
                         String LongDesc = LongDescTextView.getText().toString();
                         String Quatity = QuantityEditText.getText().toString();
@@ -351,49 +392,185 @@ private TextView textViewVATs,textViewTotals;
 
         return view;
     }
+    private void showSaveOptionsDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Save Transaction as");
+        String[] options = {"Proforma", "Debit Note", "Credit Note"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    String Type="PRF";
+                    double totalAmount = calculateTotalAmount();
+                    double TaxtotalAmount = calculateTotalTax();
+                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
 
-    private void SaveTransaction(double totalAmount, double TaxtotalAmount) {
+
+                } else if (which == 1) {
+                    String Type="DRN";
+                    double totalAmount = calculateTotalAmount();
+                    double TaxtotalAmount = calculateTotalTax();
+                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
+
+
+                }
+                else if (which == 2) {
+                    String Type="CRN";
+                    double totalAmount = calculateTotalAmount();
+                    double TaxtotalAmount = calculateTotalTax();
+                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
+
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void startNewActivity(String type, String newTransactionId) {
+        // Create an Intent to start the desired activity based on the selected type
+        Intent intent = new Intent(getContext(), MRADBN.class);
+
+        // Pass any data you need to the new activity using intent extras
+        intent.putExtra("TransactionType", type);
+        intent.putExtra("newtransactionid", newTransactionId);
+        if (selectedBuyer != null) {
+            // Access selectedBuyer properties here
+
+            // Pass the selected buyer's information as an extra
+            intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
+            intent.putExtra("selectedBuyerTAN", selectedBuyer.getTan());
+            intent.putExtra("selectedBuyerCompanyName", selectedBuyer.getCompanyName());
+            intent.putExtra("selectedBuyerType", selectedBuyer.getBuyerType());
+            intent.putExtra("selectedBuyerBRN", selectedBuyer.getBrn());
+            intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
+            intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
+            intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
+            startActivity(intent);
+        } else {
+
+
+            // Pass the selected buyer's information as an extra
+            intent.putExtra("selectedBuyerName", "");
+            intent.putExtra("selectedBuyerTAN", "");
+            intent.putExtra("selectedBuyerCompanyName", "");
+            intent.putExtra("selectedBuyerType", "");
+            intent.putExtra("selectedBuyerBRN", "");
+            intent.putExtra("selectedBuyerNIC", "");
+            intent.putExtra("selectedBuyerAddresse", "");
+            intent.putExtra("selectedBuyerprofile", "");
+
+            startActivity(intent);
+        }
+    }
+
+    private void SaveTransaction(String Type,double totalAmount, double TaxtotalAmount) {
 
 
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
 
-        // Get the latest transaction counter value from SharedPreferences
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-        int latestTransactionCounter = sharedPreferences.getInt("transaction_counter_memo", 0);
+if(Type.equals("DRN")) {
+    // Get the latest transaction counter value from SharedPreferences
+    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+    int latestTransactionDBNCounter = sharedPreferences.getInt("transaction_counter_DBN", 0);
+    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
 
-        SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+    // Increment the transaction counter
+    latestTransactionDBNCounter++;
+    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+    PosNum = shardPreference.getString(POSNumber, null);
+    // Generate the transaction ID with the format "MEMO-integer"
+    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
+    // Update the transaction ID in the transaction table for transactions with status "InProgress"
+    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+    // Update the transaction ID in the header table for transactions with status "InProgress"
+    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
 
-        // Increment the transaction counter
-        latestTransactionCounter++;
+    // Update the transaction counter in SharedPreferences
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putInt("transaction_counter_DBN", latestTransactionDBNCounter);
+    editor.apply();
+    // Update the transaction status for all in-progress transactions to "saved"
+    mDatabaseHelper.updateAllTransactionsStatus(Type);
+    updateTransactionStatus();
 
-        // Generate the transaction ID with the format "MEMO-integer"
-        String newTransactionId = "MEMO-" + latestTransactionCounter;
-        // Update the transaction ID in the transaction table for transactions with status "InProgress"
-        mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
-        // Update the transaction ID in the header table for transactions with status "InProgress"
-        mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+    // Start the activity here based on the selected type
+    startNewActivity(Type,newTransactionId);
+    getActivity().finish();
 
 
+} else if (Type.equals("PRF")) {
+    // Get the latest transaction counter value from SharedPreferences
+    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+    int latestTransactionProformaCounter = sharedPreferences.getInt("transaction_counter_Proforma", 0);
 
-        // Update the transaction counter in SharedPreferences
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("transaction_counter_memo", latestTransactionCounter);
-        editor.apply();
-        // Update the transaction status for all in-progress transactions to "saved"
-        mDatabaseHelper.updateAllTransactionsStatus(DatabaseHelper.TRANSACTION_STATUS_Saved);
-        updateTransactionStatus();
-        Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
-        startActivity(intent);
-        getActivity().finish();
+    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+    PosNum = shardPreference.getString(POSNumber, null);
+
+    // Increment the transaction counter
+    latestTransactionProformaCounter++;
+
+    // Generate the transaction ID with the format "MEMO-integer"
+    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionProformaCounter;
+    // Update the transaction ID in the transaction table for transactions with status "InProgress"
+    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+    // Update the transaction ID in the header table for transactions with status "InProgress"
+    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+
+    // Update the transaction counter in SharedPreferences
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putInt("transaction_counter_Proforma", latestTransactionProformaCounter);
+    editor.apply();
+    // Update the transaction status for all in-progress transactions to "saved"
+    mDatabaseHelper.updateAllTransactionsStatus(Type);
+    updateTransactionStatus();
+
+    startNewActivity(Type,newTransactionId);
+    getActivity().finish();
+
+
+}else if (Type.equals("CRN")) {
+
+    // Get the latest transaction counter value from SharedPreferences
+    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+    int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
+
+    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+    PosNum = shardPreference.getString(POSNumber, null);
+
+
+    // Increment the transaction counter
+    latestTransactionCDNCounter++;
+
+    // Generate the transaction ID with the format "MEMO-integer"
+    String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
+    // Update the transaction ID in the transaction table for transactions with status "InProgress"
+    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+    // Update the transaction ID in the header table for transactions with status "InProgress"
+    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+
+    // Update the transaction counter in SharedPreferences
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
+    editor.apply();
+    // Update the transaction status for all in-progress transactions to "saved"
+    mDatabaseHelper.updateAllTransactionsStatus(Type);
+    updateTransactionStatus();
+
+    startNewActivity(Type,newTransactionId);
+    getActivity().finish();
+
+}
+
     }
-
-
-
-
-
 
     public void updateTransactionStatus() {
 

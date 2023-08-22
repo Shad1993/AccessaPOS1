@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Name"
+        android:inputType="text" />
+
+
+    <EditText
+        android:id="@+id/etcompName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etName"
+        android:layout_marginTop="16dp"
+        android:hint="Company Name"
+        android:inputType="text" />
+    <EditText
+        android:id="@+id/etTAN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etcompName"
+        android:layout_marginTop="16dp"
+        android:hint="TAN"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/etBRN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etTAN"
+        android:layout_marginTop="16dp"
+        android:hint="BRN"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/etBusinessAddr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etBRN"
+        android:layout_marginTop="16dp"
+        android:hint="Business Address"
+        android:inputType="text" />
+    <Spinner
+        android:id="@+id/spinnerBuyerprofile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etBusinessAddr"
+        android:layout_marginTop="16dp" />
+
+    <Spinner
+        android:id="@+id/spinnerBuyerType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinnerBuyerprofile"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/etNIC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinnerBuyerType"
+        android:layout_marginTop="16dp"
+        android:hint="NIC"
+        android:inputType="text" />
+
+    <Button
+        android:id="@+id/btnAddBuyer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etNIC"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="Add Buyer" />
+
+</RelativeLayout>

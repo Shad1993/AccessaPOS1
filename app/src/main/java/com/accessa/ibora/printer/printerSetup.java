@@ -252,12 +252,14 @@ public class printerSetup extends AppCompatActivity {
 
                             // Inside the for loop where you print the data from the RecyclerView
 
-                            String unitPrice ="Rs " + String.format("%.2f", items.getUnitPrice());
+
+                            double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
+                            String formattedUnitPrice = "Rs " + String.format("%.2f", numericUnitPrice);
 
 
                             // Create the formatted item line
 
-                            String QuantityLine = itemQuantity + " X " + unitPrice ;
+                            String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
 
                             // Create the formatted item price line
                             String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;

@@ -277,8 +277,12 @@ public class ReceiptMenuFragment extends Fragment {
                 // Modify the displayed text here based on your condition
                 if (originalStatus.equals("InProgress")) {
                     displayedStatus = getString(R.string.inprogress);
-                } else if (originalStatus.equals("Saved")) {
-                    displayedStatus = getString(R.string.Saved);
+                } else if (originalStatus.equals("Proforma")) {
+                    displayedStatus = getString(R.string.Proforma);
+                } else if (originalStatus.equals("DBN")) {
+                    displayedStatus = getString(R.string.DBN);
+                } else if (originalStatus.equals("CRN")) {
+                    displayedStatus = getString(R.string.CRN);
                 } else if (originalStatus.equals("Completed")) {
                     displayedStatus = getString(R.string.completed);
                 } else {
@@ -305,8 +309,12 @@ public class ReceiptMenuFragment extends Fragment {
                 // Modify the displayed text here based on your condition
                 if (originalStatus.equals("InProgress")) {
                     displayedStatus = getString(R.string.inprogress);
-                } else if (originalStatus.equals("Saved")) {
-                    displayedStatus = getString(R.string.Saved);
+                } else if (originalStatus.equals("Proforma")) {
+                    displayedStatus = getString(R.string.Proforma);
+                } else if (originalStatus.equals("DBN")) {
+                    displayedStatus = getString(R.string.DBN);
+                } else if (originalStatus.equals("CRN")) {
+                    displayedStatus = getString(R.string.CRN);
                 } else if (originalStatus.equals("Completed")) {
                     displayedStatus = getString(R.string.completed);
                 } else {

@@ -6,7 +6,6 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -111,7 +110,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
             holder.imageView.setImageResource(R.drawable.payment);
         }
         if (id.equals("5") && name.equals("Debit Card")) {
-            holder.imageView.setImageResource(R.drawable.debit);
+            holder.imageView.setImageResource(R.drawable.debit1);
         } else {
             holder.imageView.setImageResource(R.drawable.payment);
         }

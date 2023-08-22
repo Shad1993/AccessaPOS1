@@ -405,7 +405,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 intent.putExtra("cash_return", cashReturn);
                 intent.putExtra("settlement_items", settlementItems);
                 intent.putExtra("mraQR", qrMra);
-                insertCashReturn(cashReturn,totalAmountinserted);
+                insertCashReturn(cashReturn,totalAmountinserted,qrMra);
                 startActivity(intent);
             }
 
@@ -546,23 +546,11 @@ public class validateticketDialogFragment extends DialogFragment  {
         return null;
     }
 
-    private void loadQRData() {
-        // Retrieve data from the database, including the default item
-        Cursor cursor = mDatabaseHelper.getAllQR();
 
-        // Check if the adapter is null
-        if (mAdapter != null) {
-            // Add the cursor position for the default item
-            cursor.moveToPosition(-1); // Move to before the first position
-
-            // Set the adapter with the cursor
-            mAdapter.swapCursor(cursor);
-        }
-    }
-public void  insertCashReturn(double cashReturn,double totalAmountinserted){
+public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra){
 
     // Insert the cash return value to the header table
-    boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id);
+    boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra);
     if (cashReturnUpdated) {
         Toast.makeText(getActivity(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
     } else {

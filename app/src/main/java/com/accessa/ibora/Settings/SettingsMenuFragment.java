@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
+import com.accessa.ibora.Buyer.buyerFragment;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.POPSettings.POPSettingsFragment;
@@ -67,13 +68,18 @@ public class SettingsMenuFragment extends Fragment {
                 getString(R.string.QR),
                 getString(R.string.QRDisplaySettings),
                 getString(R.string.PaymentMethods),
-                getString(R.string.PopSettings)
+                getString(R.string.PopSettings),
+                getString(R.string.buyer),
+                getString(R.string.MRA)
         };
         icons = new int[]{
                 R.drawable.qr,
                 R.drawable.led_display,
                 R.drawable.payment,
-                R.drawable.poplogo
+                R.drawable.poplogo,
+                R.drawable.buyer,
+                R.drawable.mra_logo
+
         };
 
         setHasOptionsMenu(true);
@@ -165,6 +171,21 @@ public class SettingsMenuFragment extends Fragment {
                 }else if (position==3) {
                     toolbarTitle = getString(R.string.PopSettings);
                     Fragment newFragment = new POPSettingsFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
+
+                }
+
+                else if (position==4) {
+                    toolbarTitle = getString(R.string.buyer);
+                    Fragment newFragment = new buyerFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment

@@ -458,6 +458,26 @@
     <string name="till_info">Till/Outlet Info</string>
     <string name="ClientID">Client ID</string>
     <string name="QRParams">QR Params</string>
-
+    <string name="Nature">Nature</string>
+    <string name="ItemCode">Item Code</string>
+    <string name="CurrencySpinner">Currency</string>
+    <string name="NODISCOUNT">No Discount</string>
+    <string name="buyer">Buyer</string>
+    <string name="ALLBuyers">All Buyers</string>
+    <string name="MRA">MRA</string>
+    <string name="Coupon">Coupon Code</string>
+    <string name="Proforma">Proforma</string>
+    <string name="DBN">Debit Note</string>
+    <string name="CRN">Credit Note</string>
+    <string-array name="buyer_types">
+        <item>VATR</item>
+        <item>NVTR</item>
+        <item>EXMP</item>
+    </string-array>
+    <string-array name="buyer_profiles">
+        <item>B2B</item>
+        <item>B2C</item>
+        <item>B2G</item>
+    </string-array>
 
 </resources>

@@ -131,8 +131,8 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
         // Update the previous date
         previousDate = date;
         // Set the status text and color
-        if (status.equals("Saved")) {
-            holder.statusTextView.setText("Saved");
+        if (status.equals("PRF") ) {
+            holder.statusTextView.setText("Proforma");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
             holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
             holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
@@ -169,6 +169,38 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             }
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
             holder.Imageview.setImageResource(R.drawable.receipts);
+        }else if (status.equals("CRN")) {
+
+            holder.statusTextView.setText("Credit Note");
+            holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.red));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.red));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.red));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.red));
+
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.credit1);
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
+            }
+            holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            // Change the image in the ImageView
+            holder.Imageview.setImageResource(R.drawable.cn1);
+
+        }else if (status.equals("DRN")) {
+
+            holder.statusTextView.setText("Debit Note");
+            holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
+
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.debit1);
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
+            }
+            holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            // Change the image in the ImageView
+            holder.Imageview.setImageResource(R.drawable.db1);
+
         }
 
     }

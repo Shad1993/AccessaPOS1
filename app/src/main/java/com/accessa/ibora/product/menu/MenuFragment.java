@@ -69,7 +69,8 @@ public class MenuFragment extends Fragment {
                 getString(R.string.Category),
                 getString(R.string.vendor),
                 getString(R.string.cost),
-                getString(R.string.discount)
+                getString(R.string.discount),
+                getString(R.string.Coupon)
         };
         icons = new int[]{
                 R.drawable.cart,
@@ -78,7 +79,8 @@ public class MenuFragment extends Fragment {
                 R.drawable.category,
                 R.drawable.vendor,
                 R.drawable.cost,
-                R.drawable.baseline_discount_24
+                R.drawable.baseline_discount_24,
+                R.drawable.coupon
         };
 
         setHasOptionsMenu(true);

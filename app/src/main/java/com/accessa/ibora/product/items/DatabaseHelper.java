@@ -3,7 +3,6 @@ package com.accessa.ibora.product.items;
 
 
 
-import static android.provider.DocumentsContract.Document.COLUMN_LAST_MODIFIED;
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
 import android.content.ContentValues;
@@ -12,7 +11,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.Report.PaymentItem;
 
@@ -121,7 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     // Transaction table columns
-    public static String TRANSACTION_STATUS_Saved = "Saved";
+    public static String TRANSACTION_STATUS_Saved = "Saved1";
     public static final String TRANSACTION_ID = "TranscationId";
     public static final String ITEM_ID = "ItemId";
     public static final String TRANSACTION_DATE = "TransactionDate";
@@ -139,9 +140,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_TIME_MODIFIED = "TimeModified";
     private static final String TRANSACTION_CODE = "Code";
     private static final String TRANSACTION_DESCRIPTION = "Description";
-
+    public static final String TRANSACTION_MRA_Invoice_Counter="Invoice_counter";
     private static final String TRANSACTION_QUANTITY = "Qte";
-    private static final String TRANSACTION_DISCOUNT = "Discount";
+    public static final String TRANSACTION_DISCOUNT = "Discount";
     private static final String TRANSACTION_VAT_BEFORE_DISC = "VAT_Before_Disc";
     private static final String TRANSACTION_VAT_AFTER_DISC = "VAT_After_Disc";
     public static final String TRANSACTION_TOTAL_HT_A ="TOTALHT_A" ;
@@ -151,6 +152,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_DATE_TRANSACTION = "DateTransaction";
     private static final String TRANSACTION_TIME_TRANSACTION = "TimeTransaction";
     private static final String TRANSACTION_BARCODE = "Barcode";
+    public static String Nature="Nature";
+    public static String TaxCode="TaxCode";
+    public static String Currency="Currency";
+    public static String ItemCode="ItemCode";
+    public static String PriceAfterDiscount="CurrentPrice";
+    public static String TotalDiscount="TotalDiscount";
     private static final String TRANSACTION_WEIGHTS = "Weights";
     private static final String TRANSACTION_TOTAL_HT_B = "TotalHT_B";
     private static final String TRANSACTION_TYPE_TAX = "TYPETAX";
@@ -166,14 +173,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_CASHIER_CODE = "CashierCode";
 
    public static final String TRANSACTION_TOTAL_PAID="TenderAmount";
-
+    public static final String TRANSACTION_STATUS_DETAILS ="SavedStatusDetails";
     public static final String TRANSACTION_CASH_RETURN ="CashReturn";
 
     public static final String TRANSACTION_TOTAL_TX_1 = "Total_Tx_1";
     private static final String TRANSACTION_TOTAL_TX_2 = "Total_Tx_2";
     private static final String TRANSACTION_TOTAL_TX_3 = "Total_Tx_3";
-    private static final String TRANSACTION_TOTAL_DISCOUNT = "TotalDisc";
-    private static final String TRANSACTION_ITEM_QUANTITY = "QtyItem";
+    public static final String TRANSACTION_NATURE ="Nature" ;
+    public static final String TRANSACTION_TAX_CODE ="TaxCode" ;
+    public static final String TRANSACTION_CURRENCY ="Currency" ;
+    public static final String TRANSACTION_ITEM_CODE = "ItemCode";
+    public static final String TRANSACTION_TOTAL_DISCOUNT = "TotalDisc";
+    public static final String TRANSACTION_MRA_QR = "MRA_Response";
+    public static final String TRANSACTION_ITEM_QUANTITY = "QtyItem";
 
     private static final String TRANSACTION_CLIENT_NAME = "ClientName";
     private static final String TRANSACTION_CLIENT_OTHER_NAME = "ClientOtherName";
@@ -247,11 +259,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String PAYMENT_METHOD_COLUMN_CASHOR_ID = "PaymentMethodCashorId";
     public static final String PAYMENT_METHOD_TABLE_NAME= "PaymentMethodTable";
     public static String OpenDrawer = "OpenDrawer";
+    // buyer table
+
+    public static final String BUYER_TABLE_NAME ="Buyer_Table" ;
+    public static final String BUYER_ID ="Buyer_Id" ;
+    public static final String BUYER_NAME = "Buyer_Name";
+    public static final String BUYER_TAN = "Buyer_TAN";
+    public static final String BUYER_BUSINESS_ADDR  ="Adresse";
+    public static final String BUYER_DATE_CREATED ="DateCreated" ;
+    public static final String BUYER_LAST_MODIFIED ="LastModified" ;
+    public static final String BUYER_BRN ="Buyer_BRN" ;
+    public static final String BUYER_TYPE ="Buyer_Type" ;
+    public static final String BUYER_NIC ="Buyer_NIC" ;
+    public static String BUYER_Company_name="companyName";
+    public static String BUYER_Profile="Buyer_Profile";
+
 
 // POS Table
 
     public static final String TABLE_NAME_POS_ACCESS = "POSTable";
     private static final String COLUMN_POS_ID = "id";
+
+    // Define the coupon code table name and columns
+    private static final String COUPON_TABLE_NAME = "CouponTable";
+    private static final String COUPON_ID = "id";
+    private static final String COUPON_CODE = "code";
+    private static final String COUPON_STATUS = "status";
+    private static final String COUPON_START_DATE = "start_date";
+    private static final String COUPON_END_DATE = "end_date";
+    private static final String COUPON_CASHIER_ID = "cashier_id";
+    private static final String COUPON_DATE_CREATED = "date_created";
+    private static final String COUPON_TIME_CREATED = "time_created";
+    private static final String COUPON_DISCOUNT = "discount";
 
     //default qr
 
@@ -311,6 +350,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + LongDescription + " TEXT NOT NULL, "
             + SubDepartment + " TEXT NOT NULL, "
             + Price + " DECIMAL(10, 2) NOT NULL, "
+            + PriceAfterDiscount + " DECIMAL(10, 2) NOT NULL, "
             + VAT + " TEXT NOT NULL CHECK(VAT IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
             + ExpiryDate + " DATE, " // Allow NULL values for ExpiryDate
             + AvailableForSale + " BOOLEAN NOT NULL DEFAULT 1, "
@@ -321,6 +361,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Cost + " DECIMAL(10, 2) NOT NULL, "
             + Weight + " DECIMAL(10, 2), " // Allow NULL values for Weight
             + UserId + " INTEGER NOT NULL, "
+            + Nature + " TEXT, "           // New field: Nature
+            + TaxCode + " TEXT, "          // New field: TaxCode
+            + Currency + " TEXT, "         // New field: Currency
+            + ItemCode + " TEXT, "         // New field: ItemCode
+            + TotalDiscount + " DECIMAL(10, 2), " // New field: TotalDiscount
             + DateCreated + " DATETIME NOT NULL, "
             + LastModified + " DATETIME NOT NULL, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
@@ -405,6 +450,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             VAT_Type + " TEXT NOT NULL CHECK(VatType IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
             LongDescription + " TEXT NOT NULL, " +
+            TRANSACTION_NATURE + " TEXT, " +
+            TRANSACTION_TAX_CODE + " TEXT, " +
+            TRANSACTION_CURRENCY + " TEXT, " +
+            TRANSACTION_ITEM_CODE + " TEXT, " +
+            TRANSACTION_TOTAL_DISCOUNT + " DECIMAL(10, 2), " +
             TRANSACTION_SHOP_NO + " TEXT, " +
             TRANSACTION_TERMINAL_NO + " TEXT, " +
             TRANSACTION_DATE_CREATED + " TEXT, " +
@@ -428,11 +478,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TOTAL_HT_B + " DECIMAL(10, 2), " +
             TRANSACTION_TYPE_TAX + " TEXT, " +
             TRANSACTION_RAYON + " TEXT, " +
+            PriceAfterDiscount + " DECIMAL(10, 2),  " +
             TRANSACTION_FAMILLE + " TEXT, " +
             TRANSACTION_ID_SALES_D + " TEXT, " +
             TRANSACTION_TOTALIZER + " TEXT, " +
+
             "FOREIGN KEY (" + ITEM_ID + ") REFERENCES " +
             TABLE_NAME + "(" + _ID + "));";
+
 
 
     private static final String CREATE_TRANSACTION_HEADER = "CREATE TABLE " + TRANSACTION_HEADER_TABLE_NAME + "(" +
@@ -465,7 +518,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_CLIENT_OTHER_NAME + " TEXT, " +
             TRANSACTION_CLIENT_ADR1 + " TEXT, " +
             TRANSACTION_CLIENT_ADR2 + " TEXT, " +
-            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('Saved', 'InProgress', 'Completed')), " +
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed')), " +
             TRANSACTION_CLIENT_VAT_REG_NO + " TEXT, " +
             TRANSACTION_CLIENT_BRN + " TEXT, " +
             TRANSACTION_CLIENT_TEL + " TEXT, " +
@@ -474,6 +527,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_ID_SALESH + " TEXT, " +
             TRANSACTION_CLIENT_CODE + " TEXT, " +
             TRANSACTION_LOYALTY + " TEXT, " +
+            TRANSACTION_MRA_QR + " TEXT, " +
+            TRANSACTION_MRA_Invoice_Counter + " TEXT, " +
             "FOREIGN KEY (" + TRANSACTION_TICKET_NO + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
@@ -545,6 +600,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+
+    public static final String CREATE_BUYER_TABLE = "CREATE TABLE " + BUYER_TABLE_NAME + "(" +
+            BUYER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            BUYER_NAME + " TEXT NOT NULL, " +
+            BUYER_Company_name + " TEXT NOT NULL, " +
+            BUYER_TAN + " TEXT , " +
+            BUYER_BRN + " TEXT , " +
+            BUYER_BUSINESS_ADDR + " TEXT, " +
+            BUYER_TYPE + " TEXT NOT NULL, " +
+            BUYER_NIC + " TEXT, " +
+            BUYER_Profile + " TEXT, " +
+            COLUMN_CASHOR_id + " TEXT, " +
+            BUYER_DATE_CREATED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+            BUYER_LAST_MODIFIED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+
+    private static final String CREATE_COUPON_TABLE = "CREATE TABLE " + COUPON_TABLE_NAME + "(" +
+            COUPON_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COUPON_CODE + " TEXT NOT NULL, " +
+            COUPON_STATUS + " TEXT NOT NULL, " +
+            COUPON_START_DATE + " DATE NOT NULL, " +
+            COUPON_END_DATE + " DATE NOT NULL, " +
+            COUPON_CASHIER_ID + " INTEGER NOT NULL, " +
+            COUPON_DATE_CREATED + " DATE NOT NULL, " +
+            COUPON_TIME_CREATED + " TIME NOT NULL, " +
+            COUPON_DISCOUNT + " REAL NOT NULL);";
+
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -566,6 +648,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_PAYMENTBYQY_TABLE);
         db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
         db.execSQL(CREATE_POS_TABLE);
+        db.execSQL(CREATE_BUYER_TABLE);
+        db.execSQL(CREATE_COUPON_TABLE);
         addDefaultItem(db);
         // Insert cheque details
         addDefaultPaymentMethod(db, "POP", "1");
@@ -601,6 +685,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PAYMENTBYQY);
         db.execSQL("DROP TABLE IF EXISTS " + PAYMENT_METHOD_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_POS_ACCESS);
+        db.execSQL("DROP TABLE IF EXISTS " + BUYER_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + COUPON_TABLE_NAME);
 
         onCreate(db);
     }
@@ -634,7 +720,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
-                                  String vatType, String posNum) {
+                                  String vatType, String posNum, String Nature, String ItemCode, String Currency, String taxCode, double priceAfterDiscount, double totalDiscount) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ITEM_ID, itemId);
@@ -644,11 +730,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
         values.put(LongDescription, longDescription);
-        values.put(TRANSACTION_UNIT_PRICE, unitPrice);
+        double roundedUnitPrice = Math.round(unitPrice * 100.0) / 100.0;
+        values.put(TRANSACTION_UNIT_PRICE, roundedUnitPrice);
         values.put(TRANSACTION_TOTAL_HT_A, priceWithoutVat);
         values.put(TRANSACTION_TOTAL_TTC, totalPrice);
         values.put(VAT_Type, vatType);
         values.put(TRANSACTION_TERMINAL_NO, posNum);
+        values.put(TRANSACTION_NATURE, Nature);
+        values.put(TRANSACTION_ITEM_CODE, ItemCode);
+        values.put(TRANSACTION_CURRENCY, Currency);
+        values.put(TRANSACTION_TAX_CODE, taxCode);
+        values.put(PriceAfterDiscount, priceAfterDiscount);
+        // Round the totalDiscount to two decimal places
+        double roundedTotalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
+        values.put(TRANSACTION_TOTAL_DISCOUNT, roundedTotalDiscount);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
     public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
@@ -687,20 +782,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat, String vatType) {
-        SQLiteDatabase db = this.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
-        values.put(QUANTITY, newQuantity);
-        values.put(TOTAL_PRICE, newTotalPrice);
-        values.put(VAT, newVat);
-        values.put(VAT_Type, vatType);
-
-        String selection = ITEM_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(itemId)};
-
-        db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
-    }
     public void updateAllTransactionsHeaderStatus(String transactionStatusCompleted) {
 
         SQLiteDatabase db = getWritableDatabase();
@@ -714,11 +796,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
 
     }
-    public void updateAllTransactionsStatus(String newStatus) {
+    public void updateAllTransactionsStatus(String Type) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TRANSACTION_STATUS, newStatus);
+        values.put(TRANSACTION_STATUS, Type);
+
 
         // Update the status of all in-progress transactions to the new status
         String whereClause = TRANSACTION_STATUS + " = ?";
@@ -776,6 +859,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
+    }
+    public Cursor getAllBuyer() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(BUYER_TABLE_NAME, null, null, null, null, null, null);
     }
     public Cursor getAllQR() {
         SQLiteDatabase db = getReadableDatabase();
@@ -862,6 +949,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(PAYMENT_METHOD_TABLE_NAME, null, null, null, null, null, null);
     }
     public Cursor searchItems(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {BUYER_ID, BUYER_NAME, BUYER_TAN,BUYER_BUSINESS_ADDR,BUYER_NIC};
+        String selection = BUYER_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = BUYER_NAME + " ASC";
+        return db.query(BUYER_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+    public Cursor searchbuyer(String query) {
         SQLiteDatabase db = getReadableDatabase();
         String[] projection = {_ID, Name, LongDescription,AvailableForSale, Category, Price};
         String selection = LongDescription + " LIKE ?";
@@ -1011,7 +1106,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, null);
     }
+    public Cursor getTransactionHeaderType(String Type) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = '" + Type + "'";
+
+
+        return db.rawQuery(query, null);
+    }
 
     public double getItemPrice(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1312,12 +1415,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertcashReturn(double cashReturn,double tenderamount, String transaction_id) {
+    public boolean insertcashReturn(double cashReturn, double tenderamount, String transaction_id, String qrMra) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_CASH_RETURN, cashReturn);
         values.put(TRANSACTION_TOTAL_PAID, tenderamount);
+        values.put(TRANSACTION_MRA_QR, qrMra);
 
         String selection = TRANSACTION_TICKET_NO + " = ?";
         String[] selectionArgs = {transaction_id};
@@ -1643,5 +1747,93 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Step 5: Close the database connection
         db.close();
     }
+
+    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat, String vatType) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(QUANTITY, newQuantity);
+        values.put(TOTAL_PRICE, newTotalPrice);
+        values.put(VAT, newVat);
+        values.put(VAT_Type, vatType);
+
+
+        String selection = ITEM_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(itemId)};
+
+        db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
+
+    }
+
+
+    public void updateCounter(int newCounter) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_MRA_Invoice_Counter, newCounter);
+
+        // Update the counter value in the row
+        db.update(TRANSACTION_HEADER_TABLE_NAME, values, null, null);
+
+        db.close(); // Close the database connection
+    }
+
+    public List<Buyer> getAllBuyers() {
+        List<Buyer> buyerList = new ArrayList<>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(BUYER_TABLE_NAME, null, null, null, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    // Extract buyer information from the cursor
+                    String name = cursor.getString(cursor.getColumnIndex(BUYER_NAME));
+                    String tan = cursor.getString(cursor.getColumnIndex(BUYER_TAN));
+                    String companyName = cursor.getString(cursor.getColumnIndex(BUYER_Company_name));
+                    String brn = cursor.getString(cursor.getColumnIndex(BUYER_BRN));
+                    String businessAddr = cursor.getString(cursor.getColumnIndex(BUYER_BUSINESS_ADDR));
+                    String buyerType = cursor.getString(cursor.getColumnIndex(BUYER_TYPE));
+                    String buyerProfile = cursor.getString(cursor.getColumnIndex(BUYER_Profile));
+                    String nic = cursor.getString(cursor.getColumnIndex(BUYER_NIC));
+
+                    // Create a Buyer object and add it to the list
+                    Buyer buyer = new Buyer(name, tan, brn, businessAddr, buyerType,buyerProfile, nic,companyName);
+                    buyerList.add(buyer);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+
+        return buyerList;
+    }
+
+
+    public boolean addBuyer(Buyer buyer) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("Buyer_Name", buyer.getNames());
+        values.put("Buyer_TAN", buyer.getTan());
+        values.put("companyName", buyer.getCompanyName());
+        values.put("Buyer_BRN", buyer.getBrn());
+        values.put("Adresse", buyer.getBusinessAddr());
+        values.put("Buyer_Type", buyer.getBuyerType());
+        values.put("Buyer_NIC", buyer.getNic());
+        values.put(BUYER_Profile, buyer.getProfile());
+
+        long result = db.insert("Buyer_Table", null, values);
+
+        db.close();
+
+        return result != -1;
+    }
+
 }
 

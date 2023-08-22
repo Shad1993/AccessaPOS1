@@ -21,6 +21,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Buyer.buyerFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Receipt.ReceiptActivity;
@@ -101,6 +102,10 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
             replaceFragment(newFragment);
         } else if (fragmentKey != null && fragmentKey.equals("Pay_fragment")) {
             Fragment newFragment = new PaymentFragment();
+            setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
+            replaceFragment(newFragment);
+        }else if (fragmentKey != null && fragmentKey.equals("buyer_fragment")) {
+            Fragment newFragment = new buyerFragment();
             setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
             replaceFragment(newFragment);
         }

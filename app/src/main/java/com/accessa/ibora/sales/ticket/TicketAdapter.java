@@ -45,7 +45,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
                 String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
-                double unitPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
+                String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
 
                 Transaction item = new Transaction(itemName, itemPrice, itemQuantity, unitPrice);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order

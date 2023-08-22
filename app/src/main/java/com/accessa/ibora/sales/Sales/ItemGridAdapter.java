@@ -112,8 +112,10 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
-        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
-        String PriceInRs= "Rs " + price;
+        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+
+            String PriceInRs = "Rs " + price;
+
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));
 

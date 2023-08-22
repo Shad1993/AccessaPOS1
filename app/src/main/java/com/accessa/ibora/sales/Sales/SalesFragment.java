@@ -33,7 +33,6 @@ import com.bumptech.glide.Glide;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Random;
 
 import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
@@ -47,9 +46,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private double totalAmount,TaxtotalAmount;
     private DBManager dbManager;
     private  String existingTransactionId;
-    private double UnitPrice;
+    private double UnitPrice,priceAfterDiscount,TotalDiscount;
     private int transactionCounter = 1;
     private String VatVall;
+    private String Nature;
+    private String TaxCode;
+    private String ItemCode;
+    private String Currency;
     private String price;
     private  String barcode;
     private String VatType;
@@ -176,14 +179,22 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 if (item != null) {
                     VatVall = item.getVAT();
                     VatType=item.getVAT();
+                    priceAfterDiscount=item.getPriceAfterDiscount();
+                    TotalDiscount=item.getTotalDiscount();
+                    Nature=item.getNature();
+                    TaxCode=item.getTaxCode();
+                    Currency=item.getCurrency();
+                    ItemCode=item.getItemCode();
 
                 }
 
 
                 String transactionStatus = "InProgress";
-                String transactionSaved = "Saved";
+                String transactionSaved = "PFT";
+                String transactionCDN = "CRN";
+                String transactionDBN = "DRN";
 
-                if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")  ) {
+                if (transactionStatus.equals("InProgress") || transactionSaved.equals("PFT") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")  ) {
                     if (transactionIdInProgress == null) {
                         transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                         // Store the transaction ID in SharedPreferences
@@ -195,6 +206,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                     }
                     transactionId = transactionIdInProgress;
+
 
                 } else {
                     transactionId = generateNewTransactionId(); // Generate a new transaction ID
@@ -240,24 +252,47 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         refreshTicketFragment();
                         refreshTotal();
                     } else {
+                        item = dbManager.getItemById(String.valueOf(itemId));
+                        if (item != null) {
+                            VatVall = item.getVAT();
+                            priceAfterDiscount=item.getPriceAfterDiscount();
+                            double unitprice = item.getPrice();
+                            TotalDiscount=item.getTotalDiscount();
+                            VatType = item.getVAT();
+                            Nature = item.getNature();
+                            Currency = item.getCurrency();
+                            TaxCode=item.getTaxCode();
+                            ItemCode = item.getItemCode();
+                            double UnitPrice = Double.parseDouble(price);
+                            double newTotalPrice = UnitPrice * 1;
 
-                        double  UnitPrice = Double.parseDouble(price);
-                        double  newTotalPrice = UnitPrice * 1;
+                            // Item has a different transaction ID, insert a new transaction
+                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency,TaxCode,priceAfterDiscount,TotalDiscount);
 
-                        // Item has a different transaction ID, insert a new transaction
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
+                            refreshTicketFragment();
+                            refreshTotal();
+                        }
+                    }
+                } else {
+                    item = dbManager.getItemById(String.valueOf(itemId));
+                    if (item != null) {
+                        VatVall = item.getVAT();
+                        double unitprice = item.getPrice();
+                        priceAfterDiscount=item.getPriceAfterDiscount();
+                        VatType = item.getVAT();
+                        TotalDiscount=item.getTotalDiscount();
+                        TaxCode=item.getTaxCode();
+                        Nature = item.getNature();
+                        Currency = item.getCurrency();
+                        ItemCode = item.getItemCode();
+                        double UnitPrice = Double.parseDouble(price);
+                        double newTotalPrice = UnitPrice * 1;
 
+                        // Item not selected, insert a new transaction with quantity 1 and total price
+                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount);
                         refreshTicketFragment();
                         refreshTotal();
                     }
-                } else {
-                    double  UnitPrice = Double.parseDouble(price);
-                    double  newTotalPrice = UnitPrice * 1;
-
-                    // Item not selected, insert a new transaction with quantity 1 and total price
-                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType, PosNum);
-                    refreshTicketFragment();
-                    refreshTotal();
                 }
 
                 if (cursor != null) {
@@ -266,7 +301,14 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 item = dbManager.getItemById(id);
                 if (item != null) {
                     VatVall = item.getVAT();
+                    priceAfterDiscount=item.getPriceAfterDiscount();
                     double unitprice=item.getPrice();
+                    TotalDiscount=item.getTotalDiscount();
+                    VatType=item.getVAT();
+                    TaxCode=item.getTaxCode();
+                    Nature=item.getNature();
+                    Currency=item.getCurrency();
+                    ItemCode=item.getItemCode();
 
                     SendToHeader(unitprice, calculateTax());
                 }
@@ -303,13 +345,24 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String longDescription = item.getLongDescription();
                 price = String.valueOf(item.getPrice());
                 VatVall = item.getVAT();
-                VatType = item.getVAT();
+                priceAfterDiscount=item.getPriceAfterDiscount();
+                VatType=item.getVAT();
+                TotalDiscount=item.getTotalDiscount();
+                Nature=item.getNature();
+                TaxCode=item.getTaxCode();
+                Currency=item.getCurrency();
+                ItemCode=item.getItemCode();
                 String Available4sale = String.valueOf(item.getAvailableForSale());
 
                 String transactionStatus = "InProgress";
-                String transactionSaved = "Saved";
+                String transactionSaved = "PFT";
+                String transactionCDN = "CRN";
+                String transactionDBN = "DRN";
+
+
+
                 if (Available4sale != null && Available4sale.equalsIgnoreCase("true")) {
-                    if (transactionStatus.equals("InProgress") || transactionSaved.equals("Saved")) {
+                    if (transactionStatus.equals("InProgress") || transactionSaved.equals("PFT")|| transactionCDN.equals("CRN")|| transactionDBN.equals("DRN")) {
                         if (transactionIdInProgress == null) {
                             transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                             // Store the transaction ID in SharedPreferences
@@ -366,26 +419,48 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             refreshTicketFragment();
                             refreshTotal();
                         } else {
+                            item = dbManager.getItemById(String.valueOf(itemId));
+                            if (item != null) {
+                                VatVall = item.getVAT();
+                                double unitprice = item.getPrice();
+                                priceAfterDiscount=item.getPriceAfterDiscount();
+                                TotalDiscount=item.getTotalDiscount();
+                                VatType = item.getVAT();
+                                TaxCode=item.getTaxCode();
+                                Nature = item.getNature();
+                                Currency = item.getCurrency();
+                                ItemCode = item.getItemCode();
 
+                                double UnitPrice = Double.parseDouble(price);
+                                double newTotalPrice = UnitPrice * 1;
+
+                                // Item has a different transaction ID, insert a new transaction
+                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount);
+
+                                refreshTicketFragment();
+                                refreshTotal();
+                            }
+                        }
+                    } else {
+                        item = dbManager.getItemById(String.valueOf(itemId));
+                        if (item != null) {
+                            VatVall = item.getVAT();
+                            double unitprice = item.getPrice();
+                            priceAfterDiscount=item.getPriceAfterDiscount();
+                            VatType = item.getVAT();
+                            TotalDiscount=item.getTotalDiscount();
+                            TaxCode=item.getTaxCode();
+                            Nature = item.getNature();
+                            Currency = item.getCurrency();
+                            ItemCode = item.getItemCode();
                             double UnitPrice = Double.parseDouble(price);
                             double newTotalPrice = UnitPrice * 1;
 
-                            // Item has a different transaction ID, insert a new transaction
-                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
-
+                            // Item not selected, insert a new transaction with quantity 1 and total price
+                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount);
                             refreshTicketFragment();
                             refreshTotal();
                         }
-                    } else {
-
-                        double UnitPrice = Double.parseDouble(price);
-                        double newTotalPrice = UnitPrice * 1;
-
-                        // Item not selected, insert a new transaction with quantity 1 and total price
-                        mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
-                        refreshTicketFragment();
-                        refreshTotal();
-
                     }
 
                     if (cursor != null) {
@@ -394,7 +469,14 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     item = dbManager.getItemById(String.valueOf(id));
                     if (item != null) {
                         VatVall = item.getVAT();
+                        priceAfterDiscount=item.getPriceAfterDiscount();
                         double unitprice=item.getPrice();
+                        VatType=item.getVAT();
+                        TotalDiscount=item.getTotalDiscount();
+                        TaxCode=item.getTaxCode();
+                        Nature=item.getNature();
+                        Currency=item.getCurrency();
+                        ItemCode=item.getItemCode();
                         SendToHeader(unitprice, calculateTax());
                     }
                     // Notify the listener that an item is added
@@ -460,18 +542,24 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         Item item = dbManager.getItemById(id);
                         if (item != null) {
                             VatVall = item.getVAT();
+                            priceAfterDiscount=item.getPriceAfterDiscount();
                             VatType=item.getVAT();
-
+                            TotalDiscount=item.getTotalDiscount();
+                            TaxCode=item.getTaxCode();
+                            VatType=item.getVAT();
+                            Nature=item.getNature();
+                            Currency=item.getCurrency();
+                            ItemCode=item.getItemCode();
                         }
 
 
                         String transactionStatus = "InProgress";
-                        String transactionSaved = "Saved";
+
 
                         String status = mDatabaseHelper.getTransactionStatus(transactionIdInProgress);
 
 
-                        if (status.equals("InProgress") || status.equals("Saved")  ) {
+                        if (status.equals("InProgress") || status.equals("PFT") || status.equals("DRN") || status.equals("CRN")  ) {
                             if (transactionIdInProgress == null) {
                                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                                 // Store the transaction ID in SharedPreferences
@@ -528,24 +616,47 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 refreshTicketFragment();
                                 refreshTotal();
                             } else {
+                                item = dbManager.getItemById(String.valueOf(itemId));
+                                if (item != null) {
+                                    VatVall = item.getVAT();
+                                    priceAfterDiscount=item.getPriceAfterDiscount();
+                                    double unitprice = item.getPrice();
+                                    VatType = item.getVAT();
+                                    TotalDiscount=item.getTotalDiscount();
+                                    TaxCode=item.getTaxCode();
+                                    Nature = item.getNature();
+                                    Currency = item.getCurrency();
+                                    ItemCode = item.getItemCode();
+                                    double UnitPrice = Double.parseDouble(price);
+                                    double newTotalPrice = UnitPrice * 1;
 
-                                double  UnitPrice = Double.parseDouble(price);
-                                double  newTotalPrice = UnitPrice * 1;
+                                    // Item has a different transaction ID, insert a new transaction
+                                    mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount);
 
-                                // Item has a different transaction ID, insert a new transaction
-                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum);
+                                    refreshTicketFragment();
+                                    refreshTotal();
+                                }
+                            }
+                        } else {
+                            item = dbManager.getItemById(String.valueOf(itemId));
+                            if (item != null) {
+                                VatVall = item.getVAT();
+                                priceAfterDiscount=item.getPriceAfterDiscount();
+                                double unitprice = item.getPrice();
+                                VatType = item.getVAT();
+                                TotalDiscount=item.getTotalDiscount();
+                                TaxCode=item.getTaxCode();
+                                Nature = item.getNature();
+                                Currency = item.getCurrency();
+                                ItemCode = item.getItemCode();
+                                double UnitPrice = Double.parseDouble(price);
+                                double newTotalPrice = UnitPrice * 1;
 
+                                // Item not selected, insert a new transaction with quantity 1 and total price
+                                mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount);
                                 refreshTicketFragment();
                                 refreshTotal();
                             }
-                        } else {
-                            double  UnitPrice = Double.parseDouble(price);
-                            double  newTotalPrice = UnitPrice * 1;
-
-                            // Item not selected, insert a new transaction with quantity 1 and total price
-                            mDatabaseHelper.insertTransaction(itemId, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription,UnitPrice, Double.parseDouble(priceWithoutVat),VatType,PosNum);
-                            refreshTicketFragment();
-                            refreshTotal();
                         }
 
                         if (cursor != null) {
@@ -554,6 +665,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         item = dbManager.getItemById(id);
                         if (item != null) {
                             VatVall = item.getVAT();
+                            priceAfterDiscount=item.getPriceAfterDiscount();
                             double unitprice=item.getPrice();
                             SendToHeader(unitprice, calculateTax());
                         }

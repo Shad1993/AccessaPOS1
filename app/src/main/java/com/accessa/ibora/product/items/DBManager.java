@@ -1,5 +1,6 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.BUYER_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_1;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_2;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_3;
@@ -41,6 +42,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.accessa.ibora.Admin.cashier;
+import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.QR.QR;
 import com.accessa.ibora.Settings.PaymentFragment.payment;
 import com.accessa.ibora.company.Company;
@@ -69,7 +71,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,String DateCreated, String LastModified) {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount, double currentPrice) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -93,6 +95,12 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DateCreated, DateCreated);
         contentValue.put(DatabaseHelper.LastModified, LastModified);
         contentValue.put(DatabaseHelper.UserId, UserId);
+        contentValue.put(DatabaseHelper.Nature, selectedNature);
+        contentValue.put(DatabaseHelper.Currency, selectedCurrency);
+        contentValue.put(DatabaseHelper.ItemCode, itemCode);
+        contentValue.put(DatabaseHelper.TaxCode, vatCode);
+        contentValue.put(DatabaseHelper.TotalDiscount, selectedDiscount);
+        contentValue.put(DatabaseHelper.PriceAfterDiscount, currentPrice);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
 
         // Insert duplicates into the cost table
@@ -193,6 +201,13 @@ public class DBManager {
     public Cursor fetch() {
         String[] columns = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+        return cursor;
+    } public Cursor fetchBuyers() {
+        String[] columns = new String[]{DatabaseHelper.BUYER_ID, DatabaseHelper.BUYER_NAME,DatabaseHelper.BUYER_Company_name, DatabaseHelper.BUYER_BRN, DatabaseHelper.BUYER_TAN, DatabaseHelper.BUYER_NIC, DatabaseHelper.BUYER_BUSINESS_ADDR};
+        Cursor cursor = database.query(DatabaseHelper.BUYER_TABLE_NAME, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
         }
@@ -318,7 +333,12 @@ public class DBManager {
                 DatabaseHelper.SKU,
                 DatabaseHelper.AvailableForSale,
                 DatabaseHelper.Variant,
-                DatabaseHelper.Image
+                DatabaseHelper.Image,
+                DatabaseHelper.Nature,
+                DatabaseHelper.ItemCode,
+                DatabaseHelper.Currency,
+                DatabaseHelper.TaxCode,
+                DatabaseHelper.TotalDiscount
                 // Add other columns as needed
         };
 
@@ -359,6 +379,11 @@ public class DBManager {
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
             item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
             item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
+            item.setNature(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Nature)));
+            item.setItemCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.ItemCode)));
+            item.setCurrency(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Currency)));
+            item.setTaxCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.TaxCode)));
+            item.setTotalDiscount(Float.parseFloat(cursor.getString(cursor.getColumnIndex(DatabaseHelper.TotalDiscount))));
             // Set other properties of the item
         }
         if (cursor != null) {
@@ -615,7 +640,10 @@ public class DBManager {
 
         };
 
-        String selection = DatabaseHelper.DISCOUNT_ID + " = ?";
+
+
+
+            String selection = DatabaseHelper.DISCOUNT_ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DISCOUNT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
@@ -635,7 +663,46 @@ public class DBManager {
         }
         return discount;
     }
+    public Buyer getBuyerById(String id) {
+        Buyer buyer = null;
+        String[] columns = new String[]{
+                DatabaseHelper.BUYER_ID,
+                DatabaseHelper.BUYER_NAME,
+                DatabaseHelper.BUYER_TAN,
+                DatabaseHelper.BUYER_BRN,
+                DatabaseHelper.BUYER_BUSINESS_ADDR,
+                DatabaseHelper.BUYER_TYPE,
+                DatabaseHelper.BUYER_NIC,
+                DatabaseHelper.BUYER_Company_name,
+                DatabaseHelper.BUYER_Profile
 
+
+        };
+        String selection = DatabaseHelper.BUYER_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(BUYER_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            buyer = new Buyer();
+            buyer.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.BUYER_ID)));
+            buyer.setNames(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_NAME)));
+            buyer.setTan(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_TAN)));
+            buyer.setBrn(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_BRN)));
+            buyer.setBusinessAddr(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_BUSINESS_ADDR)));
+            buyer.setBuyerType(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_TYPE)));
+            buyer.setNic(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_NIC)));
+            buyer.setCompanyName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_Company_name)));
+            buyer.setProfile(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_Profile)));
+
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return buyer;
+    }
     public Vendor getVendorById(String id) {
 
         Vendor vendor = null;
@@ -766,6 +833,21 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DISCOUNT_USER_ID, userId);
         contentValue.put(DatabaseHelper.DISCOUNT_VALUE, deptCode);
         database.update(DISCOUNT_TABLE_NAME, contentValue, DatabaseHelper.DISCOUNT_ID + " = " + id, null);
+        return true;
+    }
+    public boolean updateBuyer(long id, String name, String compname, String tan, String brn,String add, String type, String Buyerprofile,String nic) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.BUYER_NAME, name);
+        contentValue.put(DatabaseHelper.BUYER_Company_name, compname);
+        contentValue.put(DatabaseHelper.BUYER_TAN, tan);
+        contentValue.put(DatabaseHelper.BUYER_BRN, brn);
+        contentValue.put(DatabaseHelper.BUYER_BUSINESS_ADDR, add);
+        contentValue.put(DatabaseHelper.BUYER_TYPE, type);
+        contentValue.put(DatabaseHelper.BUYER_NIC, nic);
+        contentValue.put(DatabaseHelper.BUYER_Profile, Buyerprofile);
+
+
+        database.update(BUYER_TABLE_NAME, contentValue, DatabaseHelper.BUYER_ID + " = " + id, null);
         return true;
     }
     public boolean updateCost(long id, String lastmodified, String userId, String vendCode) {
@@ -1014,4 +1096,10 @@ public class DBManager {
             int rowsAffected = database.update(TABLE_NAME_STD_ACCESS, values, null, null);
             return rowsAffected > 0;}
 
+    public boolean deleteBuyer(long id) {
+        String selection = DatabaseHelper.BUYER_ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(BUYER_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
 }

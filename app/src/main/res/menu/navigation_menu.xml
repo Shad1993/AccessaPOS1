@@ -8,6 +8,10 @@
         android:title="@string/MyProfile" />
 
     <item
+        android:id="@+id/nav_buyer"
+        android:title="@string/buyer" />
+
+    <item
         android:id="@+id/nav_settings"
         android:title="@string/Settings" />
 
