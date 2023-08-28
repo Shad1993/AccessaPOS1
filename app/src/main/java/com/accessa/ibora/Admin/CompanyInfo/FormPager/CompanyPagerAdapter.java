@@ -151,4 +151,10 @@ public class CompanyPagerAdapter extends FragmentPagerAdapter {
         }
         return "";
     }
+    public String getsixteenSlideData() {
+        if (firstSlideFragment != null) {
+            return firstSlideFragment.getShopNumber();
+        }
+        return "";
+    }
 }

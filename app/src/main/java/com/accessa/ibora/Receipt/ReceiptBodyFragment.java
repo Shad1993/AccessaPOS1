@@ -24,9 +24,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.PrintDuplicata;
+import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -103,12 +106,32 @@ public class ReceiptBodyFragment extends Fragment {
         TextView compFaxTextview=view.findViewById(R.id.compfax_text_view);
         View ReturnCashline=view.findViewById(R.id.cash_return_line);
         ImageView qrCodeImageView = view.findViewById(R.id.qrCodeImageView);
+        FloatingActionButton floatingButtonprint = view.findViewById(R.id.floating_button);
+        FloatingActionButton floatingButtonedit = view.findViewById(R.id.floating_button2);
 
         LinearLayout CashReturnLayout=view.findViewById(R.id.cash_return_layout);
 
         ImageView logo= view.findViewById(R.id.logoImageView);
-        // ... Initialize other TextViews
 
+        // Set an OnClickListener for the button
+        floatingButtonprint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), PrintDuplicata.class);
+                intent.putExtra("transactionId", transactionId);
+                intent.putExtra("transactionType", TransactionType);
+                startActivity(intent);
+            }
+        });
+
+        floatingButtonedit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Handle the button click event here
+                // For example, you can open a new activity or perform some action
+                // when the button is clicked.
+            }
+        });
 
         // Initialize the database helper
         mDatabaseHelper = new DatabaseHelper(getContext());
@@ -223,19 +246,40 @@ public class ReceiptBodyFragment extends Fragment {
             timeCreated = cursor1.getString(columnIndexTimeCreated);
             TenderAmount = cursor1.getString(TotalTenderindex);
             CashReturn=cursor1.getString(CashReturnindex);
-if(!TransactionType.equals("InProgress")) {
-    // Generate the QR code image
-    Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
+if(!TransactionType.equals("InProgress") ) {
+
+    if (TransactionQr == null) {
+        qrCodeImageView.setVisibility(View.GONE);
+
+    }else {
+        // Generate the QR code image
+        Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
 
 // Display the QR code in the ImageView
-    if (qrCodeBitmap != null) {
-        qrCodeImageView.setImageBitmap(qrCodeBitmap);
-        qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
+        if (qrCodeBitmap != null) {
+            qrCodeImageView.setImageBitmap(qrCodeBitmap);
+            qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
+        } else {
+            qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
+        }
+    }
+}else {
+    if (TransactionQr == null) {
+        qrCodeImageView.setVisibility(View.GONE);
+
     } else {
-        qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
+        // Generate the QR code image
+        Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
+
+// Display the QR code in the ImageView
+        if (qrCodeBitmap != null) {
+            qrCodeImageView.setImageBitmap(qrCodeBitmap);
+            qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
+        } else {
+            qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
+        }
     }
 }
-
     String formattedTotalAmount = String.format("%.2f", totalAmount);
     String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
 

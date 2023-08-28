@@ -788,24 +788,35 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             String transactionStatus = "InProgress";
             // Get the total quantity of items in the transaction
            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
+            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+            cashierId = sharedPreference.getString("cashorId", null);
+
+            String ShopName = sharedPreference.getString("ShopName", null);
+
+            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
 
 
-            // Save the transaction details in the TRANSACTION_HEADER table
-            boolean success = mDatabaseHelper.saveTransactionHeader(
-                    transactionIdInProgress,
-                    totalAmount,
-                    currentDate,
-                    currentTime,
-                    totalHT_A,
-                    totalTTC,
-                    TaxAmount,
-                    quantityItem,
-                    cashierId,
-                    transactionStatus,
-                    PosNum
-            );
+                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
 
+                // Save the transaction details in the TRANSACTION_HEADER table
+                boolean success = mDatabaseHelper.saveTransactionHeader(
+                        CompanyShopNumber,
+                        transactionIdInProgress,
+                        totalAmount,
+                        currentDate,
+                        currentTime,
+                        totalHT_A,
+                        totalTTC,
+                        TaxAmount,
+                        quantityItem,
+                        cashierId,
+                        transactionStatus,
+                        PosNum
+                );
 
+            }
         }
     }
 

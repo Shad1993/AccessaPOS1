@@ -40,7 +40,7 @@ import java.io.File;
 
 public class FirstSlideFragment extends Fragment {
     private static final int REQUEST_IMAGE_GALLERY = 1;
-    private EditText editCompanyName;
+    private EditText editCompanyName,SHOPNUMBER;
     private EditText editShopName;
     private static final int PICK_IMAGE_REQUEST = 1;
     private ImageView imageLogo;
@@ -60,6 +60,7 @@ public class FirstSlideFragment extends Fragment {
 
         editCompanyName = view.findViewById(R.id.editCompanyName);
         editShopName = view.findViewById(R.id.editShopName);
+        SHOPNUMBER = view.findViewById(R.id.editShopNumber);
         imageLogo = view.findViewById(R.id.imageLogo);
         btnUploadImage = view.findViewById(R.id.btnUploadImage);
 
@@ -214,6 +215,10 @@ public class FirstSlideFragment extends Fragment {
 
     public String getShopName() {
         return editShopName.getText().toString();
+    }
+
+    public String getShopNumber() {
+        return SHOPNUMBER.getText().toString();
     }
 
 

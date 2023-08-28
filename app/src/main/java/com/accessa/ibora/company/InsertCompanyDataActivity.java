@@ -26,6 +26,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 public class InsertCompanyDataActivity extends Activity {
 
     private EditText SHOPNAME;
+    private EditText SHOPNUMBER;
 
     private ImageView imageLogo;
     private Button btnUploadImage;

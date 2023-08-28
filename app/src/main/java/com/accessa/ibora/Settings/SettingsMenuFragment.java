@@ -21,6 +21,7 @@ import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
 import com.accessa.ibora.Buyer.buyerFragment;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.MRASettings.MRAFragment;
 import com.accessa.ibora.Settings.POPSettings.POPSettingsFragment;
 import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
@@ -186,6 +187,19 @@ public class SettingsMenuFragment extends Fragment {
                 else if (position==4) {
                     toolbarTitle = getString(R.string.buyer);
                     Fragment newFragment = new buyerFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
+
+                } else if (position==5) {
+                    toolbarTitle = getString(R.string.MRA);
+                    Fragment newFragment = new MRAFragment();
                     // create a FragmentManager
                     FragmentManager fm = getFragmentManager();
                     // create a FragmentTransaction to begin the transaction and replace the Fragment

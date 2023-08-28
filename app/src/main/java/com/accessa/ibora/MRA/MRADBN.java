@@ -156,7 +156,7 @@ public class MRADBN extends AppCompatActivity {
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
 
                     // Retrieve the total amount and total tax amount from the transactionheader table
-                    Cursor cursor = mDatabaseHelper.getTransactionHeaderType(TransactionType);
+                    Cursor cursor = mDatabaseHelper.getTransactionHeaderType(TransactionType,newtransactionid);
                     int currentCounter = 1; // Default value if no data is present in the table
 
                     if (cursor != null && cursor.moveToFirst()) {

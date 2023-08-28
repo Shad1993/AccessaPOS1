@@ -18,6 +18,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_FAX_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Logo;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_PAYMENT_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_QR_CODE_NUM;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TEL_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_VAT_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
@@ -1015,6 +1016,7 @@ public class DBManager {
 
         String[] columns = new String[]{
                 COLUMN_SHOPNAME,
+                COLUMN_SHOPNUMBER,
                 COLUMN_VAT_NO,
                 COLUMN_BRN_NO,
                 COLUMN_ADR_1,
@@ -1038,6 +1040,7 @@ public class DBManager {
         if (cursor != null && cursor.moveToFirst()) {
             company = new Company(); // Instantiate the company object
             company.setShopName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SHOPNAME)));
+            company.setShopNumber(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SHOPNUMBER)));
             company.setVATNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VAT_NO)));
             company.setBRNNo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BRN_NO)));
             company.setADR1(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ADR_1)));
@@ -1071,10 +1074,11 @@ public class DBManager {
 
 
 
-    public boolean updateCompanyInfo(String abv, String lastModified, String userId, String vatNo, String brnNo, String adr1, String adr2, String adr3, String compAdr, String compAdr2, String compAdr3, String telNo, String faxNo, String companyName, String image, String openhour, String comptel, String compfax) {
+    public boolean updateCompanyInfo(String abv, String shopnumber, String lastModified, String userId, String vatNo, String brnNo, String adr1, String adr2, String adr3, String compAdr, String compAdr2, String compAdr3, String telNo, String faxNo, String companyName, String image, String openhour, String comptel, String compfax) {
 
             ContentValues values = new ContentValues();
             values.put(COLUMN_SHOPNAME, abv);
+            values.put(COLUMN_SHOPNUMBER, shopnumber);
             values.put(LastModified, lastModified);
             values.put(COLUMN_CASHOR_id, userId);
             values.put(COLUMN_VAT_NO, vatNo);

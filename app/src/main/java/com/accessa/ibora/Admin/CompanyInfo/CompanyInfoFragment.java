@@ -71,7 +71,7 @@ import java.util.Locale;
 
 public class CompanyInfoFragment extends Fragment {
 
-    private EditText Abv, StockNo, PriceNo, DefSupplierCode, VATNo, BRNNo, ADR1, ADR2, ADR3, TelNo, FaxNo, CompanyName,CompAd1,CompAd2,CompAd3, cashior, date, lastmodified, openinghours;
+    private EditText Abv,SHOPNumber, StockNo, PriceNo, DefSupplierCode, VATNo, BRNNo, ADR1, ADR2, ADR3, TelNo, FaxNo, CompanyName,CompAd1,CompAd2,CompAd3, cashior, date, lastmodified, openinghours;
     private DatabaseHelper mDatabaseHelper;
     private DBManager dbManager;
     private SharedPreferences sharedPreferences;
@@ -99,6 +99,7 @@ public class CompanyInfoFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.edit_company_info, container, false);
         Abv = view.findViewById(R.id.editAbbrev);
+        SHOPNumber = view.findViewById(R.id.editShopNumber);
         VATNo = view.findViewById(R.id.editVATNo);
         BRNNo = view.findViewById(R.id.editBRNNo);
         ADR1 = view.findViewById(R.id.editADR1);
@@ -137,7 +138,7 @@ public class CompanyInfoFragment extends Fragment {
         Company company = dbManager.getCompanyInfo();
         if (company != null) {
             Abv.setText(company.getShopName());
-
+            SHOPNumber.setText(company.getShopNumber());
             VATNo.setText(company.getVATNo());
             BRNNo.setText(company.getBRNNo());
             ADR1.setText(company.getADR1());
@@ -188,6 +189,7 @@ public class CompanyInfoFragment extends Fragment {
 
         private void updateCompanyInfo() {
             String abv = Abv.getText().toString().trim();
+            String shopnum = SHOPNumber.getText().toString().trim();
 
             // Get the current timestamp
             long currentTimeMillis = System.currentTimeMillis();
@@ -219,7 +221,7 @@ public class CompanyInfoFragment extends Fragment {
 
             }
 
-            if (abv.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
+            if (abv.isEmpty() || shopnum.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
                     || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty() || CompAdr.isEmpty()|| CompAdr2.isEmpty()|| CompAdr3.isEmpty()
                     || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty() || openhour.isEmpty() || comptel.isEmpty() || compfax.isEmpty()) {
                 Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
@@ -235,7 +237,7 @@ public class CompanyInfoFragment extends Fragment {
 
 
 
-        boolean isUpdated = dbManager.updateCompanyInfo( abv, lastmodified, UserId,vatNo,brnNo,adr1,adr2,adr3, CompAdr,CompAdr2,CompAdr3,telNo,faxNo,companyName,image,openhour,comptel,compfax);
+        boolean isUpdated = dbManager.updateCompanyInfo( abv,shopnum, lastmodified, UserId,vatNo,brnNo,adr1,adr2,adr3, CompAdr,CompAdr2,CompAdr3,telNo,faxNo,companyName,image,openhour,comptel,compfax);
             int rowsAffected = database.update("Users", value, null, null);
             dbManager.close();
             SharedPreferences.Editor editor = sharedPreferences.edit();

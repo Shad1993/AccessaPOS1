@@ -24,7 +24,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
 
     // Data fields for each slide
     private String companyName;
-    private String shopName;
+    private String shopName,SHOPNUMBER;
     private String vatNo;
     private String brnNo;
     private String adr1;
@@ -55,6 +55,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         // Set initial data for the first slide
         companyName = "";
         shopName = "";
+        SHOPNUMBER="";
         btnPrevious.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +73,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
                     // Save data from the first slide
                     companyName = pagerAdapter.getFirstSlideData();
                     shopName = pagerAdapter.getSecondSlideData();
+                    SHOPNUMBER=pagerAdapter.getsixteenSlideData();
                     viewPager.setCurrentItem(1); // Move to the second slide
 
                     // Retrieve the logo path after the user has selected an image
@@ -121,6 +123,7 @@ public class InsertCompanyDataActivity extends AppCompatActivity {
         values.put("Logo", LogoPath);
         values.put("company_name", companyName);
         values.put("ShopName", shopName);
+        values.put("ShopNumber", SHOPNUMBER);
         values.put("vat_no", vatNo);
         values.put("BRN_No", brnNo);
         values.put("adr_1", adr1);

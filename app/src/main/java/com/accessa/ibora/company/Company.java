@@ -3,6 +3,7 @@ package com.accessa.ibora.company;
 
 public class Company {
     private String Shopname;
+    private String ShopNumber;
     private String VATNo;
     private String BRNNo;
     private String ADR1;
@@ -25,6 +26,7 @@ public class Company {
 
     public Company() {
         this.Shopname = Shopname;
+        this.ShopNumber = ShopNumber;
         this.VATNo = VATNo;
         this.BRNNo = BRNNo;
         this.ADR1 = ADR1;
@@ -53,6 +55,13 @@ public class Company {
 
     public void setShopName(String Shopname) {
         this.Shopname = Shopname;
+    }
+    public String getShopNumber() {
+        return ShopNumber;
+    }
+
+    public void setShopNumber(String ShopNumber) {
+        this.ShopNumber = ShopNumber;
     }
 
 

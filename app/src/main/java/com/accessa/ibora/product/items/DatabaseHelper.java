@@ -11,7 +11,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.Constants;
@@ -132,7 +131,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String QUANTITY = "Quantity";
     public static final String TOTAL_PRICE = "TotalPrice";
 
-    private static final String TRANSACTION_SHOP_NO = "ShopNo";
+    public static final String TRANSACTION_SHOP_NO = "ShopNo";
     public static final String TRANSACTION_TERMINAL_NO = "TerminalNo";
     public static final String TRANSACTION_DATE_CREATED = "DateCreated";
     private static final String TRANSACTION_DATE_MODIFIED = "DateModified";
@@ -231,6 +230,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_FAX_NO = "fax_no";
     public static String COLUMN_Comp_ADR_1= "ComPanyAdress1";
     public static String COLUMN_Comp_ADR_2 ="ComPanyAdress2";
+    public static final String COLUMN_SHOPNUMBER ="ShopNumber" ;
     public static String COLUMN_Comp_ADR_3= "ComPanyAdress3";
     public static String COLUMN_Comp_TEL_NO= "ComPanyphoneNumber";
     public static String COLUMN_Comp_FAX_NO= "ComPanyFaxNumber";
@@ -552,6 +552,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
 
+
     private static final String CREATE_STD_ACCESS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_STD_ACCESS + " ("
             + COLUMN_STD_ACCESS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_Comp_ADR_1 + " TEXT, "
@@ -560,6 +561,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_Comp_TEL_NO + " TEXT, "
             + COLUMN_Comp_FAX_NO + " TEXT, "
             + COLUMN_SHOPNAME + " TEXT, "
+            + COLUMN_SHOPNUMBER + " TEXT, "
             + COLUMN_Logo + " TEXT, "
             + COLUMN_VAT_NO + " TEXT, "
             + COLUMN_BRN_NO + " TEXT, "
@@ -746,7 +748,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_TOTAL_DISCOUNT, roundedTotalDiscount);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
-    public boolean saveTransactionHeader(String transactionId, double totalAmount, String currentDate,
+    public boolean saveTransactionHeader(String Shopnumber, String transactionId, double totalAmount, String currentDate,
                                          String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus, String posNum) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -764,6 +766,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         ContentValues values = new ContentValues();
+        values.put(TRANSACTION_SHOP_NO, Shopnumber);
         values.put(TRANSACTION_TICKET_NO, transactionId);
         values.put(TRANSACTION_TOTAL_TTC, totalAmount);
         values.put(TRANSACTION_DATE_CREATED, currentDate);
@@ -853,10 +856,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    public Cursor getAllInProgressTransactionsByType(String Type, String id) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
+                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
+                " WHERE th." + TRANSACTION_STATUS + "=? AND t." + TRANSACTION_ID + "=? " +
+                "ORDER BY t." + TRANSACTION_DATE + " ASC";
+
+        String[] selectionArgs = {Type, id};
+
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        if (cursor == null || !cursor.moveToFirst()) {
+            // There are no in-progress transactions.
+            // Return zero.
+            return null;
+        } else {
+            // There are in-progress transactions.
+            // Return the Cursor object.
+            return cursor;
+        }
+    }
 
 
 
-        public Cursor getAllItems() {
+
+    public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
@@ -883,6 +909,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getAllUsers() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME_Users, null, null, null, null, null, null);
+    }
+
+    public Cursor getUserById(int userId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        // Define the selection clause
+        String selection = "cashorid = ?";
+
+        // Define the selection arguments
+        String[] selectionArgs = { String.valueOf(userId) };
+
+        // Perform the query
+        return db.query(TABLE_NAME_Users, null, selection, selectionArgs, null, null, null);
     }
 
     public Cursor getAllDepartment() {
@@ -1098,6 +1137,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return null;
         }
     }
+    public Cursor getCompanyInfobyShopId(String shopNumber) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TABLE_NAME_STD_ACCESS +
+                " WHERE " + COLUMN_SHOPNUMBER + " = ?";
+
+        if (shopNumber != null) {
+            return db.rawQuery(query, new String[]{shopNumber});
+        } else {
+            // Handle the case where transactionId is null
+            // You can choose to return null or an empty cursor, depending on your requirements
+            return null;
+        }
+    }
     public Cursor getTransactionHeader() {
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -1106,15 +1159,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, null);
     }
-    public Cursor getTransactionHeaderType(String Type) {
+
+    public Cursor getTransactionSettlementById(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + TRANSACTION_STATUS + " = '" + Type + "'";
-
+        String query = "SELECT * FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                " WHERE " + SETTLEMENT_INVOICE_ID + " = '" + id + "'";
 
         return db.rawQuery(query, null);
     }
+    public Cursor getTransactionHeaderType(String type, String id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = ? AND " + TRANSACTION_ID + " = ?";
+
+        return db.rawQuery(query, new String[]{type, id});
+    }
+
 
     public double getItemPrice(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1325,7 +1387,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
         return db.query(TRANSACTION_HEADER_TABLE_NAME, null, null, null, null, null, sortOrder);
     }
+    public Cursor getAllReceiptwithoutQR() {
+        SQLiteDatabase db = getReadableDatabase();
+        String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
+        String selection = "MRA_Response IS NULL OR MRA_Response = ?";
+        String[] selectionArgs = {"Request Failed%"};
 
+        return db.query(
+                TRANSACTION_HEADER_TABLE_NAME,
+                null,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
 
 
     public Cursor searchReceipt(String selectedItem) {

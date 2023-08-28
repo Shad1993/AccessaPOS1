@@ -115,6 +115,8 @@
         <activity android:name=".Buyer.AddBuyerActivity"/>
         <activity android:name=".Buyer.ModifyBuyerActivity"/>
         <activity android:name=".MRA.MRADBN"/>
+        <activity android:name=".printer.PrintDuplicata"/>
+
 
         <activity
             android:name="com.accessa.ibora.POP.CancelPaymentPOPDialogFragment"

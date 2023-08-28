@@ -23,6 +23,34 @@
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floating_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/printer"
+            app:backgroundTint="@color/BleuAccessaText"
+            app:elevation="6dp"
+            app:tint="@color/white"
+            app:pressedTranslationZ="12dp" />
+
+        <!-- Add margin (padding) to create space between the buttons -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floating_button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/whitepen"
+            app:backgroundTint="@color/BleuAccessaText"
+            app:elevation="6dp"
+            app:pressedTranslationZ="12dp"
+            app:tint="@color/white"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -485,5 +513,8 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </ScrollView>
+
+
+
 
 </LinearLayout>
