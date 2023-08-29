@@ -116,6 +116,7 @@
         <activity android:name=".Buyer.ModifyBuyerActivity"/>
         <activity android:name=".MRA.MRADBN"/>
         <activity android:name=".printer.PrintDuplicata"/>
+        <activity android:name=".MRA.MRABULKActivity"/>
 
 
         <activity

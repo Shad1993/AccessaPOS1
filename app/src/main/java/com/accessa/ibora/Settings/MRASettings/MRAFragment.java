@@ -1,6 +1,7 @@
 package com.accessa.ibora.Settings.MRASettings;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,11 +21,17 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MRA.ItemData;
+import com.accessa.ibora.MRA.MRABULKActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Receipt.ReceiptAdapter;
 import com.accessa.ibora.Receipt.ReceiptBodyFragment;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DatabaseHelper;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MRAFragment extends Fragment {
     private SharedPreferences sharedPreferences;
@@ -47,14 +55,12 @@ public class MRAFragment extends Fragment {
         // Register all the UI components with their appropriate IDs
         TextView Cashiername=view.findViewById(R.id.textView2);
         TextView ShopName=view.findViewById(R.id.textView3);
-        ImageButton backB = view.findViewById(R.id.backB);
-        ImageButton logOutB = view.findViewById(R.id.logOutB);
+        ImageButton refresher = view.findViewById(R.id.refresh);
         ImageButton profileB = view.findViewById(R.id.profileB);
-        Button todoB = view.findViewById(R.id.todoB);
-        Button editProfileB = view.findViewById(R.id.editProfileB);
-        CardView contributeCard = view.findViewById(R.id.contributeCard);
-        CardView practiceCard = view.findViewById(R.id.practiceCard);
-        CardView learnCard = view.findViewById(R.id.learnCard);
+        Button allReceipt = view.findViewById(R.id.allreceipt);
+        CardView SendBulk = view.findViewById(R.id.sendBulkCard);
+        CardView failedreceipt = view.findViewById(R.id.failedreceipt);
+        CardView sucessreceipt = view.findViewById(R.id.sucessreceipt);
         Cashiername.setText(cashorName);
         ShopName.setText(Shopname);
 // Assuming you have a reference to your NestedScrollView
@@ -73,16 +79,18 @@ public class MRAFragment extends Fragment {
                     public void onItemClick(View view, int position) {
                         TextView idTextView = view.findViewById(R.id.id_text_view);
                         TextView deptNameEditText = view.findViewById(R.id.name_text_view);
-                        TextView deptCodeEditText = view.findViewById(R.id.total_text_view);
-                        TextView lastModifiedTextView = view.findViewById(R.id.transdate_edittex);
+                        TextView QrEditText = view.findViewById(R.id.Available_text_view);
+                        CheckBox checkBox = view.findViewById(R.id.myCheckBox); // Find the CheckBox
 
                         String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
                         String name = deptNameEditText.getText().toString();
-                        String deptCode = deptCodeEditText.getText().toString();
+                        String deptCode = QrEditText.getText().toString();
 
-
+                        // Toggle the CheckBox's checked state
+                        checkBox.setChecked(!checkBox.isChecked());
                     }
+
 
                     @Override
                     public void onLongItemClick(View view, int position) {
@@ -92,19 +100,25 @@ public class MRAFragment extends Fragment {
         );
 
         // Handle UI component clicks
-        backB.setOnClickListener(new View.OnClickListener() {
+        refresher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Back Button", Toast.LENGTH_SHORT).show();
+                // Refresh data here, for example, by querying the database again
+                Cursor refreshedCursor = mDatabaseHelper.getAllReceipt();
+
+                // Update the RecyclerView adapter with the new data
+                adapter.updateData(refreshedCursor);
+
+                // Notify the adapter that the data has changed
+                adapter.notifyDataSetChanged();
+
+                // Show a toast to indicate that the refresh has occurred
+                Toast.makeText(getActivity(), "Fragment Refreshed", Toast.LENGTH_SHORT).show();
             }
         });
 
-        logOutB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Logout Button", Toast.LENGTH_SHORT).show();
-            }
-        });
+
+
 
         profileB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,44 +127,73 @@ public class MRAFragment extends Fragment {
             }
         });
 
-        todoB.setOnClickListener(new View.OnClickListener() {
+        allReceipt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Create and execute a new cursor query to get new data
 
+                Cursor allreceipt  = mDatabaseHelper.getAllReceipt();
+                // Update the adapter with the new cursor data
+                adapter.updateData(allreceipt);
+            }
+        });
+
+
+
+        SendBulk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Create a list to store selected items
+                List<ItemData> selectedItems = new ArrayList<>();
+
+                for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                    View view = recyclerView.getChildAt(i);
+                    CheckBox checkBox = view.findViewById(R.id.myCheckBox);
+
+                    if (checkBox.isChecked()) {
+                        TextView idTextView = view.findViewById(R.id.id_text_view);
+                        TextView deptNameEditText = view.findViewById(R.id.name_text_view);
+                        String id = idTextView.getText().toString();
+                        String name = deptNameEditText.getText().toString();
+
+                        // Add the selected item to the list
+                        selectedItems.add(new ItemData(id, name));
+                    }
+                }
+
+                if (!selectedItems.isEmpty()) {
+                    // Create an Intent to start the other activity
+                    Intent intent = new Intent(getActivity(), MRABULKActivity.class);
+
+                    // Pass the list of selected items as a Serializable extra
+                    intent.putExtra("selectedItems", (Serializable) selectedItems);
+
+                    // Start the other activity
+                    startActivity(intent);
+                } else {
+                    // Handle the case where no item is selected
+                    Toast.makeText(getActivity(), "Please select at least one item", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+
+
+        failedreceipt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 Cursor newCursor  = mDatabaseHelper.getAllReceiptwithoutQR();
                 // Update the adapter with the new cursor data
                 adapter.updateData(newCursor);
             }
         });
 
-        editProfileB.setOnClickListener(new View.OnClickListener() {
+        sucessreceipt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Editing Profile", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        contributeCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Contribute Articles", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        practiceCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Practice Programming", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        learnCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Cursor newCursor  = mDatabaseHelper.getAllItems();
+                Cursor newCursor1  = mDatabaseHelper.getAllReceiptWithQR();
                 // Update the adapter with the new cursor data
-                adapter.updateData(newCursor);
+                adapter.updateData(newCursor1);
             }
         });
 

@@ -801,7 +801,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
 
                 // Save the transaction details in the TRANSACTION_HEADER table
-                boolean success = mDatabaseHelper.saveTransactionHeader(
+                 mDatabaseHelper.saveTransactionHeader(
                         CompanyShopNumber,
                         transactionIdInProgress,
                         totalAmount,

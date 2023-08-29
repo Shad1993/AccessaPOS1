@@ -1,0 +1,34 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select a Reference Receipt"
+        android:textSize="18sp"
+        android:padding="16dp"
+        android:gravity="center"
+        android:textColor="@android:color/black"
+        android:background="@android:color/white" />
+
+    <!-- Use RecyclerView or ListView here to display receipt data -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/popupRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:padding="16dp" />
+
+    <!-- Add buttons or other UI elements as needed -->
+    <!-- For example, a "Cancel" button to dismiss the dialog -->
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No Reference"
+        android:layout_margin="16dp" />
+</LinearLayout>

@@ -88,6 +88,7 @@ public class Mra extends AppCompatActivity {
     private String cashierName,cashierId;
     private double totalAmount,TaxtotalAmount,TotalHT;
     private String aesKey;
+    String transactionType;
     String selectedBuyerName ;
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
@@ -171,26 +172,37 @@ public class Mra extends AppCompatActivity {
 
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
+                        Log.d("cashier", cashorlevel);
 if(SelectedBuyerProfile.equals("")) {
+    if(cashorlevel.equals("1")) {
+        Log.d("cashier", cashorlevel);
+        transactionType = "TRN";
+    }else{
+        transactionType = "STD";
+    }
 
-    String transactionType = "STD";
-    String VATR="NVTR";
-    String TransactionType="B2C";
-    jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-    jsondetailedtransacs.put("transactionType", TransactionType);
-    jsondetailedtransacs.put("personType", "NVTR");
-    jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-    jsondetailedtransacs.put("currency", "MUR");
-    jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-    jsondetailedtransacs.put("reasonStated", "test");
-    jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-    jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-    jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-    jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+        String VATR = "NVTR";
+        String TransactionType = "B2C";
+        jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
+        jsondetailedtransacs.put("transactionType", TransactionType);
+        jsondetailedtransacs.put("personType", "NVTR");
+        jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
+        jsondetailedtransacs.put("currency", "MUR");
+        jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
+        jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
+        jsondetailedtransacs.put("previousNoteHash", "prevNote");
+        jsondetailedtransacs.put("reasonStated", "test");
+        jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
+        jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
+        jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
+        jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+
 }  else {
-    String transactionType = "STD";
+    if(cashorlevel.equals("1")) {
+        transactionType = "TRN";
+    }else{
+        transactionType = "STD";
+    }
     jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
     jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
     jsondetailedtransacs.put("personType", selectedBuyerType);
@@ -389,6 +401,8 @@ if(SelectedBuyerProfile.equals("")) {
                                 amount,
                                 popFraction,
                                 result
+
+
                         );
 
                         dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
@@ -405,7 +419,7 @@ if(SelectedBuyerProfile.equals("")) {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mra);
-
+        mDatabaseHelper = new DatabaseHelper(this);
 
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
@@ -423,7 +437,7 @@ if(SelectedBuyerProfile.equals("")) {
             // Retrieve other buyer information as needed
         }
 
-        mDatabaseHelper = new DatabaseHelper(this);
+
 
 
         SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);

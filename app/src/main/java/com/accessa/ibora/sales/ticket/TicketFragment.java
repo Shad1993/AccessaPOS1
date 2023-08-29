@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.content.Context;
@@ -20,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -40,6 +42,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.MRA.MRADBN;
+import com.accessa.ibora.MRA.MRAdaptor;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.QR.QRGenerator;
@@ -47,9 +50,11 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
+import com.accessa.ibora.Settings.MRASettings.MRAAdaptor;
 import com.accessa.ibora.Settings.SettingsDashboard;
 
 import com.accessa.ibora.SplashFlashActivity;
+import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
@@ -315,6 +320,10 @@ private TextView textViewVATs,textViewTotals;
                 if (selectedBuyer != null) {
                     // Access selectedBuyer properties here
                     Intent intent = new Intent(getActivity(), Mra.class);
+                    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+
                     // Pass the selected buyer's information as an extra
                     intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
                     intent.putExtra("selectedBuyerTAN", selectedBuyer.getTan());
@@ -324,6 +333,18 @@ private TextView textViewVATs,textViewTotals;
                     intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
                     intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
                     intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
+                  
+
+                   mDatabaseHelper.updateTransactionBuyerInfo(
+                            transactionIdInProgress,
+                            transactionIdInProgress,
+                            selectedBuyer.getNames(),
+                            selectedBuyer.getTan(),
+                            selectedBuyer.getCompanyName(),
+                            selectedBuyer.getBusinessAddr(),
+                            selectedBuyer.getBrn(),
+                            cashierId
+                    );
                     startActivity(intent);
                 }else {
                     // Handle the case when selectedBuyer is null
@@ -427,15 +448,17 @@ private TextView textViewVATs,textViewTotals;
         builder.show();
     }
 
-    private void startNewActivity(String type, String newTransactionId) {
+    private void startNewActivity(String type, String newTransactionId,String invoiceRefIdentifier) {
         // Create an Intent to start the desired activity based on the selected type
         Intent intent = new Intent(getContext(), MRADBN.class);
 
         // Pass any data you need to the new activity using intent extras
         intent.putExtra("TransactionType", type);
         intent.putExtra("newtransactionid", newTransactionId);
+        intent.putExtra("invoiceRefIdentifier", invoiceRefIdentifier);
         if (selectedBuyer != null) {
             // Access selectedBuyer properties here
+
 
             // Pass the selected buyer's information as an extra
             intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
@@ -446,6 +469,17 @@ private TextView textViewVATs,textViewTotals;
             intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
             intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
             intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
+            mDatabaseHelper.updateTransactionBuyerInfo(
+                    newTransactionId,
+                    invoiceRefIdentifier,
+                    selectedBuyer.getNames(),
+                    selectedBuyer.getTan(),
+                    selectedBuyer.getCompanyName(),
+                    selectedBuyer.getBusinessAddr(),
+                    selectedBuyer.getBrn(),
+                    cashierId
+            );
+
             startActivity(intent);
         } else {
 
@@ -471,37 +505,122 @@ private TextView textViewVATs,textViewTotals;
         refreshData(totalAmount, TaxtotalAmount);
 
 if(Type.equals("DRN")) {
-    // Get the latest transaction counter value from SharedPreferences
-    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-    int latestTransactionDBNCounter = sharedPreferences.getInt("transaction_counter_DBN", 0);
-    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
-
-    // Increment the transaction counter
-    latestTransactionDBNCounter++;
-    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-    PosNum = shardPreference.getString(POSNumber, null);
-    // Generate the transaction ID with the format "MEMO-integer"
-    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
-    // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
-    // Update the transaction ID in the header table for transactions with status "InProgress"
-    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
-
-    // Update the transaction counter in SharedPreferences
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putInt("transaction_counter_DBN", latestTransactionDBNCounter);
-    editor.apply();
-    // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type);
-    updateTransactionStatus();
-
-    // Start the activity here based on the selected type
-    startNewActivity(Type,newTransactionId);
-    getActivity().finish();
+    // Retrieve the data for receipts with QR codes
+    Cursor receiptCursor = mDatabaseHelper.getAllReceipt();
 
 
+
+
+    // Create a custom dialog to display the receipt data
+    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
+    dialogBuilder.setView(dialogView);
+    dialogBuilder.setTitle("Select a Receipt");
+
+    // Initialize your RecyclerView
+    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
+
+// Set a layout manager (for example, LinearLayoutManager)
+    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+    popupRecyclerView.setLayoutManager(layoutManager);
+
+// Initialize and set up your adapter
+    MRAdaptor popupAdapter = new MRAdaptor(receiptCursor);
+    popupRecyclerView.setAdapter(popupAdapter);
+
+
+// Set a click listener for the items in the dialog
+    popupRecyclerView.addOnItemTouchListener(
+            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, int position) {
+                    TextView idTextView = view.findViewById(R.id.id_text_view);
+                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
+
+                    String id1 = idTextView.getText().toString();
+                    String id = idTextView.getText().toString();
+                    String name = deptNameEditText.getText().toString();
+
+                    // Get the latest transaction counter value from SharedPreferences
+                    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+                    int latestTransactionDBNCounter = sharedPreferences.getInt("transaction_counter_DBN", 0);
+                    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+                    // Increment the transaction counter
+                    latestTransactionDBNCounter++;
+                    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                    PosNum = shardPreference.getString(POSNumber, null);
+                    // Generate the transaction ID with the format "MEMO-integer"
+                    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
+                    // Update the transaction ID in the transaction table for transactions with status "InProgress"
+                    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+                    // Update the transaction ID in the header table for transactions with status "InProgress"
+                    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+
+                    // Update the transaction counter in SharedPreferences
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt("transaction_counter_DBN", latestTransactionDBNCounter);
+                    editor.apply();
+                    // Update the transaction status for all in-progress transactions to "saved"
+                    mDatabaseHelper.updateAllTransactionsStatus(Type);
+                    updateTransactionStatus();
+
+
+
+                    // Start the activity with the selected receipt data
+                    startNewActivity(Type, newTransactionId, name);
+                    getActivity().finish();
+
+
+                }
+
+                @Override
+                public void onLongItemClick(View view, int position) {
+                    // Do whatever you want on long item click
+                }
+            })
+    );
+
+
+
+    // Create and show the dialog
+    AlertDialog alertDialog = dialogBuilder.create();
+    alertDialog.show();
 } else if (Type.equals("PRF")) {
+    // Retrieve the data for receipts with QR codes
+    Cursor newCursor1 = mDatabaseHelper.getAllReceiptWithQR();
+
+    // Create a custom dialog to display the receipt data
+    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
+    dialogBuilder.setView(dialogView);
+    dialogBuilder.setTitle("Select a Receipt");
+
+    // Initialize your RecyclerView
+    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
+
+// Set a layout manager (for example, LinearLayoutManager)
+    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+    popupRecyclerView.setLayoutManager(layoutManager);
+
+// Initialize and set up your adapter
+    MRAdaptor popupAdapter = new MRAdaptor(newCursor1);
+    popupRecyclerView.setAdapter(popupAdapter);
+
+
+
+// Set a click listener for the items in the dialog
+    popupRecyclerView.addOnItemTouchListener(
+            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, int position) {
+                    TextView idTextView = view.findViewById(R.id.id_text_view);
+                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
+
+                    String id1 = idTextView.getText().toString();
+                    String id = idTextView.getText().toString();
+                    String name = deptNameEditText.getText().toString();
     // Get the latest transaction counter value from SharedPreferences
     SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
     int latestTransactionProformaCounter = sharedPreferences.getInt("transaction_counter_Proforma", 0);
@@ -530,12 +649,104 @@ if(Type.equals("DRN")) {
     mDatabaseHelper.updateAllTransactionsStatus(Type);
     updateTransactionStatus();
 
-    startNewActivity(Type,newTransactionId);
-    getActivity().finish();
+                    // Start the activity with the selected receipt data
+                    startNewActivity(Type, newTransactionId, name);
+                    getActivity().finish();
 
+
+                }
+
+                @Override
+                public void onLongItemClick(View view, int position) {
+                    // Do whatever you want on long item click
+                }
+            })
+    );
+
+
+
+    // Create and show the dialog
+    AlertDialog alertDialog = dialogBuilder.create();
+    alertDialog.show();
 
 }else if (Type.equals("CRN")) {
+    // Retrieve the data for receipts with QR codes
+    Cursor newCursor1 = mDatabaseHelper.getAllReceiptWithQR();
 
+    // Create a custom dialog to display the receipt data
+    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
+    dialogBuilder.setView(dialogView);
+    dialogBuilder.setTitle("Select a Receipt");
+    // Create and show the dialog
+    AlertDialog alertDialog = dialogBuilder.create();
+// Find the "Cancel" button in your dialog's layout
+    Button cancelButton = dialogView.findViewById(R.id.saveButton);
+
+// Set an OnClickListener for the "Cancel" button
+    cancelButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // Get the latest transaction counter value from SharedPreferences
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+            int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
+
+            SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+            SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+            PosNum = shardPreference.getString(POSNumber, null);
+
+
+            // Increment the transaction counter
+            latestTransactionCDNCounter++;
+
+            // Generate the transaction ID with the format "MEMO-integer"
+            String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
+            // Update the transaction ID in the transaction table for transactions with status "InProgress"
+            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+            // Update the transaction ID in the header table for transactions with status "InProgress"
+            mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+
+            // Update the transaction counter in SharedPreferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
+            editor.apply();
+            // Update the transaction status for all in-progress transactions to "saved"
+            mDatabaseHelper.updateAllTransactionsStatus(Type);
+            updateTransactionStatus();
+
+            // Start the activity with the selected receipt data
+            startNewActivity(Type, newTransactionId, "null");
+            getActivity().finish();
+
+
+            // Dismiss the dialog when the "Cancel" button is clicked
+            alertDialog.dismiss();
+        }
+    });
+    // Initialize your RecyclerView
+    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
+
+// Set a layout manager (for example, LinearLayoutManager)
+    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+    popupRecyclerView.setLayoutManager(layoutManager);
+
+// Initialize and set up your adapter
+    MRAdaptor popupAdapter = new MRAdaptor(newCursor1);
+    popupRecyclerView.setAdapter(popupAdapter);
+
+// Set a click listener for the items in the dialog
+    popupRecyclerView.addOnItemTouchListener(
+            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, int position) {
+                    TextView idTextView = view.findViewById(R.id.id_text_view);
+                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
+
+                    String id1 = idTextView.getText().toString();
+                    String id = idTextView.getText().toString();
+                    String name = deptNameEditText.getText().toString();
     // Get the latest transaction counter value from SharedPreferences
     SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
     int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
@@ -565,8 +776,25 @@ if(Type.equals("DRN")) {
     mDatabaseHelper.updateAllTransactionsStatus(Type);
     updateTransactionStatus();
 
-    startNewActivity(Type,newTransactionId);
-    getActivity().finish();
+                    // Start the activity with the selected receipt data
+                    startNewActivity(Type, newTransactionId, name);
+                    getActivity().finish();
+
+
+                }
+
+                @Override
+                public void onLongItemClick(View view, int position) {
+                    // Do whatever you want on long item click
+                }
+            })
+    );
+
+
+
+    // Create and show the dialog
+    AlertDialog alertDialogs = dialogBuilder.create();
+    alertDialogs.show();
 
 }
 

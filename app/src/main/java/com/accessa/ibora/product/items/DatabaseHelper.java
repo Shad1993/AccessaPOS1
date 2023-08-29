@@ -748,6 +748,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_TOTAL_DISCOUNT, roundedTotalDiscount);
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
+    public boolean updateTransactionBuyerInfo(String transactionId, String invoiceRefIdentifier, String name, String tan, String compname, String Address, String brn, String cashierId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Check if the transaction ID already exists
+        String query = "SELECT COUNT(*) FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{transactionId});
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_CLIENT_NAME, name);
+        values.put(TRANSACTION_INVOICE_REF,invoiceRefIdentifier);
+        values.put(TRANSACTION_CLIENT_BRN, brn);
+        values.put(TRANSACTION_CLIENT_VAT_REG_NO, tan);
+        values.put(TRANSACTION_CLIENT_OTHER_NAME, compname);
+        values.put(TRANSACTION_CLIENT_ADR1, Address);
+        values.put(TRANSACTION_CASHIER_CODE, cashierId);
+
+
+        if (count > 0) {
+            // Transaction ID already exists, update the row
+            int result = db.update(TRANSACTION_HEADER_TABLE_NAME, values, TRANSACTION_TICKET_NO + " = ?", new String[]{transactionId});
+            return result > 0;
+        } else {
+            // Transaction ID does not exist, insert a new row
+            long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
+            return result != -1;
+        }
+    }
+
     public boolean saveTransactionHeader(String Shopnumber, String transactionId, double totalAmount, String currentDate,
                                          String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus, String posNum) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -783,7 +815,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
         return result != -1;
     }
-
 
 
     public void updateAllTransactionsHeaderStatus(String transactionStatusCompleted) {
@@ -1176,7 +1207,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, new String[]{type, id});
     }
+    public Cursor getTransactionHeaderids( String id) {
+        SQLiteDatabase db = this.getReadableDatabase();
 
+        String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_ID + " = ?";
+
+        return db.rawQuery(query, new String[]{ id});
+    }
 
     public double getItemPrice(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1404,6 +1442,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
+    public Cursor getAllReceiptWithQR() {
+        SQLiteDatabase db = getReadableDatabase();
+        String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
+        String selection = "MRA_Response IS NOT NULL AND MRA_Response NOT LIKE ?";
+        String[] selectionArgs = {"Request Failed%"};
+
+        return db.query(
+                TRANSACTION_HEADER_TABLE_NAME,
+                null,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
 
     public Cursor searchReceipt(String selectedItem) {
         SQLiteDatabase db = getReadableDatabase();

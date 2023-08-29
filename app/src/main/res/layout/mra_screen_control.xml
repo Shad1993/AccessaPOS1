@@ -19,14 +19,14 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
-        android:id="@+id/backB"
+        android:id="@+id/refresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:background="?attr/selectableItemBackground"
         android:padding="8dp"
-        android:src="@drawable/baseline_close_24"
+        android:src="@drawable/refresh_white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,21 +42,10 @@
         android:textColor="@color/white"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/backB"
+        app:layout_constraintStart_toEndOf="@+id/refresh"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/logOutB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="?attr/selectableItemBackground"
-        android:padding="8dp"
-        android:src="@drawable/logout"
-        app:layout_constraintCircleRadius="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
@@ -103,12 +92,12 @@
                 app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/todoB"
+                android:id="@+id/allreceipt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginBottom="8dp"
-                android:text="Unsent Receipt List"
+                android:text="@string/AllReceipt"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
@@ -120,8 +109,8 @@
                 android:layout_marginStart="8dp"
                 android:text="EDIT Settings"
                 android:textColor="@color/BleuAccessaText"
-                app:layout_constraintBottom_toBottomOf="@+id/todoB"
-                app:layout_constraintStart_toEndOf="@+id/todoB" />
+                app:layout_constraintBottom_toBottomOf="@+id/allreceipt"
+                app:layout_constraintStart_toEndOf="@+id/allreceipt" />
 
             <ImageButton
                 android:id="@+id/profileB"
@@ -155,7 +144,7 @@
         tools:ignore="MissingConstraints">
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/contributeCard"
+            android:id="@+id/sendBulkCard"
             android:layout_width="128dp"
             android:layout_height="128dp"
             android:layout_margin="8dp"
@@ -202,7 +191,7 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/practiceCard"
+            android:id="@+id/failedreceipt"
             android:layout_width="128dp"
             android:layout_height="128dp"
             android:layout_margin="8dp"
@@ -248,7 +237,7 @@
 
         </androidx.cardview.widget.CardView>
         <androidx.cardview.widget.CardView
-            android:id="@+id/learnCard"
+            android:id="@+id/sucessreceipt"
             android:layout_width="128dp"
             android:layout_height="128dp"
             android:layout_margin="8dp"
