@@ -413,15 +413,8 @@ public class printerSetup extends AppCompatActivity {
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                                 String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
 
-                                boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate);
+                               mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate);
 
-
-                                if (updated) {
-
-                                 //   Toast.makeText(getApplicationContext(), "Settlement amount insert for " + paymentName, Toast.LENGTH_SHORT).show();
-                                } else {
-                                  //  Toast.makeText(getApplicationContext(), "Failed to insert settlement amount for " + paymentName, Toast.LENGTH_SHORT).show();
-                                }
                             }
 
 
@@ -443,7 +436,7 @@ public class printerSetup extends AppCompatActivity {
 
                         if (mraqr != null && !mraqr.equals("Request Failed")) {
                             service.printText("MRA Response" + "\n", null);
-                            service.printQRCode(mraqr + "\n", 5, 1, null);
+                            service.printQRCode(mraqr + "\n", 2, 1, null);
                         }
 
                         // Print the centered footer text
@@ -518,11 +511,17 @@ public class printerSetup extends AppCompatActivity {
                             service.openDrawer(null);
 
                         }
+                       String transactionType;
+                        if(cashorlevel.equals("1")) {
 
+                            mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN);
+                        }else{
+                            mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
+                        }
 
 
                         // Update the transaction status for all in-progress transactions to "Completed"
-                        mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
+
 
                         updateTransactionStatus();
                         MainActivity mainActivity = MainActivity.getInstance();

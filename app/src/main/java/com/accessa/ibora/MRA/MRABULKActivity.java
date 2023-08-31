@@ -4,11 +4,17 @@ package com.accessa.ibora.MRA;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_ADR1;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_BRN;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_OTHER_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_VAT_REG_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CURRENCY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DISCOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TAX_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_HT_A;
@@ -71,23 +77,26 @@ import okhttp3.Response;
 public class MRABULKActivity extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private String cashorlevel,ShopName,LogoPath,CompanyName;
-    private String cashierName,cashierId;
+    private String cashierName,cashierId,BuyerName,BuyerCompany,BuyerTan,BuyerBRN,BuyerNIC , BuyerAddress,BuyerType;;
     private double totalAmount,TaxtotalAmount,TotalHT;
-
+private String   concatenatedJson;
     private static final long SPLASH_DURATION = 1000; // Splash screen duration in milliseconds
 
     private Handler handler;
     private Runnable navigateToNextScreenRunnable;
 private List<ItemData> selectedItems;
     private String aesKey;
+    private String   irn;
     String selectedBuyerName,newtransactionid,selectinvoiceTypeDesc,TransactionType,invoiceRefIdentifier, TransactionsId,TransactionNumber ;
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
     String selectedBuyerType ;
     String selectedBuyerBRN ;
-    String transactionType;
+    String transactionType,Status;
     String selectedBuyerNIC ;
+    public String qrCode,IRN;
     String selectedBuyerAddresse ;
+    private  List<String> selectedTransactionIds;
 
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String TAG = "EncryptionActivity";
@@ -125,24 +134,32 @@ private List<ItemData> selectedItems;
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
                         .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
                 String Till_id = readTextFromFile("till_num.txt");
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
+                    JSONArray transactionArray = new JSONArray(); // Create a JSON array to hold all transactions
+                    String responseBody = response.body().string();
+                    List<String> jsonStrings = new ArrayList<>(); // Create a list to store JSON strings
+// Retrieve the stored transaction IDs from SharedPreferences
+                    SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("idtoBulk", Context.MODE_PRIVATE);
+                    String selectedTransactionIdsJson = sharedPreferences.getString("selectedTransactionIds", null); // Provide a default value of "[]" if the key is not found
 
-                    if (selectedItems != null) {
-                        // Now you have a list of selected items to work with in your MRABULKActivity
-                        for (ItemData item : selectedItems) {
-                            TransactionNumber = item.getId();
-                            TransactionsId = item.getName();
 
-                            String responseBody = response.body().string();
-                            mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
+                        JSONArray jsonArray = new JSONArray(selectedTransactionIdsJson);
 
+                        // Convert the JSONArray to a List of strings
+                       selectedTransactionIds = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            selectedTransactionIds.add(jsonArray.getString(i));
+                        }
+
+                        // Now, you can use selectedTransactionIds in your loop
+                        for (String transactionId : selectedTransactionIds) {
                             // Retrieve the total amount and total tax amount from the transactionheader table
-                            Cursor cursor = mDatabaseHelper.getTransactionHeaderType("STD",TransactionsId);
+                            Cursor cursor = mDatabaseHelper.getTransactionHeaderids(transactionId);
                             int currentCounter = 1; // Default value if no data is present in the table
 
                             if (cursor != null && cursor.moveToFirst()) {
@@ -150,21 +167,34 @@ private List<ItemData> selectedItems;
                                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                                 int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                                 int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
+                                int columnIndexstatus = cursor.getColumnIndex(TRANSACTION_STATUS);
+                                int columnIndexBuyerName = cursor.getColumnIndex(TRANSACTION_CLIENT_NAME);
+                                int columnIndexBuyerComp = cursor.getColumnIndex(TRANSACTION_CLIENT_OTHER_NAME);
+                                int columnIndexBuyerAdd = cursor.getColumnIndex(TRANSACTION_CLIENT_ADR1);
+                                int columnIndexBuyerBRN = cursor.getColumnIndex(TRANSACTION_CLIENT_BRN);
+                                int columnIndexBuyerVAT = cursor.getColumnIndex(TRANSACTION_CLIENT_VAT_REG_NO);
+
                                 currentCounter = cursor.getInt(columnIndexCounter);
 
                                 // Assuming you have retrieved the double values as you mentioned
                                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                                 double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                                 double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
-
+                                Status = cursor.getString(columnIndexstatus);
+                                BuyerName = cursor.getString(columnIndexBuyerName);
+                                BuyerCompany = cursor.getString(columnIndexBuyerComp);
+                                BuyerAddress = cursor.getString(columnIndexBuyerAdd);
+                                BuyerBRN = cursor.getString(columnIndexBuyerBRN);
+                                BuyerTan = cursor.getString(columnIndexBuyerVAT);
+                                System.out.println("buyer vat: " + BuyerTan);
+                                System.out.println("buyer brn: " + BuyerBRN);
                                 // Step 2: Increment the counter value
                                 int newCounter = currentCounter + 1;
 
-// Step 3: Update the counter value in the transactionheader table
+                                // Step 3: Update the counter value in the transactionheader table
                                 mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
 
-
-// Convert the doubles to formatted strings with 2 decimal places
+                                // Convert the doubles to formatted strings with 2 decimal places
                                 String formattedTotalAmount = String.format("%.2f", totalAmount);
                                 String formattedTaxtotalAmount = String.format("%.2f", TaxtotalAmount);
                                 String formattedTotalHT = String.format("%.2f", TotalHT);
@@ -172,128 +202,119 @@ private List<ItemData> selectedItems;
                                 // Construct the JSON request body
                                 JSONObject jsondetailedtransacs = new JSONObject();
 
+                                try {
 
-                                if(SelectedBuyerProfile.equals("")) {
-                                    if(cashorlevel.equals("1")) {
-                                        transactionType = "TRN";
-                                    }else{
-                                        transactionType = TransactionType;
-                                    }
-                                    String TransactionTypes="B2C";
                                     jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-                                    jsondetailedtransacs.put("transactionType", TransactionTypes);
+                                    jsondetailedtransacs.put("transactionType", "B2C");
                                     jsondetailedtransacs.put("personType", "NVTR");
-                                    jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
+                                    jsondetailedtransacs.put("invoiceTypeDesc", "STD");
                                     jsondetailedtransacs.put("currency", "MUR");
-                                    jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
-                                    jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
+                                    jsondetailedtransacs.put("invoiceIdentifier", transactionId);
                                     jsondetailedtransacs.put("previousNoteHash", "prevNote");
                                     jsondetailedtransacs.put("reasonStated", "test");
                                     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
                                     jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
                                     jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
                                     jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
-                                }  else {
-                                    if(cashorlevel.equals("1")) {
-                                        transactionType = "TRN";
-                                    }else{
-                                        transactionType = TransactionType;
+
+                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                        int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_1);
+                                        int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_2);
+                                        int columnCompanyAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_3);
+                                        int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
+                                        int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
+                                        int columnTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_TEL_NO);
+                                        int columncompnameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
+
+                                        String CompanyName = cursorCompany.getString(columncompnameIndex);
+                                        String CompanyAdress1 = cursorCompany.getString(columnCompanyAddressIndex);
+                                        String CompanyAdress2 = cursorCompany.getString(columnCompanyAddress2Index);
+                                        String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
+                                        String Addresse = CompanyAdress1 + "," + CompanyAdress2 + "," + CompanyAdress3;
+                                        String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
+                                        String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
+                                        String TelNum = cursorCompany.getString(columnTelNumIndex);
+                                        // Construct the "seller" JSON object
+                                        JSONObject seller = new JSONObject();
+                                        seller.put("name", CompanyName);
+                                        seller.put("tan", CompanyVatNo);
+                                        seller.put("brn", CompanyBRNNo);
+                                        seller.put("businessAddr", Addresse);
+                                        seller.put("businessPhoneNum", TelNum);
+                                        seller.put("ebsCounterNo", Till_id);
+                                        jsondetailedtransacs.put("seller", seller);
                                     }
-                                    jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-                                    jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
-                                    jsondetailedtransacs.put("personType", selectedBuyerType);
-                                    jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-                                    jsondetailedtransacs.put("currency", "MUR");
-                                    jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
-                                    jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
-                                    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-                                    jsondetailedtransacs.put("reasonStated", "test");
-                                    jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-                                    jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-                                    jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-                                    jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
 
-                                }
+                                    //   BuyerNIC = mDatabaseHelper.getNICByTANandBRN(BuyerTan);
 
 
-
-                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                                    int columnCompanyAddressIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_1);
-                                    int columnCompanyAddress2Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_2);
-                                    int columnCompanyAddress3Index = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Comp_ADR_3);
-                                    int columnCompanyVATIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_VAT_NO);
-                                    int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
-                                    int columnTelNumIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_TEL_NO);
-                                    int columncompnameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_COMPANY_NAME);
-
-                                    String CompanyName = cursorCompany.getString(columncompnameIndex);
-                                    String CompanyAdress1 = cursorCompany.getString(columnCompanyAddressIndex);
-                                    String CompanyAdress2 = cursorCompany.getString(columnCompanyAddress2Index);
-                                    String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
-                                    String Addresse = CompanyAdress1 + "," + CompanyAdress2 + "," + CompanyAdress3;
-                                    String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
-                                    String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
-                                    String TelNum = cursorCompany.getString(columnTelNumIndex);
-                                    // Construct the "seller" JSON object
-                                    JSONObject seller = new JSONObject();
-                                    seller.put("name", CompanyName);
-                                    seller.put("tan", CompanyVatNo);
-                                    seller.put("brn", CompanyBRNNo);
-                                    seller.put("businessAddr", Addresse);
-                                    seller.put("businessPhoneNum", TelNum);
-                                    seller.put("ebsCounterNo", Till_id);
-                                    jsondetailedtransacs.put("seller", seller);
-                                }
+                                    // Construct the "buyer" JSON object
+                                    JSONObject buyer = new JSONObject();
+                                    buyer.put("name", BuyerName);
+                                    buyer.put("tan", BuyerTan);
+                                    buyer.put("brn", BuyerBRN);
+                                    buyer.put("businessAdd", BuyerAddress);
+                                    buyer.put("buyerType", BuyerBRN);
+                                    buyer.put("nic", BuyerBRN);
+                                    jsondetailedtransacs.put("buyer", buyer);
 
 
-                                // Construct the "buyer" JSON object
-                                JSONObject buyer = new JSONObject();
-                                buyer.put("name", selectedBuyerName);
-                                buyer.put("tan", selectedBuyerTAN);
-                                buyer.put("brn", selectedBuyerBRN);
-                                buyer.put("businessAdd", selectedBuyerAddresse);
-                                buyer.put("buyerType", selectedBuyerType);
-                                buyer.put("nic", selectedBuyerNIC);
-                                jsondetailedtransacs.put("buyer", buyer);
+                                    // Assuming you have retrieved the list of items from your database
+                                    List<Transaction> itemListFromDatabase = getItemsFromDatabase(transactionId); // Replace with your method to fetch items
 
-                                // Assuming you have retrieved the list of items from your database
-                                List<Transaction> itemListFromDatabase = getItemsFromDatabase(); // Replace with your method to fetch items
+                                    // Construct the "itemList" JSON array
+                                    JSONArray itemList = new JSONArray();
 
-                                // Construct the "itemList" JSON array
-                                JSONArray itemList = new JSONArray();
-
-                                for (Transaction itemFromDatabase : itemListFromDatabase) {
-                                    JSONObject transaction = new JSONObject();
-                                    transaction.put("itemNo", itemFromDatabase.getId());
-                                    transaction.put("taxCode", itemFromDatabase.getTaxCode());
-                                    transaction.put("nature", itemFromDatabase.getNature());
-                                    transaction.put("currency", itemFromDatabase.getCurrency());
-                                    transaction.put("itemCode", itemFromDatabase.getItemcode());
-                                    transaction.put("itemDesc", itemFromDatabase.getLongDescription());
-                                    transaction.put("quantity", itemFromDatabase.getItemQuantity());
-                                    transaction.put("unitPrice", itemFromDatabase.getUnitPrice());
-                                    transaction.put("discount", itemFromDatabase.getDiscount());
-                                    transaction.put("amtWoVatCur", itemFromDatabase.getTotalAmountWitoutVAT());
-                                    transaction.put("amtWoVat", itemFromDatabase.getTotalAmountWitoutVAT());
-                                    transaction.put("tds", itemFromDatabase.getTotalDiscount());
-                                    transaction.put("vatAmt", itemFromDatabase.getTotalVatAmount());
-                                    transaction.put("totalPrice", itemFromDatabase.getTotalPrice());
-                                    itemList.put(transaction);
-                                }
+                                    for (Transaction itemFromDatabase : itemListFromDatabase) {
+                                        JSONObject transaction = new JSONObject();
+                                        transaction.put("itemNo", itemFromDatabase.getId());
+                                        transaction.put("taxCode", itemFromDatabase.getTaxCode());
+                                        transaction.put("nature", itemFromDatabase.getNature());
+                                        transaction.put("currency", itemFromDatabase.getCurrency());
+                                        transaction.put("itemCode", itemFromDatabase.getItemcode());
+                                        transaction.put("itemDesc", itemFromDatabase.getLongDescription());
+                                        transaction.put("quantity", itemFromDatabase.getItemQuantity());
+                                        transaction.put("unitPrice", itemFromDatabase.getUnitPrice());
+                                        transaction.put("discount", itemFromDatabase.getDiscount());
+                                        transaction.put("amtWoVatCur", itemFromDatabase.getTotalAmountWitoutVAT());
+                                        transaction.put("amtWoVat", itemFromDatabase.getTotalAmountWitoutVAT());
+                                        transaction.put("tds", itemFromDatabase.getTotalDiscount());
+                                        transaction.put("vatAmt", itemFromDatabase.getTotalVatAmount());
+                                        transaction.put("totalPrice", itemFromDatabase.getTotalPrice());
+                                        itemList.put(transaction);
+                                    }
 
 // Add the itemList to the main JSON object
-                                jsondetailedtransacs.put("itemList", itemList);
+                                    jsondetailedtransacs.put("itemList", itemList);
 
 
-                                jsondetailedtransacs.put("salesTransactions", "CASH");
-                                jsondetailedtransacs.put("paymentMethods", "CASH");
+                                    jsondetailedtransacs.put("salesTransactions", "CASH");
 
-                                // Convert JSON object to string
-                                String jsondetails = jsondetailedtransacs.toString();
-                                jsondetails = "[" + jsondetails + "]";
 
-                                System.out.println("newjson: " + jsondetails);
+
+                                    // Convert JSON object to string
+                                    String jsondetails = jsondetailedtransacs.toString();
+
+                                } catch (JSONException e) {
+                                    throw new RuntimeException(e);
+                                }
+
+
+                                String jsonString = jsondetailedtransacs.toString();
+                                jsonStrings.add(jsonString); // Add the JSON string to the list
+
+                                // ... Add more log statements or processing as needed
+                            }
+                            // Join the JSON strings with commas
+                            concatenatedJson = String.join(",", jsonStrings);
+                            concatenatedJson = "[" + concatenatedJson + "]";
+
+                        }
+
+
+
+                                System.out.println("newjson: " + concatenatedJson);
 
 
                                 // Parse the response JSON to extract the key
@@ -305,7 +326,7 @@ private List<ItemData> selectedItems;
                                 String decryptedKey = decryptKey(encryptedKeyBase64, aesKey);
 
                                 // Now you have the decrypted key to use for encryption
-                                String encryptedInvoice = encryptedInvoice(jsondetails, decryptedKey);
+                                String encryptedInvoice = encryptedInvoice(concatenatedJson, decryptedKey);
 
 
                                 // Construct the JSON request body
@@ -326,7 +347,7 @@ private List<ItemData> selectedItems;
                                         .addHeader("Content-Type", "application/json")
 
                                         .addHeader("token", encryptedtokenBase64)
-                                        .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                                         .addHeader("username", "LBatour")
                                         .addHeader("areaCode", "734")
                                         .post(body1)
@@ -336,7 +357,8 @@ private List<ItemData> selectedItems;
                                 if (responsesQRMRA.isSuccessful()) {
                                     String responseBody1 = responsesQRMRA.body().string();
                                     System.out.println("response: " + responseBody1);
-                                    String qrCode = extractQrCode(responseBody1);
+                                     qrCode = extractQrCode(responseBody1);
+                                    irn= extractIRNCode(responseBody1);
                                     if (qrCode != null) {
                                         System.out.println("QR Code: " + qrCode);
                                     } else {
@@ -349,14 +371,6 @@ private List<ItemData> selectedItems;
                                 } else {
                                     return "Error response code: " + responsesQRMRA;
                                 }
-                            }else{
-                                return "Error from sqlite: " ;
-                            }
-
-                        }
-                    } else {
-                        return "Error from sqlite: " ;
-                    }
 
                 } else {
                     return "Error response code 1: " + response.code();
@@ -366,7 +380,7 @@ private List<ItemData> selectedItems;
                 e.printStackTrace();
                 return "Request Failed: " + e.getMessage();
             }
-            return encryptedPayload;
+
         }
 
         @Override
@@ -376,15 +390,17 @@ private List<ItemData> selectedItems;
                 public void run() {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
+                        String MRAMETHOD="Bulk";
 
-                        insertCashReturn(0,0,result);
+
+                        insertCashReturnForMultipleTransactions(selectedTransactionIds,"Bulk",irn,result);
                         navigateToNextScreen();
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
-
-                        insertCashReturn(0,0,result);
+                        String MRAMETHOD="BULK";
+                        insertCashReturnForMultipleTransactions(selectedTransactionIds,"Bulk",irn,result);
                         navigateToNextScreen();
                     }
                 }
@@ -395,21 +411,15 @@ private List<ItemData> selectedItems;
 
     }
 
+
+    // Function to show JSON string in an AlertDialog
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.splashflash);
-
-        // Retrieve the passed buyer information from the intent
-        Intent intent = getIntent();
-        selectedItems = (List<ItemData>) intent.getSerializableExtra("selectedItems");
-
-
         mDatabaseHelper = new DatabaseHelper(this);
-
-
-
 
         SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -417,6 +427,27 @@ private List<ItemData> selectedItems;
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
         ShopName = sharedPreference.getString("ShopName", null);
+        // Retrieve the passed buyer information from the intent
+        Intent intent = getIntent();
+        // Retrieve the stored transaction IDs from SharedPreferences
+
+
+        // Get the current date and time
+        Date currentDate = new Date();
+
+        // Define the desired date format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss", Locale.getDefault());
+
+        // Format the date and time
+        String formattedDateTime = dateFormat.format(currentDate);
+
+        String requestidmethod = getRequestid();
+
+        List<String> jsonStrings = new ArrayList<>(); // Create a list to store JSON strings
+// Retrieve the stored transaction IDs from SharedPreferences
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("idtoBulk", Context.MODE_PRIVATE);
+        String selectedTransactionIdsJson = sharedPreferences.getString("selectedTransactionIds", null); // Provide a default value of "[]" if the key is not found
+
 
 
         try {
@@ -460,16 +491,23 @@ private List<ItemData> selectedItems;
             // textViewResult.setText("Encryption Failed");
             Log.e(TAG, "Encryption Failed", e);
         }
+
     }
 
-    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra){
+    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra,String mrairn,String MRAMETHOD){
 
         // Insert the cash return value to the header table
-        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra);
+        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra, mrairn,MRAMETHOD, transactionType);
         if (cashReturnUpdated) {
             Toast.makeText(getApplicationContext(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getApplicationContext(), "Failed to insert cash return amount: " + cashReturn, Toast.LENGTH_SHORT).show();
+        }
+    }
+    public void insertCashReturnForMultipleTransactions(List<String> transactionIds,  String MRAMETHOD,String irn,String Qr) {
+        for (String transactionId : transactionIds) {
+            mDatabaseHelper.insertmramethod( transactionId,  MRAMETHOD,irn,Qr);
+
         }
     }
 
@@ -574,11 +612,11 @@ private List<ItemData> selectedItems;
             return null;
         }
     }
-    private List<Transaction> getItemsFromDatabase() {
+    private List<Transaction> getItemsFromDatabase(String transactionId) {
         List<Transaction> itemList = new ArrayList<>();
 
         // Replace the following with your actual database query logic
-        Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(TransactionType, newtransactionid);
+        Cursor cursor = mDatabaseHelper.getTransactionsById( transactionId);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -641,6 +679,23 @@ private List<ItemData> selectedItems;
 
         return itemList;
     }
+
+
+    public static String extractIRNCode(String apiResponse) {
+        try {
+            JSONObject jsonResponse = new JSONObject(apiResponse);
+            if (jsonResponse.has("fiscalisedInvoices")) {
+                JSONObject firstInvoice = jsonResponse.getJSONArray("fiscalisedInvoices").getJSONObject(0);
+                if (firstInvoice.has("irn")) {
+                    return firstInvoice.getString("irn");
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if qrCode is not found or an error occurs
+    }
+
     private void navigateToNextScreen() {
         // Start the next activity (e.g., main activity)
         Intent intent = new Intent(this, MainActivity.class);

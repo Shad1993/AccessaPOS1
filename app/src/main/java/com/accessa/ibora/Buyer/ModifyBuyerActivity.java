@@ -42,7 +42,7 @@ public class ModifyBuyerActivity extends Activity {
     private EditText BRN_Edittext;
     private EditText Adresse_Edittext;
     private EditText Type_Edittext;
-    private EditText NIC_Edittext;
+    private EditText NIC_Edittext,editTextOtherNames;
 
     private long _id;
     private DatabaseHelper mDatabaseHelper;
@@ -70,6 +70,7 @@ public class ModifyBuyerActivity extends Activity {
         dbManager.open();
 
         Name_Edittext = findViewById(R.id.etName);
+        editTextOtherNames = findViewById(R.id.etOtherName);
         compName_Edittext = findViewById(R.id.etcompName);
         Tan_Edittext = findViewById(R.id.etTAN);
         BRN_Edittext = findViewById(R.id.etBRN);
@@ -105,6 +106,7 @@ public class ModifyBuyerActivity extends Activity {
         if (buyer != null) {
             Name_Edittext.setText(buyer.getNames());
             compName_Edittext.setText(buyer.getCompanyName());
+            editTextOtherNames.setText(buyer.getBuyerOtherName());
             Tan_Edittext.setText(buyer.getTan());
             BRN_Edittext.setText(buyer.getBrn());
             Adresse_Edittext.setText(buyer.getBusinessAddr());
@@ -153,6 +155,7 @@ public class ModifyBuyerActivity extends Activity {
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         String name = Name_Edittext.getText().toString().trim();
+        String Othername = editTextOtherNames.getText().toString().trim();
         String compname = compName_Edittext.getText().toString().trim();
         String tan = Tan_Edittext.getText().toString().trim();
         String brn = BRN_Edittext.getText().toString().trim();
@@ -162,12 +165,12 @@ public class ModifyBuyerActivity extends Activity {
         String nic = NIC_Edittext.getText().toString().trim();
 
 
-        if (name.isEmpty() || compname.isEmpty() || tan.isEmpty() || brn.isEmpty() || add.isEmpty() || buyerType.isEmpty() || Buyerprofile.isEmpty() || nic.isEmpty() ) {
+        if (name.isEmpty()|| Othername.isEmpty() || compname.isEmpty() || tan.isEmpty() || brn.isEmpty() || add.isEmpty() || buyerType.isEmpty() || Buyerprofile.isEmpty() || nic.isEmpty() ) {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        boolean isUpdated = dbManager.updateBuyer( _id,name, compname, tan, brn,add,buyerType,Buyerprofile,nic);
+        boolean isUpdated = dbManager.updateBuyer( _id,name,Othername, compname, tan, brn,add,buyerType,Buyerprofile,nic);
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, R.string.Disc, Toast.LENGTH_SHORT).show();

@@ -89,6 +89,7 @@ public class Mra extends AppCompatActivity {
     private double totalAmount,TaxtotalAmount,TotalHT;
     private String aesKey;
     String transactionType;
+    private String   irn;
     String selectedBuyerName ;
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
@@ -133,7 +134,7 @@ public class Mra extends AppCompatActivity {
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
                         .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
                 String Till_id = readTextFromFile("till_num.txt");
@@ -175,13 +176,11 @@ public class Mra extends AppCompatActivity {
                         Log.d("cashier", cashorlevel);
 if(SelectedBuyerProfile.equals("")) {
     if(cashorlevel.equals("1")) {
-        Log.d("cashier", cashorlevel);
         transactionType = "TRN";
     }else{
         transactionType = "STD";
     }
 
-        String VATR = "NVTR";
         String TransactionType = "B2C";
         jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
         jsondetailedtransacs.put("transactionType", TransactionType);
@@ -330,7 +329,7 @@ if(SelectedBuyerProfile.equals("")) {
                                 .addHeader("Content-Type", "application/json")
 
                                 .addHeader("token", encryptedtokenBase64)
-                                .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                                .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                                 .addHeader("username", "LBatour")
                                 .addHeader("areaCode", "734")
                                 .post(body1)
@@ -341,8 +340,10 @@ if(SelectedBuyerProfile.equals("")) {
                             String responseBody1 = responsesQRMRA.body().string();
                             System.out.println("response: " + responseBody1);
                             String qrCode = extractQrCode(responseBody1);
+                             irn= extractIRNCode(responseBody1);
                             if (qrCode != null) {
                                 System.out.println("QR Code: " + qrCode);
+                                System.out.println("IRN: " + irn);
                             } else {
                                 System.out.println("QR Code not found or error occurred.");
                             }
@@ -383,7 +384,8 @@ if(SelectedBuyerProfile.equals("")) {
                                 transactionIdInProgress,
                                 amount,
                                 popFraction,
-                                result
+                                result,
+                                irn
                         );
 
                         dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
@@ -400,7 +402,8 @@ if(SelectedBuyerProfile.equals("")) {
                                 transactionIdInProgress,
                                 amount,
                                 popFraction,
-                                result
+                                result,
+                                irn
 
 
                         );
@@ -504,6 +507,20 @@ if(SelectedBuyerProfile.equals("")) {
                 JSONObject firstInvoice = jsonResponse.getJSONArray("fiscalisedInvoices").getJSONObject(0);
                 if (firstInvoice.has("qrCode")) {
                     return firstInvoice.getString("qrCode");
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if qrCode is not found or an error occurs
+    }
+    public static String extractIRNCode(String apiResponse) {
+        try {
+            JSONObject jsonResponse = new JSONObject(apiResponse);
+            if (jsonResponse.has("fiscalisedInvoices")) {
+                JSONObject firstInvoice = jsonResponse.getJSONArray("fiscalisedInvoices").getJSONObject(0);
+                if (firstInvoice.has("irn")) {
+                    return firstInvoice.getString("irn");
                 }
             }
         } catch (JSONException e) {

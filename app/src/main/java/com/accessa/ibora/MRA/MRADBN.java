@@ -19,37 +19,24 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_H
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
-import static com.accessa.ibora.product.items.DatabaseHelper.VAT_Type;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.Item;
-import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
-import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.accessa.ibora.sales.ticket.Transaction;
 
 import org.json.JSONArray;
@@ -57,24 +44,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -94,6 +76,7 @@ public class MRADBN extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private String cashorlevel,ShopName,LogoPath,CompanyName;
     private String cashierName,cashierId;
+    private String   irn;
     private double totalAmount,TaxtotalAmount,TotalHT;
 
     private static final long SPLASH_DURATION = 1000; // Splash screen duration in milliseconds
@@ -147,7 +130,7 @@ public class MRADBN extends AppCompatActivity {
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
                         .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
                 String Till_id = readTextFromFile("till_num.txt");
@@ -340,7 +323,7 @@ public class MRADBN extends AppCompatActivity {
                                 .addHeader("Content-Type", "application/json")
 
                                 .addHeader("token", encryptedtokenBase64)
-                                .addHeader("ebsMraId", "16916680316722DELTNOB17H")
+                                .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                                 .addHeader("username", "LBatour")
                                 .addHeader("areaCode", "734")
                                 .post(body1)
@@ -351,6 +334,7 @@ public class MRADBN extends AppCompatActivity {
                             String responseBody1 = responsesQRMRA.body().string();
                             System.out.println("response: " + responseBody1);
                             String qrCode = extractQrCode(responseBody1);
+                            irn= extractIRNCode(responseBody1);
                             if (qrCode != null) {
                                 System.out.println("QR Code: " + qrCode);
                             } else {
@@ -384,15 +368,15 @@ public class MRADBN extends AppCompatActivity {
                 public void run() {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
-
-                        insertCashReturn(0,0,result);
+                       String MRAMETHOD="Single";
+                        insertCashReturn(0,0,result,irn,MRAMETHOD);
                         navigateToNextScreen();
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
-
-                        insertCashReturn(0,0,result);
+                        String MRAMETHOD="Single";
+                        insertCashReturn(0,0,result,irn,MRAMETHOD);
                         navigateToNextScreen();
                     }
                 }
@@ -485,10 +469,10 @@ public class MRADBN extends AppCompatActivity {
         }
     }
 
-    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra){
+    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra,String mrairn,String MRAMETHOD){
 
         // Insert the cash return value to the header table
-        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra);
+        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra, mrairn,MRAMETHOD, transactionType);
         if (cashReturnUpdated) {
             Toast.makeText(getApplicationContext(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
         } else {
@@ -516,7 +500,20 @@ public class MRADBN extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
         return dateFormat.format(currentDate);
     }
-
+    public static String extractIRNCode(String apiResponse) {
+        try {
+            JSONObject jsonResponse = new JSONObject(apiResponse);
+            if (jsonResponse.has("fiscalisedInvoices")) {
+                JSONObject firstInvoice = jsonResponse.getJSONArray("fiscalisedInvoices").getJSONObject(0);
+                if (firstInvoice.has("irn")) {
+                    return firstInvoice.getString("irn");
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if qrCode is not found or an error occurs
+    }
     public static String generateRandomAESKey() {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");

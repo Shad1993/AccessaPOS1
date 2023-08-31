@@ -797,7 +797,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             if (cursorCompany != null && cursorCompany.moveToFirst()) {
                 int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
 
-
+                String MRAMETHOD="Single";
                 String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
 
                 // Save the transaction details in the TRANSACTION_HEADER table
@@ -813,7 +813,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         quantityItem,
                         cashierId,
                         transactionStatus,
-                        PosNum
+                        PosNum,
+                         MRAMETHOD
+
                 );
 
             }

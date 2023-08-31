@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -63,8 +62,10 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
     private static final String POSNumber="posNumber";
-    private String qrMra,Transaction_Id,PosNum,amountpaid,pop;
-    private String cashierId;
+    private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn;
+    private String cashierId,cashierName,cashorlevel,CompanyName;
+
+
     private double cashReturn;
     private Set<String> selectedItems; // Store selected items
     private TextView IDselectedQRTextView;
@@ -75,6 +76,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String amounts = "amount";
     private static final String popFragment = "popfragment";
     private static final String MRAQR="mraqr";
+    private static final String MRAIRN="MRAIRN";
 
     private View view; // Declare the view variable
 
@@ -85,7 +87,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     // You can create a public method to get the stored QR code string
 
 
-    public static validateticketDialogFragment newInstance(String transactionId, String amount, String popFraction, String result) {
+    public static validateticketDialogFragment newInstance(String transactionId, String amount, String popFraction, String result, String IRN) {
         validateticketDialogFragment fragment = new validateticketDialogFragment();
         Bundle args = new Bundle();
 
@@ -93,6 +95,7 @@ public class validateticketDialogFragment extends DialogFragment  {
         args.putString(amounts, amount);
         args.putString(popFragment, popFraction);
         args.putString(MRAQR, result);
+        args.putString(MRAIRN, IRN);
         fragment.setArguments(args);
         return fragment;
     }
@@ -106,6 +109,14 @@ public class validateticketDialogFragment extends DialogFragment  {
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
+
+
+        SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorId", null);
+        cashierName = sharedPreference.getString("cashorName", null);
+        cashorlevel = sharedPreference.getString("cashorlevel", null);
+        CompanyName=sharedPreference.getString("CompanyName",null);
+
         // Check if intent has data
         Intent intent = getActivity().getIntent();
         if (intent != null) {
@@ -229,8 +240,10 @@ public class validateticketDialogFragment extends DialogFragment  {
             Transaction_Id = args.getString(ARG_Transaction_id);
             amountpaid = args.getString(amounts);
             pop= args.getString(popFragment);
+            mrairn=args.getString(MRAIRN);
             qrMra=args.getString(MRAQR);
-            Log.d("MRAqr",qrMra);
+
+
 
             SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
             transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -398,8 +411,12 @@ public class validateticketDialogFragment extends DialogFragment  {
                 }
 
                 // Print or use the total amount as needed
-
-
+                String transactionType;
+                if(cashorlevel.equals("1")) {
+                     transactionType = "TRN";
+                }else{
+                    transactionType = "STD";
+                }
                 double cashReturn= totalAmountinserted- totalAmount;
                 // Pass the amount received and settlement items as extras to the print activity
                 Intent intent = new Intent(getActivity(), printerSetup.class);
@@ -407,7 +424,10 @@ public class validateticketDialogFragment extends DialogFragment  {
                 intent.putExtra("cash_return", cashReturn);
                 intent.putExtra("settlement_items", settlementItems);
                 intent.putExtra("mraQR", qrMra);
-                insertCashReturn(cashReturn,totalAmountinserted,qrMra);
+                intent.putExtra("MRAIRN", mrairn);
+
+                String MRAMETHOD="Single";
+                insertCashReturn(cashReturn,totalAmountinserted,qrMra,mrairn,MRAMETHOD,transactionType);
                 startActivity(intent);
             }
 
@@ -549,15 +569,10 @@ public class validateticketDialogFragment extends DialogFragment  {
     }
 
 
-public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra){
+public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD, String transactionType){
 
-    // Insert the cash return value to the header table
-    boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra);
-    if (cashReturnUpdated) {
-        Toast.makeText(getActivity(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
-    } else {
-        Toast.makeText(getActivity(), "Failed to insert cash return amount: " + cashReturn, Toast.LENGTH_SHORT).show();
-    }
+     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD,transactionType);
+
 }
     public void returnHome() {
         Intent home_intent1 = new Intent(getActivity(), MainActivity.class)

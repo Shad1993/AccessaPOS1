@@ -88,6 +88,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CASHOR_id = "cashorid";
     public static final String COLUMN_CASHOR_Shop ="ShopName" ;
     public static final String TRANSACTION_STATUS_COMPLETED = "Completed";
+    public static final String TRANSACTION_STATUS_TRN = "TRN";
     public static final String TRANSACTION_STATUS_INPROGRESS = "InProgress";
     public static final String COLUMN_PIN = "pin";
     public static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
@@ -184,14 +185,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_ITEM_CODE = "ItemCode";
     public static final String TRANSACTION_TOTAL_DISCOUNT = "TotalDisc";
     public static final String TRANSACTION_MRA_QR = "MRA_Response";
+    public static final String TRANSACTION_MRA_IRN = "MRA_IRN";
+    public static final String TRANSACTION_MRA_Method = "MRA_Method";
     public static final String TRANSACTION_ITEM_QUANTITY = "QtyItem";
 
-    private static final String TRANSACTION_CLIENT_NAME = "ClientName";
-    private static final String TRANSACTION_CLIENT_OTHER_NAME = "ClientOtherName";
-    private static final String TRANSACTION_CLIENT_ADR1 = "ClientAdr1";
-    private static final String TRANSACTION_CLIENT_ADR2 = "ClientAdr2";
-    private static final String TRANSACTION_CLIENT_VAT_REG_NO = "ClientVATRegNo";
-    private static final String TRANSACTION_CLIENT_BRN = "ClientBRN";
+    public static final String TRANSACTION_CLIENT_NAME = "ClientName";
+    public static final String TRANSACTION_CLIENT_OTHER_NAME = "ClientOtherName";
+    public static final String TRANSACTION_CLIENT_Company_NAME = "ClientCompanyName";
+    public static final String TRANSACTION_CLIENT_ADR1 = "ClientAdr1";
+    public static final String TRANSACTION_CLIENT_ADR2 = "ClientAdr2";
+    public static final String TRANSACTION_CLIENT_VAT_REG_NO = "ClientVATRegNo";
+    public static final String TRANSACTION_CLIENT_BRN = "ClientBRN";
     private static final String TRANSACTION_CLIENT_TEL = "ClientTel";
     private static final String TRANSACTION_INVOICE_REF = "InvoiceRef";
     private static final String TRANSACTION_IS_CASH_CREDIT = "IsCash_Credit";
@@ -199,6 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_CLIENT_CODE = "ClientCode";
     private static final String TRANSACTION_LOYALTY = "Loyalty";
     public static final String TRANSACTION_TICKET_NO = "TranscationId";
+    public static final String TRANSACTION_PREVIOUS_HASH ="PreviousHash" ;
 
 
     // Invoice Settlement table columns
@@ -273,6 +278,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String BUYER_NIC ="Buyer_NIC" ;
     public static String BUYER_Company_name="companyName";
     public static String BUYER_Profile="Buyer_Profile";
+    public static String BUYER_Other_NAME="BuyerOtherName";
 
 
 // POS Table
@@ -291,6 +297,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COUPON_DATE_CREATED = "date_created";
     private static final String COUPON_TIME_CREATED = "time_created";
     private static final String COUPON_DISCOUNT = "discount";
+    public static final String TRANSACTION_CLIENT_NIC = "ClientNIC";
 
     //default qr
 
@@ -497,6 +504,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_DATE_MODIFIED + " TEXT, " +
             TRANSACTION_TIME_CREATED + " TEXT, " +
             TRANSACTION_TIME_MODIFIED + " TEXT, " +
+            TRANSACTION_PREVIOUS_HASH + " TEXT, " +
             TRANSACTION_MEMBER_CARD + " TEXT, " +
             TRANSACTION_SUB_TOTAL + " DECIMAL(10, 2), " +
             TRANSACTION_CASHIER_CODE + " TEXT, " +
@@ -516,9 +524,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TOTAL_HT_B + " DECIMAL(10, 2), " +
             TRANSACTION_CLIENT_NAME + " TEXT, " +
             TRANSACTION_CLIENT_OTHER_NAME + " TEXT, " +
+            TRANSACTION_CLIENT_NIC + " TEXT, " +
             TRANSACTION_CLIENT_ADR1 + " TEXT, " +
             TRANSACTION_CLIENT_ADR2 + " TEXT, " +
-            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed')), " +
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed','TRN')), " +
             TRANSACTION_CLIENT_VAT_REG_NO + " TEXT, " +
             TRANSACTION_CLIENT_BRN + " TEXT, " +
             TRANSACTION_CLIENT_TEL + " TEXT, " +
@@ -528,7 +537,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_CLIENT_CODE + " TEXT, " +
             TRANSACTION_LOYALTY + " TEXT, " +
             TRANSACTION_MRA_QR + " TEXT, " +
+            TRANSACTION_MRA_IRN + " TEXT, " +
             TRANSACTION_MRA_Invoice_Counter + " TEXT, " +
+            TRANSACTION_MRA_Method + " TEXT," +
+
             "FOREIGN KEY (" + TRANSACTION_TICKET_NO + ") REFERENCES " +
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
@@ -606,6 +618,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String CREATE_BUYER_TABLE = "CREATE TABLE " + BUYER_TABLE_NAME + "(" +
             BUYER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             BUYER_NAME + " TEXT NOT NULL, " +
+            BUYER_Other_NAME + " TEXT NOT NULL, " +
             BUYER_Company_name + " TEXT NOT NULL, " +
             BUYER_TAN + " TEXT , " +
             BUYER_BRN + " TEXT , " +
@@ -706,6 +719,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.e(TAG, "Error inserting default item into the database");
         }
     }
+    public String getNICByTANandBRN(String tan) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String nic = null;
+
+        // Define the columns you want to retrieve (in this case, only NIC)
+        String[] projection = {BUYER_NIC};
+
+        // Define the WHERE clause with placeholders for TAN and BRN
+        String selection = BUYER_TAN + " = ?";
+
+        // Specify the values to replace the placeholders
+        String[] selectionArgs = {tan};
+
+        // Query the database
+        Cursor cursor = db.query(
+                BUYER_TABLE_NAME,       // The table to query
+                projection,             // The columns to return
+                selection,              // The columns for the WHERE clause
+                selectionArgs,          // The values for the WHERE clause
+                null,                   // Don't group the rows
+                null,                   // Don't filter by row groups
+                null                    // The sort order
+        );
+
+        // Check if there is a result
+        if (cursor != null && cursor.moveToFirst()) {
+            // Get the NIC from the cursor
+            nic = cursor.getString(cursor.getColumnIndexOrThrow(BUYER_NIC));
+            cursor.close(); // Close the cursor when done
+        }
+
+        // Close the database connection
+        db.close();
+
+        return nic; // Return the NIC or null if not found
+    }
 
     private void addDefaultPaymentMethod(SQLiteDatabase db, String paymentMethod, String cashOrId) {
         ContentValues values = new ContentValues();
@@ -781,7 +830,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean saveTransactionHeader(String Shopnumber, String transactionId, double totalAmount, String currentDate,
-                                         String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus, String posNum) {
+                                         String currentTime, double totalHT_A, double totalTTC, double taxAmount, int quantityItem, String cashierId, String transactionStatus, String posNum, String MRAMETHOD) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Check if the transaction ID already exists
@@ -810,6 +859,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_CASHIER_CODE, cashierId);
         values.put(TRANSACTION_STATUS, transactionStatus);
         values.put(TRANSACTION_TERMINAL_NO, posNum);
+        values.put(TRANSACTION_MRA_Method, MRAMETHOD);
 
 
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
@@ -830,11 +880,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
 
     }
-    public void updateAllTransactionsStatus(String Type) {
+    public void updateAllTransactionsStatus(String Type,String MRAMETHOD) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_STATUS, Type);
+        values.put(TRANSACTION_MRA_Method, MRAMETHOD);
 
 
         // Update the status of all in-progress transactions to the new status
@@ -1154,6 +1205,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(query, selectionArgs);
     }
+
+    public Cursor getTransactionsById( String transactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
+                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
+                " AND t." + TRANSACTION_ID + " = ?";
+
+        String[] selectionArgs = {transactionId};
+
+        return db.rawQuery(query, selectionArgs);
+    }
     public Cursor getCompanyInfo(String shopName) {
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -1429,7 +1492,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
         String selection = "MRA_Response IS NULL OR MRA_Response = ?";
-        String[] selectionArgs = {"Request Failed%"};
+        String[] selectionArgs = {"Request Failed"};
 
         return db.query(
                 TRANSACTION_HEADER_TABLE_NAME,
@@ -1546,13 +1609,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertcashReturn(double cashReturn, double tenderamount, String transaction_id, String qrMra) {
+    public boolean insertcashReturn(double cashReturn, double tenderamount, String transaction_id, String qrMra, String mrairn, String MRAMETHOD, String transactionType) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_CASH_RETURN, cashReturn);
         values.put(TRANSACTION_TOTAL_PAID, tenderamount);
         values.put(TRANSACTION_MRA_QR, qrMra);
+        values.put(TRANSACTION_MRA_IRN, mrairn);
+        values.put(TRANSACTION_MRA_Method, MRAMETHOD);
+        values.put(TRANSACTION_STATUS, transactionType);
 
         String selection = TRANSACTION_TICKET_NO + " = ?";
         String[] selectionArgs = {transaction_id};
@@ -1922,6 +1988,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 do {
                     // Extract buyer information from the cursor
                     String name = cursor.getString(cursor.getColumnIndex(BUYER_NAME));
+                    String othername = cursor.getString(cursor.getColumnIndex(BUYER_Other_NAME));
                     String tan = cursor.getString(cursor.getColumnIndex(BUYER_TAN));
                     String companyName = cursor.getString(cursor.getColumnIndex(BUYER_Company_name));
                     String brn = cursor.getString(cursor.getColumnIndex(BUYER_BRN));
@@ -1931,7 +1998,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     String nic = cursor.getString(cursor.getColumnIndex(BUYER_NIC));
 
                     // Create a Buyer object and add it to the list
-                    Buyer buyer = new Buyer(name, tan, brn, businessAddr, buyerType,buyerProfile, nic,companyName);
+                    Buyer buyer = new Buyer(name,othername, tan, brn, businessAddr, buyerType,buyerProfile, nic,companyName);
                     buyerList.add(buyer);
                 } while (cursor.moveToNext());
             }
@@ -1951,6 +2018,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put("Buyer_Name", buyer.getNames());
+        values.put(BUYER_Other_NAME, buyer.getNames());
         values.put("Buyer_TAN", buyer.getTan());
         values.put("companyName", buyer.getCompanyName());
         values.put("Buyer_BRN", buyer.getBrn());
@@ -1964,6 +2032,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
 
         return result != -1;
+    }
+
+    public boolean insertmramethod(String transactionId, String mramethod,String irn,String Qr) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_MRA_Method, mramethod);
+        values.put(TRANSACTION_MRA_IRN, irn);
+        values.put(TRANSACTION_MRA_QR, Qr);
+
+        String selection = TRANSACTION_TICKET_NO + " = ?";
+        String[] selectionArgs = {transactionId};
+
+        long newRowId = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
+
+        return newRowId != -1;
     }
 
 }

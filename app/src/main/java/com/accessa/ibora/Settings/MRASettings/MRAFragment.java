@@ -16,18 +16,15 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
-import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.MRA.ItemData;
 import com.accessa.ibora.MRA.MRABULKActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.Receipt.ReceiptAdapter;
-import com.accessa.ibora.Receipt.ReceiptBodyFragment;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.google.gson.Gson;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,6 +33,8 @@ import java.util.List;
 public class MRAFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private DatabaseHelper mDatabaseHelper;
+    private List<String> selectedTransactionIds = new ArrayList<>();
+
     private String cashorId,cashorName,Shopname,cashorlevel;
     @Nullable
     @Override
@@ -79,17 +78,24 @@ public class MRAFragment extends Fragment {
                     public void onItemClick(View view, int position) {
                         TextView idTextView = view.findViewById(R.id.id_text_view);
                         TextView deptNameEditText = view.findViewById(R.id.name_text_view);
-                        TextView QrEditText = view.findViewById(R.id.Available_text_view);
-                        CheckBox checkBox = view.findViewById(R.id.myCheckBox); // Find the CheckBox
-
-                        String id1 = idTextView.getText().toString();
+                        CheckBox checkBox = view.findViewById(R.id.myCheckBox);
                         String id = idTextView.getText().toString();
                         String name = deptNameEditText.getText().toString();
-                        String deptCode = QrEditText.getText().toString();
-
                         // Toggle the CheckBox's checked state
-                        checkBox.setChecked(!checkBox.isChecked());
+                        boolean isChecked = !checkBox.isChecked();
+                        checkBox.setChecked(isChecked);
+
+                        if (isChecked) {
+                            // Add the transaction ID to the list
+                            selectedTransactionIds.add(name);
+                        } else {
+                            // Remove the transaction ID from the list
+                            selectedTransactionIds.remove(name);
+                        }
+                        saveSelectedTransactionIds();
+
                     }
+
 
 
                     @Override
@@ -200,5 +206,16 @@ public class MRAFragment extends Fragment {
 
 
         return view;
+    }
+
+    private void saveSelectedTransactionIds() {
+        // Convert the list to a JSON string
+        Gson gson = new Gson();
+        String selectedIdsJson = gson.toJson(selectedTransactionIds);
+
+        // Save the JSON string in SharedPreferences
+        SharedPreferences.Editor editor = getContext().getSharedPreferences("idtoBulk", Context.MODE_PRIVATE).edit();
+        editor.putString("selectedTransactionIds", selectedIdsJson);
+        editor.apply();
     }
 }

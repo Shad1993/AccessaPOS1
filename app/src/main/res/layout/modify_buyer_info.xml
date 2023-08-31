@@ -10,13 +10,20 @@
         android:layout_height="wrap_content"
         android:hint="Name"
         android:inputType="text" />
-
+    <EditText
+        android:id="@+id/etOtherName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Other Names"
+        android:layout_marginTop="16dp"
+        android:layout_below="@+id/etName"
+        android:inputType="text" />
 
     <EditText
         android:id="@+id/etcompName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/etName"
+        android:layout_below="@+id/etOtherName"
         android:layout_marginTop="16dp"
         android:hint="Company Name"
         android:inputType="text" />

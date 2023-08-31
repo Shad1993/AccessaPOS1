@@ -24,7 +24,7 @@ public class AddBuyerActivity extends AppCompatActivity {
 
     private EditText editTextName,editTextcompname;
     private EditText editTextTan;
-    private EditText editTextBrn;
+    private EditText editTextBrn,editTextOtherNames;
     private EditText editTextBusinessAddr;
     private EditText editTextBuyerType;
     private Spinner spinnerBuyerType,spinnerBuyerProfile;
@@ -40,6 +40,7 @@ public class AddBuyerActivity extends AppCompatActivity {
         databaseHelper = new DatabaseHelper(this);
 
         editTextName = findViewById(R.id.etName);
+        editTextOtherNames = findViewById(R.id.etOtherName);
         editTextcompname = findViewById(R.id.etcompName);
         editTextTan = findViewById(R.id.etTAN);
         editTextBrn = findViewById(R.id.etBRN);
@@ -83,6 +84,7 @@ public class AddBuyerActivity extends AppCompatActivity {
 
     private void saveBuyer() {
         String name = editTextName.getText().toString();
+        String Othername = editTextOtherNames.getText().toString();
         String tan = editTextTan.getText().toString();
         String companyName =editTextcompname.getText().toString();
         String brn = editTextBrn.getText().toString();
@@ -93,7 +95,7 @@ public class AddBuyerActivity extends AppCompatActivity {
         String Buyerprofile = spinnerBuyerProfile.getSelectedItem().toString();
         String nic = editTextNic.getText().toString();
 
-        Buyer newBuyer = new Buyer(name, tan, brn, businessAddr, buyerType,Buyerprofile, nic,companyName);
+        Buyer newBuyer = new Buyer(name,Othername, tan, brn, businessAddr, buyerType,Buyerprofile, nic,companyName);
 
         boolean success = databaseHelper.addBuyer(newBuyer);
 

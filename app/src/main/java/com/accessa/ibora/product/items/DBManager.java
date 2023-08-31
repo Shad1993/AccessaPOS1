@@ -669,6 +669,7 @@ public class DBManager {
         String[] columns = new String[]{
                 DatabaseHelper.BUYER_ID,
                 DatabaseHelper.BUYER_NAME,
+                DatabaseHelper.BUYER_Other_NAME,
                 DatabaseHelper.BUYER_TAN,
                 DatabaseHelper.BUYER_BRN,
                 DatabaseHelper.BUYER_BUSINESS_ADDR,
@@ -687,6 +688,7 @@ public class DBManager {
             buyer = new Buyer();
             buyer.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.BUYER_ID)));
             buyer.setNames(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_NAME)));
+            buyer.setBuyerOtherName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_Other_NAME)));
             buyer.setTan(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_TAN)));
             buyer.setBrn(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_BRN)));
             buyer.setBusinessAddr(cursor.getString(cursor.getColumnIndex(DatabaseHelper.BUYER_BUSINESS_ADDR)));
@@ -836,9 +838,10 @@ public class DBManager {
         database.update(DISCOUNT_TABLE_NAME, contentValue, DatabaseHelper.DISCOUNT_ID + " = " + id, null);
         return true;
     }
-    public boolean updateBuyer(long id, String name, String compname, String tan, String brn,String add, String type, String Buyerprofile,String nic) {
+    public boolean updateBuyer(long id, String name,String OtherNames, String compname, String tan, String brn,String add, String type, String Buyerprofile,String nic) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.BUYER_NAME, name);
+        contentValue.put(DatabaseHelper.BUYER_Other_NAME, OtherNames);
         contentValue.put(DatabaseHelper.BUYER_Company_name, compname);
         contentValue.put(DatabaseHelper.BUYER_TAN, tan);
         contentValue.put(DatabaseHelper.BUYER_BRN, brn);

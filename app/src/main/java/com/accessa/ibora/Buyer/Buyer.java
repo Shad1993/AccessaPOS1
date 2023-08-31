@@ -3,6 +3,7 @@ package com.accessa.ibora.Buyer;
 public class Buyer {
     private int id;
     private String name;
+    private String Othername;
     private String tan;
     private String brn;
     private String businessAddr;
@@ -11,8 +12,9 @@ public class Buyer {
     private String companyName;
     private String profile;
 
-    public Buyer(String name, String tan, String brn, String businessAddr, String buyerType, String profile, String nic, String companyName) {
+    public Buyer(String name,String Othername, String tan, String brn, String businessAddr, String buyerType, String profile, String nic, String companyName) {
         this.name = name;
+        this.Othername = Othername;
         this.tan = tan;
         this.brn = brn;
         this.businessAddr = businessAddr;
@@ -85,6 +87,14 @@ public class Buyer {
 
     public String getCompanyName() {
         return companyName;
+    }
+
+    public void setBuyerOtherName(String Othername) {
+        this.Othername = Othername;
+    }
+
+    public String getBuyerOtherName() {
+        return Othername;
     }
     @Override
     public String toString() {

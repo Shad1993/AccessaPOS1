@@ -562,8 +562,9 @@ if(Type.equals("DRN")) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt("transaction_counter_DBN", latestTransactionDBNCounter);
                     editor.apply();
+                    String MRAMETHOD="Single";
                     // Update the transaction status for all in-progress transactions to "saved"
-                    mDatabaseHelper.updateAllTransactionsStatus(Type);
+                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
                     updateTransactionStatus();
 
 
@@ -645,8 +646,9 @@ if(Type.equals("DRN")) {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putInt("transaction_counter_Proforma", latestTransactionProformaCounter);
     editor.apply();
+                    String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
@@ -712,8 +714,9 @@ if(Type.equals("DRN")) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
             editor.apply();
+            String MRAMETHOD="Single";
             // Update the transaction status for all in-progress transactions to "saved"
-            mDatabaseHelper.updateAllTransactionsStatus(Type);
+            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
             updateTransactionStatus();
 
             // Start the activity with the selected receipt data
@@ -772,8 +775,9 @@ if(Type.equals("DRN")) {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
     editor.apply();
+                    String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
@@ -853,7 +857,7 @@ if(Type.equals("DRN")) {
             // Update the RecyclerView data on the secondary screen
             secondaryDisplay.updateRecyclerViewData(data);
         } else {
-            // Secondary screen not found or not supported
+            // Secondary screen not found or not supportedF
             displayOnLCD();
         }
     }
