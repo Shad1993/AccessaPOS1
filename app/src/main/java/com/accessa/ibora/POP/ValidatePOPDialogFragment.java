@@ -537,7 +537,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     // Create and show the dialog fragment with the data
                     String popFraction= "popfraction";
                     String result=null;
-                    validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(transactionIdInProgress,amount,popFraction, result, result);
+                    validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(transactionIdInProgress,amount,popFraction,null,null,null,null,null,null,null,null);
                     dialogFragment.setTargetFragment(ValidatePOPDialogFragment.this, 0);
                     dialogFragment.show(activity.getSupportFragmentManager(), "validate_transaction_dialog");
                 }

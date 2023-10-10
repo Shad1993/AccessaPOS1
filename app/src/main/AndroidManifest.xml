@@ -101,14 +101,10 @@
         <activity android:name=".Admin.CompanyInfo.POSINFO.PosInfo"/>
         <activity android:name=".SplashFlashActivity"/>
         <activity android:name=".Report.SalesReportActivity"/>
-        <activity android:name=".Sync.connectToMssql"/>
         <activity android:name=".POP.POP"/>
         <activity android:name=".POP.MerchantValidationActivity"/>
         <activity android:name=".POP.EncryptionActivity"/>
         <activity android:name=".POP.RSAEncryptionActivity"/>
-        <activity android:name=".Sync.signuptest"/>
-        <activity android:name=".Sync.AddProducts"/>
-        <activity android:name=".Sync.signup"/>
         <activity android:name=".POP.PopMobileDialogFragment"/>
         <activity android:name=".product.items.Loadfromusb"/>
         <activity android:name=".MRA.Mra"/>
@@ -117,7 +113,16 @@
         <activity android:name=".MRA.MRADBN"/>
         <activity android:name=".printer.PrintDuplicata"/>
         <activity android:name=".MRA.MRABULKActivity"/>
-        <activity android:name="MRA.MRATest"/>
+        <activity android:name=".printer.PrintReport"/>
+        <activity android:name=".printer.PrintCoupon"/>
+        <activity android:name=".SelectDevice"/>
+        <activity android:name=".scanner.InbuiltScannerActivity"/>
+        <activity android:name=".MainActivityMobile"/>
+        <service android:name=".Sync.SyncService" />
+        <service android:name=".Sync.SyncAddToMssql" />
+        <service android:name=".Sync.SyncActivitySync" />
+
+
 
 
         <activity

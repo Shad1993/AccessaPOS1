@@ -72,7 +72,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount, double currentPrice) {
+    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount, double currentPrice,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -102,16 +102,19 @@ public class DBManager {
         contentValue.put(DatabaseHelper.TaxCode, vatCode);
         contentValue.put(DatabaseHelper.TotalDiscount, selectedDiscount);
         contentValue.put(DatabaseHelper.PriceAfterDiscount, currentPrice);
+        contentValue.put(DatabaseHelper.SyncStatus, SyncStatus);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
+        if (!dbHelper.checkBarcodeExistsForcost(Barcode)) {
+            // Insert duplicates into the cost table
+            ContentValues costContentValue = new ContentValues();
+            costContentValue.put(DatabaseHelper.Barcode, Barcode);
+            costContentValue.put(DatabaseHelper.SKU, SKU);
+            costContentValue.put(DatabaseHelper.UserId, UserId);
+            costContentValue.put(DatabaseHelper.LastModified, LastModified);
+            costContentValue.put(DatabaseHelper.Cost, Cost);
+            database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
+        }
 
-        // Insert duplicates into the cost table
-        ContentValues costContentValue = new ContentValues();
-        costContentValue.put(DatabaseHelper.Barcode, Barcode);
-        costContentValue.put(DatabaseHelper.SKU, SKU);
-        costContentValue.put(DatabaseHelper.UserId, UserId);
-        costContentValue.put(DatabaseHelper.LastModified, LastModified);
-        costContentValue.put(DatabaseHelper.Cost, Cost);
-        database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
     }
     public void insertUser(String pin, String cashorname, String cashierLevel, String cashordepartment, String ShopName, String dateCreated, String lastModified, DatabaseHelper databaseHelper) {
         // Insert the item into the main table
@@ -270,13 +273,59 @@ public class DBManager {
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
     }
-
     public boolean deleteItem(long _id) {
+        // Retrieve the barcode from the main table using the _id
+        String barcode = getBarcodeFromMainTable(_id);
+
+        // Check if barcode is not null or empty
+        if (barcode != null && !barcode.isEmpty()) {
+            // First, delete from the main table
+            String selectionMain = DatabaseHelper._ID + "=?";
+            String[] selectionArgsMain = { String.valueOf(_id) };
+            database.delete(DatabaseHelper.TABLE_NAME, selectionMain, selectionArgsMain);
+
+            // Second, delete from the Cost table based on the barcode
+            String selectionCost = "Barcode=?";
+            String[] selectionArgsCost = { barcode };
+            database.delete("Cost", selectionCost, selectionArgsCost);
+
+            return true;
+        } else {
+            // Barcode is not found or empty, return false or handle accordingly
+            return false;
+        }
+    }
+
+    public String getBarcodeFromMainTable(long _id) {
+        String barcode = null;
+        String[] projection = { "Barcode" };
         String selection = DatabaseHelper._ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
-        database.delete(DatabaseHelper.TABLE_NAME, selection, selectionArgs);
-        return true;
+
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                barcode = cursor.getString(cursor.getColumnIndexOrThrow("Barcode"));
+            }
+            cursor.close();
+        }
+
+        return barcode;
     }
+
+
+    public boolean deleteAllItems() {
+        int rowsDeleted = database.delete(DatabaseHelper.TABLE_NAME, null, null);
+        return rowsDeleted > 0;
+    }
+    public boolean deleteItemsWithSyncStatusNotOffline() {
+        String whereClause = DatabaseHelper.SyncStatus + " != ?";
+        String[] whereArgs = { "Offline" };
+
+        int rowsDeleted = database.delete(DatabaseHelper.TABLE_NAME, whereClause, whereArgs);
+        return rowsDeleted > 0;
+    }
+
     public boolean deleteUser(long id) {
         String selection = COLUMN_CASHOR_id + "=?";
         String[] selectionArgs = { String.valueOf(id) };
@@ -1109,4 +1158,87 @@ public class DBManager {
         database.delete(BUYER_TABLE_NAME, selection, selectionArgs);
         return true;
     }
+
+    public void insertwithnewbarcode(String itemname, String desc, String price, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String nature, String currency, String itemCode, String taxCode, String totalDiscount, double priceAfterDiscount, String syncStatus) {
+
+        // Insert the item into the main table
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.Name, itemname);
+        contentValue.put(DatabaseHelper.DESC, desc);
+        contentValue.put(DatabaseHelper.Price, price);
+        contentValue.put(DatabaseHelper.Category, category);
+        contentValue.put(DatabaseHelper.Barcode, barcode);
+        contentValue.put(DatabaseHelper.Department, department);
+        contentValue.put(DatabaseHelper.SubDepartment, subDepartment);
+        contentValue.put(DatabaseHelper.LongDescription, longDescription);
+        contentValue.put(DatabaseHelper.Quantity, quantity);
+        contentValue.put(DatabaseHelper.ExpiryDate, expiryDate);
+        contentValue.put(DatabaseHelper.VAT, vAT);
+        contentValue.put(DatabaseHelper.Weight, weight);
+        contentValue.put(DatabaseHelper.AvailableForSale, availableForSale);
+        contentValue.put(DatabaseHelper.SoldBy, soldBy);
+        contentValue.put(DatabaseHelper.Image, image);
+        contentValue.put(DatabaseHelper.Variant, variant);
+        contentValue.put(DatabaseHelper.SKU, sku);
+        contentValue.put(DatabaseHelper.Cost, cost);
+        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.UserId, userId);
+        contentValue.put(DatabaseHelper.Nature, nature);
+        contentValue.put(DatabaseHelper.Currency, currency);
+        contentValue.put(DatabaseHelper.ItemCode, itemCode);
+        contentValue.put(DatabaseHelper.TaxCode, taxCode);
+        contentValue.put(DatabaseHelper.TotalDiscount, totalDiscount);
+        contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
+        contentValue.put(DatabaseHelper.SyncStatus, syncStatus);
+        database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
+
+
+        if (!dbHelper.checkBarcodeExistsForcost(barcode)) {
+            // Insert duplicates into the cost table
+            ContentValues costContentValue = new ContentValues();
+            costContentValue.put(DatabaseHelper.Barcode, barcode);
+            costContentValue.put(DatabaseHelper.SKU, sku);
+            costContentValue.put(DatabaseHelper.UserId, userId);
+            costContentValue.put(DatabaseHelper.LastModified, LastModified);
+            costContentValue.put(DatabaseHelper.Cost, cost);
+            database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
+        }
+    }
+
+    public void updateItemWithBarcode(String barcode, String itemname, String desc, String price, String category, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String nature, String currency, String itemCode, String taxCode, String totalDiscount, double priceAfterDiscount) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.Name, itemname);
+        contentValue.put(DatabaseHelper.DESC, desc);
+        contentValue.put(DatabaseHelper.Price, price);
+        contentValue.put(DatabaseHelper.Category, category);
+        contentValue.put(DatabaseHelper.Barcode, barcode); // Use the existing barcode for updating
+        contentValue.put(DatabaseHelper.Department, department);
+        contentValue.put(DatabaseHelper.SubDepartment, subDepartment);
+        contentValue.put(DatabaseHelper.LongDescription, longDescription);
+        contentValue.put(DatabaseHelper.Quantity, quantity);
+        contentValue.put(DatabaseHelper.ExpiryDate, expiryDate);
+        contentValue.put(DatabaseHelper.VAT, vAT);
+        contentValue.put(DatabaseHelper.Weight, weight);
+        contentValue.put(DatabaseHelper.AvailableForSale, availableForSale);
+        contentValue.put(DatabaseHelper.SoldBy, soldBy);
+        contentValue.put(DatabaseHelper.Image, image);
+        contentValue.put(DatabaseHelper.Variant, variant);
+        contentValue.put(DatabaseHelper.SKU, sku);
+        contentValue.put(DatabaseHelper.Cost, cost);
+        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.UserId, userId);
+        contentValue.put(DatabaseHelper.Nature, nature);
+        contentValue.put(DatabaseHelper.Currency, currency);
+        contentValue.put(DatabaseHelper.ItemCode, itemCode);
+        contentValue.put(DatabaseHelper.TaxCode, taxCode);
+        contentValue.put(DatabaseHelper.TotalDiscount, totalDiscount);
+        contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
+
+        // Update the existing record with the matching barcode
+        database.update(DatabaseHelper.TABLE_NAME, contentValue, DatabaseHelper.Barcode + "=?", new String[]{barcode});
+    }
+
 }

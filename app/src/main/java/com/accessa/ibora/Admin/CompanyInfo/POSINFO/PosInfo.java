@@ -2,9 +2,11 @@ package com.accessa.ibora.Admin.CompanyInfo.POSINFO;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_COMPANY_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_POS_Num;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TerminalNo;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_POS_ACCESS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -14,6 +16,7 @@ import android.content.pm.ActivityInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -116,6 +119,28 @@ public class PosInfo extends AppCompatActivity {
 
         long result = db.insert(TABLE_NAME_POS_ACCESS, null, values);
         if (result != -1) {
+
+
+                // Data inserted successfully
+                savePosNumber(terminalNo); // Save POS number to SharedPreferences
+                Toast.makeText(this, "POS Number saved", Toast.LENGTH_SHORT).show();
+                Log.d("update1","POS Number saved");
+                // Now, update all rows in the std table with the same pos_num
+                ContentValues updateValues = new ContentValues();
+                updateValues.put(COLUMN_POS_Num, terminalNo); // Update the pos_num column
+
+                // Perform the update operation without a WHERE clause (update all rows)
+                int rowsUpdated = db.update(TABLE_NAME_STD_ACCESS, updateValues, null, null);
+
+                if (rowsUpdated > 0) {
+                    // Rows in std table updated successfully
+                    Log.d("update","update");
+                    Toast.makeText(this, "std table updated", Toast.LENGTH_SHORT).show();
+                } else {
+                    // No rows were updated
+                    Toast.makeText(this, "std table not updated", Toast.LENGTH_SHORT).show();
+                    Log.d("not update","not update");
+                }
             // Data inserted successfully
 
             savePosNumber(terminalNo); // Save POS number to SharedPreferences

@@ -64,7 +64,7 @@
             android:layout_marginStart="200dp"
             android:layout_marginTop="200dp"
             android:layout_marginEnd="200dp"
-            android:layout_marginBottom="-200dp"
+            android:layout_marginBottom="-210dp"
             android:elevation="8dp">
 
 
@@ -442,7 +442,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
-                    android:text="MRA Response"
+                    android:text="MRA e-invoicing"
                     android:textSize="14sp" />
                 <ImageView
                     android:id="@+id/qrCodeImageView"

@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -23,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -72,17 +75,13 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
 
-import android.hardware.display.DisplayManager;
-import android.view.Display;
-import android.widget.VideoView;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener {
+public class MainActivityMobile extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener {
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
 
@@ -103,7 +102,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private TextView CompanyName;
     private String Shopname,PosNum;
     private static final String POSNumber="posNumber";
-    private static MainActivity instance;
+    private static MainActivityMobile instance;
     private SharedPreferences sharedPreferences;
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private TicketFragment ticketFragment;
@@ -181,25 +180,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         // Retrieve the value from shared preferences
 
-        sharedPreferences = this.getSharedPreferences("device", Context.MODE_PRIVATE);
-        String deviceType = sharedPreferences.getString("device_type", null);
-
-
-        // Check the value and set the content view accordingly
-        if ("mobile".equalsIgnoreCase(deviceType)) {
             setContentView(R.layout.main_activity_mini_pos);
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            Fragment salesFragment = fragmentManager.findFragmentById(R.id.sales_fragment);
-
-            if (salesFragment != null) {
-
-                fragmentManager.beginTransaction().hide(salesFragment).commit();
-
-            }
-        } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
-            setContentView(R.layout.activity_main);
-        }
-
 
 
         showSecondaryScreen();
@@ -249,7 +230,30 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         CashorId.setText(cashorId);
         name.setText(cashorName);
         CompanyName.setText(Shopname);
+// Inside your MainActivity or wherever you want to control the visibility
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment salesFragment = fragmentManager.findFragmentById(R.id.sales_fragment);
 
+        if (salesFragment != null) {
+
+                fragmentManager.beginTransaction().hide(salesFragment).commit();
+
+        }
+     /*   Fragment keyboardFragment = fragmentManager.findFragmentById(R.id.Keyboard_fragment);
+
+        if (keyboardFragment != null) {
+
+            fragmentManager.beginTransaction().hide(keyboardFragment).commit();
+
+        }
+
+        Fragment Scannerfrag = fragmentManager.findFragmentById(R.id.customerDisplay_fragment);
+
+        if (Scannerfrag != null) {
+
+            fragmentManager.beginTransaction().hide(Scannerfrag).commit();
+
+        }*/
         // Initialize the TicketFragment
         ticketFragment = new TicketFragment();
 
@@ -284,27 +288,27 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
                 if (id == R.id.Sales) {
                     // Already in the sales screen, do nothing
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(MainActivity.this, ReceiptActivity.class);
+                    Intent intent = new Intent(MainActivityMobile.this, ReceiptActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(MainActivity.this, SalesReportActivity.class);
+                    Intent intent = new Intent(MainActivityMobile.this, SalesReportActivity.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(MainActivity.this, Product.class);
+                    Intent intent = new Intent(MainActivityMobile.this, Product.class);
                     startActivity(intent);
                     return true;
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(MainActivity.this, SettingsDashboard.class);
+                    Intent intent = new Intent(MainActivityMobile.this, SettingsDashboard.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Intent intent = new Intent(MainActivity.this, SyncService.class);
+                    Intent intent = new Intent(MainActivityMobile.this, SyncService.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(MainActivity.this, AdminActivity.class);
+                    Intent intent = new Intent(MainActivityMobile.this, AdminActivity.class);
                     startActivity(intent);
                     return true;
                 }
@@ -370,7 +374,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         return null;
     }
 
-    public static MainActivity getInstance() {
+    public static MainActivityMobile getInstance() {
         return instance;
     }
     public void logout() {

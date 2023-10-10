@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/welcome_background">
+
+
+        <ImageView
+            android:id="@+id/imageLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="150dp"
+
+            android:layout_centerInParent="true"
+            android:src="@drawable/iboralogos" />
+        <Button
+            android:id="@+id/SunmiT2"
+            android:text="Sunmi T2 Series"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/imageLogo"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+        <Button
+            android:id="@+id/sunmiMob"
+            android:text="Sunmi V1 Series"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/SunmiT2"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+
+
+
+
+    </RelativeLayout>
+</ScrollView>
+

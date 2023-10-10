@@ -27,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -44,6 +45,7 @@ import java.util.Locale;
 public class FirstFragment extends Fragment {
 private  EditText searchEditText;
     FloatingActionButton mAddFab;
+    FloatingActionButton mSyncFab;
     private SearchView mSearchView;
     private DBManager dbManager;
     private ItemAdapter mAdapter;
@@ -214,6 +216,7 @@ private  EditText searchEditText;
         dbManager.open();
         Cursor cursor1 = dbManager.fetch();
         mAddFab = view.findViewById(R.id.add_fab);
+        mSyncFab = view.findViewById(R.id.sync_fab);
 
 
         adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, froms, tos, 0);
@@ -254,6 +257,19 @@ private  EditText searchEditText;
                 openNewActivity();
             }
         });
+
+        mSyncFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //clear table
+
+                    dbManager.deleteItemsWithSyncStatusNotOffline();
+                    // Start the synchronization process when the FAB is clicked
+                    SyncService.startSync(requireContext());
+
+            }
+        });
+
 
         return view;
     }

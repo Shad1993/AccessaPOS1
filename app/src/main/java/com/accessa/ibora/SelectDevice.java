@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +12,7 @@ import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -20,17 +22,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Admin.RegistorCashor;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
-import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
-import java.util.List;
 import java.util.Locale;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class SelectLanguage extends AppCompatActivity {
-    Button buttonEng, buttonFr;
+public class SelectDevice extends AppCompatActivity {
+    Button buttonMobile, buttonT2;
 private DatabaseHelper mDatabaseHelper;
     private SQLiteDatabase database;
     private static IWoyouService woyouService;
@@ -52,8 +52,7 @@ private DatabaseHelper mDatabaseHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.selectlanguage);
+        setContentView(R.layout.selectdevice);
         Intent intent1 = new Intent();
         intent1.setPackage("woyou.aidlservice.jiuiv5");
         intent1.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
@@ -62,56 +61,49 @@ private DatabaseHelper mDatabaseHelper;
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
         database = mDatabaseHelper.getReadableDatabase();
-        // Eng language
-        buttonEng = findViewById(R.id.buttonEng);
-        buttonEng.setOnClickListener(new View.OnClickListener() {
+        buttonMobile = findViewById(R.id.sunmiMob);
+        buttonMobile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity(Locale.ENGLISH);
+                // Store "mobile" as the device type in shared preferences
+                storeDeviceType("mobile");
             }
-
         });
 
-        // Fr language
-        buttonFr = findViewById(R.id.buttonFr);
-        buttonFr.setOnClickListener(new View.OnClickListener() {
+// mob
+        buttonT2 = findViewById(R.id.SunmiT2);
+        buttonT2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity(Locale.FRENCH);
+                // Store "sunmit2" as the device type in shared preferences
+                storeDeviceType("sunmit2");
             }
         });
+
+
+
     }
 
-    public void openNewActivity(Locale locale) {
-        // Set the app's locale to the selected language
-        Locale.setDefault(locale);
+    // Method to store the device type in shared preferences
+    private void storeDeviceType(String deviceType) {
+        // Define a custom name for your SharedPreferences
+        String customSharedPreferencesName = "device";
 
-        // Update the configuration to reflect the new locale
-        Configuration configuration = getResources().getConfiguration();
-        configuration.setLocale(locale);
-        getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
+// Create the SharedPreferences instance with the custom name
+        SharedPreferences sharedPreferences = getSharedPreferences(customSharedPreferencesName, Context.MODE_PRIVATE);
 
+// Now, you can edit and use this sharedPreferences as needed
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("device_type", deviceType);
+        editor.apply();
 
-        CheckTableUser();
-        CheckTableCompany();
+// Start the SelectLanguage activity
+        Intent intent = new Intent(SelectDevice.this, SelectLanguage.class);
+        startActivity(intent);
+
     }
 
-   public void CheckTableUser(){
-        // Check if "Users" table is not empty
-        boolean isUserTableEmpty = mDatabaseHelper.isUserTableEmpty();
 
-        if (!isUserTableEmpty) {
-            // "Users" table is not empty, redirect to the login activity
-            Intent intent = new Intent(SelectLanguage.this, login.class);
-            startActivity(intent);
-            finish(); // Optional: Finish the current activity to prevent going back to it
-        } else {
-            // "Users" table is empty, proceed with the current flow
-            // Start the SelectProfile activity
-            Intent intent = new Intent(this, RegistorCashor.class);
-            startActivity(intent);
-        }
-    }
     private void showSecondaryScreen() {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -159,20 +151,5 @@ private DatabaseHelper mDatabaseHelper;
         }
         return null;
     }
-    public void CheckTableCompany(){
-        // Check if "Company" table is not empty
-        boolean isUserTableEmpty = mDatabaseHelper.isCompanyTableEmpty();
 
-        if (!isUserTableEmpty) {
-            // "Company" table is not empty, redirect to the login activity
-            Intent intent = new Intent(SelectLanguage.this, login.class);
-            startActivity(intent);
-            finish(); // Optional: Finish the current activity to prevent going back to it
-        } else {
-            // "Company" table is empty, proceed with the current flow
-            // Start the SelectProfile activity
-            Intent intent = new Intent(this, welcome.class);
-            startActivity(intent);
-        }
-    }
 }

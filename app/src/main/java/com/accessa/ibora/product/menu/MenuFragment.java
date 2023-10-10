@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -21,8 +20,8 @@ import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
+import com.accessa.ibora.product.couponcode.CouponDialogFragment;
 import com.accessa.ibora.product.items.FirstFragment;
-import com.accessa.ibora.product.menu.CustomAdapter;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class MenuFragment extends Fragment {
@@ -216,7 +215,16 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
-                } else {
+                } else if (position == 7) {
+                    toolbarTitle = getString(R.string.couponcode);
+
+                    // Show the CouponDialogFragment
+                    CouponDialogFragment couponDialogFragment = new CouponDialogFragment();
+                    couponDialogFragment.show(getFragmentManager(), "coupon_dialog");
+                }
+
+
+                else {
                     toolbarTitle = getString(R.string.Items); // Set a default value if needed
                 }
 

@@ -6,13 +6,16 @@ import android.os.Bundle;
 
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.Admin.RegistorAdmin;
-import com.accessa.ibora.Sync.connectToMssql;
-import com.accessa.ibora.company.InsertCompanyDataActivity;
+import com.accessa.ibora.Sync.SyncActivitySync;
+import com.accessa.ibora.Sync.SyncAddToMssql;
+import com.accessa.ibora.Sync.SyncService;
+import com.accessa.ibora.product.items.AddItemActivity;
 
 public class welcome extends AppCompatActivity {
 
@@ -54,11 +57,37 @@ public class welcome extends AppCompatActivity {
                 buttonSynchronize.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(welcome.this, connectToMssql.class);
-                        startActivity(intent);
-                        dialog.dismiss(); // Close the dialog
+                        AlertDialog.Builder builder = new AlertDialog.Builder(welcome.this);
+                        View dialogView = getLayoutInflater().inflate(R.layout.dialog_layout_brn_password, null);
+                        builder.setView(dialogView);
+
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+
+                        EditText brnEditText = dialogView.findViewById(R.id.brnEditText);
+                        EditText passwordEditText = dialogView.findViewById(R.id.passwordEditText);
+                        EditText shopnumEditText = dialogView.findViewById(R.id.ShopnumEditText);
+                        EditText posnumEditText = dialogView.findViewById(R.id.tillnumEditText);
+                        Button buttonSubmit = dialogView.findViewById(R.id.buttonSubmit);
+
+                        buttonSubmit.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // Retrieve BRN and password from EditText fields
+                                String brn = brnEditText.getText().toString();
+                                String password = passwordEditText.getText().toString();
+                                String shopnumber = shopnumEditText.getText().toString();
+                                String tillnum = posnumEditText.getText().toString();
+
+
+                                SyncActivitySync.startSync(welcome.this, brn, password,shopnumber,tillnum);
+
+                                dialog.dismiss(); // Close the dialog
+                            }
+                        });
                     }
                 });
+
             }
         });
 

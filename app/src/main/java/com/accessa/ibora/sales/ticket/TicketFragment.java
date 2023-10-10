@@ -1,13 +1,20 @@
 package com.accessa.ibora.sales.ticket;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_HT_A;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -21,10 +28,14 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.MenuInflater;
@@ -36,6 +47,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -45,6 +58,7 @@ import com.accessa.ibora.MRA.MRADBN;
 import com.accessa.ibora.MRA.MRAdaptor;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.QR.QRGenerator;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
@@ -58,9 +72,16 @@ import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
+import com.accessa.ibora.scanner.InbuiltScannerFragment;
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
@@ -72,6 +93,8 @@ public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickL
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
+
+    FloatingActionButton mAddItem;
     private  String ItemId,PosNum;
     private String VatVall;
     private static final String POSNumber="posNumber";
@@ -97,15 +120,26 @@ private TextView textViewVATs,textViewTotals;
         public void onServiceConnected(ComponentName name, IBinder service) {
             woyouService = IWoyouService.Stub.asInterface(service);
 
-            // Call the method to display on the LCD here
-            showSecondaryScreen(data);
+                   // showSecondaryScreen(data);
+
         }
     };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        showSecondaryScreen(data);
+
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+        String deviceType = sharedPreferences.getString("device_type", null);
+
+
+        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+           // showSecondaryScreen(data);
+        }  else {
+            Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+        }
+
     }
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -153,6 +187,12 @@ private TextView textViewVATs,textViewTotals;
         (id == R.id.nav_logout) {
             MainActivity mainActivity = (MainActivity) requireActivity(); // Get the MainActivity object
             mainActivity.logout(); // Call the logout() function
+            return true;
+        }else if
+        (id == R.id.nav_scan) {
+            InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
+            replaceFragment(newScannerFragment);
+
             return true;
         }else if
         (id == R.id.clear_ticket) {
@@ -255,7 +295,7 @@ private TextView textViewVATs,textViewTotals;
         textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");
         textViewTotals.setText(getString(R.string.Total) + " : Rs 0.00");
 
-
+        mAddItem = view.findViewById(R.id.fab);
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
@@ -310,6 +350,172 @@ private TextView textViewVATs,textViewTotals;
             mRecyclerView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
         }
+        mAddItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Use getActivity() to get the activity context from the fragment
+                Context context = getActivity();
+
+                // Create a custom dialog with custom dimensions
+                Dialog dialog = new Dialog(context);
+
+                // Set the layout for the dialog
+                dialog.setContentView(R.layout.popup_layout_add_dept);
+
+                // Set the dialog width and height
+                Window window = dialog.getWindow();
+                WindowManager.LayoutParams params = window.getAttributes();
+
+                // Set the width and height as per your requirements
+                params.width = WindowManager.LayoutParams.MATCH_PARENT;
+                params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+
+                // Apply the layout parameters to the window
+                window.setAttributes(params);
+
+                // Find the Spinner and EditText in the dialog layout
+                Spinner spinnerDepartment = dialog.findViewById(R.id.spinner_department);
+                EditText editTextAmount = dialog.findViewById(R.id.edit_text_amount);
+
+                // Find the Type Spinner in the dialog layout
+                Spinner spinnerType = dialog.findViewById(R.id.spinner_type);
+
+// Define an array of type options
+                String[] typeOptions = {"Goods", "Services"};
+
+// Create an ArrayAdapter for the Type Spinner
+                ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        typeOptions
+                );
+                typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// Set the Type Spinner adapter
+                spinnerType.setAdapter(typeAdapter);
+
+
+                // Find the VAT Spinner in the dialog layout
+                Spinner spinnerVAT = dialog.findViewById(R.id.spinner_vat);
+                // Find the VAT Spinner in the dialog layout
+                Spinner spinnerDiscount = dialog.findViewById(R.id.spinner_discount);
+
+// Define an array of VAT options
+                String[] vatOptions = {"VAT 0%", "VAT Exempted", "VAT 15%"};
+
+// Create an ArrayAdapter for the VAT Spinner
+                ArrayAdapter<String> vatAdapter = new ArrayAdapter<>(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        vatOptions
+                );
+                vatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// Set the VAT Spinner adapter
+                spinnerVAT.setAdapter(vatAdapter);
+                String department=null;
+                String departmentid=null;
+                Cursor cursor = mDatabaseHelper.getAllDepartment();
+                List<String> departments = new ArrayList<>();
+                departments.add(getString(R.string.AllDepartments));
+                if (cursor.moveToFirst()) {
+                    do {
+                         department = cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_NAME));
+                        departmentid = cursor.getString(cursor.getColumnIndex(DatabaseHelper.DEPARTMENT_ID));
+                        departments.add(department);
+                    } while (cursor.moveToNext());
+                }
+                cursor.close();
+
+                ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(requireContext(), 0, departments) {
+                    @NonNull
+                    @Override
+                    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        if (convertView == null) {
+                            convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_item, parent, false);
+                        }
+
+                        TextView textView = convertView.findViewById(android.R.id.text1);
+                        textView.setTextColor(getResources().getColor(R.color.white));
+
+
+                        // Set the text for the selected item
+                        textView.setText(getItem(position));
+
+                        return convertView;
+                    }
+                };
+                spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                Cursor discursor = mDatabaseHelper.getAllDiscounts();
+
+                List<String> Discounts = new ArrayList<>();
+                Discounts.add(getString(R.string.AllDiscount));
+
+                if (discursor.moveToFirst()) {
+                    do {
+                        String discount = discursor.getString(discursor.getColumnIndex(DatabaseHelper.DISCOUNT_NAME));
+                        Discounts.add(discount);
+                    } while (discursor.moveToNext());
+                }
+                discursor.close();
+
+                // Create an ArrayAdapter for the spinner with the custom layout
+                ArrayAdapter<String> discountAdapter = new ArrayAdapter<String>(requireContext(), 0, Discounts) {
+                    @NonNull
+                    @Override
+                    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        if (convertView == null) {
+                            convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_item, parent, false);
+                        }
+
+                        TextView textView = convertView.findViewById(android.R.id.text1);
+                        textView.setTextColor(getResources().getColor(R.color.white));
+
+
+                        // Set the text for the selected item
+                        textView.setText(getItem(position));
+
+                        return convertView;
+                    }
+
+                };
+                discountAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Set the Spinner adapter
+                spinnerDiscount.setAdapter(discountAdapter);
+                    // Set the Spinner adapter
+                spinnerDepartment.setAdapter(spinnerAdapter);
+
+                // Add a button to save the data
+                Button saveButton = dialog.findViewById(R.id.save_button);
+                String finalDepartmentid = departmentid;
+                saveButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        // Get the current date and time for the transaction
+                        String transactionDate = getCurrentDateTime();
+                        // Get the selected department and entered amount
+                        // Get the selected VAT and entered amount
+                        String selectedVAT = spinnerVAT.getSelectedItem().toString();
+                        String selectedDepartment = spinnerDepartment.getSelectedItem().toString();
+                        String enteredAmounts = editTextAmount.getText().toString();
+                        double enteredAmount= Double.parseDouble(enteredAmounts);
+                        String selectedType = spinnerType.getSelectedItem().toString();
+
+                        SendToHeader(enteredAmount,0.00);
+                        // Perform your desired action with the data (e.g., save it)
+                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid), transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00);
+
+
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+                });
+
+                // Show the dialog
+                dialog.show();
+            }
+        });
 
 
         // Retrieve the checkout button and set its click listener
@@ -318,51 +524,79 @@ private TextView textViewVATs,textViewTotals;
             @Override
             public void onClick(View v) {
                 if (selectedBuyer != null) {
-                    // Access selectedBuyer properties here
-                    Intent intent = new Intent(getActivity(), Mra.class);
-                    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+                    // Retrieve the total amount and total tax amount from the transactionheader table
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    int currentCounter = 1; // Default value if no data is present in the table
+
+                    if (cursor != null && cursor.moveToFirst()) {
+
+                        int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
 
 
-                    // Pass the selected buyer's information as an extra
-                    intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
-                    intent.putExtra("selectedBuyerTAN", selectedBuyer.getTan());
-                    intent.putExtra("selectedBuyerCompanyName", selectedBuyer.getCompanyName());
-                    intent.putExtra("selectedBuyerType", selectedBuyer.getBuyerType());
-                    intent.putExtra("selectedBuyerBRN", selectedBuyer.getBrn());
-                    intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
-                    intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
-                    intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
-                  
 
-                   mDatabaseHelper.updateTransactionBuyerInfo(
-                            transactionIdInProgress,
-                            transactionIdInProgress,
-                            selectedBuyer.getNames(),
-                            selectedBuyer.getTan(),
-                            selectedBuyer.getCompanyName(),
-                            selectedBuyer.getBusinessAddr(),
-                            selectedBuyer.getBrn(),
-                            cashierId
-                    );
-                    startActivity(intent);
+                        String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
+                        // Access selectedBuyer properties here
+                        Intent intent = new Intent(getActivity(), Mra.class);
+                        SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                        transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+
+
+                        mDatabaseHelper.updateTransactionBuyerInfo(
+                                transactionIdInProgress,
+                                InvoiceRefIdentifyer,
+                                selectedBuyer.getNames(),
+                                selectedBuyer.getTan(),
+                                selectedBuyer.getCompanyName(),
+                                selectedBuyer.getBusinessAddr(),
+                                selectedBuyer.getBrn(),
+                                cashierId
+                        );
+
+
+                        String amount = "0";
+                        String popFraction = "novalue";
+                        // Create and show the dialog fragment with the data
+                        validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
+                                transactionIdInProgress,
+                                amount,
+                                popFraction,
+                                selectedBuyer.getBuyerType(),
+                                selectedBuyer.getNames(),
+                                selectedBuyer.getTan(),
+                                selectedBuyer.getCompanyName(),
+                                selectedBuyer.getBusinessAddr(),
+                                selectedBuyer.getBrn(),
+                                selectedBuyer.getNic(),
+                                selectedBuyer.getProfile()
+                        );
+
+// Use getChildFragmentManager() to show the dialog within the fragment.
+                        dialogFragment.show(getChildFragmentManager(), "validate_transaction_dialog");
+
+                    }
+
                 }else {
+                    String amount = "0";
+                    String popFraction = "novalue";
                     // Handle the case when selectedBuyer is null
-                    Intent intent = new Intent(getActivity(), Mra.class);
-                    // Pass the selected buyer's information as an extra
-                    intent.putExtra("selectedBuyerName", "");
-                    intent.putExtra("selectedBuyerTAN", "");
-                    intent.putExtra("selectedBuyerCompanyName", "");
-                    intent.putExtra("selectedBuyerType", "");
-                    intent.putExtra("selectedBuyerBRN", "");
-                    intent.putExtra("selectedBuyerNIC", "");
-                    intent.putExtra("selectedBuyerAddresse", "");
-                    intent.putExtra("selectedBuyerprofile", "");
+                    validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
+                            transactionIdInProgress,
+                            amount,
+                            popFraction,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                    dialogFragment.show(getChildFragmentManager(), "validate_transaction_dialog");
 
-                    startActivity(intent);
+
                 }
-
-
             }
         });
 
@@ -413,6 +647,58 @@ private TextView textViewVATs,textViewTotals;
 
         return view;
     }
+
+    private void SendToHeader(double totalAmount, double taxtotalAmount) {
+
+
+        // Save the transaction details in the TRANSACTION_HEADER table
+        if (transactionIdInProgress != null) {
+
+
+            // Get the current date and time
+            String currentDate = mDatabaseHelper.getCurrentDate();
+            String currentTime = mDatabaseHelper.getCurrentTime();
+
+            // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+            double totalHT_A = totalAmount- taxtotalAmount;
+            double totalTTC = totalAmount;
+            double TaxAmount=taxtotalAmount;
+            String transactionStatus = "InProgress";
+            // Get the total quantity of items in the transaction
+            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
+             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+            cashierId = sharedPreference.getString("cashorId", null);
+
+            String ShopName = sharedPreference.getString("ShopName", null);
+
+            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                String MRAMETHOD="Single";
+                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+
+                // Save the transaction details in the TRANSACTION_HEADER table
+                mDatabaseHelper.saveTransactionHeader(
+                        CompanyShopNumber,
+                        transactionIdInProgress,
+                        totalAmount,
+                        currentDate,
+                        currentTime,
+                        totalHT_A,
+                        totalTTC,
+                        TaxAmount,
+                        quantityItem,
+                        cashierId,
+                        transactionStatus,
+                        PosNum,
+                        MRAMETHOD
+
+                );
+
+            }
+        }
+    }
     private void showSaveOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Save Transaction as");
@@ -447,7 +733,10 @@ private TextView textViewVATs,textViewTotals;
         });
         builder.show();
     }
-
+    private String getCurrentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
+    }
     private void startNewActivity(String type, String newTransactionId,String invoiceRefIdentifier) {
         // Create an Intent to start the desired activity based on the selected type
         Intent intent = new Intent(getContext(), MRADBN.class);
@@ -497,7 +786,13 @@ private TextView textViewVATs,textViewTotals;
             startActivity(intent);
         }
     }
-
+    private void replaceFragment(Fragment newFragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.scanner_container, newFragment);
+        fragmentTransaction.addToBackStack(null); // Optional: Add the transaction to the back stack
+        fragmentTransaction.commit();
+    }
     private void SaveTransaction(String Type,double totalAmount, double TaxtotalAmount) {
 
 
@@ -564,7 +859,7 @@ if(Type.equals("DRN")) {
                     editor.apply();
                     String MRAMETHOD="Single";
                     // Update the transaction status for all in-progress transactions to "saved"
-                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
+                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
                     updateTransactionStatus();
 
 
@@ -589,39 +884,7 @@ if(Type.equals("DRN")) {
     AlertDialog alertDialog = dialogBuilder.create();
     alertDialog.show();
 } else if (Type.equals("PRF")) {
-    // Retrieve the data for receipts with QR codes
-    Cursor newCursor1 = mDatabaseHelper.getAllReceiptWithQR();
 
-    // Create a custom dialog to display the receipt data
-    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
-    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
-    dialogBuilder.setView(dialogView);
-    dialogBuilder.setTitle("Select a Receipt");
-
-    // Initialize your RecyclerView
-    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
-
-// Set a layout manager (for example, LinearLayoutManager)
-    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-    popupRecyclerView.setLayoutManager(layoutManager);
-
-// Initialize and set up your adapter
-    MRAdaptor popupAdapter = new MRAdaptor(newCursor1);
-    popupRecyclerView.setAdapter(popupAdapter);
-
-
-
-// Set a click listener for the items in the dialog
-    popupRecyclerView.addOnItemTouchListener(
-            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
-                @Override
-                public void onItemClick(View view, int position) {
-                    TextView idTextView = view.findViewById(R.id.id_text_view);
-                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
-
-                    String id1 = idTextView.getText().toString();
-                    String id = idTextView.getText().toString();
-                    String name = deptNameEditText.getText().toString();
     // Get the latest transaction counter value from SharedPreferences
     SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
     int latestTransactionProformaCounter = sharedPreferences.getInt("transaction_counter_Proforma", 0);
@@ -648,28 +911,15 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, name);
+                    startNewActivity(Type, newTransactionId, null);
                     getActivity().finish();
 
 
-                }
 
-                @Override
-                public void onLongItemClick(View view, int position) {
-                    // Do whatever you want on long item click
-                }
-            })
-    );
-
-
-
-    // Create and show the dialog
-    AlertDialog alertDialog = dialogBuilder.create();
-    alertDialog.show();
 
 }else if (Type.equals("CRN")) {
     // Retrieve the data for receipts with QR codes
@@ -716,7 +966,7 @@ if(Type.equals("DRN")) {
             editor.apply();
             String MRAMETHOD="Single";
             // Update the transaction status for all in-progress transactions to "saved"
-            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
+            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
             updateTransactionStatus();
 
             // Start the activity with the selected receipt data
@@ -777,7 +1027,7 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
@@ -832,7 +1082,15 @@ if(Type.equals("DRN")) {
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
 
-              showSecondaryScreen(data);
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+        String deviceType = sharedPreferences.getString("device_type", null);
+
+
+        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+            //showSecondaryScreen(data);
+        }  else {
+            Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+        }
      //   recreate(getActivity());
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
         mAdapter.swapCursor(cursor);
@@ -863,17 +1121,20 @@ if(Type.equals("DRN")) {
     }
 
     private Display getPresentationDisplay() {
-        DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
-        Display[] displays = displayManager.getDisplays();
-        for (Display display : displays) {
-            if ((display.getFlags() & Display.FLAG_SECURE) != 0
-                    && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
-                    && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
-                return display;
+        if (isAdded()) {  // Check if the Fragment is attached to an Activity
+            DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
+            Display[] displays = displayManager.getDisplays();
+            for (Display display : displays) {
+                if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                        && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                        && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                    return display;
+                }
             }
         }
         return null;
     }
+
 
     public void displayOnLCD() {
         if (woyouService == null) {
@@ -952,7 +1213,15 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         );
 
         if (success && qrCodeUpdateSuccess) {
-            showSecondaryScreen(data);
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+            String deviceType = sharedPreferences.getString("device_type", null);
+
+
+            if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+                showSecondaryScreen(data);
+            }  else {
+                Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+            }
 
         } else {
 

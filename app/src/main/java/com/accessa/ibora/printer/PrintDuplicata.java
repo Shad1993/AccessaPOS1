@@ -487,7 +487,7 @@ public class PrintDuplicata extends AppCompatActivity {
 
                         if (MRAQR != null && !MRAQR.equals("Request Failed")) {
                             service.printText("MRA Response" + "\n", null);
-                            service.printQRCode(MRAQR + "\n", 5, 1, null);
+                            service.printQRCode(MRAQR + "\n", 2, 1, null);
                         }
 
                         // Print the centered footer text
@@ -604,9 +604,6 @@ public class PrintDuplicata extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recycleview_printer);
-
-
-
 
         // Retrieve the extras from the intent
         Intent intent = getIntent();

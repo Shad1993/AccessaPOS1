@@ -42,6 +42,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
@@ -551,6 +552,7 @@ private ImageView image_view;
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
+
             finish();
         } else {
             Toast.makeText(this, "Failed to update item", Toast.LENGTH_SHORT).show();

@@ -5,25 +5,19 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.ActivityInfo;
-import android.database.Cursor;
 import android.hardware.display.DisplayManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.Display;
-import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -62,8 +56,7 @@ public class SplashActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the screen orientation to landscape
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
         setContentView(R.layout.splashfile);
         showSecondaryScreen();
         logoImageView = findViewById(R.id.logoImageView);
@@ -171,7 +164,7 @@ public class SplashActivity extends Activity {
     }
     private void navigateToNextScreen() {
         // Start the next activity (e.g., main activity)
-        Intent intent = new Intent(this, SelectLanguage.class);
+        Intent intent = new Intent(this, SelectDevice.class);
         startActivity(intent);
         finish();
     }

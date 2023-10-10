@@ -66,7 +66,7 @@ public class QRActivity extends AppCompatActivity implements QRFragment.DataPass
                 Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
 
                 // Generate QR code bitmap
-                int qrCodeSize = 20; // Set your desired QR code size
+                int qrCodeSize = 2; // Set your desired QR code size
                 BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
                 int qrCodeWidth = qrCodeMatrix.getWidth();
                 int qrCodeHeight = qrCodeMatrix.getHeight();

@@ -252,7 +252,7 @@ public class PopQRDialogFragment extends DialogFragment {
                 e.printStackTrace();
                 // Handle request failure
                 // Hide the loading GIF animation
-                loadingGifImageView.setVisibility(View.GONE);
+              //  loadingGifImageView.setVisibility(View.GONE);
             }
 
             @Override

@@ -8,6 +8,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CURRENCY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DISCOUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
@@ -40,6 +41,7 @@ import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
+import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.accessa.ibora.sales.ticket.Transaction;
@@ -90,7 +92,13 @@ public class Mra extends AppCompatActivity {
     private String aesKey;
     String transactionType;
     private String   irn;
-    String selectedBuyerName ;
+    String selectedBuyerName;
+    String Transaction_Id;
+    String totalAmountinserted;
+    String cashReturn;
+    private  ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+
+
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
     String selectedBuyerType ;
@@ -137,7 +145,18 @@ public class Mra extends AppCompatActivity {
                         .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
-                String Till_id = readTextFromFile("till_num.txt");
+
+                SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                String Till_id = shardPreference.getString("posNumber", null);
+
+               if(Till_id== null) {
+                   Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                   if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                       int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+                       Till_id = cursorCompany.getString(columnCompanyNameIndex);
+
+                   }
+               }
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
@@ -151,6 +170,7 @@ public class Mra extends AppCompatActivity {
                         int columnIndexTotalAmount = cursor.getColumnIndex(TRANSACTION_TOTAL_TTC);
                         int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                         int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
+                        int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
                         int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
                         currentCounter = cursor.getInt(columnIndexCounter);
 
@@ -158,6 +178,7 @@ public class Mra extends AppCompatActivity {
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                         double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
+                        String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
 
                         // Step 2: Increment the counter value
                         int newCounter = currentCounter + 1;
@@ -174,7 +195,7 @@ public class Mra extends AppCompatActivity {
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
                         Log.d("cashier", cashorlevel);
-if(SelectedBuyerProfile.equals("")) {
+if(SelectedBuyerProfile==null) {
     if(cashorlevel.equals("1")) {
         transactionType = "TRN";
     }else{
@@ -188,7 +209,7 @@ if(SelectedBuyerProfile.equals("")) {
         jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
         jsondetailedtransacs.put("currency", "MUR");
         jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
-        jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
+        jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
         jsondetailedtransacs.put("previousNoteHash", "prevNote");
         jsondetailedtransacs.put("reasonStated", "test");
         jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -208,7 +229,7 @@ if(SelectedBuyerProfile.equals("")) {
     jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
     jsondetailedtransacs.put("currency", "MUR");
     jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
-    jsondetailedtransacs.put("invoiceRefIdentifier", transactionIdInProgress);
+    jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
     jsondetailedtransacs.put("previousNoteHash", "prevNote");
     jsondetailedtransacs.put("reasonStated", "test");
     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -376,39 +397,32 @@ if(SelectedBuyerProfile.equals("")) {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
 
-                        String amount = "0";
-                        String popFraction = "novalue";
+                        Intent intent = new Intent(getApplication(), printerSetup.class);
+                        intent.putExtra("amount_received", totalAmountinserted);
+                        intent.putExtra("cash_return", cashReturn);
+                        intent.putExtra("settlement_items", settlementItems);
+                        intent.putExtra("mraQR", result);
+                        intent.putExtra("MRAIRN", irn);
 
-                        // Create and show the dialog fragment with the data
-                        validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
-                                transactionIdInProgress,
-                                amount,
-                                popFraction,
-                                result,
-                                irn
-                        );
-
-                        dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
+                        String MRAMETHOD="Single";
+                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
+                        startActivity(intent);
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
 
-                        String amount = "0";
-                        String popFraction = "novalue";
 
-                        // Create and show the dialog fragment with the data
-                        validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
-                                transactionIdInProgress,
-                                amount,
-                                popFraction,
-                                result,
-                                irn
+                        Intent intent = new Intent(getApplication(), printerSetup.class);
+                        intent.putExtra("amount_received", totalAmountinserted);
+                        intent.putExtra("cash_return", cashReturn);
+                        intent.putExtra("settlement_items", settlementItems);
+                        intent.putExtra("mraQR", result);
+                        intent.putExtra("MRAIRN", irn);
 
-
-                        );
-
-                        dialogFragment.show(getSupportFragmentManager(), "validate_transaction_dialog");
+                        String MRAMETHOD="Single";
+                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
+                        startActivity(intent);
                     }
                 }
             });
@@ -427,6 +441,10 @@ if(SelectedBuyerProfile.equals("")) {
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
         if (intent != null) {
+            Transaction_Id = intent.getStringExtra("id");
+            totalAmountinserted= intent.getStringExtra("amount_received");
+            cashReturn= intent.getStringExtra("cash_return");
+            settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
              selectedBuyerName = intent.getStringExtra("selectedBuyerName");
              selectedBuyerTAN = intent.getStringExtra("selectedBuyerTAN");
              selectedBuyerCompanyName = intent.getStringExtra("selectedBuyerCompanyName");
@@ -499,7 +517,11 @@ if(SelectedBuyerProfile.equals("")) {
     }
 
 
+    public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD,String Transactiontype){
 
+        mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD);
+
+    }
     public static String extractQrCode(String apiResponse) {
         try {
             JSONObject jsonResponse = new JSONObject(apiResponse);

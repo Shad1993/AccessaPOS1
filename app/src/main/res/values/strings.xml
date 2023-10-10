@@ -469,6 +469,9 @@
     <string name="Proforma">Proforma</string>
     <string name="DBN">Debit Note</string>
     <string name="CRN">Credit Note</string>
+    <string name="vat_prompt">VAT</string>
+    <string name="type">Type</string>
+    <string name="couponcode">CouponCode</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

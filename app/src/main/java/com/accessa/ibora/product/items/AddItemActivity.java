@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.webkit.URLUtil;
 import android.widget.AdapterView;
@@ -40,6 +39,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.bumptech.glide.Glide;
@@ -57,7 +57,10 @@ public class AddItemActivity extends Activity {
     private static final int PERMISSION_REQUEST_CODE = 123;
     private String imagePath;
     private Spinner Discount;
-
+    private static final String _user = "db_a9c818_test_admin";
+    private static final String _pass = "Test1234";
+    private static final String _DB = "db_a9c818_test";
+    private static final String _server = "SQL8005.site4now.net";
     private CategoryDatabaseHelper catDatabaseHelper;
     private DatabaseHelper mDatabaseHelper;
     private EditText subjectEditText;
@@ -540,7 +543,15 @@ public class AddItemActivity extends Activity {
         String longDescription = longDescEditText.getText().toString().trim();
         String subDepartment = subDepartmentSpinner.getSelectedItem().toString().trim();
         String price = priceEditText.getText().toString().trim();
-        double prices= Double.parseDouble(price);
+        double prices;
+
+        if (!price.isEmpty()) {
+            prices = Double.parseDouble(price);
+        } else {
+            // Handle the case where price is empty, e.g., assign a default value
+            prices = 0.0; // You can change this default value as needed
+        }
+
         String selectedNature = Nature.getSelectedItem().toString();
         String selectedCurrency = Currency.getSelectedItem().toString();
         String selectedDiscount = Discount.getSelectedItem().toString();
@@ -609,12 +620,9 @@ public class AddItemActivity extends Activity {
             return;
         }
 
-// Check if the barcode is already present in the database
 
 
-        // Insert the record into the database
-        DBManager dbManager = new DBManager(this);
-        dbManager.open();
+
 
         // Check if the department code already exists
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
@@ -623,11 +631,12 @@ public class AddItemActivity extends Activity {
             return;
         }
 
-        dbManager.insert(name, desc, price, category, barcode, Float.parseFloat(weight), department,
+
+        showUpdateConfirmationDialog(name, desc, price, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale, soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode,VatCode, String.valueOf(discountedAmount), currentPrice);
-        dbManager.close();
+
 
 
 
@@ -648,11 +657,11 @@ public class AddItemActivity extends Activity {
         departmentSpinner.setSelection(0);
         subDepartmentSpinner.setSelection(0);
 
-        // Redirect to the Product activity
-        Intent intent = new Intent(AddItemActivity.this, Product.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
+
     }
+
+
+
     //  retrieve the value of isAvailableForSale
     private boolean getIsAvailableForSale() {
         return isAvailableForSale;
@@ -670,6 +679,101 @@ public class AddItemActivity extends Activity {
             imageView.setImageResource(R.drawable.emptybasket);
         }
     }
+
+
+    private void showUpdateConfirmationDialog(String name, String desc, String price, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, double currentPrice) {
+        if (isFinishing()) {
+            // Activity is finishing, do not show the dialog
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.update_confirmation_dialog, null);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+
+        // Insert the record into the database
+        DBManager dbManager = new DBManager(this);
+        dbManager.open();
+        Button btnYes = dialogView.findViewById(R.id.btn_yes);
+        Button btnNo = dialogView.findViewById(R.id.btn_no);
+
+        btnYes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Call a method to upload data to the online database here
+                String Name = name;
+                String Descript = desc;
+                String Price = price;
+                String Category = category;
+                String Barcode = barcode;
+                float Weight = parseFloat;
+                String Department = department;
+                String SubDepartment = subDepartment;
+                String LongDescription = longDescription;
+                String Quantity = quantity;
+                String ExpiryDate = expiryDate;
+                String VAT = vat;
+                String AvailableForSale = availableForSale;
+                String SoldBy = soldBy;
+                String Image = image;
+                String Variant = variant;
+                String SKU = sku;
+                String Cost = cost;
+                String UserId = userId;
+                String DateCreated = dateCreated;
+                String LastModified = lastModified;
+                String SelectedNature = selectedNature;
+                String SelectedCurrency = selectedCurrency;
+                String ItemCode = itemCode;
+                String VATCode = vatCode;
+                String ValueOf = valueOf;
+                double CurrentPrice = currentPrice;
+
+                dbManager.insert(name, desc, price, category, barcode, parseFloat, department,
+                        subDepartment, longDescription, quantity, expiryDate, vat,
+                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf, currentPrice,"Online");
+
+
+// Trigger the service to insert data
+                SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript, Price, Category, Barcode, Weight, Department,
+                        SubDepartment, LongDescription, Quantity, ExpiryDate, VAT,
+                        AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
+                        SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf, CurrentPrice);
+
+                // Redirect to the Product activity
+                Intent intent = new Intent(AddItemActivity.this, Product.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+
+                dialog.dismiss();
+            }
+        });
+
+        btnNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                dbManager.insert(name, desc, price, category, barcode, parseFloat, department,
+                        subDepartment, longDescription, quantity, expiryDate, vat,
+                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf, currentPrice,"Offline");
+
+                dbManager.close();
+
+                // Redirect to the Product activity
+                Intent intent = new Intent(AddItemActivity.this, Product.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
 
     // Handle the permission request response
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

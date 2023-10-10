@@ -10,6 +10,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CURRENCY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DISCOUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
@@ -133,7 +134,18 @@ public class MRADBN extends AppCompatActivity {
                         .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
-                String Till_id = readTextFromFile("till_num.txt");
+
+                SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                String Till_id = shardPreference.getString("posNumber", null);
+                if(Till_id== null) {
+                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                        int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+                        Till_id = cursorCompany.getString(columnCompanyNameIndex);
+
+                    }
+                }
+                String previousNoteHash;
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
@@ -148,15 +160,18 @@ public class MRADBN extends AppCompatActivity {
                         int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                         int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                         int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
+                        int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
                         currentCounter = cursor.getInt(columnIndexCounter);
 
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                         double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
-
+                        String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                         // Step 2: Increment the counter value
                         int newCounter = currentCounter + 1;
+
+
 
 // Step 3: Update the counter value in the transactionheader table
                         mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
@@ -171,45 +186,52 @@ public class MRADBN extends AppCompatActivity {
                         JSONObject jsondetailedtransacs = new JSONObject();
                         if(SelectedBuyerProfile.equals("")) {
 
-                            if(cashorlevel.equals("1")) {
+                            if (cashorlevel.equals("1")) {
                                 transactionType = "TRN";
-                            }else{
+                            } else {
                                 transactionType = TransactionType;
                             }
-                            String TransactionTypes="B2C";
-                            jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-                            jsondetailedtransacs.put("transactionType", TransactionTypes);
-                            jsondetailedtransacs.put("personType", "NVTR");
-                            jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-                            jsondetailedtransacs.put("currency", "MUR");
-                            jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
-                            jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
-                            jsondetailedtransacs.put("previousNoteHash", "prevNote");
-                            jsondetailedtransacs.put("reasonStated", "test");
-                            jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-                            jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-                            jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-                            jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
-                        }  else {
-                            if(cashorlevel.equals("1")) {
-                                transactionType = "TRN";
-                            }else{
-                                transactionType = TransactionType;
-                            }
-                            jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
-                            jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
-                            jsondetailedtransacs.put("personType", selectedBuyerType);
-                            jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
-                            jsondetailedtransacs.put("currency", "MUR");
-                            jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
-                            jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
-                            jsondetailedtransacs.put("previousNoteHash", "prevNote");
-                            jsondetailedtransacs.put("reasonStated", "test");
-                            jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
-                            jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
-                            jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
-                            jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
 
+
+
+                                String TransactionTypes = "B2C";
+                                jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
+                                jsondetailedtransacs.put("transactionType", TransactionTypes);
+                                jsondetailedtransacs.put("personType", "NVTR");
+                                jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
+                                jsondetailedtransacs.put("currency", "MUR");
+                                jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
+                                jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
+                                jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
+                                jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
+                                jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
+                                jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
+                                jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+                            }
+                        else {
+                                if (cashorlevel.equals("1")) {
+                                    transactionType = "TRN";
+                                } else {
+                                    transactionType = TransactionType;
+                                }
+                                jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
+                                jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
+                                jsondetailedtransacs.put("personType", selectedBuyerType);
+                                jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
+                                jsondetailedtransacs.put("currency", "MUR");
+                                jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
+                                jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
+                                jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
+                                jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
+                                jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
+                                jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
+                                jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
+                            }
                         }
 
 
@@ -369,14 +391,14 @@ public class MRADBN extends AppCompatActivity {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
                        String MRAMETHOD="Single";
-                        insertCashReturn(0,0,result,irn,MRAMETHOD);
+                        insertCashReturn("0","0",result,irn,MRAMETHOD);
                         navigateToNextScreen();
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
                         String MRAMETHOD="Single";
-                        insertCashReturn(0,0,result,irn,MRAMETHOD);
+                        insertCashReturn("0","0",result,irn,MRAMETHOD);
                         navigateToNextScreen();
                     }
                 }
@@ -469,10 +491,10 @@ public class MRADBN extends AppCompatActivity {
         }
     }
 
-    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra,String mrairn,String MRAMETHOD){
+    public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra,String mrairn,String MRAMETHOD){
 
         // Insert the cash return value to the header table
-        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra, mrairn,MRAMETHOD, transactionType);
+        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra, mrairn,MRAMETHOD);
         if (cashReturnUpdated) {
             Toast.makeText(getApplicationContext(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
         } else {

@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
@@ -88,7 +89,31 @@ public class SeconScreenDisplay extends Presentation {
         TextView textView = findViewById(R.id.text_view);
         TextView TotaltextView = findViewById(R.id.Total_text_view);
         TextView TaxtextView = findViewById(R.id.Tax_text_view);
-        textView.setText(text);
+        ImageView Poplogo= findViewById(R.id.log_view);
+
+        if(text.equals("POP")) {
+            textView.setText(text);
+            textView.setVisibility(View.INVISIBLE);
+            Poplogo.setVisibility(View.VISIBLE);
+            // Set the image resource to the ImageView (assuming you have an image resource in your project)
+            Poplogo.setImageResource(R.drawable.poplogo);
+
+            // Set the width and height of the ImageView
+            int desiredWidth = 150; // Set your desired width here
+            int desiredHeight = 150; // Set your desired height here
+
+            ViewGroup.LayoutParams layoutParams = Poplogo.getLayoutParams();
+            layoutParams.width = desiredWidth;
+            layoutParams.height = desiredHeight;
+            Poplogo.setLayoutParams(layoutParams);
+
+
+
+        }else {
+            textView.setText(text);
+            textView.setText(text);
+            textView.setVisibility(View.VISIBLE);
+        }
         TotaltextView.setText(getContext().getString(R.string.Total) + ": Rs " + formattedTotalAmount);
         TaxtextView.setText (getContext().getString(R.string.tax) + ": Rs " + formattedTaxAmount);
 

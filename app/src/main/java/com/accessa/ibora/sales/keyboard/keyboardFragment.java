@@ -1,6 +1,8 @@
 package com.accessa.ibora.sales.keyboard;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -38,11 +40,20 @@ public class keyboardFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.keyboard_fragment, container, false);
+        View view = null;
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+        String deviceType = sharedPreferences.getString("device_type", null);
 
 
+        // Check the value and set the content view accordingly
+        if ("mobile".equalsIgnoreCase(deviceType)) {
+            view = inflater.inflate(R.layout.mobile_keyboard_fragment, container, false);
+        } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+             view = inflater.inflate(R.layout.keyboard_fragment, container, false);
+        }
         // Set the screen orientation to landscape
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+      //  requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         // Initialize views
 

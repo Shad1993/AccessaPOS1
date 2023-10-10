@@ -127,7 +127,6 @@ public class QRFragment extends Fragment {
                 if(id !=null && (id.equals("1") && name.equals("POP")))
                 {
                     showPopAmountOptionsDialog();
-                 // showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
                 }else {
 
@@ -412,8 +411,8 @@ public class QRFragment extends Fragment {
 
     private Bitmap generateQRCodeBitmap(String qrCode) {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        int width = 400;
-        int height = 400;
+        int width = 200;
+        int height = 200;
         BitMatrix bitMatrix;
         try {
             bitMatrix = qrCodeWriter.encode(qrCode, BarcodeFormat.QR_CODE, width, height);

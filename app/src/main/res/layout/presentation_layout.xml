@@ -98,7 +98,16 @@
         android:background="@color/BleuAccessaText"
         android:layout_gravity="center"
         android:gravity="center">
-
+        <ImageView
+            android:id="@+id/log_view"
+            android:layout_width="200dp"
+            android:layout_gravity="center_vertical"
+            android:layout_height="200dp"
+            android:visibility="gone"
+            android:src="@drawable/poplogo"
+            android:layout_below="@id/text_view"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp" />
         <TextView
             android:id="@+id/text_view"
             android:layout_width="wrap_content"

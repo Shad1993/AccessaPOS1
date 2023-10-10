@@ -1,24 +1,39 @@
 package com.accessa.ibora.sales.ticket.Checkout;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,8 +47,12 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.POP.PopMobileAmountDialogFragment;
 import com.accessa.ibora.POP.PopMobileDialogFragment;
+import com.accessa.ibora.POP.PopQRDialogFragment;
+import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.printer.printerSetup;
@@ -45,6 +64,11 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,17 +76,25 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class validateticketDialogFragment extends DialogFragment  {
+import woyou.aidlservice.jiuiv5.IWoyouService;
 
+public class validateticketDialogFragment extends DialogFragment  {
+    public interface DataPassListener {
+        void onDataPass(String name, String id, String QR);
+    }
+    private QRFragment.DataPassListener dataPassListener;
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
+
+    private IWoyouService woyouService;
+    private String qrname,code, qrid;
     private CheckoutGridAdapter mAdapter;
     private static final int QR_CODE_REQUEST_CODE = 1;
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String ARG_Transaction_id = "transactionId";
     private static final String POSNumber="posNumber";
-    private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn;
+    private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn,Buyname,BuyBRN,BuyTAN,BuyAdd,BuyComp,BuyNIC,BuyProfile,BuyType;
     private String cashierId,cashierName,cashorlevel,CompanyName;
 
 
@@ -75,8 +107,16 @@ public class validateticketDialogFragment extends DialogFragment  {
     private  Button validateButton;
     private static final String amounts = "amount";
     private static final String popFragment = "popfragment";
-    private static final String MRAQR="mraqr";
-    private static final String MRAIRN="MRAIRN";
+    private static final String Buyertype="Buyertype";
+
+    private static final String BuyerName="buyername";
+    private static final String Buyertan="BuyerTan";
+    private static final String BuyerNIC="BuyerNIC";
+    private static final String BuyerProfile="BuyerProfile";
+    private static final String BuyerCompName="BuyerCompName";
+    private static final String BuyerBusinessAddress="BuyerBusinessAdress";
+
+    private static final String BuyerbRN="BuyerBRN";
 
     private View view; // Declare the view variable
 
@@ -87,24 +127,34 @@ public class validateticketDialogFragment extends DialogFragment  {
     // You can create a public method to get the stored QR code string
 
 
-    public static validateticketDialogFragment newInstance(String transactionId, String amount, String popFraction, String result, String IRN) {
+    public static validateticketDialogFragment newInstance(String transactionId, String amount, String popFraction,String BuyerType, String buyername, String BuyerTan,String BuyerCompname,String BusinessAddess,String BuyerBRN,String buyerNIC,String buyerProfile) {
         validateticketDialogFragment fragment = new validateticketDialogFragment();
         Bundle args = new Bundle();
 
         args.putString(ARG_Transaction_id, transactionId);
         args.putString(amounts, amount);
         args.putString(popFragment, popFraction);
-        args.putString(MRAQR, result);
-        args.putString(MRAIRN, IRN);
+        args.putString(Buyertype, BuyerType);
+        args.putString(BuyerName, buyername);
+        args.putString(Buyertan, BuyerTan);
+        args.putString(BuyerCompName, BuyerCompname);
+        args.putString(BuyerBusinessAddress, BusinessAddess);
+        args.putString(BuyerbRN, BuyerBRN);
+        args.putString(BuyerNIC, buyerNIC);
+        args.putString(BuyerProfile, buyerProfile);
+
         fragment.setArguments(args);
         return fragment;
     }
 
 
 
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         selectedItems = new HashSet<>(); // Initialize the set
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
@@ -164,9 +214,62 @@ public class validateticketDialogFragment extends DialogFragment  {
                 String name = nameTextView.getText().toString();
                 if(id !=null && (id.equals("1") && name.equals("POP")))
                 {
-                    showPopOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
+                    showPopAmountOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
+                } else if (id != null && (id.equals("6") && name.equals("Coupon Code"))) {
+                    // Create an AlertDialog.Builder
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+                    alertDialogBuilder.setTitle("Enter Barcode"); // Set dialog title
+
+                    // Create an EditText for the barcode input
+                    final EditText editTextBarcode = new EditText(getContext());
+                    editTextBarcode.setHint("Barcode Number"); // Set hint for EditText
+                    alertDialogBuilder.setView(editTextBarcode);
+
+                    // Create a method for handling barcode validation
+                    DialogInterface.OnClickListener validateBarcode = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // This logic is the same as before
+                            String barcode = editTextBarcode.getText().toString();
+                            boolean isBarcodeValid = mDatabaseHelper.isValidBarcode(barcode);
+
+                            if (isBarcodeValid) {
+                                Toast.makeText(getContext(), "Valid Barcode", Toast.LENGTH_SHORT).show();
+                                // Barcode is valid, start another activity and pass the amount
+                                // Intent intent = new Intent(getContext(), AnotherActivity.class);
+                                // intent.putExtra("amount", calculateAmount()); // Pass the calculated amount
+                                // startActivity(intent);
+                            } else {
+                                // Barcode is invalid, show an error message
+                                Toast.makeText(getContext(), "Invalid Barcode", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    };
+
+                    // Set positive button (Enter)
+                    alertDialogBuilder.setPositiveButton("Enter", validateBarcode);
+
+                    // Set an OnEditorActionListener for the EditText
+                    editTextBarcode.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                        @Override
+                        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                                // "Enter" key on the keyboard was pressed
+                                validateBarcode.onClick(null, DialogInterface.BUTTON_POSITIVE); // Trigger the validation logic
+                                return true;
+                            }
+                            return false;
+                        }
+                    });
+
+                    // Create and show the AlertDialog
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
                 }
+
+
+
                 else if (id != null && !selectedItems.contains(id)) {
                     selectedItems.add(id);
                     // Create a new TextView
@@ -240,8 +343,14 @@ public class validateticketDialogFragment extends DialogFragment  {
             Transaction_Id = args.getString(ARG_Transaction_id);
             amountpaid = args.getString(amounts);
             pop= args.getString(popFragment);
-            mrairn=args.getString(MRAIRN);
-            qrMra=args.getString(MRAQR);
+            BuyType=args.getString(Buyertype);
+            Buyname=args.getString(BuyerName);
+            BuyTAN=args.getString(Buyertan);
+            BuyComp=args.getString(BuyerCompName);
+            BuyAdd=args.getString(BuyerBusinessAddress);
+            BuyBRN=args.getString(BuyerbRN);
+            BuyNIC=args.getString(BuyerNIC);
+            BuyProfile=args.getString(BuyerProfile);
 
 
 
@@ -411,23 +520,27 @@ public class validateticketDialogFragment extends DialogFragment  {
                 }
 
                 // Print or use the total amount as needed
-                String transactionType;
-                if(cashorlevel.equals("1")) {
-                     transactionType = "TRN";
-                }else{
-                    transactionType = "STD";
-                }
+
                 double cashReturn= totalAmountinserted- totalAmount;
                 // Pass the amount received and settlement items as extras to the print activity
-                Intent intent = new Intent(getActivity(), printerSetup.class);
-                intent.putExtra("amount_received", totalAmountinserted);
-                intent.putExtra("cash_return", cashReturn);
+                Intent intent = new Intent(getActivity(), Mra.class);
+                intent.putExtra("amount_received", String.valueOf(totalAmountinserted));
+                intent.putExtra("cash_return", String.valueOf(cashReturn));
                 intent.putExtra("settlement_items", settlementItems);
-                intent.putExtra("mraQR", qrMra);
-                intent.putExtra("MRAIRN", mrairn);
+                intent.putExtra("id", Transaction_Id);
+                intent.putExtra("selectedBuyerName", Buyname);
+                intent.putExtra("selectedBuyerTAN", BuyTAN);
+                intent.putExtra("selectedBuyerCompanyName", BuyComp);
+                intent.putExtra("selectedBuyerType",BuyType);
+                intent.putExtra("selectedBuyerBRN", BuyBRN);
+                intent.putExtra("selectedBuyerNIC", BuyNIC);
+                intent.putExtra("selectedBuyerAddresse", BuyAdd);
+                intent.putExtra("selectedBuyerprofile", BuyProfile);
+
+
 
                 String MRAMETHOD="Single";
-                insertCashReturn(cashReturn,totalAmountinserted,qrMra,mrairn,MRAMETHOD,transactionType);
+                insertCashReturn(String.valueOf(cashReturn), String.valueOf(totalAmountinserted),qrMra,mrairn,MRAMETHOD);
                 startActivity(intent);
             }
 
@@ -440,6 +553,44 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
 
+    private void showPopAmountOptionsDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Amount");
+        String[] options = {"Pay part of amount  by POP", "Pay Full amount by POP"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_amount);
+
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editamount = dialogmob.findViewById(R.id.editAmount);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Retrieve the entered amount from the EditText
+                            String amountInserted = editamount.getText().toString();
+                            showPopOptionsWithAmountDialog(amountInserted);
+
+                        }
+                    });
+                } else if (which == 1) {
+                    showPopOptionsDialog();
+                }
+            }
+        });
+        builder.show();
+    }
+
     private void showPopOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Select Payment Method");
@@ -449,7 +600,7 @@ public class validateticketDialogFragment extends DialogFragment  {
             public void onClick(DialogInterface dialog, int which) {
                 // Handle the user's selection here
                 if (which == 0) {
-                  androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
                     builder.setView(R.layout.validate_num);
 
                     // Set up the dialog
@@ -458,7 +609,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                     // Get references to the views in the popup layout
                     EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
-                    EditText editCompanyName = dialogmob.findViewById(R.id.editCompanyName);
+                    EditText editamount = dialogmob.findViewById(R.id.editCompanyName);
                     Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
 
                     // Set up button click listener
@@ -488,18 +639,163 @@ public class validateticketDialogFragment extends DialogFragment  {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
 
-                        // User selected "Pay by QR code"
-                        // Perform the action for this option
-                        // For example, open a QR code scanner activity
-                        showSecondaryScreen("POP","00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054071927.035802MU5912IntermartOne6015Agalega North I622202112305786280707031436304BE4F");
+                        double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+
+                        // Format the double to a string with two decimal places
+                        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                        String formattedTotalAmount = decimalFormat.format(totalAmount);
+                        Log.e("total amount", formattedTotalAmount);
+                        String fileNameMerchName = "merch_name.txt";
+                        String fileNamePhone = "mob_num.txt";
+                        String fileNametill = "till_num.txt";
+
+                        String MerchantName = readTextFromFile(fileNameMerchName);
+                        String TillNo = readTextFromFile(fileNametill);
+                        String PhoneNum = readTextFromFile(fileNamePhone);
+                        String amountsVariation = countAndConcatenate(formattedTotalAmount);
+                        String QR=    "00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054" +amountsVariation+"5802MU5912"+MerchantName+"6015Agalega North I62220211"+PhoneNum+"0703"+TillNo+"6304BE4F";
+                        Log.e("qrstring", QR);
+                        showSecondaryScreen("POP","1",QR);
+
+
+                        // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                        PopQRDialogFragment popMobileDialogFragment = PopQRDialogFragment.newInstance(QR);
+
+                        // Show the PopMobileDialogFragment
+                        popMobileDialogFragment.show(getChildFragmentManager(), "pop_qr_dialog");
+
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+
 
                 }
             }
         });
         builder.show();
     }
-    private void showSecondaryScreen(String name, String QR) {
+    public static String countAndConcatenate(String input) {
+        int charCount = input.length();
+        String formattedCharCount = String.format("%02d", charCount);
+        return formattedCharCount + input;
+    }
+    private void showPopOptionsWithAmountDialog(String Amount) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Select Payment Method");
+        String[] options = {"Pay by mobile number", "Pay by QR code"};
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the user's selection here
+                if (which == 0) {
+                    androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+                    builder.setView(R.layout.validate_num_amount);
+
+                    // Set up the dialog
+                    androidx.appcompat.app.AlertDialog dialogmob = builder.create();
+                    dialogmob.show();
+
+                    // Get references to the views in the popup layout
+                    EditText editTerminalNo = dialogmob.findViewById(R.id.editTerminalNo);
+                    EditText editamount = dialogmob.findViewById(R.id.editAmount);
+                    editamount.setText(Amount);
+                    Button btnInsert = dialogmob.findViewById(R.id.btnInsert);
+
+                    // Set up button click listener
+                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Retrieve the entered mobile number from the EditText
+                            String mobileNumber = editTerminalNo.getText().toString();// Retrieve the entered amount from the EditText
+                            String amountInserted = editamount.getText().toString();
+
+
+                            // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                            PopMobileAmountDialogFragment popMobileAmountDialogFragment = PopMobileAmountDialogFragment.newInstance(mobileNumber,amountInserted);
+                            // Hide the keyboard before showing the dialog
+                            InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+                            // Show the PopMobileDialogFragment
+                            popMobileAmountDialogFragment.show(getChildFragmentManager(), "pop_mobile_dialog");
+
+                            // Dismiss the dialog
+                            dialog.dismiss();
+                            // Dismiss the dialogmob
+                            dialogmob.dismiss();
+
+                        }
+                    });
+                } else if (which == 1) {
+                    // User selected "Pay by QR code"
+                    // Perform the action for this option
+                    // For example, open a QR code scanner activity
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+
+                        double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+
+                        // Format the double to a string with two decimal places
+                        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                        String formattedTotalAmount = decimalFormat.format(totalAmount);
+                        Log.e("total amount", formattedTotalAmount);
+                        String fileNameMerchName = "merch_name.txt";
+                        String fileNamePhone = "mob_num.txt";
+                        String fileNametill = "till_num.txt";
+
+                        String MerchantName = readTextFromFile(fileNameMerchName);
+                        String TillNo = readTextFromFile(fileNametill);
+                        String PhoneNum = readTextFromFile(fileNamePhone);
+                        String amountsVariation = countAndConcatenate(formattedTotalAmount);
+                        String QR=    "00020101021126630009mu.maucas0112BKONMUM0XXXX021103011065958031500000000000005252047278530348054" +amountsVariation+"5802MU5912"+MerchantName+"6015Agalega North I62220211"+PhoneNum+"0703"+TillNo+"6304BE4F";
+                        Log.e("qrstring", QR);
+                        showSecondaryScreen("POP","1",QR);
+
+
+                        // Create the PopMobileDialogFragment instance and pass the mobile number as an argument
+                        PopQRDialogFragment popMobileDialogFragment = PopQRDialogFragment.newInstance(QR);
+                        // Hide the keyboard before showing the dialog
+                        InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        inputMethodManager.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+
+                        // Show the PopMobileDialogFragment
+                        popMobileDialogFragment.show(getChildFragmentManager(), "pop_qr_dialog");
+
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+
+
+                }
+            }
+        });
+        builder.show();
+    }
+    private  String readTextFromFile(String fileName) {
+        try {
+            FileInputStream fileInputStream = getContext().openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            bufferedReader.close();
+
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    private void showSecondaryScreen(String name,String id, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
         String formattedTaxAmount = null,formattedTotalAmount = null;
@@ -529,7 +825,9 @@ public class validateticketDialogFragment extends DialogFragment  {
             secondaryDisplay.updateTextAndQRCode(selectedName, qrBitmap, formattedTaxAmount, formattedTotalAmount);
         } else {
             // Secondary screen not found or not supported
-            Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            //  Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            dataPassListener.onDataPass(name, id, QR);
+
         }
     }
 
@@ -569,11 +867,132 @@ public class validateticketDialogFragment extends DialogFragment  {
     }
 
 
-public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD, String transactionType){
+public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD){
 
-     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD,transactionType);
+     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD);
 
 }
+    private ServiceConnection connService = new ServiceConnection() {
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            woyouService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            woyouService = IWoyouService.Stub.asInterface(service);
+
+            // Call the method to display on the LCD here
+
+            displayQROnLCD(code,qrname);
+
+        }
+    };
+    private void displayQROnLCD(String code, String name) {
+        if (woyouService == null) {
+            //   Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            if (name.equals("POP")){
+                int fontSize = 10; // Set your desired font size
+                int textColor = Color.WHITE; // Set your desired text color
+                Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
+
+                // Generate QR code bitmap
+                int qrCodeSize = 2; // Set your desired QR code size
+                BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+                int qrCodeWidth = qrCodeMatrix.getWidth();
+                int qrCodeHeight = qrCodeMatrix.getHeight();
+
+                Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+                for (int x = 0; x < qrCodeWidth; x++) {
+                    for (int y = 0; y < qrCodeHeight; y++) {
+                        qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                    }
+                }
+
+                // Generate text bitmap
+                Paint textPaint = new Paint();
+                textPaint.setTextSize(fontSize);
+                textPaint.setColor(textColor);
+                textPaint.setTypeface(typeface);
+
+                Rect textBounds = new Rect();
+                textPaint.getTextBounds(name, 0, name.length(), textBounds);
+                int textWidth = textBounds.width();
+                int textHeight = textBounds.height();
+
+                Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+                Canvas textCanvas = new Canvas(textBitmap);
+                textCanvas.drawText(name, 0, textHeight, textPaint);
+
+                // Create composite bitmap
+                int compositeWidth = qrCodeWidth + textWidth;
+                int compositeHeight = Math.max(qrCodeHeight, textHeight);
+
+                Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+                Canvas compositeCanvas = new Canvas(compositeBitmap);
+                compositeCanvas.drawColor(Color.BLACK);
+
+                compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+                compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+                woyouService.sendLCDBitmap(compositeBitmap, null);
+
+            }else {
+                int fontSize = 10; // Set your desired font size
+                int textColor = Color.WHITE; // Set your desired text color
+                Typeface typeface = Typeface.DEFAULT; // Set your desired font typeface
+
+                // Generate QR code bitmap
+                int qrCodeSize = 50; // Set your desired QR code size
+                BitMatrix qrCodeMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize);
+                int qrCodeWidth = qrCodeMatrix.getWidth();
+                int qrCodeHeight = qrCodeMatrix.getHeight();
+
+                Bitmap qrCodeBitmap = Bitmap.createBitmap(qrCodeWidth, qrCodeHeight, Bitmap.Config.ARGB_8888);
+                for (int x = 0; x < qrCodeWidth; x++) {
+                    for (int y = 0; y < qrCodeHeight; y++) {
+                        qrCodeBitmap.setPixel(x, y, qrCodeMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                    }
+                }
+
+                // Generate text bitmap
+                Paint textPaint = new Paint();
+                textPaint.setTextSize(fontSize);
+                textPaint.setColor(textColor);
+                textPaint.setTypeface(typeface);
+
+                Rect textBounds = new Rect();
+                textPaint.getTextBounds(name, 0, name.length(), textBounds);
+                int textWidth = textBounds.width();
+                int textHeight = textBounds.height();
+
+                Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
+                Canvas textCanvas = new Canvas(textBitmap);
+                textCanvas.drawText(name, 0, textHeight, textPaint);
+
+                // Create composite bitmap
+                int compositeWidth = qrCodeWidth + textWidth;
+                int compositeHeight = Math.max(qrCodeHeight, textHeight);
+
+                Bitmap compositeBitmap = Bitmap.createBitmap(compositeWidth, compositeHeight, Bitmap.Config.ARGB_8888);
+                Canvas compositeCanvas = new Canvas(compositeBitmap);
+                compositeCanvas.drawColor(Color.BLACK);
+
+                compositeCanvas.drawBitmap(qrCodeBitmap, 0, (compositeHeight - qrCodeHeight) / 2, null);
+                compositeCanvas.drawBitmap(textBitmap, qrCodeWidth, (compositeHeight - textHeight) / 2, null);
+
+                woyouService.sendLCDBitmap(compositeBitmap, null);
+            }
+        } catch (RemoteException | WriterException e) {
+            e.printStackTrace();
+        }
+
+    }
     public void returnHome() {
         Intent home_intent1 = new Intent(getActivity(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

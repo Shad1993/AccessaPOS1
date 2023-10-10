@@ -1,10 +1,11 @@
 package com.accessa.ibora.Admin;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_id;
-import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_COMPANY_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_POS_Num;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TerminalNo;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_POS_ACCESS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -14,6 +15,7 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,16 +34,11 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
-import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 
-import com.accessa.ibora.Report.SalesReportActivity;
-import com.accessa.ibora.Sync.connectToMssql;
-import com.accessa.ibora.Sync.signup;
-import com.accessa.ibora.Sync.signuptest;
+import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.CustomAdapter;
-import com.accessa.ibora.welcome;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -216,7 +213,7 @@ public class AdminMenuFragment extends Fragment {
                         @Override
                         public void onClick(View v) {
 
-                            Intent intent = new Intent(getContext(), connectToMssql.class);
+                            Intent intent = new Intent(getContext(), SyncService.class);
                             startActivity(intent);
                         }
                     });
@@ -301,6 +298,23 @@ public class AdminMenuFragment extends Fragment {
             // Data inserted successfully
             savePosNumber(terminalNo); // Save POS number to SharedPreferences
             Toast.makeText(getContext(), "POS Number saved", Toast.LENGTH_SHORT).show();
+            Log.d("update1","POS Number saved");
+            // Now, update all rows in the std table with the same pos_num
+            ContentValues updateValues = new ContentValues();
+            updateValues.put(COLUMN_POS_Num, terminalNo); // Update the pos_num column
+
+            // Perform the update operation without a WHERE clause (update all rows)
+            int rowsUpdated = db.update(TABLE_NAME_STD_ACCESS, updateValues, null, null);
+
+            if (rowsUpdated > 0) {
+                // Rows in std table updated successfully
+                Log.d("update","update");
+                Toast.makeText(getContext(), "std table updated", Toast.LENGTH_SHORT).show();
+            } else {
+                // No rows were updated
+                Toast.makeText(getContext(), "std table not updated", Toast.LENGTH_SHORT).show();
+                Log.d("not update","not update");
+            }
         } else {
             // Failed to insert data
             Toast.makeText(getContext(), "Failed to insert data", Toast.LENGTH_SHORT).show();

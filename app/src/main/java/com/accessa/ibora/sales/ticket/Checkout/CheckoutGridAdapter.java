@@ -103,7 +103,20 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
                 holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
                 holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
             }
-        } else {
+        } else if (id.equals("6") && name.equals("Coupon Code")) {
+            // Get the coupon drawable from resources
+            Drawable couponDrawable = ContextCompat.getDrawable(mContext, R.drawable.couponwhite);
+
+            // Set the drawable on the button
+            holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, couponDrawable, null);
+
+            // Set padding between text and drawable
+            holder.button.setCompoundDrawablePadding(8);
+
+            // Set the background resource for the button
+            holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
+
+    } else {
             // Set the default drawableEnd for other cases here
             holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.cash, 0);
             holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable

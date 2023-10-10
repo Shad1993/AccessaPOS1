@@ -89,10 +89,6 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         int numberOfColumns = 6;
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
-
-
-
-
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
 
@@ -133,6 +129,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         shopname=sharedPreference.getString("ShopName",null);
         dbManager = new DBManager(getContext());
         dbManager.open();
+
+         sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+        String ShopName = sharedPreference.getString("ShopName", null);
+
 
 
         mRecyclerView = view.findViewById(R.id.recycler_view1);
@@ -839,8 +840,15 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         // Extract the first three letters from companyName
         String companyLetters = shopname.substring(0, Math.min(shopname.length(), 3)).toUpperCase();
-        String posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
 
+        String posNumberLetters = null;
+        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(shopname);
+        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+            int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+            PosNum= cursorCompany.getString(columnCompanyNameIndex);
+             posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+
+        }
         // Generate the transaction ID by combining the three letters and the counter
         return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }

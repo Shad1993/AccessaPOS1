@@ -11,6 +11,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CLIENT_VAT_REG_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CURRENCY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DISCOUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
@@ -137,7 +138,16 @@ private List<ItemData> selectedItems;
                         .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
                         .post(body)
                         .build();
-                String Till_id = readTextFromFile("till_num.txt");
+                SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                String Till_id = shardPreference.getString("posNumber", null);
+                if(Till_id== null) {
+                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                        int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+                        Till_id = cursorCompany.getString(columnCompanyNameIndex);
+
+                    }
+                }
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
                     JSONArray transactionArray = new JSONArray(); // Create a JSON array to hold all transactions
@@ -173,7 +183,7 @@ private List<ItemData> selectedItems;
                                 int columnIndexBuyerAdd = cursor.getColumnIndex(TRANSACTION_CLIENT_ADR1);
                                 int columnIndexBuyerBRN = cursor.getColumnIndex(TRANSACTION_CLIENT_BRN);
                                 int columnIndexBuyerVAT = cursor.getColumnIndex(TRANSACTION_CLIENT_VAT_REG_NO);
-
+                                int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
                                 currentCounter = cursor.getInt(columnIndexCounter);
 
                                 // Assuming you have retrieved the double values as you mentioned
@@ -186,8 +196,7 @@ private List<ItemData> selectedItems;
                                 BuyerAddress = cursor.getString(columnIndexBuyerAdd);
                                 BuyerBRN = cursor.getString(columnIndexBuyerBRN);
                                 BuyerTan = cursor.getString(columnIndexBuyerVAT);
-                                System.out.println("buyer vat: " + BuyerTan);
-                                System.out.println("buyer brn: " + BuyerBRN);
+                                String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                                 // Step 2: Increment the counter value
                                 int newCounter = currentCounter + 1;
 
@@ -210,6 +219,7 @@ private List<ItemData> selectedItems;
                                     jsondetailedtransacs.put("invoiceTypeDesc", "STD");
                                     jsondetailedtransacs.put("currency", "MUR");
                                     jsondetailedtransacs.put("invoiceIdentifier", transactionId);
+                                    jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
                                     jsondetailedtransacs.put("previousNoteHash", "prevNote");
                                     jsondetailedtransacs.put("reasonStated", "test");
                                     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -494,16 +504,7 @@ private List<ItemData> selectedItems;
 
     }
 
-    public void  insertCashReturn(double cashReturn, double totalAmountinserted, String qrMra,String mrairn,String MRAMETHOD){
 
-        // Insert the cash return value to the header table
-        boolean cashReturnUpdated = mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, newtransactionid,qrMra, mrairn,MRAMETHOD, transactionType);
-        if (cashReturnUpdated) {
-            Toast.makeText(getApplicationContext(), "Cash return inserted: " + cashReturn, Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Failed to insert cash return amount: " + cashReturn, Toast.LENGTH_SHORT).show();
-        }
-    }
     public void insertCashReturnForMultipleTransactions(List<String> transactionIds,  String MRAMETHOD,String irn,String Qr) {
         for (String transactionId : transactionIds) {
             mDatabaseHelper.insertmramethod( transactionId,  MRAMETHOD,irn,Qr);

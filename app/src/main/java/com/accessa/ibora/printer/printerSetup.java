@@ -368,16 +368,7 @@ public class printerSetup extends AppCompatActivity {
                         byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
                         service.setFontSize(28, null);
-                        if (paymentName.equals("POP")) {
 
-                            String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPaddingpop)) + formattedtenderpop;
-                            service.printText(TenderTypesLine + "\n", null);
-
-                        }else {
-
-                            String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
-                            service.printText(TenderTypesLine + "\n", null);
-                        }
 
                         // Disable bold text and reset font size
                         byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
@@ -577,21 +568,16 @@ public class printerSetup extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recycleview_printer);
-         amountReceived = getIntent().getDoubleExtra("amount_received", 0.0);
-         cashReturn = getIntent().getDoubleExtra("cash_return", 0.0);
+        String anReturbed = getIntent().getStringExtra("amount_received");
+        String Cashreturn = getIntent().getStringExtra("cash_return");
+         amountReceived = Double.parseDouble(anReturbed);
+         cashReturn = Double.parseDouble(Cashreturn);
 
 
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
         mraqr = getIntent().getStringExtra("mraQR");
 
-    // Retrieve the extras from the intent
-        Intent intent = getIntent();
-        if (intent != null) {
-            String Pop = intent.getStringExtra("POP");
-            amountReceived=totalAmount;
-            paymentName= "POP";
 
-        }
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);
 

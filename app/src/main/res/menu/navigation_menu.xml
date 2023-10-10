@@ -12,6 +12,10 @@
         android:title="@string/buyer" />
 
     <item
+        android:id="@+id/nav_scan"
+        android:title="@string/Scan" />
+
+    <item
         android:id="@+id/nav_settings"
         android:title="@string/Settings" />
 

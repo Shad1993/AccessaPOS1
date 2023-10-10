@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:screenOrientation="landscape"
+    android:screenOrientation="portrait"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -31,7 +31,17 @@
         android:layout_weight="1"
         android:divider="@null"
         android:dividerHeight="0dp" />
-
+    <!-- Floating Action Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@drawable/baseline_add_24"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/OrangeAccessa"
+        app:fabSize="normal" />
 
     <FrameLayout
         android:id="@+id/empty_frame_layout"
@@ -56,6 +66,7 @@
             android:textColor="@color/black"
             android:layout_marginTop="16dp"
             android:layout_gravity="center" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -170,6 +181,10 @@
             android:text="@string/Checkout"
 
              android:textColor="@color/white" />
+
         </LinearLayout>
+
     </LinearLayout>
+
+
 </LinearLayout>

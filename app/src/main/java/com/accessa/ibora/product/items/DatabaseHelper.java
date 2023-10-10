@@ -15,6 +15,7 @@ import android.util.Log;
 import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.Report.PaymentItem;
+import com.accessa.ibora.product.couponcode.Coupon;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -93,6 +94,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PIN = "pin";
     public static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
      public static final String COLUMN_CASHOR_NAME = "cashorname";
+    public static String COLUMN_CASHOR_ShopNum="shopnum";
     public static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
     // Database Information
     private static final String DB_NAME = Constants.DB_NAME;
@@ -152,6 +154,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TRANSACTION_DATE_TRANSACTION = "DateTransaction";
     private static final String TRANSACTION_TIME_TRANSACTION = "TimeTransaction";
     private static final String TRANSACTION_BARCODE = "Barcode";
+    public static String SyncStatus="SyncStatus";
     public static String Nature="Nature";
     public static String TaxCode="TaxCode";
     public static String Currency="Currency";
@@ -197,7 +200,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TRANSACTION_CLIENT_VAT_REG_NO = "ClientVATRegNo";
     public static final String TRANSACTION_CLIENT_BRN = "ClientBRN";
     private static final String TRANSACTION_CLIENT_TEL = "ClientTel";
-    private static final String TRANSACTION_INVOICE_REF = "InvoiceRef";
+    public static final String TRANSACTION_INVOICE_REF = "InvoiceRef";
     private static final String TRANSACTION_IS_CASH_CREDIT = "IsCash_Credit";
     private static final String TRANSACTION_ID_SALESH = "IDSalesH";
     private static final String TRANSACTION_CLIENT_CODE = "ClientCode";
@@ -239,8 +242,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static String COLUMN_Comp_ADR_3= "ComPanyAdress3";
     public static String COLUMN_Comp_TEL_NO= "ComPanyphoneNumber";
     public static String COLUMN_Comp_FAX_NO= "ComPanyFaxNumber";
+
+    public static String COLUMN_POS_Num="pos_num";
     public static String VAT_Type= "VatType";
     public static String COLUMN_TerminalNo="TerminalNumber";
+
     public static final String COLUMN_Logo = "Logo";
     public static final String COLUMN_COMPANY_NAME = "company_name";
 
@@ -287,16 +293,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_POS_ID = "id";
 
     // Define the coupon code table name and columns
-    private static final String COUPON_TABLE_NAME = "CouponTable";
-    private static final String COUPON_ID = "id";
-    private static final String COUPON_CODE = "code";
-    private static final String COUPON_STATUS = "status";
-    private static final String COUPON_START_DATE = "start_date";
-    private static final String COUPON_END_DATE = "end_date";
-    private static final String COUPON_CASHIER_ID = "cashier_id";
-    private static final String COUPON_DATE_CREATED = "date_created";
-    private static final String COUPON_TIME_CREATED = "time_created";
-    private static final String COUPON_DISCOUNT = "discount";
+    public static final String COUPON_TABLE_NAME = "CouponTable";
+    public static final String COUPON_ID = "id";
+    public static final String COUPON_CODE = "code";
+    public static final String COUPON_STATUS = "status";
+    public static final String COUPON_START_DATE = "start_date";
+    public static final String COUPON_END_DATE = "end_date";
+    public static final String COUPON_CASHIER_ID = "cashier_id";
+    public static final String COUPON_DATE_CREATED = "date_created";
+    public static final String COUPON_TIME_CREATED = "time_created";
+    public static final String COUPON_DISCOUNT = "discount";
     public static final String TRANSACTION_CLIENT_NIC = "ClientNIC";
 
     //default qr
@@ -372,6 +378,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + TaxCode + " TEXT, "          // New field: TaxCode
             + Currency + " TEXT, "         // New field: Currency
             + ItemCode + " TEXT, "         // New field: ItemCode
+            + SyncStatus +  " TEXT NOT NULL CHECK(SyncStatus IN ('Offline', 'Online')), "
             + TotalDiscount + " DECIMAL(10, 2), " // New field: TotalDiscount
             + DateCreated + " DATETIME NOT NULL, "
             + LastModified + " DATETIME NOT NULL, "
@@ -390,6 +397,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             DateCreated + " TEXT NOT NULL, " +
             LastModified + " TEXT NOT NULL, " +
             COLUMN_QR_CODE_NUM + " TEXT NOT NULL);";
+
 
 
     // Creating Users table query
@@ -564,7 +572,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TABLE_NAME + "(" + TRANSACTION_ID + "));";
 
 
-
     private static final String CREATE_STD_ACCESS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_STD_ACCESS + " ("
             + COLUMN_STD_ACCESS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_Comp_ADR_1 + " TEXT, "
@@ -585,6 +592,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_Opening_Hours + " TEXT, "
             + COLUMN_COMPANY_NAME + " TEXT, "
             + COLUMN_CASHOR_id + " INTEGER, "
+            + COLUMN_POS_Num + " INTEGER, "
             + LastModified + " TEXT, "
             + DateCreated + " TEXT, "
             + "FOREIGN KEY(" + COLUMN_SHOPNAME + ") REFERENCES " + TABLE_NAME_Users + "(" + COLUMN_CASHOR_Shop + ")"
@@ -680,6 +688,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Insert debit card details
         addDefaultPaymentMethod(db, "Debit Card", "1");
+        // Insert debit card details
+        addDefaultPaymentMethod(db, "Coupon Code", "1");
 
     }
 
@@ -706,6 +716,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+
+
     private void addDefaultItem(SQLiteDatabase db) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_PAYMENT_METHOD, DEFAULT_PAYMENT_METHOD);
@@ -719,6 +731,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.e(TAG, "Error inserting default item into the database");
         }
     }
+
+    public boolean isValidBarcode(String barcode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Define the columns you want to retrieve (in this case, we only need COUPON_CODE)
+        String[] projection = { COUPON_CODE };
+
+        // Define the selection criteria (COUPON_CODE should match the provided barcode)
+        String selection = COUPON_CODE + " = ?";
+        String[] selectionArgs = { barcode };
+
+        // Execute the query
+        Cursor cursor = db.query(
+                COUPON_TABLE_NAME,   // The table to query
+                projection,          // The columns to return
+                selection,           // The columns for the WHERE clause
+                selectionArgs,       // The values for the WHERE clause
+                null,                // Don't group the rows
+                null,                // Don't filter by row groups
+                null                 // The sort order
+        );
+
+        // Check if the cursor has any rows (i.e., a coupon with the provided barcode exists)
+        boolean isValid = cursor.moveToFirst();
+
+        // Close the cursor and the database
+        cursor.close();
+        db.close();
+
+        return isValid;
+    }
+
     public String getNICByTANandBRN(String tan) {
         SQLiteDatabase db = this.getReadableDatabase();
         String nic = null;
@@ -768,6 +812,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.e(TAG, "Error inserting default item into the database");
         }
     }
+
+
+    public long insertCoupon(Coupon couponData) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Replace these lines with appropriate getters from your CouponData class
+        values.put(COUPON_CODE, couponData.getCode());
+        values.put(COUPON_STATUS, couponData.getStatus());
+        values.put(COUPON_START_DATE, couponData.getStartDate());
+        values.put(COUPON_END_DATE, couponData.getEndDate());
+        values.put(COUPON_CASHIER_ID, couponData.getCashierId());
+        values.put(COUPON_DATE_CREATED, couponData.getDateCreated());
+        values.put(COUPON_TIME_CREATED, couponData.getTimeCreated());
+        values.put(COUPON_DISCOUNT, couponData.getDiscount());
+
+        long newRowId = db.insert(COUPON_TABLE_NAME, null, values);
+
+        // No need to close the database connection here; let it be managed elsewhere
+
+        return newRowId; // Return the newly inserted row ID or -1 if an error occurred
+    }
+
 
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
@@ -880,12 +947,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
 
     }
-    public void updateAllTransactionsStatus(String Type,String MRAMETHOD) {
+    public void updateAllTransactionsStatus(String Type,String MRAMETHOD,String InvoiceRefIden) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_STATUS, Type);
         values.put(TRANSACTION_MRA_Method, MRAMETHOD);
+        values.put(TRANSACTION_INVOICE_REF, InvoiceRefIden);
 
 
         // Update the status of all in-progress transactions to the new status
@@ -1152,7 +1220,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return exists;
     }
-
+    public boolean checkBarcodeExistsForcost(String barcode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(COST_TABLE_NAME, null, Barcode + "=?",
+                new String[]{barcode}, null, null, null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
 
     public Cursor getTransactionByItemId(int itemId) {
         SQLiteDatabase db = getReadableDatabase();
@@ -1609,7 +1684,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertcashReturn(double cashReturn, double tenderamount, String transaction_id, String qrMra, String mrairn, String MRAMETHOD, String transactionType) {
+    public boolean insertcashReturn(String cashReturn, String tenderamount, String transaction_id, String qrMra, String mrairn, String MRAMETHOD) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -1618,7 +1693,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_MRA_QR, qrMra);
         values.put(TRANSACTION_MRA_IRN, mrairn);
         values.put(TRANSACTION_MRA_Method, MRAMETHOD);
-        values.put(TRANSACTION_STATUS, transactionType);
 
         String selection = TRANSACTION_TICKET_NO + " = ?";
         String[] selectionArgs = {transaction_id};
@@ -2034,6 +2108,61 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
+
+    // In your DatabaseHelper class, add a method to update an item
+    public void updateItem(Item item) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(Name , item.getName());
+        values.put(DESC , item.getDescription());
+        values.put(Price , item.getPrice());
+        // Add more columns as needed
+
+        // Define the WHERE clause to identify the item by its unique identifier (e.g., Barcode)
+        String whereClause = Barcode + "=?";
+        String[] whereArgs = { item.getBarcode() };
+
+        // Perform the update operation
+        int rowsUpdated = db.update(TABLE_NAME, values, whereClause, whereArgs);
+
+        // Close the database connection
+        db.close();
+
+        // Check if the update was successful
+        if (rowsUpdated > 0) {
+            Log.d("Database Update", "Item updated successfully: " + item.getBarcode());
+        } else {
+            Log.e("Database Update", "Failed to update item: " + item.getBarcode());
+        }
+    }
+    public long insertItem(Item newItem) {
+        // Get a writable database instance
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Create a ContentValues object to store the item's values
+        ContentValues values = new ContentValues();
+        values.put(Barcode , newItem.getBarcode());
+        values.put(Name , newItem.getName());
+        values.put(DESC , newItem.getDescription());
+        values.put(Category , newItem.getCategory());
+        values.put(Quantity , newItem.getQuantity());
+        values.put(Department , newItem.getDepartment());
+        values.put(LongDescription , newItem.getLongDescription());
+        // Add other columns as needed
+
+        // Insert the item into the database and get the inserted row ID
+        long newRowId = db.insert(TABLE_NAME, null, values);
+
+        // Close the database connection
+        db.close();
+
+        // Return the inserted row ID (or -1 if the insertion failed)
+        return newRowId;
+    }
+
+
+
     public boolean insertmramethod(String transactionId, String mramethod,String irn,String Qr) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -2048,6 +2177,63 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long newRowId = db.update(TRANSACTION_HEADER_TABLE_NAME, values, selection, selectionArgs);
 
         return newRowId != -1;
+    }
+
+    public long insertStdAccessData(String compAd1, String compAd2, String compAd3, String compTel, String brnValue,
+                                    String compFaxNo, String shopName, String shopNumber, String logo, String vatNo,
+                                    String adr1, String adr2, String adr3, String telNo, String faxNo,
+                                    String openingHours, String companyName, int cashorId, String lastModified,
+                                    String dateCreated, String posNum) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COLUMN_Comp_ADR_1, compAd1);
+        values.put(COLUMN_Comp_ADR_2, compAd2);
+        values.put(COLUMN_Comp_ADR_3, compAd3);
+        values.put(COLUMN_Comp_TEL_NO, compTel);
+        values.put(COLUMN_BRN_NO, brnValue);
+        values.put(COLUMN_Comp_FAX_NO, compFaxNo);
+        values.put(COLUMN_SHOPNAME, shopName);
+        values.put(COLUMN_SHOPNUMBER, shopNumber);
+        values.put(COLUMN_Logo, logo);
+        values.put(COLUMN_VAT_NO, vatNo);
+        values.put(COLUMN_ADR_1, adr1);
+        values.put(COLUMN_ADR_2, adr2);
+        values.put(COLUMN_ADR_3, adr3);
+        values.put(COLUMN_TEL_NO, telNo);
+        values.put(COLUMN_FAX_NO, faxNo);
+        values.put(COLUMN_Opening_Hours, openingHours);
+        values.put(COLUMN_COMPANY_NAME, companyName);
+        values.put(COLUMN_CASHOR_id, cashorId);
+        values.put(LastModified, lastModified);
+        values.put(DateCreated, dateCreated);
+        values.put(COLUMN_POS_Num, posNum);
+
+        // Insert the data into the std_access table
+        long newRowId = db.insert(TABLE_NAME_STD_ACCESS, null, values);
+
+        // Close the database connection
+        db.close();
+
+        return newRowId;
+    }
+
+    public void insertUserDatas(int cashorId, String pin, int cashorLevel, String cashorName, String cashorShop, String cashorDepartment, String dateCreated, String lastModified) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COLUMN_CASHOR_id, cashorId);
+        values.put(COLUMN_PIN, pin);
+        values.put(COLUMN_CASHOR_LEVEL, cashorLevel);
+        values.put(COLUMN_CASHOR_NAME, cashorName);
+        values.put(COLUMN_CASHOR_Shop, cashorShop);
+        values.put(COLUMN_CASHOR_DEPARTMENT, cashorDepartment);
+        values.put(DateCreated, dateCreated);
+        values.put(LastModified, lastModified);
+
+        // Insert the data into the users table
+        db.insert(TABLE_NAME_Users, null, values);
+        db.close();
     }
 
 }
