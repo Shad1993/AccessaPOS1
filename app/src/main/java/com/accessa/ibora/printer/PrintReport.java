@@ -144,7 +144,7 @@ public class PrintReport extends AppCompatActivity {
 
                             LogoPath = company.getImage();
 
-                            printLogoAndReceipt(service, LogoPath);
+                            printLogoAndReceipt(service, LogoPath,100,100);
 
 
                             // Create the formatted company name line
@@ -719,7 +719,7 @@ public class PrintReport extends AppCompatActivity {
         }
     }
 
-    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath) {
+    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath, int desiredLogoWidth, int desiredLogoHeight) {
         try {
             // Check if the service is connected
             if (service == null) {
@@ -753,14 +753,13 @@ public class PrintReport extends AppCompatActivity {
 
                 // Load the logo image as a Bitmap with options that preserve transparency
                 BitmapFactory.Options options1 = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options1.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 logoBitmap = BitmapFactory.decodeFile(logoPath, options1);
                 return;
             }
 
-            // Resize the logo image to fit the receipt width
-            int receiptWidth = 384; // Adjust this value according to your receipt paper width
-            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, receiptWidth, logoBitmap.getHeight(), true);
+            // Resize the logo image to fit the desired dimensions
+            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, desiredLogoWidth, desiredLogoHeight, true);
 
             // Print the logo image
             InnerResultCallback innerResultCallback = null;

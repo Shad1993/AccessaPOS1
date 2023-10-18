@@ -21,6 +21,15 @@ import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_QR_CODE_NUM;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_SHOPNUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_TEL_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_VAT_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_CASHIER_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_DATE_CREATED;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_DISCOUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_END_DATE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_START_DATE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TIME_CREATED;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
@@ -51,6 +60,11 @@ import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.Vendor.Vendor;
+import com.accessa.ibora.product.couponcode.Coupon;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class DBManager {
 
@@ -72,12 +86,15 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount, double currentPrice,String SyncStatus) {
+    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
         contentValue.put(DatabaseHelper.DESC, desc);
+        contentValue.put(DatabaseHelper.RateDiscount, selectedDiscounts);
         contentValue.put(DatabaseHelper.Price, price);
+        contentValue.put(DatabaseHelper.Price2, price2);
+        contentValue.put(DatabaseHelper.Price3, price3);
         contentValue.put(DatabaseHelper.Category, Category);
         contentValue.put(DatabaseHelper.Barcode, Barcode);
         contentValue.put(DatabaseHelper.Department, Department);
@@ -101,7 +118,11 @@ public class DBManager {
         contentValue.put(DatabaseHelper.ItemCode, itemCode);
         contentValue.put(DatabaseHelper.TaxCode, vatCode);
         contentValue.put(DatabaseHelper.TotalDiscount, selectedDiscount);
+        contentValue.put(DatabaseHelper.TotalDiscount2, selectedDiscount2);
+        contentValue.put(DatabaseHelper.TotalDiscount3, selectedDiscount3);
         contentValue.put(DatabaseHelper.PriceAfterDiscount, currentPrice);
+        contentValue.put(DatabaseHelper.Price2AfterDiscount, currentPrice2);
+        contentValue.put(DatabaseHelper.Price3AfterDiscount, currentPrice3);
         contentValue.put(DatabaseHelper.SyncStatus, SyncStatus);
         database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
         if (!dbHelper.checkBarcodeExistsForcost(Barcode)) {
@@ -248,27 +269,47 @@ public class DBManager {
         return true;
 
     }
-    public boolean updateItem(long id,String name, String desc, String price, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost,String lastmodified) {
+
+
+    public boolean updateItem(long id,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         ContentValues contentValues = new ContentValues();
+
+
         contentValues.put(DatabaseHelper.Name, name);
         contentValues.put(DatabaseHelper.DESC, desc);
+        contentValues.put(DatabaseHelper.RateDiscount, selectedDiscounts);
         contentValues.put(DatabaseHelper.Price, price);
-        contentValues.put(DatabaseHelper.LongDescription, LongDescription);
-        contentValues.put(DatabaseHelper.Quantity, Quantity);
+        contentValues.put(DatabaseHelper.Price2, price2);
+        contentValues.put(DatabaseHelper.Price3, price3);
         contentValues.put(DatabaseHelper.Category, Category);
+        contentValues.put(DatabaseHelper.Barcode, Barcode);
         contentValues.put(DatabaseHelper.Department, Department);
         contentValues.put(DatabaseHelper.SubDepartment, SubDepartment);
-        contentValues.put(DatabaseHelper.Barcode, Barcode);
-        contentValues.put(DatabaseHelper.Weight, weight);
+        contentValues.put(DatabaseHelper.LongDescription, LongDescription);
+        contentValues.put(DatabaseHelper.Quantity, Quantity);
         contentValues.put(DatabaseHelper.ExpiryDate, ExpiryDate);
         contentValues.put(DatabaseHelper.VAT, VAT);
+        contentValues.put(DatabaseHelper.Weight, weight);
+        contentValues.put(DatabaseHelper.AvailableForSale, AvailableForSale);
         contentValues.put(DatabaseHelper.SoldBy, SoldBy);
         contentValues.put(DatabaseHelper.Image, Image);
-        contentValues.put(DatabaseHelper.SKU, SKU);
         contentValues.put(DatabaseHelper.Variant, Variant);
+        contentValues.put(DatabaseHelper.SKU, SKU);
         contentValues.put(DatabaseHelper.Cost, Cost);
-        contentValues.put(DatabaseHelper.AvailableForSale,AvailableForSale);
-        contentValues.put(LastModified,lastmodified);
+        contentValues.put(DatabaseHelper.DateCreated, DateCreated);
+        contentValues.put(DatabaseHelper.LastModified, LastModified);
+        contentValues.put(DatabaseHelper.UserId, UserId);
+        contentValues.put(DatabaseHelper.Nature, selectedNature);
+        contentValues.put(DatabaseHelper.Currency, selectedCurrency);
+        contentValues.put(DatabaseHelper.ItemCode, itemCode);
+        contentValues.put(DatabaseHelper.TaxCode, vatCode);
+        contentValues.put(DatabaseHelper.TotalDiscount, selectedDiscount);
+        contentValues.put(DatabaseHelper.TotalDiscount2, selectedDiscount2);
+        contentValues.put(DatabaseHelper.TotalDiscount3, selectedDiscount3);
+        contentValues.put(DatabaseHelper.PriceAfterDiscount, currentPrice);
+        contentValues.put(DatabaseHelper.Price2AfterDiscount, currentPrice2);
+        contentValues.put(DatabaseHelper.Price3AfterDiscount, currentPrice3);
+        contentValues.put(DatabaseHelper.SyncStatus, SyncStatus);
 
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
@@ -369,6 +410,9 @@ public class DBManager {
                 DatabaseHelper.Name,
                 DatabaseHelper.DESC,
                 DatabaseHelper.Price,
+                DatabaseHelper.Price2,
+                DatabaseHelper.Price3,
+                DatabaseHelper.RateDiscount,
                 DatabaseHelper.Category,
                 DatabaseHelper.Barcode,
                 DatabaseHelper.Department,
@@ -401,10 +445,18 @@ public class DBManager {
             item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
             item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
             item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
+            item.setRateDiscount(cursor.getString(cursor.getColumnIndex(DatabaseHelper.RateDiscount)));
 
             // Handle empty strings or invalid numbers for Price, Quantity, and Cost
             String priceString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
             item.setPrice(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString));
+            // Handle empty strings or invalid numbers for Price, Quantity, and Cost
+            String priceString2 = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price2));
+            item.setPrice2(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString2));
+            // Handle empty strings or invalid numbers for Price, Quantity, and Cost
+            String priceString3 = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price3));
+            item.setPrice3(priceString.isEmpty() ? 0.0f : Float.parseFloat(priceString3));
+
 
             String quantityString = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Quantity));
             item.setQuantity(quantityString.isEmpty() ? 0 : Float.parseFloat(quantityString));
@@ -554,10 +606,49 @@ public class DBManager {
         return true;
     }
 
+
+
+    public boolean updateCoupon(long id, String couponCode, String amount, String status,String startDate, String endDate,  String userId) {
+
+        ContentValues values = new ContentValues();
+        values.put(COUPON_CODE, couponCode);
+        values.put(COUPON_DISCOUNT, amount);
+        values.put(COUPON_STATUS, status);
+        values.put(COUPON_START_DATE, startDate);
+        values.put(COUPON_END_DATE, endDate);
+        // Add date_created and time_created values
+        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        String currentDate = sdfDate.format(new Date());
+        String currentTime = sdfTime.format(new Date());
+        values.put(COUPON_DATE_CREATED, currentDate);
+        values.put(COUPON_TIME_CREATED, currentTime);
+        values.put(COUPON_CASHIER_ID, userId);
+
+        // Define the WHERE clause to update the specific department by ID
+        String whereClause = "id = ?";
+        String[] whereArgs = {String.valueOf(id)};
+
+        int rowsAffected = database.update(COUPON_TABLE_NAME, values, whereClause, whereArgs);
+
+        // Close the database connection
+        database.close();
+
+        // Return true if the update was successful (at least one row affected)
+        return rowsAffected > 0;
+    }
+
     public boolean deleteDept(long _id) {
         String selection = DatabaseHelper._ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
         database.delete(DEPARTMENT_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
+    public boolean deleteCoupon(long _id) {
+        String selection = DatabaseHelper.COUPON_ID + "=?";
+        String[] selectionArgs = { String.valueOf(_id) };
+        database.delete(COUPON_TABLE_NAME, selection, selectionArgs);
         return true;
     }
 
@@ -593,6 +684,41 @@ public class DBManager {
             cursor.close();
         }
         return department;
+    }
+
+    public Coupon getCouponById(String id) {
+        Coupon coupon = null;
+        String[] columns = new String[]{
+                DatabaseHelper.COUPON_ID,
+                COUPON_DISCOUNT,
+                COUPON_CODE,
+                DatabaseHelper.COUPON_DATE_CREATED,
+                COUPON_END_DATE,
+                COUPON_CASHIER_ID,
+
+                // Add other columns as needed
+        };
+
+        String selection = DatabaseHelper.COUPON_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(COUPON_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            coupon = new Coupon();
+            coupon.setid((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.COUPON_ID)));
+            coupon.setCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COUPON_CODE)));
+            coupon.setDiscount(cursor.getInt(cursor.getColumnIndex(COUPON_DISCOUNT)));
+            coupon.setDateCreated(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COUPON_DATE_CREATED)));
+            coupon.setEndDate(cursor.getString(cursor.getColumnIndex(COUPON_END_DATE)));
+            coupon.setCashierId(cursor.getInt(cursor.getColumnIndex(COUPON_CASHIER_ID)));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return coupon;
     }
     public Department getDepartmentByCode(String id) {
         Department department = null;

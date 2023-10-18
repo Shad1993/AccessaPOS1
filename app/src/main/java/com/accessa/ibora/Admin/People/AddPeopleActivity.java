@@ -85,7 +85,7 @@ public class AddPeopleActivity extends Activity {
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-        ShopName = sharedPreferences.getString("Shopame", null); // Retrieve cashor's level
+        ShopName = sharedPreferences.getString("ShopName", null); // Retrieve cashor's level
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 

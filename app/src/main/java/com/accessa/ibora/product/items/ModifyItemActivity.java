@@ -2,13 +2,16 @@ package com.accessa.ibora.product.items;
 
 import static com.accessa.ibora.product.category.CategoryDatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_VALUE;
 import static com.accessa.ibora.product.items.DatabaseHelper.SUBDEPARTMENT_NAME;
 import static com.accessa.ibora.sales.Sales.ItemGridAdapter.PERMISSION_REQUEST_CODE;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -25,6 +28,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import androidx.appcompat.widget.SwitchCompat;
+
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -62,7 +67,7 @@ public class ModifyItemActivity extends Activity {
     private String imagePath;
     private EditText NameText;
     private EditText descText;
-    private EditText PriceEditText;
+    private EditText PriceEditText,PriceEditText2,PriceEditText3;
     private EditText WeightEditText;
     private EditText BarcodeEditText;
     private EditText SKUEditText;
@@ -72,7 +77,9 @@ public class ModifyItemActivity extends Activity {
     private EditText LongDescEditText;
     private EditText QuantityEditText;
     private EditText VariantEditText;
-
+    private Spinner Discount;
+    private EditText ItemCode;
+    private Spinner Nature,Currency;
 
     private EditText CostEditText;
     private DatePicker ExpiryDates;
@@ -86,8 +93,9 @@ public class ModifyItemActivity extends Activity {
     private boolean isAvailableForSale;
     private TextView ExpiryDateText;
     private DBManager dbManager;
-    private String ImageLink;
+    private String ImageLink,cashorId;
     private long _id;
+    private SharedPreferences sharedPreferences;
     private DatabaseHelper mDatabaseHelper;
     private CategoryDatabaseHelper catDatabaseHelper;
 private ImageView image_view;
@@ -104,9 +112,17 @@ private ImageView image_view;
         dbManager = new DBManager(this);
         dbManager.open();
 
+        Intent intent = getIntent();
+        String id = intent.getStringExtra("id");
+
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+
         NameText = findViewById(R.id.itemName_edittext);
         descText = findViewById(R.id.description_edittext);
         PriceEditText = findViewById(R.id.price_edittext);
+        PriceEditText2 = findViewById(R.id.price2_edittext);
+        PriceEditText3 = findViewById(R.id.price3_edittext);
         BarcodeEditText = findViewById(R.id.IdBarcode_edittext);
         DepartmentSpinner = findViewById(R.id.Dept_spinner);
         SubDepartmentSpinner = findViewById(R.id.SubDept_spinner);
@@ -121,8 +137,96 @@ private ImageView image_view;
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
-        ExpirydateSwitch = findViewById(R.id.expirydate_switch);
+        ExpirydateSwitch = findViewById(R.id.perishable_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
+        ItemCode = findViewById(R.id.IdItemCode_edittext);
+        Discount = findViewById(R.id.discount_spinner);
+        Currency = findViewById(R.id.Currency_spinner);
+
+        // Create a list of currency options
+        List<String> currencyOptions = new ArrayList<>();
+        currencyOptions.add("MUR");
+        currencyOptions.add("USD");
+        currencyOptions.add("EUR");
+        currencyOptions.add("GBP");
+
+        // Assuming you have already retrieved the item's ID as _id
+        String cur = mDatabaseHelper.getCurrencyById(Long.parseLong(id));
+
+        // Create an ArrayAdapter for the spinner
+        ArrayAdapter<String> CurrencyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, currencyOptions);
+        CurrencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Currency.setAdapter(CurrencyAdapter);
+
+        if (cur != null) {
+            // Handle the retrieved "Nature" value
+            for (int i = 0; i < currencyOptions.size(); i++) {
+                if (currencyOptions.get(i).equals(cur)) {
+                    Currency.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+        // Set an item selection listener for the "Nature" spinner
+        Currency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedItemCode = parent.getItemAtPosition(position).toString();
+                // Handle the selected nature here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
+
+
+        // Inside your onCreate method, after initializing other views
+        Nature = findViewById(R.id.Nature_spinner);
+
+        // Create a list of options for the Nature spinner
+        List<String> natureOptions = new ArrayList<>();
+        natureOptions.add("GOODS");
+        natureOptions.add("SERVICES");
+
+        // Assuming you have already retrieved the item's ID as _id
+        String nature = mDatabaseHelper.getNatureById(Long.parseLong(id));
+
+        // Create an ArrayAdapter for the spinner
+        ArrayAdapter<String> natureAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, natureOptions);
+        natureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Nature.setAdapter(natureAdapter);
+
+        if (nature != null) {
+            // Handle the retrieved "Nature" value
+            for (int i = 0; i < natureOptions.size(); i++) {
+                if (natureOptions.get(i).equals(nature)) {
+                    Nature.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+// Set an item selection listener for the "Nature" spinner
+        Nature.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedNature = parent.getItemAtPosition(position).toString();
+                // Handle the selected nature here
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
+
+
+
 
         ImageView imageView = findViewById(R.id.image_view);
 
@@ -204,8 +308,8 @@ private ImageView image_view;
             }
         });
 
-        Intent intent = getIntent();
-        String id = intent.getStringExtra("id");
+
+
         _id = Long.parseLong(id);
 
 
@@ -216,12 +320,17 @@ private ImageView image_view;
             NameText.setText(item.getName());
             descText.setText(item.getDescription());
             PriceEditText.setText(String.valueOf(item.getPrice()));
+            PriceEditText2.setText(String.valueOf(item.getPrice2()));
+            PriceEditText3.setText(String.valueOf(item.getPrice3()));
             BarcodeEditText.setText(item.getBarcode());
             DepartmentSpinner.setSelection(getSpinnerIndex1(DepartmentSpinner, item.getDepartment()));
             SubDepartmentSpinner.setSelection(getSpinnerIndex2(SubDepartmentSpinner, item.getSubDepartment()));
             CategorySpinner.setSelection(getSpinnerIndex(CategorySpinner, item.getCategory()));
+            Discount.setSelection(getSpinnerIndex4(Discount, item.getDiscount()));
             CostEditText.setText(String.valueOf(item.getPrice()));
             VariantEditText.setText(item.getVariant());
+            ItemCode.setText(item.getItemCode());
+
              ImageLink= item.getImage();
 
             Glide.with(this).load(ImageLink).into(imageView);
@@ -252,6 +361,8 @@ private ImageView image_view;
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
         Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
         Cursor subDepartmentCursor = mDatabaseHelper.getAllSubDepartment();
+        Cursor discountCursor = mDatabaseHelper.getAllDiscounts();
+
 
         List<String> categories = new ArrayList<>();
         categories.add("All Category");
@@ -283,15 +394,39 @@ private ImageView image_view;
         }
         subDepartmentCursor.close();
 
+
+        // Fetch discount data from your database
+        List<String> discountOptions = new ArrayList<>();
+        // Fetch the data and populate the discountOptions list
+
+        discountOptions.add(getString(R.string.NODISCOUNT));
+        if (discountCursor.moveToFirst()) {
+            do {
+                String discount_name = discountCursor.getString(discountCursor.getColumnIndex(DatabaseHelper.DISCOUNT_NAME));
+                String discount_Value= discountCursor.getString(discountCursor.getColumnIndex(DISCOUNT_VALUE));
+                discountOptions.add(discount_Value);
+            } while (discountCursor.moveToNext());
+        }
+        discountCursor.close();
+
+
+
+
+        // Create an ArrayAdapter for the spinner
+        ArrayAdapter<String> discountAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, discountOptions);
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
         ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
         ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subDepartments);
+        discountAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAdapterSubDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        natureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         CategorySpinner.setAdapter(spinnerAdapter);
         DepartmentSpinner.setAdapter(spinnerAdapterDept);
         SubDepartmentSpinner.setAdapter(spinnerAdapterSubDept);
+        Discount.setAdapter(discountAdapter);
+
 
         CategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -305,16 +440,19 @@ private ImageView image_view;
                 // Handle the case when nothing is selected
             }
         });
-// Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
+        // Retrieve the existing category value from the database (replace item.getCategory() with the correct method)
         String existingCategory = item.getCategory();
         String existingDepartment = item.getDepartment();
         String existingSubDepartment = item.getSubDepartment();
-// Get the index of the existing category value in the spinner's data source
+        String existingDiscount = item.getRateDiscount();
+        // Get the index of the existing category value in the spinner's data source
         int categoryIndex = spinnerAdapter.getPosition(existingCategory);
         int DeptIndex = spinnerAdapterDept.getPosition(existingDepartment);
         int SubDeptIndex = spinnerAdapterSubDept.getPosition(existingSubDepartment);
+        int DiscountIndex = discountAdapter.getPosition(existingDiscount);
 
-// Set the selected item of the CategorySpinner to the existing category value
+
+        // Set the selected item of the CategorySpinner to the existing category value
         CategorySpinner.setSelection(categoryIndex);
 
         // Set the selected item of the CategorySpinner to the existing category value
@@ -323,20 +461,22 @@ private ImageView image_view;
         // Set the selected item of the CategorySpinner to the existing category value
         SubDepartmentSpinner.setSelection(SubDeptIndex);
 
+        Discount.setSelection(DiscountIndex);
+
         // Retrieve the existing soldBy value from the database (replace item.getSoldBy() with the correct method)
         String existingSoldBy = item.getSoldBy();
 
-// Find the radio button corresponding to the existing soldBy value and set it as checked
+        // Find the radio button corresponding to the existing soldBy value and set it as checked
         if (existingSoldBy != null && existingSoldBy.equals("Each")) {
             soldByRadioGroup.check(R.id.soldBy_each_radio);
         } else if (existingSoldBy != null && existingSoldBy.equals("Volume")) {
             soldByRadioGroup.check(R.id.soldBy_volume_radio);
         }
 
-// Retrieve the existing VAT value from the database (replace item.getVAT() with the correct method)
+        // Retrieve the existing VAT value from the database (replace item.getVAT() with the correct method)
         String existingVAT = item.getVAT();
 
-// Check the radio button based on the value
+        // Check the radio button based on the value
         if (existingVAT != null && existingVAT.equals("VAT 0%")) {
             vatRadioGroup.check(R.id.VAT_0_radio);
         } else if (existingVAT != null && existingVAT.equals("VAT Exempted")) {
@@ -373,6 +513,20 @@ private ImageView image_view;
                 // Handle the case when nothing is selected
             }
         });
+
+        Discount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedDiscount = parent.getItemAtPosition(position).toString();
+                // Do something with the selectedDiscount (e.g., store it in a variable)
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle the case when nothing is selected
+            }
+        });
+
 
         buttonUpdate = findViewById(R.id.btn_update);
         buttonUpdate.setOnClickListener(new OnClickListener() {
@@ -511,6 +665,8 @@ private ImageView image_view;
         String name = NameText.getText().toString().trim();
         String desc = descText.getText().toString().trim();
         String price = PriceEditText.getText().toString().trim();
+        String price2 = PriceEditText2.getText().toString().trim();
+        String price3 = PriceEditText3.getText().toString().trim();
         String barcode = BarcodeEditText.getText().toString().trim();
         String department = DepartmentSpinner.getSelectedItem().toString();
         String subDepartment = SubDepartmentSpinner.getSelectedItem().toString();
@@ -525,6 +681,55 @@ private ImageView image_view;
         String soldBy = getSelectedRadioButtonText(soldByRadioGroup);
         String vat = getSelectedRadioButtonText(vatRadioGroup);
         String availableForSale =String.valueOf(isAvailableForSale);
+        String itemCode = String.valueOf(ItemCode);
+        String selectedNature = Nature.getSelectedItem().toString();
+        String selectedCurrency = Currency.getSelectedItem().toString();
+        String selectedDiscount = Discount.getSelectedItem().toString();
+        double currentPrice;
+        double currentPrice2;
+        double currentPrice3;
+
+        double discountedAmount;
+        double discountedAmount2;
+        double discountedAmount3;
+
+        int selectedDiscounts = 0;
+        if (selectedDiscount.equals("No Discount")) {
+            currentPrice = Double.parseDouble(price);
+            currentPrice2 = Double.parseDouble(price2);
+            currentPrice3 = Double.parseDouble(price3);
+            discountedAmount = 0.00;
+            discountedAmount2 = 0.00;
+            discountedAmount3 = 0.00;
+
+        } else {
+            selectedDiscounts = Integer.parseInt(Discount.getSelectedItem().toString());
+
+            double prices= Double.parseDouble(price);
+            double prices2= Double.parseDouble(price2);
+            double prices3= Double.parseDouble(price3);
+            // Corrected discountedAmount calculation
+            discountedAmount = (selectedDiscounts / 100.0) * prices;
+            discountedAmount2 = (selectedDiscounts / 100.0) * prices2;
+            discountedAmount3 = (selectedDiscounts / 100.0) * prices3;
+
+            // Calculate the current price
+            currentPrice = prices - discountedAmount;
+            currentPrice2 = prices - discountedAmount2;
+            currentPrice3 = prices - discountedAmount3;
+
+
+        }
+
+        String vats = vat;
+        String VatCode = "";
+        if (vat.equals("VAT 15%")) {
+            VatCode = "TC01";
+        } else if (vat.equals("VAT 0%")) {
+            VatCode = "TC02";
+        } else if (vat.equals("VAT Exempted")) {
+            VatCode = "TC03";
+        }
 
         String image ;
         if( imagePath== null) {
@@ -536,7 +741,7 @@ private ImageView image_view;
         }
 
 
-        if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || barcode.isEmpty() || department.isEmpty()
+        if (name.isEmpty() || desc.isEmpty() || price.isEmpty() ||price2.isEmpty() || price3.isEmpty() || barcode.isEmpty() || department.isEmpty()
                 || subDepartment.isEmpty() || longDescription.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()
                 || soldBy.isEmpty() || vat.isEmpty()) {
             Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
@@ -546,9 +751,13 @@ private ImageView image_view;
 
 
 
-        boolean isUpdated = dbManager.updateItem( _id,name, desc, price, category, barcode, Float.parseFloat(weight), department,
+        boolean isUpdated = dbManager.updateItem( _id,name, desc,selectedDiscounts, price,price2,price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost,lastmodified);
+                availableForSale, soldBy, image, variant, sku, cost, cashorId,  lastmodified,
+                selectedNature, selectedCurrency, itemCode,VatCode, discountedAmount,discountedAmount2,discountedAmount3, currentPrice,currentPrice2,currentPrice3,"Offline");
+
+
+
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
@@ -678,7 +887,38 @@ private ImageView image_view;
         return 0; // Default index
     }
 
+    private int getSpinnerIndex4(Spinner spinner, String value) {
+        // Retrieve categories from the database
 
+        DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
+        Cursor DiscountCursor = databaseHelper.getAllDiscounts();
+        List<String> discounts = new ArrayList<>();
+
+        // Iterate through the cursor and add categories to the list
+        if (DiscountCursor.moveToFirst()) {
+            do {
+                String category = DiscountCursor.getString(DiscountCursor.getColumnIndex(DISCOUNT_VALUE));
+                discounts.add(category);
+            } while (DiscountCursor.moveToNext());
+        }
+
+        // Create an ArrayAdapter and populate it with the retrieved data
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, discounts);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+
+        // Find the index of the selected value in the spinner
+        int index = discounts.indexOf(value);
+        if (index != -1) {
+            // Set the spinner selection to the found index
+            spinner.setSelection(index);
+            return index;
+        }
+
+        // If the selected value is not found in categories, default to the first item
+        spinner.setSelection(0);
+        return 0; // Default index
+    }
 
     private String getDateFromDatePicker(DatePicker datePicker) {
         int day = datePicker.getDayOfMonth();

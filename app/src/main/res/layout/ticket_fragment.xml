@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:screenOrientation="portrait"
+    android:background="@color/textviewextColor"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -16,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/Tickets"
-            android:background="@color/OrangeAccessa"
+            android:background="@color/BleuAccessaText"
             app:titleTextColor="@color/white"
              />
 
@@ -40,7 +41,7 @@
         android:layout_margin="16dp"
         android:src="@drawable/baseline_add_24"
         app:tint="@android:color/white"
-        app:backgroundTint="@color/OrangeAccessa"
+        app:backgroundTint="@color/BleuAccessaText"
         app:fabSize="normal" />
 
     <FrameLayout
@@ -117,7 +118,8 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:orientation="vertical"
-        android:background="@color/white">
+        android:background="@color/textviewextColor"
+        >
         <!-- Separator Line -->
         <View
             android:layout_width="match_parent"
@@ -155,7 +157,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:background="@color/BleuAccessaText"
+        android:background="@color/white"
         >
 
         <!-- save Button -->

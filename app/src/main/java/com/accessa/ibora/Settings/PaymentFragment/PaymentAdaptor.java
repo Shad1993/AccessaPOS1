@@ -110,7 +110,7 @@ public class PaymentAdaptor extends RecyclerView.Adapter<PaymentAdaptor.ItemView
             holder.imageView.setImageResource(R.drawable.payment);
         }
         if (id.equals("5") && name.equals("Debit Card")) {
-            holder.imageView.setImageResource(R.drawable.debit1);
+            holder.imageView.setImageResource(R.drawable.debitnotes);
         } else {
             holder.imageView.setImageResource(R.drawable.payment);
         }

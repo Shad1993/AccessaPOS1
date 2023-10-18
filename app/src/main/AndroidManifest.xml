@@ -121,6 +121,7 @@
         <service android:name=".Sync.SyncService" />
         <service android:name=".Sync.SyncAddToMssql" />
         <service android:name=".Sync.SyncActivitySync" />
+        <activity android:name="com.accessa.ibora.product.couponcode.ModifyCouponActivity"/>
 
 
 

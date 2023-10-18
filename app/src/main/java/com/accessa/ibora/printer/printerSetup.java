@@ -176,7 +176,7 @@ public class printerSetup extends AppCompatActivity {
 
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
 
-                            printLogoAndReceipt(service,LogoPath);
+                            printLogoAndReceipt(service, LogoPath,100,100);
 
 
                             // Create the formatted company name line
@@ -636,7 +636,7 @@ public class printerSetup extends AppCompatActivity {
         }
     }
 
-    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath) {
+    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath, int desiredLogoWidth, int desiredLogoHeight) {
         try {
             // Check if the service is connected
             if (service == null) {
@@ -659,25 +659,24 @@ public class printerSetup extends AppCompatActivity {
                 // Get the resource name (without the extension) from the resource ID
                 String resourceName = this.getResources().getResourceEntryName(resourceId);
 
-            // Get the resource type (e.g., "drawable") from the resource ID
+                // Get the resource type (e.g., "drawable") from the resource ID
                 String resourceType = this.getResources().getResourceTypeName(resourceId);
 
                 // Now you can construct the path as "android.resource://your_package_name/resource_type/resource_name"
                 String imagePath = "android.resource://" + this.getPackageName() + "/" + resourceType + "/" + resourceName;
 
                 // Provide the path to the logo image
-                 logoPath = imagePath;
+                logoPath = imagePath;
 
                 // Load the logo image as a Bitmap with options that preserve transparency
                 BitmapFactory.Options options1 = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                 logoBitmap = BitmapFactory.decodeFile(logoPath, options1);
+                options1.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                logoBitmap = BitmapFactory.decodeFile(logoPath, options1);
                 return;
             }
 
-            // Resize the logo image to fit the receipt width
-            int receiptWidth = 384; // Adjust this value according to your receipt paper width
-            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, receiptWidth, logoBitmap.getHeight(), true);
+            // Resize the logo image to fit the desired dimensions
+            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, desiredLogoWidth, desiredLogoHeight, true);
 
             // Print the logo image
             InnerResultCallback innerResultCallback = null;

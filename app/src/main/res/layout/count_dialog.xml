@@ -1,0 +1,234 @@
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Existing Total TextView -->
+        <TextView
+            android:id="@+id/totalTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:text="Total: Rs 0.00"
+            android:textSize="18sp" />
+
+        <!-- New Totalizer Total TextView -->
+        <TextView
+            android:id="@+id/totalizerTotalTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/totalTextView"
+            android:text="Totalizer Total: Rs 0.00"
+            android:textSize="18sp" />
+
+        <!-- New Totalizer Total TextView -->
+        <TextView
+            android:id="@+id/differenceTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/totalizerTotalTextView"
+            android:text="Total Difference: Rs 0.00"
+            android:textSize="18sp" />
+        <!-- Create a LinearLayout to contain both Notes and Coins layouts -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@+id/differenceTextView"
+            android:id="@+id/notesCoinsLayout">
+
+        <!-- Notes Layout (Left) with 50% width -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:id="@+id/notesLayout">
+            <!-- Separator Line -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/BleuAccessaText" />
+            <TextView
+                android:id="@+id/notesTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Notes"
+                android:textSize="18sp" />
+        <EditText
+            android:id="@+id/editText25RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="25 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText50RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="50 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText100RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="100 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText200RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="200 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText500RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="500 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText1000RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1000 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText2000RupeesNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="2000 Rupees"
+            android:inputType="numberDecimal" />
+
+        <!-- Add more EditText fields for other note denominations if needed -->
+
+    </LinearLayout>
+
+        <!-- Coins Layout (Right) -->
+        <LinearLayout
+
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:id="@+id/coinsLayout">
+            <!-- Separator Line -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/BleuAccessaText" />
+            <TextView
+                android:id="@+id/CoinsTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Coins"
+                android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/editText1Cent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1 Cent"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText5Cents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="5 Cents"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText10Cents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="10 Cents"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText20Cents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="20 Cents"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText50Cents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="50 Cents"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText1RupeeCoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1 Rupee"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText5RupeesCoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="5 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText10RupeesCoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="10 Rupees"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editText20RupeesCoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="20 Rupees"
+            android:inputType="numberDecimal" />
+
+        <!-- Add more EditText fields for other coin denominations if needed -->
+        </LinearLayout>
+    </LinearLayout>
+
+        <!-- Cheques Layout (Single EditText for adding more) -->
+        <LinearLayout
+            android:id="@+id/chequesLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_below="@id/notesCoinsLayout">
+            <TextView
+                android:id="@+id/chequesTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cheques "
+                android:textSize="18sp" />
+
+
+
+            <Button
+                android:id="@+id/addChequeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Cheque" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/chequesLayout" />
+    </RelativeLayout>
+</ScrollView>

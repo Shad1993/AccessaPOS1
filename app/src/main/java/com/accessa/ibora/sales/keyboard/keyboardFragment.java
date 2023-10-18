@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -18,12 +19,14 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
+import com.accessa.ibora.Functions.FunctionFragment;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
@@ -77,11 +80,14 @@ public class keyboardFragment extends Fragment {
         Button button8 = view.findViewById(R.id.button8);
         Button button9 = view.findViewById(R.id.button9);
         Button button0 = view.findViewById(R.id.button0);
-        Button button00 = view.findViewById(R.id.button00);
+        Button buttonbackspace = view.findViewById(R.id.buttonbackspace);
         Button buttonComma = view.findViewById(R.id.buttonComma);
         Button buttonClear = view.findViewById(R.id.buttonClear);
-        Button buttonEnter = view.findViewById(R.id.buttonEnter);
-        Button buttonPrint = view.findViewById(R.id.buttonPrint);
+        CardView buttonEnter = view.findViewById(R.id.buttonEnter);
+
+
+
+        Button buttonfunction = view.findViewById(R.id.buttonFunctions);
         Button buttonQr = view.findViewById(R.id.buttonQr);
 
         EditText editTextSearch = view.findViewById(R.id.editTextBarcode);
@@ -198,10 +204,10 @@ public class keyboardFragment extends Fragment {
             }
         });
 
-        button00.setOnClickListener(new View.OnClickListener() {
+        buttonbackspace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onNumberButtonClick("00");
+                onBackspaceButtonClick();
             }
         });
 
@@ -218,6 +224,8 @@ public class keyboardFragment extends Fragment {
                 onClearButtonClick(v);
             }        });
 
+
+
         // Set OnClickListener for other buttons
         buttonEnter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -226,14 +234,24 @@ public class keyboardFragment extends Fragment {
             }
         });
 
-        buttonPrint.setOnClickListener(new View.OnClickListener() {
+        buttonfunction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle the print button click
-                // Implement the desired functionality here
-                // Handle the print button click
-                Intent intent = new Intent(getActivity(), printerSetup.class);
-                startActivity(intent);
+                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.scanner_container);
+                if (currentFragment instanceof CustomerLcdFragment) {
+                    buttonfunction.setText(getString(R.string.functions));
+                    FunctionFragment customerFragment = new FunctionFragment();
+                    replaceFragment(customerFragment);
+                } else if(currentFragment instanceof InbuiltScannerFragment) {
+                    buttonfunction.setText(getString(R.string.functions));
+                    FunctionFragment customerFragment = new FunctionFragment();
+                    replaceFragment(customerFragment);
+            }else {
+                // The current fragment is CustomerLcdFragment, replace it with InbuiltScannerFragment
+                    buttonfunction.setText(getString(R.string.functions));
+                    FunctionFragment customerFragment = new FunctionFragment();
+                    replaceFragment(customerFragment);
+            }
             }
         });
 
@@ -310,6 +328,16 @@ public class keyboardFragment extends Fragment {
         editTextBarcode.requestFocus();
 
         }
+
+    private void onBackspaceButtonClick() {
+        // Check if there are characters to remove
+        if (enteredBarcode.length() > 0) {
+            // Remove the last character from the entered barcode
+            enteredBarcode.deleteCharAt(enteredBarcode.length() - 1);
+            editTextBarcode.setText(enteredBarcode.toString());
+        }
+    }
+
     private void performItemSearch(String searchText) {
 
         Bundle resultBundle = new Bundle();

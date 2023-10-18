@@ -6,10 +6,8 @@ package com.accessa.ibora.login;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_Shop;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -18,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 import android.view.WindowManager;
 import androidx.appcompat.app.AlertDialog;
@@ -27,6 +24,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.MainActivityMobile;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -103,8 +101,6 @@ public class login extends AppCompatActivity {
         if (cursor.moveToFirst()) {
 
 
-
-
             // PIN matched, login successfull
             // Get the cashor's name from the cursor
             String cashorName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_NAME));
@@ -152,21 +148,24 @@ public class login extends AppCompatActivity {
             alertDialog.show();
 
 
-            final Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("cashorName", cashorName); // Pass cashorName to MainActivity
-            intent.putExtra("cashorId", cashorId); // Pass cashorId to MainActivity
-            intent.putExtra("ShopName", ShopName); // Pass cashorId to MainActivity
-            // Use a Handler to delay the redirection
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!isFinishing()) { // Check if the activity is still running
-                        startActivity(intent);
-                        finish(); // Optional: Finish the current activity if needed
+                final Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("cashorName", cashorName); // Pass cashorName to MainActivity
+                intent.putExtra("cashorId", cashorId); // Pass cashorId to MainActivity
+                intent.putExtra("ShopName", ShopName); // Pass cashorId to MainActivity
+                // Use a Handler to delay the redirection
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!isFinishing()) { // Check if the activity is still running
+                            startActivity(intent);
+                            finish(); // Optional: Finish the current activity if needed
+                        }
                     }
-                }
-            }, 1000);  // Delay in milliseconds (1 second
-            builder.setCancelable(false);
+                }, 1000);  // Delay in milliseconds (1 second
+                builder.setCancelable(false);
+
+
+
 
         } else {
 

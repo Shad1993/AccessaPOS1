@@ -76,6 +76,8 @@ public class SyncAddToMssql extends IntentService {
             String name = intent.getStringExtra("Name");
             String desc = intent.getStringExtra("Desc");
             String price = intent.getStringExtra("Price");
+            String price2 = intent.getStringExtra("Price2");
+            String price3 = intent.getStringExtra("Price3");
             String category = intent.getStringExtra("Category");
             String barcode = intent.getStringExtra("Barcode");
             float weight = intent.getFloatExtra("Weight", 0.0f);
@@ -99,10 +101,15 @@ public class SyncAddToMssql extends IntentService {
             String itemCode = intent.getStringExtra("ItemCode");
             String vatCode = intent.getStringExtra("VATCode");
             String valueOf = intent.getStringExtra("ValueOf");
+            String discountedval2 = intent.getStringExtra("Discountedamount2");
+            String discountedval3 = intent.getStringExtra("Discountedamount3");
             double currentPrice = intent.getDoubleExtra("CurrentPrice", 0.0);
+            double currentPrice2 = intent.getDoubleExtra("CurrentPrice2", 0.0);
+            double currentPrice3 = intent.getDoubleExtra("CurrentPrice3", 0.0);
+            int discountAmount = intent.getIntExtra("Discountamount", 0);
 
             // Insert the data into the MSSQL database using these values
-            add(conn,name, desc, price, category, barcode, weight, department, subDepartment, longDescription, quantity, expiryDate, vat, availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified, selectedNature, selectedCurrency, itemCode, vatCode, valueOf, currentPrice);
+            add(conn,name, desc,discountAmount, price,price2,price3, category, barcode, weight, department, subDepartment, longDescription, quantity, expiryDate, vat, availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified, selectedNature, selectedCurrency, itemCode, vatCode, valueOf,discountedval2,discountedval3, currentPrice,currentPrice2,currentPrice3);
 
         }
     }
@@ -133,56 +140,63 @@ public class SyncAddToMssql extends IntentService {
         return conn;
     }
 
-    private void add(Connection conn,String name, String desc, String price, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, double currentPrice) {
+    private void add(Connection conn,String name, String desc,int discamount, String price,String price2,String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, String discountedamount2, String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
 
         try {
             // Step 1: Fetch data from the local SQLite database
             mDatabaseHelper = new DatabaseHelper(this);
             Cursor localCursor = mDatabaseHelper.getAllItems();
 
-            insertItemsFromMssql(conn,name,  desc,  price,  category,  barcode,  weight,  department,  subDepartment,  longDescription,  quantity,  expiryDate,  vat,  availableForSale,  soldBy,  image,  variant,  sku,  cost,  userId,  dateCreated,  lastModified,  selectedNature,  selectedCurrency,  itemCode,  vatCode,  valueOf,  currentPrice
+            insertItemsFromMssql(conn,name,  desc,discamount,  price,price2,price3,  category,  barcode,  weight,  department,  subDepartment,  longDescription,  quantity,  expiryDate,  vat,  availableForSale,  soldBy,  image,  variant,  sku,  cost,  userId,  dateCreated,  lastModified,  selectedNature,  selectedCurrency,  itemCode,  vatCode,  valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3
             );
 
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }
     }
-    private void insertItemsFromMssql(Connection conn ,String name, String desc, String price, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, double currentPrice) {
+    private void insertItemsFromMssql(Connection conn ,String name, String desc,int discamount, String price,String price2, String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
 
 
         try {
             // Construct and execute your SQL insert statement here
-            String insertQuery = "INSERT INTO Items (name, description, price, category, Barcode, Weight, Department, SubDepartment, LongDescription, Quantity, ExpiryDate, VAT, AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified, Nature, Currency, ItemCode, TaxCode, TotalDiscount, CurrentPrice,SyncStatus) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+            String insertQuery = "INSERT INTO Items (name, description,DiscountAmount, price,price2,price3, category, Barcode, Weight, Department, SubDepartment, LongDescription, Quantity, ExpiryDate, VAT, AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified, Nature, Currency, ItemCode, TaxCode, TotalDiscount, CurrentPrice,SyncStatus) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
             PreparedStatement preparedStatement = conn.prepareStatement(insertQuery);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, desc);
             preparedStatement.setString(3, price);
-            preparedStatement.setString(4, category);
-            preparedStatement.setString(5, barcode);
-            preparedStatement.setFloat(6, weight);
-            preparedStatement.setString(7, department);
-            preparedStatement.setString(8, subDepartment);
-            preparedStatement.setString(9, longDescription);
-            preparedStatement.setString(10, quantity);
-            preparedStatement.setString(11, expiryDate);
-            preparedStatement.setString(12, vat);
-            preparedStatement.setString(13, availableForSale);
-            preparedStatement.setString(14, soldBy);
-            preparedStatement.setString(15, image);
-            preparedStatement.setString(16, variant);
-            preparedStatement.setString(17, sku);
-            preparedStatement.setString(18, cost);
-            preparedStatement.setString(19, userId);
-            preparedStatement.setString(20, dateCreated);
-            preparedStatement.setString(21, lastModified);
-            preparedStatement.setString(22, selectedNature);
-            preparedStatement.setString(23, selectedCurrency);
-            preparedStatement.setString(24, itemCode);
-            preparedStatement.setString(25, vatCode);
-            preparedStatement.setString(26, valueOf);
-            preparedStatement.setDouble(27, currentPrice);
-            preparedStatement.setString(28, "Online");
+            preparedStatement.setString(4, price2);
+            preparedStatement.setString(5, price3);
+            preparedStatement.setString(6, category);
+            preparedStatement.setString(7, barcode);
+            preparedStatement.setFloat(8, weight);
+            preparedStatement.setString(9, department);
+            preparedStatement.setString(10, subDepartment);
+            preparedStatement.setString(11, longDescription);
+            preparedStatement.setString(12, quantity);
+            preparedStatement.setString(13, expiryDate);
+            preparedStatement.setString(14, vat);
+            preparedStatement.setString(15, availableForSale);
+            preparedStatement.setString(16, soldBy);
+            preparedStatement.setString(17, image);
+            preparedStatement.setString(18, variant);
+            preparedStatement.setString(19, sku);
+            preparedStatement.setString(20, cost);
+            preparedStatement.setString(21, userId);
+            preparedStatement.setString(22, dateCreated);
+            preparedStatement.setString(23, lastModified);
+            preparedStatement.setString(24, selectedNature);
+            preparedStatement.setString(25, selectedCurrency);
+            preparedStatement.setString(26, itemCode);
+            preparedStatement.setString(27, vatCode);
+            preparedStatement.setString(28, valueOf);
+            preparedStatement.setString(29, discountedamount2);
+            preparedStatement.setString(30, discountedamount3);
+            preparedStatement.setDouble(31, currentPrice);
+            preparedStatement.setDouble(32, currentPrice2);
+            preparedStatement.setDouble(33, currentPrice3);
+            preparedStatement.setInt(34, discamount);
+            preparedStatement.setString(35, "Online");
 
             preparedStatement.executeUpdate();
             String test="test";
@@ -226,11 +240,13 @@ public class SyncAddToMssql extends IntentService {
 
     }
 
-    public static void startSync(Context context, String name, String desc, String price, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, double currentPrice) {
+    public static void startSync(Context context, String name, String desc,int DiscountAmount, String price,String price2,String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         Intent intent = new Intent(context, SyncAddToMssql.class);
         intent.putExtra("Name", name);
         intent.putExtra("Desc", desc);
         intent.putExtra("Price", price);
+        intent.putExtra("Price2", price2);
+        intent.putExtra("Price3", price3);
         intent.putExtra("Category", category);
         intent.putExtra("Barcode", barcode);
         intent.putExtra("Weight", weight);
@@ -254,7 +270,12 @@ public class SyncAddToMssql extends IntentService {
         intent.putExtra("ItemCode", itemCode);
         intent.putExtra("VATCode", vatCode);
         intent.putExtra("ValueOf", valueOf);
+        intent.putExtra("Discountedamount2", discountedamount2);
+        intent.putExtra("Discountedamount3", discountedamount3);
         intent.putExtra("CurrentPrice", currentPrice);
+        intent.putExtra("CurrentPrice2", currentPrice2);
+        intent.putExtra("CurrentPrice3", currentPrice3);
+        intent.putExtra("Discountamount", DiscountAmount);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);

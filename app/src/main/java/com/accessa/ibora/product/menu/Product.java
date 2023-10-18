@@ -16,6 +16,7 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.product.couponcode.CouponFragment;
 import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
 import androidx.annotation.NonNull;
@@ -116,6 +117,10 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         } else if (fragmentKey != null && fragmentKey.equals("Discount_fragment")) {
             Fragment newFragment = new DiscountFragment();
             setToolbarTitle(getString(R.string.discount)); // Set the toolbar title
+            replaceFragment(newFragment);
+        }else if (fragmentKey != null && fragmentKey.equals("coupon_fragment")) {
+            Fragment newFragment = new CouponFragment();
+            setToolbarTitle(getString(R.string.couponcode)); // Set the toolbar title
             replaceFragment(newFragment);
         }
 

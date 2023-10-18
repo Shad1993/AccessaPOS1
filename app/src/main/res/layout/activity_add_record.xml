@@ -251,12 +251,40 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="start"
                     android:textSize="18sp"
-                    android:text="@string/price" />
+                    android:text="@string/price1" />
 
                 <EditText
                     android:id="@+id/price_edittext"
                     style="@style/modifiedEditText"
                     android:hint="@string/price"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/price2" />
+
+                <EditText
+                    android:id="@+id/price2_edittext"
+                    style="@style/modifiedEditText"
+                    android:hint="@string/price"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:textSize="18sp"
+                    android:text="@string/price3" />
+
+                <EditText
+                    android:id="@+id/price3_edittext"
+                    style="@style/modifiedEditText"
+                    android:hint="@string/price3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="numberDecimal" />

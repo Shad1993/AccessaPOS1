@@ -12,10 +12,12 @@ public class Item {
     private String subDepartment;
     private String category;
     private String Nature;
+
     private String Discount;
+    private String RateDiscount;
 
     private float TotalDiscount;
-    private float price, priceAfterDiscount;
+    private float price,price2,price3, priceAfterDiscount;
     private String barcode;
     private float weight;
     private String expiryDate;
@@ -64,7 +66,10 @@ public class Item {
         this.name = name;
         this.description = description;
         this.longDescription = longDescription;
+        this.RateDiscount = RateDiscount;
         this.price = price;
+        this.price2 = price2;
+        this.price3 = price3;
         this.quantity = quantity;
         this.category = category;
         this.department = department;
@@ -107,6 +112,13 @@ public class Item {
 
     public void setName(String name) {
         this.name = name;
+    }
+    public String getRateDiscount() {
+        return RateDiscount;
+    }
+
+    public void setRateDiscount(String RateDiscount) {
+        this.RateDiscount = RateDiscount;
     }
 
 
@@ -199,6 +211,22 @@ public class Item {
 
     public void setPrice(float price) {
         this.price = price;
+    }
+
+    public float getPrice2() {
+        return price2;
+    }
+
+    public void setPrice2(float price2) {
+        this.price2 = price2;
+    }
+
+    public float getPrice3() {
+        return price3;
+    }
+
+    public void setPrice3(float price3) {
+        this.price3 = price3;
     }
 
     public float getPriceAfterDiscount() {

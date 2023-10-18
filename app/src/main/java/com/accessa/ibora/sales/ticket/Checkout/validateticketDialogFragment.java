@@ -1,11 +1,22 @@
 package com.accessa.ibora.sales.ticket.Checkout;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.CASH_REPORT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CASHOR_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_DATETIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_POSNUM;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTAL;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTALIZER;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TRANSACTION_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.getCurrentDateTime;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -95,7 +106,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String ARG_Transaction_id = "transactionId";
     private static final String POSNumber="posNumber";
     private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn,Buyname,BuyBRN,BuyTAN,BuyAdd,BuyComp,BuyNIC,BuyProfile,BuyType;
-    private String cashierId,cashierName,cashorlevel,CompanyName;
+    private String cashierId,cashierName,cashorlevel,CompanyName,posNum;
 
 
     private double cashReturn;
@@ -166,7 +177,8 @@ public class validateticketDialogFragment extends DialogFragment  {
         cashierName = sharedPreference.getString("cashorName", null);
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
-
+        SharedPreferences sharedPreferencepos = requireContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        posNum = sharedPreferencepos.getString("posNumber", null);
         // Check if intent has data
         Intent intent = getActivity().getIntent();
         if (intent != null) {
@@ -498,17 +510,72 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 // Update the table with settlement details
                 for (SettlementItem settlementItem : settlementItems) {
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
 
-                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum,transactionDate);
+                    // Use a specific Locale for date formatting
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    String currentDate = dateFormat.format(new Date());
 
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate);
+
+                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+                    ContentValues values = new ContentValues();
+                    values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Use the current date
+                    values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                    values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, settlementItem.getPaymentName());
+                    values.put(FINANCIAL_COLUMN_POSNUM, PosNum); // Insert the posnum
+
+// Check if a row with the same payment name, current date, cashier ID, and posnum already exists
+                    String[] whereArgs = new String[] {settlementItem.getPaymentName(), currentDate, cashierId, PosNum};
+                    Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                            FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                                    FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                            whereArgs, null, null, null);
+
+                    if (cursor.moveToFirst()) {
+                        // If a row with the same payment name, current date, cashier ID, and posnum exists, update the values
+                        int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                        double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                        double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                        values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                        values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + settlementItem.getSettlementAmount()); // Update the total
+
+                        // Check if the payment name is "Cash" or "Cheques" to update the totalizer
+                        if ("Cash".equals(settlementItem.getPaymentName()) || "Cheque".equals(settlementItem.getPaymentName())) {
+                            values.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + settlementItem.getSettlementAmount()); // Update the totalizer
+
+                        } else {
+                            // If the payment name is not "Cash" or "Cheques," do not update the totalizer
+                            values.put(FINANCIAL_COLUMN_TOTALIZER, 0.00);
+                        }
+
+                        db.update(FINANCIAL_TABLE_NAME, values, FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " +
+                                FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                                FINANCIAL_COLUMN_POSNUM + " = ?", whereArgs);
+                    } else {
+                        // If no row with the same payment name and current date exists, insert a new row
+                        values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
+                        values.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Initialize total
+                        values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getSettlementAmount()); // Initialize totalizer
+
+                        db.insert(FINANCIAL_TABLE_NAME, null, values);
+                    }
+                    if ("Cash".equals(settlementItem.getPaymentName()) ) {
+                        ContentValues cashReportValues = new ContentValues();
+                        cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                        cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                        cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                        cashReportValues.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Positive cash in amount
+                        cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+
+                        db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+                    }
                     if (updated) {
-
                         Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
                     }
+
                 }
 
                 // Declare a variable to hold the total amount
@@ -538,6 +605,60 @@ public class validateticketDialogFragment extends DialogFragment  {
                 intent.putExtra("selectedBuyerprofile", BuyProfile);
 
 
+                if (cashReturn != 0.0) {
+                    cashReturn = -cashReturn; // Make cashReturn negative
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    String currentDate = dateFormat.format(new Date());
+
+                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+
+                    // Create an entry for "Cash Return" in the financial table
+                    ContentValues cashReturnValues = new ContentValues();
+                    cashReturnValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                    cashReturnValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                    cashReturnValues.put(FINANCIAL_COLUMN_TRANSACTION_CODE, "Cash Return");
+                    cashReturnValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+                    cashReturnValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is set to 1 for Cash Return
+                    cashReturnValues.put(FINANCIAL_COLUMN_TOTAL, cashReturn); // Negate cashReturn
+                    cashReturnValues.put(FINANCIAL_COLUMN_TOTALIZER, cashReturn); // Negate cashReturn
+
+                    // Check if a row with the same payment name, current date, cashier ID, and posnum already exists
+                    String[] whereArgs = new String[]{"Cash Return", currentDate, cashierId, PosNum};
+                    Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                            FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                                    FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                            whereArgs, null, null, null);
+
+                    if (cursor.moveToFirst()) {
+                        // If a row with the same payment name, current date, cashier ID, and posnum exists, update the values
+                        int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                        double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                        double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                        cashReturnValues.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                        cashReturnValues.put(FINANCIAL_COLUMN_TOTAL, currentTotal + cashReturn); // Update the total
+                        cashReturnValues.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + cashReturn); // Update the totalizer
+
+                        db.update(FINANCIAL_TABLE_NAME, cashReturnValues, FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " +
+                                FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                                FINANCIAL_COLUMN_POSNUM + " = ?", whereArgs);
+                    } else {
+                        // If no row with the same payment name and current date exists, insert a new row
+                        db.insert(FINANCIAL_TABLE_NAME, null, cashReturnValues);
+
+                    }
+
+                    ContentValues cashReportValues = new ContentValues();
+                    cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                    cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                    cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                    cashReportValues.put(FINANCIAL_COLUMN_TOTAL, cashReturn); // Positive cash in amount
+                    cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+
+                    db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+                }
+
 
                 String MRAMETHOD="Single";
                 insertCashReturn(String.valueOf(cashReturn), String.valueOf(totalAmountinserted),qrMra,mrairn,MRAMETHOD);
@@ -551,7 +672,11 @@ public class validateticketDialogFragment extends DialogFragment  {
                 .create();
     }
 
-
+    public String getCurrentDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentDate = new Date();
+        return dateFormat.format(currentDate);
+    }
 
     private void showPopAmountOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());

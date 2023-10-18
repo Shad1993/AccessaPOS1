@@ -67,7 +67,7 @@ public class AddItemActivity extends Activity {
     private EditText ItemCode;
     private Spinner Nature,Currency;
     private EditText descEditText;
-    private EditText priceEditText;
+    private EditText priceEditText,price2EditText,price3EditText;
     private Spinner categorySpinner, departmentSpinner, subDepartmentSpinner;
     private EditText barcodeEditText;
     private EditText longDescEditText;
@@ -117,6 +117,8 @@ public class AddItemActivity extends Activity {
         subjectEditText = findViewById(R.id.itemName_edittext);
         descEditText = findViewById(R.id.description_edittext);
         priceEditText = findViewById(R.id.price_edittext);
+        price2EditText = findViewById(R.id.price2_edittext);
+        price3EditText = findViewById(R.id.price3_edittext);
         categorySpinner = findViewById(R.id.category_spinner);
         barcodeEditText = findViewById(R.id.IdBarcode_edittext);
         departmentSpinner = findViewById(R.id.Dept_spinner);
@@ -136,18 +138,18 @@ public class AddItemActivity extends Activity {
         Discount = findViewById(R.id.discount_spinner);
 
         ItemCode = findViewById(R.id.IdItemCode_edittext);
-// Inside your onCreate method, after initializing other views
+        // Inside your onCreate method, after initializing other views
         Currency = findViewById(R.id.Currency_spinner);
 
-// Create a list of currency options
+        // Create a list of currency options
         List<String> currencyOptions = new ArrayList<>();
         currencyOptions.add("MUR");
         currencyOptions.add("USD");
         currencyOptions.add("EUR");
         currencyOptions.add("GBP");
-// Add more currency options as needed
 
-// Create an ArrayAdapter for the Currency spinner
+
+        // Create an ArrayAdapter for the Currency spinner
         ArrayAdapter<String> currencyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, currencyOptions);
         currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         Currency.setAdapter(currencyAdapter);
@@ -543,7 +545,12 @@ public class AddItemActivity extends Activity {
         String longDescription = longDescEditText.getText().toString().trim();
         String subDepartment = subDepartmentSpinner.getSelectedItem().toString().trim();
         String price = priceEditText.getText().toString().trim();
+        String price2 = price2EditText.getText().toString().trim();
+        String price3 = price3EditText.getText().toString().trim();
+
         double prices;
+        double prices2;
+        double prices3;
 
         if (!price.isEmpty()) {
             prices = Double.parseDouble(price);
@@ -551,44 +558,64 @@ public class AddItemActivity extends Activity {
             // Handle the case where price is empty, e.g., assign a default value
             prices = 0.0; // You can change this default value as needed
         }
+        if (!price2.isEmpty()) {
+            prices2 = Double.parseDouble(price2);
+        } else {
+            // Handle the case where price is empty, e.g., assign a default value
+            prices2 = 0.0; // You can change this default value as needed
+        }
+        if (!price3.isEmpty()) {
+            prices3 = Double.parseDouble(price3);
+        } else {
+            // Handle the case where price is empty, e.g., assign a default value
+            prices3 = 0.0; // You can change this default value as needed
+        }
+
 
         String selectedNature = Nature.getSelectedItem().toString();
         String selectedCurrency = Currency.getSelectedItem().toString();
         String selectedDiscount = Discount.getSelectedItem().toString();
         double currentPrice;
+        double currentPrice2;
+        double currentPrice3;
+
         double discountedAmount;
+        double discountedAmount2;
+        double discountedAmount3;
 
+        int selectedDiscounts = 0;
         if (selectedDiscount.equals("No Discount")) {
-             currentPrice= prices;
-             discountedAmount=0.00;
+            currentPrice = prices;
+            currentPrice2 = prices2;
+            currentPrice3 = prices3;
+            discountedAmount = 0.00;
+            discountedAmount2 = 0.00;
+            discountedAmount3 = 0.00;
 
-        }else{
-            int selectedDiscounts = Integer.parseInt(Discount.getSelectedItem().toString());
+        } else {
+            selectedDiscounts = Integer.parseInt(Discount.getSelectedItem().toString());
             // Corrected discountedAmount calculation
-             discountedAmount = (selectedDiscounts / 100.0) * prices;
+            discountedAmount = (selectedDiscounts / 100.0) * prices;
+            discountedAmount2 = (selectedDiscounts / 100.0) * prices2;
+            discountedAmount3 = (selectedDiscounts / 100.0) * prices3;
 
-// Calculate the current price
-             currentPrice = prices - discountedAmount;
+            // Calculate the current price
+            currentPrice = prices - discountedAmount;
+            currentPrice2 = prices - discountedAmount2;
+            currentPrice3 = prices - discountedAmount3;
 
-            System.out.println("Original Price: " + prices);
-            System.out.println("Selected Discount: " + selectedDiscount + "%");
-            System.out.println("Discounted Amount: " + discountedAmount);
-            System.out.println("Current Price: " + currentPrice);
 
         }
 
 
-
-
-
         String vat = selectedVat;
-        String VatCode="";
-        if(vat.equals("VAT 15%")){
-             VatCode="TC01";
+        String VatCode = "";
+        if (vat.equals("VAT 15%")) {
+            VatCode = "TC01";
         } else if (vat.equals("VAT 0%")) {
-             VatCode="TC02";
+            VatCode = "TC02";
         } else if (vat.equals("VAT Exempted")) {
-             VatCode="TC03";
+            VatCode = "TC03";
         }
         String variant = variantEditText.getText().toString().trim();
         String sku = skuEditText.getText().toString().trim();
@@ -602,26 +629,23 @@ public class AddItemActivity extends Activity {
         String soldBy = selectedSoldBy;
 
         String UserId = cashorId;
-        String image ;
-        if( imagePath== null) {
-            image=  null;
+        String image;
+        if (imagePath == null) {
+            image = null;
 
-        } else{
-            image=  imagePath;
+        } else {
+            image = imagePath;
 
         }
 
         // Check if all required fields are filled
-        if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || barcode.isEmpty()
+        if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || price2.isEmpty() || price3.isEmpty() || barcode.isEmpty()
                 || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty()
                 || availableForSale.isEmpty() || longDescription.isEmpty()
                 || variant.isEmpty() || sku.isEmpty() || cost.isEmpty()) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
-
-
-
 
 
         // Check if the department code already exists
@@ -632,12 +656,10 @@ public class AddItemActivity extends Activity {
         }
 
 
-        showUpdateConfirmationDialog(name, desc, price, category, barcode, Float.parseFloat(weight), department,
+        showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale, soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
-                selectedNature, selectedCurrency, itemCode,VatCode, String.valueOf(discountedAmount), currentPrice);
-
-
+                selectedNature, selectedCurrency, itemCode, VatCode, String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice, currentPrice2, currentPrice3);
 
 
         // Clear the input fields
@@ -681,7 +703,7 @@ public class AddItemActivity extends Activity {
     }
 
 
-    private void showUpdateConfirmationDialog(String name, String desc, String price, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf, double currentPrice) {
+    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         if (isFinishing()) {
             // Activity is finishing, do not show the dialog
             return;
@@ -705,6 +727,8 @@ public class AddItemActivity extends Activity {
                 String Name = name;
                 String Descript = desc;
                 String Price = price;
+                String Price2 = price2;
+                String Price3 = price3;
                 String Category = category;
                 String Barcode = barcode;
                 float Weight = parseFloat;
@@ -727,20 +751,25 @@ public class AddItemActivity extends Activity {
                 String SelectedCurrency = selectedCurrency;
                 String ItemCode = itemCode;
                 String VATCode = vatCode;
+                int discountrate = selectedDiscounts;
                 String ValueOf = valueOf;
+                String Discountedamount2 = discountedamount2;
+                String Discountedamount3 = discountedamount3;
                 double CurrentPrice = currentPrice;
+                double CurrentPrice2 = currentPrice2;
+                double CurrentPrice3 = currentPrice3;
 
-                dbManager.insert(name, desc, price, category, barcode, parseFloat, department,
+                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
                         availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
-                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf, currentPrice,"Online");
+                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Online");
 
 
 // Trigger the service to insert data
-                SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript, Price, Category, Barcode, Weight, Department,
+                SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript,discountrate, Price,Price2,Price3, Category, Barcode, Weight, Department,
                         SubDepartment, LongDescription, Quantity, ExpiryDate, VAT,
                         AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
-                        SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf, CurrentPrice);
+                        SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf,Discountedamount2,Discountedamount3, CurrentPrice,CurrentPrice2,CurrentPrice3);
 
                 // Redirect to the Product activity
                 Intent intent = new Intent(AddItemActivity.this, Product.class);
@@ -755,10 +784,10 @@ public class AddItemActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                dbManager.insert(name, desc, price, category, barcode, parseFloat, department,
+                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
                         availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
-                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf, currentPrice,"Offline");
+                        selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Offline");
 
                 dbManager.close();
 

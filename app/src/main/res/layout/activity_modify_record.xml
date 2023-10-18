@@ -63,6 +63,36 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/Nature" />
+
+                    <Spinner
+                        android:id="@+id/Nature_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/ItemCode" />
+
+                    <EditText
+                        android:id="@+id/IdItemCode_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/ItemCode"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
                     <!-- Add this code within the LinearLayout that contains other fields -->
                     <TextView
                         android:layout_width="wrap_content"
@@ -127,6 +157,22 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/CurrencySpinner" />
+
+
+
+                    <Spinner
+                        android:id="@+id/Currency_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -205,12 +251,40 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="@string/price" />
+                        android:text="@string/price1" />
 
                     <EditText
                         android:id="@+id/price_edittext"
                         style="@style/modifiedEditText"
                         android:hint="@string/price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/price2" />
+
+                    <EditText
+                        android:id="@+id/price2_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/price3" />
+
+                    <EditText
+                        android:id="@+id/price3_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/price3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="numberDecimal" />
@@ -258,6 +332,19 @@
                         android:layout_height="wrap_content"
                         android:inputType="text"
                         android:hint="@string/LongDesc" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:text="@string/discount" />
+
+                    <Spinner
+                        android:id="@+id/discount_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:spinnerMode="dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -312,7 +399,7 @@
                         android:background="@color/whiteTextColor" />
 
                     <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/expirydate_switch"
+                        android:id="@+id/perishable_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/Perishable"
@@ -359,13 +446,12 @@
 
                     <ImageView
                         android:id="@+id/image_view"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:scaleType="centerCrop"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/select_image"
-                        android:layout_gravity="center"
-                         />
+                        android:src="@drawable/accessalogo"
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/image_path_text"
@@ -385,7 +471,48 @@
                         android:layout_marginBottom="10dp"
                         android:layout_gravity="center" />
 
+
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:visibility="gone"
+                        android:text="@string/LastModified" />
+
+                    <EditText
+                        android:id="@+id/LastModified_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/LastModified"
+                        android:singleLine="true"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:textSize="18sp"
+                        android:visibility="gone"
+                        android:text="@string/userid" />
+
+                    <EditText
+                        android:id="@+id/userid_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/userid"
+                        android:singleLine="true"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
                 </LinearLayout>
+
 
 
 

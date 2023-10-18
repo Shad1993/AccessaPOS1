@@ -47,6 +47,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String Category = "category";
     public static final String DESC = "description";
     public static final String Price = "price";
+    public static final String RateDiscount="DiscountRate";
+    public static final String AmountDiscount="DiscountAmount";
+    public static final String Price2="price2";
+    public static final String Price3="price3";
     public static final String Department = "Department";
     public static final String SubDepartment = "SubDepartment";
     public static final String Barcode = "Barcode";
@@ -62,6 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String Variant = "Variant";
     public static final String Weight = "Weight";
     public static final String UserId = "UserId";
+    public static final String FINANCIAL_TABLE_NAME = "FinancialReportTable";
     public static String DateCreated ="DateCreated";
     public static final String LastModified = "LastModified";
 
@@ -160,7 +165,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static String Currency="Currency";
     public static String ItemCode="ItemCode";
     public static String PriceAfterDiscount="CurrentPrice";
+    public static String Price2AfterDiscount="CurrentPrice2";
+    public static String Price3AfterDiscount="CurrentPrice3";
     public static String TotalDiscount="TotalDiscount";
+    public static String TotalDiscount2="TotalDiscount2";
+    public static String TotalDiscount3="TotalDiscount3";
     private static final String TRANSACTION_WEIGHTS = "Weights";
     private static final String TRANSACTION_TOTAL_HT_B = "TotalHT_B";
     private static final String TRANSACTION_TYPE_TAX = "TYPETAX";
@@ -282,6 +291,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String BUYER_BRN ="Buyer_BRN" ;
     public static final String BUYER_TYPE ="Buyer_Type" ;
     public static final String BUYER_NIC ="Buyer_NIC" ;
+    public static final String BUYER_PriceLevel="PriceLevel";
     public static String BUYER_Company_name="companyName";
     public static String BUYER_Profile="Buyer_Profile";
     public static String BUYER_Other_NAME="BuyerOtherName";
@@ -305,13 +315,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COUPON_DISCOUNT = "discount";
     public static final String TRANSACTION_CLIENT_NIC = "ClientNIC";
 
+
+        //financial report table
+    public static final String FINANCIAL_COLUMN_ID = "id";
+    public static final String FINANCIAL_COLUMN_DATETIME = "date";
+    public static final String FINANCIAL_COLUMN_CASHOR_ID = "cashiorid";
+    public static final String FINANCIAL_COLUMN_TRANSACTION_CODE = "TransactionType";
+    public static final String FINANCIAL_COLUMN_QUANTITY = "quantity";
+    public static final String FINANCIAL_COLUMN_TOTAL ="total" ;
+    public static final String FINANCIAL_COLUMN_TOTALIZER = "Totalizer";
+    public static final String FINANCIAL_COLUMN_POSNUM = "TillNum";
+
+
+
     //default qr
 
     private static final String DEFAULT_PAYMENT_METHOD = "POP";
     private static final String DEFAULT_CASHOR_ID = "0";
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT);
-    private static String getCurrentDateTime() {
+    public static String getCurrentDateTime() {
 
 
         Date currentDate = new Date();
@@ -322,7 +345,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DEFAULT_QR_CODE_NUM = "QRCodeNum";
 
 
+    public static final String COUNTING_REPORT_TABLE_NAME = "CountReport";
+    public static final String COUNTING_REPORT_ID = "id";
+    public static final String COUNTING_REPORT_TOTALIZER_TOTAL = "totalizer_total";
+    public static final String COUNTING_REPORT_TOTAL_VALUE = "total_value";
+    public static final String COUNTING_REPORT_DIFFERENCE = "difference";
+    public static final String COUNTING_REPORT_CASHIER_ID = "cashier_id";
+    public static final String COUNTING_REPORT_DATETIME = "datetime";
 
+    public static final String CASH_REPORT_TABLE_NAME = "CashReports";
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -363,7 +394,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + LongDescription + " TEXT NOT NULL, "
             + SubDepartment + " TEXT NOT NULL, "
             + Price + " DECIMAL(10, 2) NOT NULL, "
+            + Price2 + " DECIMAL(10, 2), " // New field: Price2
+            + Price3 + " DECIMAL(10, 2), " // New field: Price3
             + PriceAfterDiscount + " DECIMAL(10, 2) NOT NULL, "
+            + Price2AfterDiscount + " DECIMAL(10, 2) NOT NULL, "
+            + Price3AfterDiscount + " DECIMAL(10, 2) NOT NULL, "
             + VAT + " TEXT NOT NULL CHECK(VAT IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), "
             + ExpiryDate + " DATE, " // Allow NULL values for ExpiryDate
             + AvailableForSale + " BOOLEAN NOT NULL DEFAULT 1, "
@@ -379,7 +414,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Currency + " TEXT, "         // New field: Currency
             + ItemCode + " TEXT, "         // New field: ItemCode
             + SyncStatus +  " TEXT NOT NULL CHECK(SyncStatus IN ('Offline', 'Online')), "
+            + RateDiscount + " TEXT, "
+            + AmountDiscount + " TEXT, "
             + TotalDiscount + " DECIMAL(10, 2), " // New field: TotalDiscount
+            + TotalDiscount2 + " DECIMAL(10, 2), " // New field: TotalDiscount
+            + TotalDiscount3 + " DECIMAL(10, 2), " // New field: TotalDiscount
             + DateCreated + " DATETIME NOT NULL, "
             + LastModified + " DATETIME NOT NULL, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
@@ -633,6 +672,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             BUYER_BUSINESS_ADDR + " TEXT, " +
             BUYER_TYPE + " TEXT NOT NULL, " +
             BUYER_NIC + " TEXT, " +
+            BUYER_PriceLevel + " TEXT, " +
             BUYER_Profile + " TEXT, " +
             COLUMN_CASHOR_id + " TEXT, " +
             BUYER_DATE_CREATED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
@@ -648,6 +688,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             COUPON_DATE_CREATED + " DATE NOT NULL, " +
             COUPON_TIME_CREATED + " TIME NOT NULL, " +
             COUPON_DISCOUNT + " REAL NOT NULL);";
+
+
+    private static final String CREATE_FINANCIAL_TABLE = "CREATE TABLE IF NOT EXISTS " + FINANCIAL_TABLE_NAME + " ("
+            + FINANCIAL_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + FINANCIAL_COLUMN_DATETIME + " DATE DEFAULT (date('now')), " // Set it to the current date
+            + FINANCIAL_COLUMN_CASHOR_ID + " INTEGER NOT NULL, "
+            + FINANCIAL_COLUMN_TRANSACTION_CODE + " TEXT NOT NULL, "
+            + FINANCIAL_COLUMN_QUANTITY + " REAL NOT NULL, "
+            + FINANCIAL_COLUMN_TOTAL + " REAL NOT NULL, "
+            + FINANCIAL_COLUMN_TOTALIZER + " REAL NOT NULL, "
+            + FINANCIAL_COLUMN_POSNUM + " INTEGER NOT NULL" // Add the POSNUM field
+            + ");";
+
+    private static final String CREATE_COUNTING_REPORT_TABLE = "CREATE TABLE " + COUNTING_REPORT_TABLE_NAME + "(" +
+            COUNTING_REPORT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COUNTING_REPORT_TOTALIZER_TOTAL + " REAL NOT NULL, " +
+            COUNTING_REPORT_TOTAL_VALUE + " REAL NOT NULL, " +
+            COUNTING_REPORT_DIFFERENCE + " REAL NOT NULL, " +
+            COUNTING_REPORT_CASHIER_ID + " INTEGER NOT NULL, " +
+            COUNTING_REPORT_DATETIME + " DATETIME DEFAULT (DATETIME('now', 'localtime'))" +
+            ");";
+    // Define the new table name
+
+
+    // Create the new table statement
+    private static final String CREATE_CASH_REPORT_TABLE = "CREATE TABLE IF NOT EXISTS " + CASH_REPORT_TABLE_NAME + " ("
+            + FINANCIAL_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + FINANCIAL_COLUMN_DATETIME + " DATE DEFAULT (date('now')), " // Set it to the current date
+            + FINANCIAL_COLUMN_CASHOR_ID + " INTEGER NOT NULL, "
+            + FINANCIAL_COLUMN_QUANTITY + " REAL NOT NULL, "
+            + FINANCIAL_COLUMN_TOTAL + " REAL NOT NULL, "
+            + FINANCIAL_COLUMN_POSNUM + " INTEGER NOT NULL" // Add the POSNUM field
+            + ");";
+
+
+
 
 
     public DatabaseHelper(Context context) {
@@ -673,6 +749,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_POS_TABLE);
         db.execSQL(CREATE_BUYER_TABLE);
         db.execSQL(CREATE_COUPON_TABLE);
+        db.execSQL(CREATE_FINANCIAL_TABLE);
+        db.execSQL(CREATE_COUNTING_REPORT_TABLE);
+        db.execSQL(CREATE_CASH_REPORT_TABLE);
         addDefaultItem(db);
         // Insert cheque details
         addDefaultPaymentMethod(db, "POP", "1");
@@ -712,10 +791,88 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_POS_ACCESS);
         db.execSQL("DROP TABLE IF EXISTS " + BUYER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + COUPON_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + FINANCIAL_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + COUNTING_REPORT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + CASH_REPORT_TABLE_NAME);
 
         onCreate(db);
     }
 
+    public String getNatureById(long itemId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = { Nature };
+        String selection = _ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+
+        Cursor cursor = db.query(TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+
+        String nature = null;
+        if (cursor.moveToFirst()) {
+            nature = cursor.getString(cursor.getColumnIndex(Nature));
+        }
+
+        cursor.close();
+        return nature;
+    }
+
+
+    public String getCurrencyById(long itemId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = { Currency };
+        String selection = _ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+
+        Cursor cursor = db.query(TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+
+        String nature = null;
+        if (cursor.moveToFirst()) {
+            nature = cursor.getString(cursor.getColumnIndex(Currency));
+        }
+
+        cursor.close();
+        return nature;
+    }
+
+
+    // Method to insert a counting report into the table
+    public void insertCountingReport(double totalizerTotal, double totalValue, double difference, int cashierId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COUNTING_REPORT_TOTALIZER_TOTAL, totalizerTotal);
+        values.put(COUNTING_REPORT_TOTAL_VALUE, totalValue);
+        values.put(COUNTING_REPORT_DIFFERENCE, difference);
+        values.put(COUNTING_REPORT_CASHIER_ID, cashierId);
+
+        // Get the current date and time
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        String datetime = dateFormat.format(date);
+
+        // Insert the current date and time
+        values.put(COUNTING_REPORT_DATETIME, datetime);
+
+        long newRowId = db.insert(COUNTING_REPORT_TABLE_NAME, null, values);
+        db.close();
+    }
+
+    public double getTotalizerSumForCurrentDate(String currentDate) {
+        double totalizerSum = 0.0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTALIZER + ") FROM " + FINANCIAL_TABLE_NAME +
+                " WHERE " + FINANCIAL_COLUMN_DATETIME + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{currentDate});
+        if (cursor.moveToFirst()) {
+            totalizerSum = cursor.getDouble(0);
+        }
+
+        cursor.close();
+        db.close();
+
+        return totalizerSum;
+    }
 
 
     private void addDefaultItem(SQLiteDatabase db) {
@@ -1079,6 +1236,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(DEPARTMENT_TABLE_NAME, null, null, null, null, null, null);
     }
 
+    public Cursor getAllCoupon() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(COUPON_TABLE_NAME, null, null, null, null, null, null);
+    }
+
     public Cursor getAllDiscounts() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(DISCOUNT_TABLE_NAME, null, null, null, null, null, null);
@@ -1170,7 +1332,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = DEPARTMENT_NAME + " ASC";
         return db.query(DEPARTMENT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
-
+    public Cursor searchCoupon(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {COUPON_ID, COUPON_CODE, COUPON_DATE_CREATED, COUPON_END_DATE, COUPON_DISCOUNT};
+        String selection = COUPON_CODE + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = COUPON_CODE + " ASC";
+        return db.query(COUPON_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
 
     public Cursor searchVendor(String query) {
         SQLiteDatabase db = getReadableDatabase();

@@ -472,6 +472,23 @@
     <string name="vat_prompt">VAT</string>
     <string name="type">Type</string>
     <string name="couponcode">CouponCode</string>
+    <string name="AllCoupon">All Coupons</string>
+    <string name="updatecoupon">Coupon updated</string>
+    <string name="failedupdatecoupon">Coupon Update Failed</string>
+    <string name="functions">Functions</string>
+    <string name="Loan">Loan</string>
+    <string name="Pickup">Pick Up</string>
+    <string name="Count">Count</string>
+    <string name="pricelevel">Price Level</string>
+    <string name="calmanager">Call manager</string>
+    <string name="pause">Pause</string>
+    <string name="QRs">QR</string>
+    <string name="Cashin">Cash In</string>
+    <string name="paymentShift">Payment Shift</string>
+    <string name="printertest">Printer Test</string>
+    <string name="price1">Price 1</string>
+    <string name="price2">Price 2</string>
+    <string name="price3">Price 3</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

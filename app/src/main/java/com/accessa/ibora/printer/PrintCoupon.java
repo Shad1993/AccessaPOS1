@@ -138,7 +138,7 @@ public class PrintCoupon extends AppCompatActivity {
 
                             LogoPath = company.getImage();
 
-                            printLogoAndReceipt(service, LogoPath);
+                            printLogoAndReceipt(service, LogoPath,100,100);
 
 
                             // Create the formatted company name line
@@ -239,13 +239,16 @@ public class PrintCoupon extends AppCompatActivity {
                         service.printText(couponAmount + "\n", null);
                         service.printText(couponsd + "\n", null);
                         service.printText(couponed + "\n", null);
+                        service.setAlignment(1, null);
                         service.printBarCode(code , 4, 162, 2, 2, null);
-
+                        service.setAlignment(0, null);
                         service.setAlignment(0, null);
                         service.printText(  "\n\n", null);
 
 
                         service.printText(lineSeparator + "\n", null);
+
+                        service.setAlignment(1, null);
                         // Footer Text
                         String FooterText = getString(R.string.Footer_See_You);
                         String Footer1Text = getString(R.string.Footer_Have);
@@ -331,10 +334,11 @@ public class PrintCoupon extends AppCompatActivity {
                             @Override
                             public void run() {
 
-                                Intent intent = new Intent(PrintCoupon.this, Product.class);
 
-                                startActivity(intent);
-
+                                Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
+                                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                home_intent1.putExtra("fragment", "coupon_fragment");
+                                startActivity(home_intent1);
 
                             }
                         });
@@ -412,7 +416,7 @@ public class PrintCoupon extends AppCompatActivity {
         }
     }
 
-    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath) {
+    private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath, int desiredLogoWidth, int desiredLogoHeight) {
         try {
             // Check if the service is connected
             if (service == null) {
@@ -446,14 +450,13 @@ public class PrintCoupon extends AppCompatActivity {
 
                 // Load the logo image as a Bitmap with options that preserve transparency
                 BitmapFactory.Options options1 = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options1.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 logoBitmap = BitmapFactory.decodeFile(logoPath, options1);
                 return;
             }
 
-            // Resize the logo image to fit the receipt width
-            int receiptWidth = 384; // Adjust this value according to your receipt paper width
-            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, receiptWidth, logoBitmap.getHeight(), true);
+            // Resize the logo image to fit the desired dimensions
+            Bitmap resizedLogoBitmap = Bitmap.createScaledBitmap(logoBitmap, desiredLogoWidth, desiredLogoHeight, true);
 
             // Print the logo image
             InnerResultCallback innerResultCallback = null;
@@ -469,6 +472,7 @@ public class PrintCoupon extends AppCompatActivity {
             throw new RuntimeException(e);
         }
     }
+
     private  String readTextFromFile(String fileName) {
         try {
             FileInputStream fileInputStream = this.openFileInput(fileName);
@@ -488,117 +492,9 @@ public class PrintCoupon extends AppCompatActivity {
             return null;
         }
     }
-    private double getDailyAmount(Date date) {
-        // Calculate the start and end date of the current day
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
-
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        Date endDate = calendar.getTime();
-
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the daily amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
-
-    }
-
-    private double getWeeklyAmount(Date date) {
-        // Calculate the start and end date of the current week
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
-
-        calendar.add(Calendar.WEEK_OF_YEAR, 1);
-        Date endDate = calendar.getTime();
-
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the weekly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
 
 
-    }
 
-    private double getMonthlyAmount(Date date) {
-        // Calculate the start and end date of the current month
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
-
-        calendar.add(Calendar.MONTH, 1);
-        Date endDate = calendar.getTime();
-
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the monthly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
-    }
-
-    private String formatAmount(double amount) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
-        return decimalFormat.format(amount);
-    }
-    private String formatDateTime(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return dateFormat.format(date);
-    }
-    private String formatDateTimes(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        return dateFormat.format(date);
-    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

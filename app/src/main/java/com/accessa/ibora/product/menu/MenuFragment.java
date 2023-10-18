@@ -21,6 +21,7 @@ import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.couponcode.CouponDialogFragment;
+import com.accessa.ibora.product.couponcode.CouponFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 
 // extended from compatibility Fragment for pre-HC fragment support
@@ -218,9 +219,16 @@ public class MenuFragment extends Fragment {
                 } else if (position == 7) {
                     toolbarTitle = getString(R.string.couponcode);
 
-                    // Show the CouponDialogFragment
-                    CouponDialogFragment couponDialogFragment = new CouponDialogFragment();
-                    couponDialogFragment.show(getFragmentManager(), "coupon_dialog");
+                    Fragment newFragment = new CouponFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
                 }
 
 

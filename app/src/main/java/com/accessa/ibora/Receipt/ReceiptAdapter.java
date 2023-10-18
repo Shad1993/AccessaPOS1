@@ -193,13 +193,13 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
             holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.yellow));
 
-            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.debit1);
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.debitnotes);
             if (drawable != null) {
                 drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
             }
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
             // Change the image in the ImageView
-            holder.Imageview.setImageResource(R.drawable.db1);
+            holder.Imageview.setImageResource(R.drawable.debitnotes1);
 
         }
 

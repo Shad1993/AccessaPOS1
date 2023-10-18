@@ -3,6 +3,7 @@ package com.accessa.ibora.sales.Sales;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -109,12 +110,26 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         if (!mCursor.moveToPosition(getRealPosition(position))) {
             return;
         }
+        SharedPreferences sharedPreferencepos = mContext.getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+        String pLevel = sharedPreferencepos.getString("selectedPriceLevel", null);
+        String price = null;
+        String PriceInRs = null;
 
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
-        String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+        if(pLevel.equals("Price Level 1")) {
+             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+             PriceInRs = "Rs " + price;
+        } else if (pLevel.equals("Price Level 2")) {
+            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
+            PriceInRs = "Rs " + price;
 
-            String PriceInRs = "Rs " + price;
+        }else if (pLevel.equals("Price Level 3")) {
+            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
+            PriceInRs = "Rs " + price;
+
+        }
+
 
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));

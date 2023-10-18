@@ -181,19 +181,24 @@ public class CouponDialogFragment extends DialogFragment {
     }
 
     private String determineStatus(String startDate, String endDate) {
-        // Implement your logic here to determine the status based on dates
-
-
         // Get the current date
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String currentDate = sdf.format(new Date());
 
-        if (endDate.compareTo(currentDate) >= 0) {
-            return "Available";
-        } else {
+        if (endDate.compareTo(currentDate) < 0) {
+            // End date is in the past
             return "Expired";
+        } else if (startDate.compareTo(currentDate) > 0) {
+            // Start date is in the future
+            return "Soon Coming";
+        } else {
+            // Current date is within the date range
+            return "Available";
         }
     }
+
+
+
     // Implement your barcode generation logic here
     private String generateBarcode() {
         Random random = new Random();

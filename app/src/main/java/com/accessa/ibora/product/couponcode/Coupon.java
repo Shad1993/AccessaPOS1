@@ -1,6 +1,8 @@
 package com.accessa.ibora.product.couponcode;
 
 public class Coupon {
+
+    private int  id;
     private String code;
     private String status;
     private String startDate;
@@ -11,6 +13,14 @@ public class Coupon {
     private double discount;
 
     // Getter and Setter for 'code'
+
+    public int getid() {
+        return id;
+    }
+
+    public void setid(int id) {
+        this.id = id;
+    }
     public String getCode() {
         return code;
     }
