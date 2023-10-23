@@ -11,8 +11,13 @@ public class Buyer {
     private String nic;
     private String companyName;
     private String profile;
+    private String priceLevel;
 
-    public Buyer(String name,String Othername, String tan, String brn, String businessAddr, String buyerType, String profile, String nic, String companyName) {
+    private String CashiorId;
+    private String datecreated;
+    private String lastmodified;
+
+    public Buyer(String name,String Othername, String tan, String brn, String businessAddr, String buyerType, String profile, String nic, String companyName,String PriceLevel,String Cashiorid,String dateCreated,String LastModified) {
         this.name = name;
         this.Othername = Othername;
         this.tan = tan;
@@ -22,6 +27,10 @@ public class Buyer {
         this.nic = nic;
         this.companyName = companyName;
         this.profile = profile;
+        this.CashiorId = Cashiorid;
+        this.datecreated = dateCreated;
+        this.lastmodified = LastModified;
+        this.priceLevel = PriceLevel;
     }
     public Buyer() {
         this.id = id;
@@ -33,6 +42,10 @@ public class Buyer {
         this.nic = nic;
         this.companyName = companyName;
         this.profile = profile;
+        this.priceLevel = priceLevel;
+        this.CashiorId = CashiorId;
+        this.datecreated = datecreated;
+        this.lastmodified = lastmodified;
     }
     public void setId(int id) {
         this.id = id;
@@ -43,6 +56,33 @@ public class Buyer {
     }
     public String getNames() {
         return name;
+    }
+
+    public void setCashiorId(String CashiorId) {
+        this.CashiorId = CashiorId;
+    }
+    public String getCashiorId() {
+        return CashiorId;
+    }
+
+    public void setDatecreated(String datecreated) {
+        this.datecreated = datecreated;
+    }
+    public String getDatecreated() {
+        return datecreated;
+    }
+
+    public void setLastmodified(String lastmodified) {
+        this.lastmodified = lastmodified;
+    }
+    public String getLastmodified() {
+        return lastmodified;
+    }
+    public void setPriceLevel(String priceLevel) {
+        this.priceLevel = priceLevel;
+    }
+    public String getPriceLevel() {
+        return priceLevel;
     }
 
     public void setProfile(String profile) {

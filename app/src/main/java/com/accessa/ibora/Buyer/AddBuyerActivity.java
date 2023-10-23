@@ -3,7 +3,9 @@ package com.accessa.ibora.Buyer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -20,6 +22,9 @@ import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class AddBuyerActivity extends AppCompatActivity {
 
     private EditText editTextName,editTextcompname;
@@ -30,7 +35,10 @@ public class AddBuyerActivity extends AppCompatActivity {
     private Spinner spinnerBuyerType,spinnerBuyerProfile;
     private EditText editTextNic;
     private Button buttonSave;
+    private  Spinner spinnerPriceLevel;
     private DatabaseHelper databaseHelper;
+    private SharedPreferences sharedPreferences;
+    private String cashorId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,10 @@ public class AddBuyerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_buyer);
 
         databaseHelper = new DatabaseHelper(this);
+
+        sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
+
 
         editTextName = findViewById(R.id.etName);
         editTextOtherNames = findViewById(R.id.etOtherName);
@@ -47,7 +59,23 @@ public class AddBuyerActivity extends AppCompatActivity {
         editTextBusinessAddr = findViewById(R.id.etBusinessAddr);
         editTextNic = findViewById(R.id.etNIC);
         buttonSave = findViewById(R.id.btnAddBuyer);
-         spinnerBuyerType = findViewById(R.id.spinnerBuyerType);
+
+        // Find the Spinner for price levels
+         spinnerPriceLevel = findViewById(R.id.spinnerPriceLevel);
+
+// Get the array of price levels from resources
+        String[] priceLevels = getResources().getStringArray(R.array.price_levels);
+
+// Create an ArrayAdapter using the price levels array and a default spinner layout
+        ArrayAdapter<String> priceLevelAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, priceLevels);
+
+// Specify the layout to use when the list of choices appears
+        priceLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// Apply the adapter to the spinner
+        spinnerPriceLevel.setAdapter(priceLevelAdapter);
+
+        spinnerBuyerType = findViewById(R.id.spinnerBuyerType);
 
         // Get the array of buyer types from resources
         String[] buyerTypes = getResources().getStringArray(R.array.buyer_types);
@@ -83,19 +111,23 @@ public class AddBuyerActivity extends AppCompatActivity {
     }
 
     private void saveBuyer() {
+        long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String name = editTextName.getText().toString();
         String Othername = editTextOtherNames.getText().toString();
         String tan = editTextTan.getText().toString();
         String companyName =editTextcompname.getText().toString();
         String brn = editTextBrn.getText().toString();
         String businessAddr = editTextBusinessAddr.getText().toString();
+        String priceLevel = spinnerPriceLevel.getSelectedItem().toString(); // Get the selected price level
 
         String buyerType = spinnerBuyerType.getSelectedItem().toString();
 
         String Buyerprofile = spinnerBuyerProfile.getSelectedItem().toString();
         String nic = editTextNic.getText().toString();
 
-        Buyer newBuyer = new Buyer(name,Othername, tan, brn, businessAddr, buyerType,Buyerprofile, nic,companyName);
+        Buyer newBuyer = new Buyer(name,Othername, tan, brn, businessAddr, buyerType,Buyerprofile, nic,companyName,priceLevel,cashorId,lastmodified,lastmodified);
 
         boolean success = databaseHelper.addBuyer(newBuyer);
 

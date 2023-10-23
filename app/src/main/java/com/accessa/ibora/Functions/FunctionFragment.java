@@ -732,43 +732,61 @@ public class FunctionFragment extends Fragment {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
+        SharedPreferences sharedPreferences2 = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        String buyerName = sharedPreferences2.getString("BuyerName", null);
+
         if (transactionIdInProgress == null || transactionIdInProgress.isEmpty()) {
-            // Transaction is not in progress, allow the user to change the price level
+            if (buyerName == null || buyerName.isEmpty()) {
+                // Both conditions are met (no transaction in progress and no selected buyer), so allow changing price level.
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Select a Price Level")
-                    .setItems(priceLevels, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // Handle the selected price level
-                            String selectedPriceLevel = priceLevels[which];
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle("Select a Price Level")
+                        .setItems(priceLevels, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Handle the selected price level
+                                String selectedPriceLevel = priceLevels[which];
 
-                            if (selectedPriceLevel != null && !selectedPriceLevel.isEmpty()) {
-                                SharedPreferences sharedPreferencesPriceLevel = requireContext().getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
-                                SharedPreferences.Editor editor = sharedPreferencesPriceLevel.edit();
-                                editor.putString("selectedPriceLevel", selectedPriceLevel);
-                                editor.apply();
+                                if (selectedPriceLevel != null && !selectedPriceLevel.isEmpty()) {
+                                    SharedPreferences sharedPreferencesPriceLevel = requireContext().getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = sharedPreferencesPriceLevel.edit();
+                                    editor.putString("selectedPriceLevel", selectedPriceLevel);
+                                    editor.apply();
 
-                                // Show a new dialog with a message
-                                AlertDialog.Builder messageBuilder = new AlertDialog.Builder(requireContext());
-                                messageBuilder.setTitle("Message")
-                                        .setMessage("Price level selected: " + selectedPriceLevel)
-                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                // Navigate to MainActivity when OK is clicked
-                                                Intent intent = new Intent(requireContext(), MainActivity.class);
-                                                startActivity(intent);
-                                            }
-                                        });
-                                messageBuilder.create().show();
+                                    // Show a new dialog with a message
+                                    AlertDialog.Builder messageBuilder = new AlertDialog.Builder(requireContext());
+                                    messageBuilder.setTitle("Message")
+                                            .setMessage("Price level selected: " + selectedPriceLevel)
+                                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    // Navigate to MainActivity when OK is clicked
+                                                    Intent intent = new Intent(requireContext(), MainActivity.class);
+                                                    startActivity(intent);
+                                                }
+                                            });
+                                    messageBuilder.create().show();
+                                }
                             }
-                        }
-                    });
-            builder.create().show();
+                        });
+                builder.create().show();
+            } else {
+                // If a buyer is selected, show a message to handle this case.
+                // Transaction is in progress, show a message to complete the transaction or update individual items.
+                AlertDialog.Builder transactionBuilder = new AlertDialog.Builder(requireContext());
+                transactionBuilder.setTitle("Buyer  Selected")
+                        .setMessage("You must remove active Buyer  before changing the price level.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Handle what to do when the user clicks "OK" in the incomplete transaction dialog.
+                                // This might involve taking the user to a transaction screen or item price update screen.
+                            }
+                        });
+                transactionBuilder.create().show();
+            }
         } else {
             // Transaction is in progress, show a message to complete the transaction or update individual items.
-
             AlertDialog.Builder transactionBuilder = new AlertDialog.Builder(requireContext());
             transactionBuilder.setTitle("Incomplete Transaction")
                     .setMessage("You must complete the transaction or update individual item prices before changing the price level.")
@@ -781,10 +799,8 @@ public class FunctionFragment extends Fragment {
                     });
             transactionBuilder.create().show();
         }
-
-
-
     }
+
 
 
     @Override

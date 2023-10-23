@@ -601,8 +601,8 @@ public class AddItemActivity extends Activity {
 
             // Calculate the current price
             currentPrice = prices - discountedAmount;
-            currentPrice2 = prices - discountedAmount2;
-            currentPrice3 = prices - discountedAmount3;
+            currentPrice2 = prices2 - discountedAmount2;
+            currentPrice3 = prices3 - discountedAmount3;
 
 
         }

@@ -489,6 +489,10 @@
     <string name="price1">Price 1</string>
     <string name="price2">Price 2</string>
     <string name="price3">Price 3</string>
+    <string name="UpdatedBuyer">Buyer Profile Updated</string>
+    <string name="failUpdateBuyer">Failed To update Buyer</string>
+    <string name="DeleteBuyer">Buyer Removed From System.</string>
+    <string name="NotDeletedBuyer">Buyer Deletion Failed</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>
@@ -498,6 +502,12 @@
         <item>B2B</item>
         <item>B2C</item>
         <item>B2G</item>
+    </string-array>
+
+    <string-array name="price_levels">
+        <item>Price Level 1</item>
+        <item>Price Level 2</item>
+        <item>Price Level 3</item>
     </string-array>
 
 </resources>

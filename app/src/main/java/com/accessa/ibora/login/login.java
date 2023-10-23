@@ -113,7 +113,8 @@ public class login extends AppCompatActivity {
             builder.setTitle(R.string.welcome);
             builder.setMessage(getString(R.string.welcomes) + " " + cashorName + "!");
 
-
+            // Remove the buyer info from shared preferences
+            clearBuyerInfoFromPrefs();
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("cashorName", cashorName); // Store cashor's name
             editor.putString("cashorId", cashorId); // Store cashor's ID
@@ -228,7 +229,12 @@ public class login extends AppCompatActivity {
 
         cursor.close();
     }
-
+    private void clearBuyerInfoFromPrefs() {
+        SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.clear();
+        editor.apply();
+    }
     public void onNumberButtonClick(View view) {
         Button button = (Button) view;
         String number = button.getText().toString();

@@ -296,7 +296,6 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Variant, Variant);
         contentValues.put(DatabaseHelper.SKU, SKU);
         contentValues.put(DatabaseHelper.Cost, Cost);
-        contentValues.put(DatabaseHelper.DateCreated, DateCreated);
         contentValues.put(DatabaseHelper.LastModified, LastModified);
         contentValues.put(DatabaseHelper.UserId, UserId);
         contentValues.put(DatabaseHelper.Nature, selectedNature);
@@ -1013,7 +1012,7 @@ public class DBManager {
         database.update(DISCOUNT_TABLE_NAME, contentValue, DatabaseHelper.DISCOUNT_ID + " = " + id, null);
         return true;
     }
-    public boolean updateBuyer(long id, String name,String OtherNames, String compname, String tan, String brn,String add, String type, String Buyerprofile,String nic) {
+    public boolean updateBuyer(long id, String name,String OtherNames, String compname, String tan, String brn,String add, String type, String Buyerprofile,String nic,String PriceLevel,String LastModified, String CashierId) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.BUYER_NAME, name);
         contentValue.put(DatabaseHelper.BUYER_Other_NAME, OtherNames);
@@ -1024,6 +1023,9 @@ public class DBManager {
         contentValue.put(DatabaseHelper.BUYER_TYPE, type);
         contentValue.put(DatabaseHelper.BUYER_NIC, nic);
         contentValue.put(DatabaseHelper.BUYER_Profile, Buyerprofile);
+        contentValue.put(DatabaseHelper.BUYER_PriceLevel, PriceLevel);
+        contentValue.put(DatabaseHelper.COLUMN_CASHOR_id, CashierId);
+        contentValue.put(DatabaseHelper.BUYER_LAST_MODIFIED, LastModified);
 
 
         database.update(BUYER_TABLE_NAME, contentValue, DatabaseHelper.BUYER_ID + " = " + id, null);

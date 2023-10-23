@@ -19,8 +19,9 @@
             app:title="@string/Tickets"
             android:background="@color/BleuAccessaText"
             app:titleTextColor="@color/white"
-             />
+             >
 
+        </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Product List -->

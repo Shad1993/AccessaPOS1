@@ -374,6 +374,11 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         return instance;
     }
     public void logout() {
+
+        SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor1 = sharedPrefs.edit();
+        editor1.clear();
+        editor1.apply();
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

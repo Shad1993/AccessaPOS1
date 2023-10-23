@@ -27,6 +27,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 
@@ -52,6 +53,8 @@ public class ModifyBuyerActivity extends Activity {
 
     private String cashorId;
 
+    private  Spinner spinnerPriceLevel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +63,6 @@ public class ModifyBuyerActivity extends Activity {
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        String cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
 
@@ -78,6 +80,8 @@ public class ModifyBuyerActivity extends Activity {
         spinnerBuyerType = findViewById(R.id.spinnerBuyerType);
         spinnerBuyerProfile = findViewById(R.id.spinnerBuyerprofile);
         NIC_Edittext = findViewById(R.id.etNIC);
+        spinnerPriceLevel= findViewById(R.id.spinnerPriceLevel);
+
 
         // Initialize and set up the ArrayAdapter for the spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -91,7 +95,11 @@ public class ModifyBuyerActivity extends Activity {
         adapters.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerBuyerProfile.setAdapter(adapters);
 
-
+        // Initialize and set up the ArrayAdapter for the spinner
+        ArrayAdapter<CharSequence> adapters1 = ArrayAdapter.createFromResource(this,
+                R.array.price_levels, android.R.layout.simple_spinner_item);
+        adapters.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPriceLevel.setAdapter(adapters1);
 
         mDatabaseHelper = new DatabaseHelper(this);
 
@@ -122,10 +130,19 @@ public class ModifyBuyerActivity extends Activity {
             // Find the index of the buyer's type in the array
             int buyerProfileIndex = Arrays.asList(buyerProfile).indexOf(buyer.getProfile());
 
+
+            // Get the array of buyer types from resources
+            String[] buyerPriceLevel = getResources().getStringArray(R.array.price_levels);
+            // Find the index of the buyer's type in the array
+            int buyerPriceLevelIndex = Arrays.asList(buyerTypes).indexOf(buyer.getPriceLevel());
+
+
+
             // Set the selected item in the spinner
             spinnerBuyerType.setSelection(buyerTypeIndex);
             spinnerBuyerProfile.setSelection(buyerProfileIndex);
             NIC_Edittext.setText(buyer.getNic());
+            spinnerPriceLevel.setSelection(buyerPriceLevelIndex);
 
         }
 
@@ -151,9 +168,9 @@ public class ModifyBuyerActivity extends Activity {
 
     private void updateDept() {
 
-        // Get the current timestamp
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String name = Name_Edittext.getText().toString().trim();
         String Othername = editTextOtherNames.getText().toString().trim();
         String compname = compName_Edittext.getText().toString().trim();
@@ -162,21 +179,22 @@ public class ModifyBuyerActivity extends Activity {
         String add = Adresse_Edittext.getText().toString().trim();
         String buyerType = spinnerBuyerType.getSelectedItem().toString();
         String Buyerprofile = spinnerBuyerProfile.getSelectedItem().toString();
+        String BuyerPriceLevel = spinnerPriceLevel.getSelectedItem().toString();
         String nic = NIC_Edittext.getText().toString().trim();
 
 
-        if (name.isEmpty()|| Othername.isEmpty() || compname.isEmpty() || tan.isEmpty() || brn.isEmpty() || add.isEmpty() || buyerType.isEmpty() || Buyerprofile.isEmpty() || nic.isEmpty() ) {
+        if (name.isEmpty()|| Othername.isEmpty() || BuyerPriceLevel.isEmpty() || compname.isEmpty() || tan.isEmpty() || brn.isEmpty() || add.isEmpty() || buyerType.isEmpty() || Buyerprofile.isEmpty() || nic.isEmpty() ) {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        boolean isUpdated = dbManager.updateBuyer( _id,name,Othername, compname, tan, brn,add,buyerType,Buyerprofile,nic);
+        boolean isUpdated = dbManager.updateBuyer( _id,name,Othername, compname, tan, brn,add,buyerType,Buyerprofile,nic,BuyerPriceLevel,lastmodified,cashorId);
         returnHome();
         if (isUpdated) {
-            Toast.makeText(this, R.string.Disc, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.UpdatedBuyer, Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, R.string.failDisc, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.failUpdateBuyer, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -184,10 +202,10 @@ public class ModifyBuyerActivity extends Activity {
         boolean isDeleted = dbManager.deleteBuyer(_id);
         returnHome();
         if (isDeleted) {
-            Toast.makeText(this, R.string.DeleteDiscount, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.DeleteBuyer, Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, R.string.NotDeleteddiscount, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.NotDeletedBuyer, Toast.LENGTH_SHORT).show();
         }
     }
     public void returnHome() {

@@ -36,6 +36,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -72,12 +73,14 @@ import com.accessa.ibora.SplashFlashActivity;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.ItemData;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.scanner.InbuiltScannerFragment;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -108,6 +111,7 @@ private TextView textViewVATs,textViewTotals;
     private Toolbar toolbar;
     private DBManager dbManager;
     private String actualdate;
+    private boolean isBuyerSelected = false;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
      private  List<String> data ;
     private ServiceConnection connService = new ServiceConnection() {
@@ -170,17 +174,96 @@ private TextView textViewVATs,textViewTotals;
             }
             return true;
         }else if (id == R.id.nav_buyer) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setTitle("Select a Buyer");
+            if (isBuyerSelected) {
+                // Handle "Remove Buyer" behavior
+                // For example, clear the selection and update the title
+                selectedBuyer = null;
+                isBuyerSelected = false;
 
-            List<Buyer> buyerList = mDatabaseHelper.getAllBuyers(); // Retrieve buyers from the database
+                // Clear the title, subtitle, and icon
+                toolbar.setTitle(getString(R.string.Tickets));
+                toolbar.setSubtitle(null);
+                toolbar.setNavigationIcon(null);
 
-            ArrayAdapter<Buyer> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, buyerList);
-            builder.setAdapter(adapter, (dialog, which) -> {
-                selectedBuyer = buyerList.get(which); // Assign the selected buyer
-            });
+                // Clear the selectedBuyer variable
+                selectedBuyer = null;
 
-            builder.show();
+                // Remove the buyer info from shared preferences
+                clearBuyerInfoFromPrefs();
+            } else {
+                // Handle "Select a Buyer" behavior
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setTitle("Select a Buyer");
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+
+                List<Buyer> buyerList = mDatabaseHelper.getAllBuyers();
+
+                ArrayAdapter<Buyer> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, buyerList);
+                builder.setAdapter(adapter, (dialog, which) -> {
+                    selectedBuyer = buyerList.get(which);
+                    isBuyerSelected = true; // Update the flag
+
+                    // Update the app bar title with the buyer's name and price level
+                    if (selectedBuyer != null) {
+                        String buyerName = selectedBuyer.getNames();
+                        String priceLevel = selectedBuyer.getPriceLevel();
+                        toolbar.setTitle(buyerName);
+                        toolbar.setSubtitle(priceLevel);
+                        toolbar.setNavigationIcon(R.drawable.people);
+                        String selectedPriceLevel = priceLevel;
+
+                        if (selectedPriceLevel != null && !selectedPriceLevel.isEmpty()) {
+                            // Store buyer info in shared preferences
+                            saveBuyerInfoToPrefs(buyerName, selectedPriceLevel);
+                            // Store buyer info in shared preferences
+                            saveBuyerInfoToPrefs(buyerName, selectedPriceLevel);
+                            SharedPreferences sharedPreferencesPriceLevel = requireContext().getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferencesPriceLevel.edit();
+                            editor.putString("selectedPriceLevel", selectedPriceLevel);
+                            editor.apply();
+
+                            // Show a new dialog with a message
+                            AlertDialog.Builder messageBuilder = new AlertDialog.Builder(requireContext());
+                            messageBuilder.setTitle("Message")
+                                    .setMessage("Price level selected: " + selectedPriceLevel)
+                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+
+
+
+                                            // Retrieve the TRANSACTION_TICKET_NO where TRANSACTION_STATUS is 'InProgress'
+                                            String transactionTicketNo = mDatabaseHelper.getInProgressTransactionTicketNo();
+                                            if (selectedPriceLevel.equals("Price Level 1")) {
+                                                // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 1");
+                                            } else if (selectedPriceLevel.equals("Price Level 2")) {
+                                                // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 2");
+                                            } else if (selectedPriceLevel.equals("Price Level 3")) {
+                                                // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 3");
+                                            }
+
+
+
+                                            // Navigate to MainActivity when OK is clicked
+                                            Intent intent = new Intent(requireContext(), MainActivity.class);
+                                            startActivity(intent);
+                                        }
+                                    });
+                            messageBuilder.create().show();
+                            isBuyerSelected = false; // Update the flag
+                            // Clear the AlertDialog if a buyer is selected
+                            dialog.dismiss();
+                        }
+                    }
+                });
+
+                builder.show();
+                item.setTitle("Remove Buyer"); // Update the menu item's title
+            }
             return true;
         }
 
@@ -188,6 +271,8 @@ private TextView textViewVATs,textViewTotals;
         (id == R.id.nav_logout) {
             MainActivity mainActivity = (MainActivity) requireActivity(); // Get the MainActivity object
             mainActivity.logout(); // Call the logout() function
+            // Remove the buyer info from shared preferences
+            clearBuyerInfoFromPrefs();
             return true;
         }else if
         (id == R.id.nav_scan) {
@@ -260,6 +345,16 @@ private TextView textViewVATs,textViewTotals;
         intent.setPackage("woyou.aidlservice.jiuiv5");
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
+        SharedPreferences sharedPreferences2 = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+       String  buyername = sharedPreferences2.getString("BuyerName", null);
+        String  buyerpricelevel = sharedPreferences2.getString("PriceLevel", null);
+        if (buyername != null && buyerpricelevel != null ) {
+
+            toolbar.setTitle(buyername);
+            toolbar.setSubtitle(buyerpricelevel);
+            toolbar.setNavigationIcon(R.drawable.people);
+
+        }
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -312,6 +407,9 @@ private TextView textViewVATs,textViewTotals;
 
 
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
+
+
+
 
         // Retrieve the total amount and total tax amount from the transactionheader table
         Cursor cursor = mDatabaseHelper.getTransactionHeader();
@@ -598,7 +696,9 @@ private TextView textViewVATs,textViewTotals;
 
 
                 }
+                clearBuyerInfoFromPrefs();
             }
+
         });
 
 
@@ -648,6 +748,7 @@ private TextView textViewVATs,textViewTotals;
 
         return view;
     }
+
 
     private void SendToHeader(double totalAmount, double taxtotalAmount) {
 
@@ -713,14 +814,14 @@ private TextView textViewVATs,textViewTotals;
                     double totalAmount = calculateTotalAmount();
                     double TaxtotalAmount = calculateTotalTax();
                     SaveTransaction(Type,totalAmount,TaxtotalAmount);
-
+                    clearBuyerInfoFromPrefs();
 
                 } else if (which == 1) {
                     String Type="DRN";
                     double totalAmount = calculateTotalAmount();
                     double TaxtotalAmount = calculateTotalTax();
                     SaveTransaction(Type,totalAmount,TaxtotalAmount);
-
+                    clearBuyerInfoFromPrefs();
 
                 }
                 else if (which == 2) {
@@ -728,12 +829,14 @@ private TextView textViewVATs,textViewTotals;
                     double totalAmount = calculateTotalAmount();
                     double TaxtotalAmount = calculateTotalTax();
                     SaveTransaction(Type,totalAmount,TaxtotalAmount);
-
+                    clearBuyerInfoFromPrefs();
                 }
             }
         });
         builder.show();
     }
+
+
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());
@@ -1273,6 +1376,23 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
 
         // Play the sound effect
         playSoundEffect();
+    }
+
+    // Helper method to save buyer info to shared preferences
+    private void saveBuyerInfoToPrefs(String buyerName, String priceLevel) {
+        SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("BuyerName", buyerName);
+        editor.putString("PriceLevel", priceLevel);
+        editor.apply();
+    }
+
+    // Helper method to clear buyer info from shared preferences
+    private void clearBuyerInfoFromPrefs() {
+        SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.clear();
+        editor.apply();
     }
 
     private void playSoundEffect() {

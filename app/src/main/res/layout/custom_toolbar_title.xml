@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <!-- Add an icon, adjust the drawable resource and size as needed -->
+    <ImageView
+        android:id="@+id/iconImageView"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/people"
+        android:contentDescription="Icon"
+        android:layout_marginEnd="4dp" />
+
+    <!-- Add the title with smaller text size -->
+    <TextView
+        android:id="@+id/custom_title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:text=""
+        android:textColor="@color/white" />
+</LinearLayout>

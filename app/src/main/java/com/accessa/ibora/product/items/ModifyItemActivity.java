@@ -517,7 +517,7 @@ private ImageView image_view;
         Discount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedDiscount = parent.getItemAtPosition(position).toString();
+                String selectedItem = parent.getItemAtPosition(position).toString();
                 // Do something with the selectedDiscount (e.g., store it in a variable)
             }
 
@@ -681,7 +681,7 @@ private ImageView image_view;
         String soldBy = getSelectedRadioButtonText(soldByRadioGroup);
         String vat = getSelectedRadioButtonText(vatRadioGroup);
         String availableForSale =String.valueOf(isAvailableForSale);
-        String itemCode = String.valueOf(ItemCode);
+        String itemCode =ItemCode.getText().toString().trim();
         String selectedNature = Nature.getSelectedItem().toString();
         String selectedCurrency = Currency.getSelectedItem().toString();
         String selectedDiscount = Discount.getSelectedItem().toString();
@@ -708,6 +708,8 @@ private ImageView image_view;
             double prices= Double.parseDouble(price);
             double prices2= Double.parseDouble(price2);
             double prices3= Double.parseDouble(price3);
+
+
             // Corrected discountedAmount calculation
             discountedAmount = (selectedDiscounts / 100.0) * prices;
             discountedAmount2 = (selectedDiscounts / 100.0) * prices2;
@@ -715,8 +717,8 @@ private ImageView image_view;
 
             // Calculate the current price
             currentPrice = prices - discountedAmount;
-            currentPrice2 = prices - discountedAmount2;
-            currentPrice3 = prices - discountedAmount3;
+            currentPrice2 = prices2 - discountedAmount2;
+            currentPrice3 = prices3 - discountedAmount3;
 
 
         }

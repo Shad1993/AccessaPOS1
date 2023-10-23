@@ -17,6 +17,7 @@ import com.accessa.ibora.Constants;
 import com.accessa.ibora.Report.PaymentItem;
 import com.accessa.ibora.product.couponcode.Coupon;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -499,7 +500,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_ID + " INTEGER NOT NULL, " +
             ITEM_ID + " INTEGER NOT NULL, " +
             TRANSACTION_DATE + " DATETIME NOT NULL, " +
-            QUANTITY + " INTEGER NOT NULL, " +
+            TRANSACTION_HEADER_TABLE_NAME + " INTEGER NOT NULL, " +
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             VAT_Type + " TEXT NOT NULL CHECK(VatType IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
@@ -675,8 +676,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             BUYER_PriceLevel + " TEXT, " +
             BUYER_Profile + " TEXT, " +
             COLUMN_CASHOR_id + " TEXT, " +
-            BUYER_DATE_CREATED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-            BUYER_LAST_MODIFIED + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+            BUYER_DATE_CREATED +  " TEXT, " +
+            BUYER_LAST_MODIFIED + " TEXT NOT NULL);";
 
     private static final String CREATE_COUPON_TABLE = "CREATE TABLE " + COUPON_TABLE_NAME + "(" +
             COUPON_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -797,6 +798,80 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         onCreate(db);
     }
+    public String getInProgressTransactionTicketNo() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Construct an SQL query to fetch the TRANSACTION_TICKET_NO
+        String selectQuery = "SELECT " + TRANSACTION_TICKET_NO + " FROM " +
+                TRANSACTION_HEADER_TABLE_NAME + " WHERE " + TRANSACTION_STATUS + " = 'InProgress'";
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        String transactionTicketNo = null;
+
+        if (cursor != null && cursor.moveToFirst()) {
+            transactionTicketNo = cursor.getString(cursor.getColumnIndex(TRANSACTION_TICKET_NO));
+            cursor.close();
+        }
+
+        return transactionTicketNo;
+    }
+
+
+    public void updateTransactionBasedOnInProgressTicketNo(String transactionTicketNo, String pricelevel) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Determine which PriceAfterDiscount field to use based on the selected price level
+        String priceAfterDiscountColumn;
+        if ("Price Level 1".equals(pricelevel)) {
+            priceAfterDiscountColumn = PriceAfterDiscount;
+        } else if ("Price Level 2".equals(pricelevel)) {
+            priceAfterDiscountColumn = Price2AfterDiscount;
+        } else if ("Price Level 3".equals(pricelevel)) {
+            priceAfterDiscountColumn = Price3AfterDiscount;
+        } else {
+            // Handle default case (e.g., use PriceAfterDiscount)
+            priceAfterDiscountColumn = PriceAfterDiscount;
+        }
+
+        // Calculate the tax based on your tax calculation logic
+        double calculatedTax = calculateTax(10.0, VAT); // Replace with your tax calculation logic
+
+        // Construct an SQL query to update the TRANSACTION table
+        String updateQuery = "UPDATE " + TRANSACTION_TABLE_NAME + " SET " +
+                TOTAL_PRICE + " = (SELECT " + priceAfterDiscountColumn + " * QUANTITY FROM " + TABLE_NAME +
+                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + "), " +
+                VAT + " = (SELECT Quantity * ? FROM " + TABLE_NAME +
+                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + "), " +
+                VAT_Type + " = (SELECT " + VAT + " FROM " + TABLE_NAME +
+                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + ") " +
+                "WHERE " + TRANSACTION_ID + " IN " +
+                "(SELECT " + TRANSACTION_ID + " FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = 'InProgress' AND " + TRANSACTION_TICKET_NO + " = ?)";
+
+        db.execSQL(updateQuery, new Object[]{calculatedTax, transactionTicketNo});
+    }
+
+
+    public double calculateTax(double unitPrice, String vatType) {
+        double taxAmount = 0.0;
+
+        if ("VAT 15%".equals(vatType)) {
+            taxAmount = unitPrice * 0.15;
+        } else {
+            taxAmount = 0.0;
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        String formattedTaxAmount = decimalFormat.format(taxAmount);
+        taxAmount = Double.parseDouble(formattedTaxAmount);
+
+        return taxAmount;
+    }
+
+
+
+
 
     public String getNatureById(long itemId) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1089,6 +1164,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long result = db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
         return result != -1;
     }
+
+
+
 
 
     public void updateAllTransactionsHeaderStatus(String transactionStatusCompleted) {
@@ -2239,9 +2317,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     String buyerType = cursor.getString(cursor.getColumnIndex(BUYER_TYPE));
                     String buyerProfile = cursor.getString(cursor.getColumnIndex(BUYER_Profile));
                     String nic = cursor.getString(cursor.getColumnIndex(BUYER_NIC));
+                    String buyerPricelevel = cursor.getString(cursor.getColumnIndex(BUYER_PriceLevel));
+                    String buyercashier = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_id));
+                    String buyerdatecreated = cursor.getString(cursor.getColumnIndex(BUYER_DATE_CREATED));
+                    String buyerlastmodified = cursor.getString(cursor.getColumnIndex(BUYER_LAST_MODIFIED));
 
-                    // Create a Buyer object and add it to the list
-                    Buyer buyer = new Buyer(name,othername, tan, brn, businessAddr, buyerType,buyerProfile, nic,companyName);
+                    Buyer buyer = new Buyer(name,othername, tan, brn, businessAddr, buyerType,buyerProfile, nic,companyName,buyerPricelevel,buyercashier,buyerdatecreated,buyerlastmodified);
                     buyerList.add(buyer);
                 } while (cursor.moveToNext());
             }
@@ -2269,6 +2350,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("Buyer_Type", buyer.getBuyerType());
         values.put("Buyer_NIC", buyer.getNic());
         values.put(BUYER_Profile, buyer.getProfile());
+        values.put(BUYER_PriceLevel, buyer.getPriceLevel());
+        values.put(COLUMN_CASHOR_id, buyer.getCashiorId());
+        values.put(BUYER_DATE_CREATED, buyer.getDatecreated());
+        values.put(BUYER_LAST_MODIFIED, buyer.getLastmodified());
+
+
 
         long result = db.insert("Buyer_Table", null, values);
 
