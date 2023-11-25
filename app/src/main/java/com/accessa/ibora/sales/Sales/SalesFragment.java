@@ -38,7 +38,8 @@ import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
 
 
-    private RecyclerView mRecyclerView;
+
+    public static RecyclerView mRecyclerView;
     private ItemGridAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
     private String cashierId,shopname;

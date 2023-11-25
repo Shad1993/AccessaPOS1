@@ -1,0 +1,30 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/centre_background"
+    android:layout_gravity="center">
+
+    <!-- Your TextViews or other UI elements here -->
+<TextView
+android:id="@+id/Buyerid"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="ID"/>
+
+<TextView
+android:id="@+id/BuyerAdapter"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="Name"/>
+
+<TextView
+android:id="@+id/textViewTAN"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="TAN"/>
+
+
+
+    </LinearLayout>

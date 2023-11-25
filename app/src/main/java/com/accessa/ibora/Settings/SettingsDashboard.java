@@ -28,6 +28,7 @@ import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
+import com.accessa.ibora.Settings.Rooms.RoomsFragment;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.product.Discount.DiscountFragment;
@@ -107,6 +108,10 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
         }else if (fragmentKey != null && fragmentKey.equals("buyer_fragment")) {
             Fragment newFragment = new buyerFragment();
             setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
+            replaceFragment(newFragment);
+        }else if (fragmentKey != null && fragmentKey.equals("Rooms_fragment")) {
+            Fragment newFragment = new RoomsFragment();
+            setToolbarTitle(getString(R.string.Roomstable)); // Set the toolbar title
             replaceFragment(newFragment);
         }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {

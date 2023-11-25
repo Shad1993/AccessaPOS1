@@ -15,6 +15,9 @@ import android.util.Log;
 import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.Report.PaymentItem;
+import com.accessa.ibora.Settings.Rooms.Rooms;
+import com.accessa.ibora.product.Rooms.Room;
+import com.accessa.ibora.product.Rooms.Table;
 import com.accessa.ibora.product.couponcode.Coupon;
 
 import java.text.DecimalFormat;
@@ -355,6 +358,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COUNTING_REPORT_DATETIME = "datetime";
 
     public static final String CASH_REPORT_TABLE_NAME = "CashReports";
+    public static final String ROOMS = "rooms";
+    public static final String TABLES = "tables";
+    public static final String ID = "id";
+    public static final String ROOM_NAME = "room_name";
+    public static final String TABLE_COUNT = "table_count";
+
+    public static final String TABLE_ID = "id";
+    public static final String ROOM_ID = "room_id";
+    public static final String TABLE_NUMBER = "table_number";
+    public static final String SEAT_COUNT = "seat_count";
+    public static final String WAITER_NAME = "waiter_name";
+    private static final String STATUS  = "STATUS";
+
+    // Room table
+    private static final String CREATE_ROOM_TABLE =
+            "CREATE TABLE " + ROOMS + " (" +
+                    ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    ROOM_NAME + " TEXT, " +
+                    TABLE_COUNT + " INTEGER);";
+
+
+    // Table table
+    private static final String CREATE_TABLE_TABLE =
+            "CREATE TABLE " + TABLES + " (" +
+                    TABLE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    ROOM_ID + " INTEGER, " +
+                    TABLE_NUMBER + " INTEGER, " +
+                    SEAT_COUNT + " INTEGER, " +
+                    WAITER_NAME + " TEXT, " +
+                    STATUS + " TEXT DEFAULT 'not_reserved' CHECK (" + STATUS + " IN ('reserved', 'not_reserved')));";
+
+
+
+
     // Creating Department table query
     private static final String CREATE_DEPARTMENT_TABLE = "CREATE TABLE " + DEPARTMENT_TABLE_NAME + "(" +
             DEPARTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -500,7 +537,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_ID + " INTEGER NOT NULL, " +
             ITEM_ID + " INTEGER NOT NULL, " +
             TRANSACTION_DATE + " DATETIME NOT NULL, " +
-            TRANSACTION_HEADER_TABLE_NAME + " INTEGER NOT NULL, " +
+            QUANTITY + " INTEGER NOT NULL, " +
             TOTAL_PRICE + " DECIMAL(10, 2) NOT NULL, " +
             VAT + " DECIMAL(10, 2) NOT NULL, " +
             VAT_Type + " TEXT NOT NULL CHECK(VatType IN ('VAT 0%', 'VAT Exempted', 'VAT 15%')), " +
@@ -753,6 +790,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_FINANCIAL_TABLE);
         db.execSQL(CREATE_COUNTING_REPORT_TABLE);
         db.execSQL(CREATE_CASH_REPORT_TABLE);
+        db.execSQL(CREATE_ROOM_TABLE);
+        db.execSQL(CREATE_TABLE_TABLE);
         addDefaultItem(db);
         // Insert cheque details
         addDefaultPaymentMethod(db, "POP", "1");
@@ -795,6 +834,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + FINANCIAL_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + COUNTING_REPORT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + CASH_REPORT_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ROOMS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLES);
 
         onCreate(db);
     }
@@ -817,6 +858,55 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return transactionTicketNo;
     }
 
+    // Method to get status and seat count based on roomId and tableId
+    public Rooms getRoomDetails(String roomId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Rooms roomDetails = null;
+
+        String query = "SELECT " +
+                SEAT_COUNT + ", " +
+                STATUS +
+                " FROM " + TABLES +
+                " WHERE " + ROOM_ID + " = ? AND " +
+                TABLE_ID + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{roomId});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            // Retrieve details from the cursor
+            int seatCount = cursor.getInt(cursor.getColumnIndex(SEAT_COUNT));
+            String status = cursor.getString(cursor.getColumnIndex(STATUS));
+
+            // Create a RoomDetails object
+            roomDetails = new Rooms( seatCount, status);
+
+            // Close the cursor
+            cursor.close();
+        }
+
+        // Close the database connection
+        db.close();
+
+        return roomDetails;
+    }
+
+    // Update room details
+    public boolean updateRoomDetails(String roomId, String newRoomName, int newTableNumber, int newSeatCount, String newStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TABLE_NUMBER, newTableNumber);
+        contentValues.put(SEAT_COUNT, newSeatCount);
+        contentValues.put(STATUS, newStatus);
+
+        // Update the record with the specified roomId
+        int numRowsAffected = db.update(TABLE_NAME, contentValues, TABLE_ID + " = ?", new String[]{roomId});
+
+        // Close the database connection
+        db.close();
+
+        // Check if the update was successful
+        return numRowsAffected > 0;
+    }
 
     public void updateTransactionBasedOnInProgressTicketNo(String transactionTicketNo, String pricelevel) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -871,8 +961,57 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
+    // Method to get the sum of PriceAfterDiscount where TransactionStatus is 'InProgress'
+    public double getSumPriceAfterDiscountInProgress() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        double sum = 0;
 
+        String query = "SELECT SUM(" + PriceAfterDiscount + ") FROM " +
+                TRANSACTION_TABLE_NAME + " t " +
+                "INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " h " +
+                "ON t." + TRANSACTION_ID + " = h." + TRANSACTION_ID +
+                " WHERE h." + TRANSACTION_STATUS + " = 'InProgress'";
 
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor.moveToFirst()) {
+            sum = cursor.getDouble(0);
+        }
+
+        cursor.close();
+        db.close();
+
+        return sum;
+    }
+    public  double calculateTotalAmount() {
+        Cursor cursor = getAllInProgressTransactions();
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+    public  double calculateTotalTax() {
+        Cursor cursor = getAllInProgressTransactions();
+        double TaxtotalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            do {
+                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
+                TaxtotalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return TaxtotalAmount;
+    }
     public String getNatureById(long itemId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = { Nature };
@@ -1275,6 +1414,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(BUYER_TABLE_NAME, null, null, null, null, null, null);
     }
+
+    public Cursor getAllRooms() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(ROOMS, null, null, null, null, null, null);
+    }
+
     public Cursor getAllQR() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME_PAYMENTBYQY, null, null, null, null, null, null);
@@ -1392,6 +1537,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {"%" + query + "%"};
         String sortOrder = LongDescription + " ASC";
         return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+    public Cursor searchRoom(String query) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {ID, ROOM_NAME, TABLE_COUNT };
+        String selection = ROOM_NAME + " LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+        String sortOrder = ROOM_NAME + " ASC";
+        return db.query(ROOMS, projection, selection, selectionArgs, null, null, sortOrder);
     }
 
     public Cursor searchUser(String query) {
@@ -1687,6 +1840,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    // Update the SEAT_COUNT for a specific table
+    public boolean updateSeatCount(String roomId, int tableNumber, int newSeatCount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("seat_count", newSeatCount);
+
+        String whereClause = "room_id = ? AND table_number = ?";
+        String[] whereArgs = {roomId, String.valueOf(tableNumber)};
+
+        int rowsAffected = db.update("tables", values, whereClause, whereArgs);
+        db.close();
+
+        return rowsAffected > 0;
+    }
+
+    // Retrieve a table by room ID and table number
+    public Table getTableByRoomAndNumber(String roomId, int tableNumber) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Table table = null;
+
+        String[] columns = {"table_number", "seat_count"}; // Add other columns as needed
+        String selection = "room_id = ? AND table_number = ?";
+        String[] selectionArgs = {roomId, String.valueOf(tableNumber)};
+
+        Cursor cursor = db.query("tables", columns, selection, selectionArgs, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            String seatCount = String.valueOf(cursor.getInt(cursor.getColumnIndex("seat_count")));
+            // Retrieve other columns as needed
+
+            table = new Table(tableNumber, seatCount); // Create a Table object with the retrieved data
+
+            cursor.close();
+        }
+
+        db.close();
+
+        return table;
+    }
 
     public boolean isUserTableEmpty() {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -2336,6 +2529,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return buyerList;
     }
 
+    public boolean addRoom(Rooms room) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues roomValues = new ContentValues();
+        roomValues.put("room_name", room.getRoomName());
+        roomValues.put("table_count", room.getTableCount());
+
+        // Insert data into the ROOMS table
+        long roomId = db.insert(ROOMS, null, roomValues);
+
+        // Check if the room insertion was successful
+        if (roomId == -1) {
+            db.close();
+            return false;
+        }
+
+        // Insert data into the TABLES table for each table in the room
+        for (int i = 1; i <= room.getTableCount(); i++) {
+            ContentValues tableValues = new ContentValues();
+            tableValues.put("room_id", roomId);  // Associate the table with the room using the ROOM_ID column
+            tableValues.put("table_number", i);  // You can adjust this based on your table numbering logic
+            tableValues.put("seat_count", 0);    // Adjust as needed
+            tableValues.put("waiter_name", "");  // Adjust as needed
+
+            // Insert data into the TABLES table
+            long result = db.insert(TABLES, null, tableValues);
+
+            // Check if the table insertion was successful
+            if (result == -1) {
+                db.close();
+                return false;
+            }
+        }
+
+        db.close();
+
+        return true;
+    }
+
+    // Inside your DatabaseHelper class or wherever you handle database operations
+    public int getTableCountForRoom(String roomId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        int tableCount = 0;
+
+        Cursor cursor = null;
+        try {
+            String[] projection = { "table_count" };
+            String selection = "id=?";
+            String[] selectionArgs = { roomId };
+
+            cursor = db.query("rooms", projection, selection, selectionArgs, null, null, null);
+
+            if (cursor.moveToFirst()) {
+                tableCount = cursor.getInt(cursor.getColumnIndexOrThrow("table_count"));
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+
+        return tableCount;
+    }
 
     public boolean addBuyer(Buyer buyer) {
         SQLiteDatabase db = this.getWritableDatabase();

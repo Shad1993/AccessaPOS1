@@ -39,13 +39,19 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
     private Cursor mCursor;
     private List<Integer> availableItemsIndices;
     private ItemClickListener itemClickListener;
-
+    private String selectedCategory; // Variable to store the selected category filter
+    public void setCategoryFilter(String category) {
+        selectedCategory = category;
+        updateAvailableItemsIndices();
+        notifyDataSetChanged();
+    }
     public void setItemClickListener(ItemClickListener listener) {
         this.itemClickListener = listener;
     }
     public ItemGridAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
+        availableItemsIndices = new ArrayList<>(); // Initialize the list here
         updateAvailableItemsIndices();
     }
 
@@ -63,12 +69,18 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
     }
 
     private void updateAvailableItemsIndices() {
-        availableItemsIndices = new ArrayList<>();
+        if (mCursor == null) {
+            return; // Add this check to avoid NPE
+        }
+        availableItemsIndices.clear();
         mCursor.moveToPosition(-1); // Move cursor to the beginning
         int position = 0;
         while (mCursor.moveToNext()) {
             String availableForSale = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.AvailableForSale));
-            if (availableForSale.equals("true")) {
+            String category = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Category));
+
+
+            if (availableForSale.equals("true") && (selectedCategory == null || category.equals(selectedCategory))) {
                 availableItemsIndices.add(position);
             }
             position++;
@@ -110,7 +122,17 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         if (!mCursor.moveToPosition(getRealPosition(position))) {
             return;
         }
+
         SharedPreferences sharedPreferencepos = mContext.getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+
+        // Check if "selectedPriceLevel" is present in the preferences
+        if (!sharedPreferencepos.contains("selectedPriceLevel")) {
+            // If not present, set the default value as "Price Level 1"
+            SharedPreferences.Editor editor = sharedPreferencepos.edit();
+            editor.putString("selectedPriceLevel", "Price Level 1");
+            editor.apply();
+        }
+
         String pLevel = sharedPreferencepos.getString("selectedPriceLevel", null);
         String price = null;
         String PriceInRs = null;
@@ -118,14 +140,18 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         if(pLevel.equals("Price Level 1")) {
-             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
-             PriceInRs = "Rs " + price;
+            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+            PriceInRs = "Rs " + price;
         } else if (pLevel.equals("Price Level 2")) {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
             PriceInRs = "Rs " + price;
 
-        }else if (pLevel.equals("Price Level 3")) {
+        } else if (pLevel.equals("Price Level 3")) {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
+            PriceInRs = "Rs " + price;
+
+        } else   {
+            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
             PriceInRs = "Rs " + price;
 
         }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AccessaPOS</string>
+    <string name="app_name">AccessaPOSRestauration</string>
     <string name="Accessa">Accessa</string>
     <string name="heading">Two Fragments in One Activity</string>
     <string name="fragment1_button">Display First Fragment</string>
@@ -493,6 +493,9 @@
     <string name="failUpdateBuyer">Failed To update Buyer</string>
     <string name="DeleteBuyer">Buyer Removed From System.</string>
     <string name="NotDeletedBuyer">Buyer Deletion Failed</string>
+    <string name="Roomstable">Rooms and Table</string>
+    <string name="ALLRooms">All Rooms</string>
+    <string name="status_prompt">Status</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

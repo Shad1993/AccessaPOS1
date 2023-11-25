@@ -18,4 +18,6 @@
     <color name="default_button_color">#204890</color> <!-- Change this to your desired default color -->
     <color name="red">#F61414</color>
     <color name="yellow">#FFEB3B</color>
+    <color name="lightSkyBlue">#87CEFA</color>
+
 </resources>

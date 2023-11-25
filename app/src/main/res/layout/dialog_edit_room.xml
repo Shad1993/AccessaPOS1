@@ -1,0 +1,35 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/editRoomName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Room Name"/>
+
+    <EditText
+        android:id="@+id/editTableNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Table Number"
+        android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/editSeatCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Seat Count"
+        android:inputType="number"/>
+
+    <Spinner
+        android:id="@+id/editStatusSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:prompt="@string/status_prompt"/>
+
+    <!-- Add more fields as needed -->
+
+</LinearLayout>

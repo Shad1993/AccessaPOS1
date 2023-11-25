@@ -238,12 +238,23 @@ private TextView textViewVATs,textViewTotals;
                                             if (selectedPriceLevel.equals("Price Level 1")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
                                                 mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 1");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
+
+
+
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             } else if (selectedPriceLevel.equals("Price Level 2")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
                                                 mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 2");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
+
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             } else if (selectedPriceLevel.equals("Price Level 3")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
                                                 mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 3");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
+
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             }
 
 
@@ -1239,7 +1250,37 @@ if(Type.equals("DRN")) {
         return null;
     }
 
+    public  double calculateTotalAmount1() {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+    public  double calculateTotalTax1() {
+        Cursor cursor = mDatabaseHelper.getTransactionHeader();
 
+        double TaxtotalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            do {
+                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
+                TaxtotalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return TaxtotalAmount;
+    }
     public void displayOnLCD() {
         if (woyouService == null) {
 

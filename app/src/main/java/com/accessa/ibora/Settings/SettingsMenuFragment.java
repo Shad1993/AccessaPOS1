@@ -25,6 +25,7 @@ import com.accessa.ibora.Settings.MRASettings.MRAFragment;
 import com.accessa.ibora.Settings.POPSettings.POPSettingsFragment;
 import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
+import com.accessa.ibora.Settings.Rooms.RoomsFragment;
 import com.accessa.ibora.product.menu.CustomAdapter;
 
 // extended from compatibility Fragment for pre-HC fragment support
@@ -71,7 +72,9 @@ public class SettingsMenuFragment extends Fragment {
                 getString(R.string.PaymentMethods),
                 getString(R.string.PopSettings),
                 getString(R.string.buyer),
-                getString(R.string.MRA)
+                getString(R.string.MRA),
+                getString(R.string.Roomstable)
+
         };
         icons = new int[]{
                 R.drawable.qr,
@@ -79,7 +82,8 @@ public class SettingsMenuFragment extends Fragment {
                 R.drawable.payment,
                 R.drawable.poplogo,
                 R.drawable.buyer,
-                R.drawable.mra_logo
+                R.drawable.mra_logo,
+                R.drawable.room
 
         };
 
@@ -210,7 +214,20 @@ public class SettingsMenuFragment extends Fragment {
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
 
-                }else {
+                } else if (position==6) {
+            toolbarTitle = getString(R.string.Roomstable);
+            Fragment newFragment = new RoomsFragment();
+            // create a FragmentManager
+            FragmentManager fm = getFragmentManager();
+            // create a FragmentTransaction to begin the transaction and replace the Fragment
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            // replace the FrameLayout with new Fragment
+            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+            fragmentTransaction.addToBackStack(newFragment.toString());
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.commit();
+
+        }else {
                     toolbarTitle = getString(R.string.Settings); // Set a default value if needed
                 }
 
