@@ -109,6 +109,8 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     private CustomerLcdFragment customerLcdFragment;
     private int transactionCounter = 1;
     private String actualdate;
+    private String tableid;
+    private int roomid;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private BroadcastReceiver cancelReceiver = new BroadcastReceiver() {
         @Override
@@ -173,6 +175,9 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         TicketFragment ticketFragment1=new TicketFragment();
         ticketFragment1.setHasOptionsMenu(true);
 
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
 
         SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -464,7 +469,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
 
 
     @Override
-    public void onItemAdded() {
+    public void onItemAdded(String roomid,String tableid) {
 
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
@@ -489,7 +494,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -513,7 +518,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (customerLcdFragment != null) {
             double totalAmount = customerLcdFragment.calculateTotalAmount();
-            double taxTotalAmount = customerLcdFragment.calculateTotalTax();
+            double taxTotalAmount = customerLcdFragment.calculateTotalTax(roomid,tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);
@@ -527,8 +532,8 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     public void onItemDeleted() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
@@ -542,8 +547,8 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     public void onAmountModified() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 

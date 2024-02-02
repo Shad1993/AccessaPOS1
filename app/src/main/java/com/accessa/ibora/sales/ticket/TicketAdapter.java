@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
     private Context mContext;
     private Cursor mCursor;
     private List<String> data;
+    private boolean isCheckBoxVisible = false;
+    public List<String> checkedItems = new ArrayList<>(); // Add this line
 
     public TicketAdapter(Context context, Cursor cursor) {
         mContext = context;
@@ -64,7 +67,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public TextView QuantityTextView;
         private TextView ItemIdTextView;
 
-
+        CheckBox checkBox;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
@@ -72,10 +75,25 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
+            // Initialize other views...
+            checkBox = itemView.findViewById(R.id.checkbox);
+            checkBox.setVisibility(isCheckBoxVisible ? View.VISIBLE : View.GONE);
+        }
 
+        // Helper method to bind data to the view holder
+        public void bindData(String itemId, boolean isItemSelected) {
+            checkBox.setChecked(isItemSelected); // Set the checked status based on IS_SELECTED field
 
+            checkBox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Update IS_SELECTED field in the database when the checkbox is clicked
+
+                }
+            });
         }
     }
+
 
     @NonNull
     @Override
@@ -85,6 +103,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         return new ItemViewHolder(view);
     }
 
+    @Override
     public void onBindViewHolder(@NonNull TicketAdapter.ItemViewHolder holder, int position) {
         // Check if the Cursor is null or if it has not been moved to the current position.
         if (mCursor == null || !mCursor.moveToPosition(position)) {
@@ -95,7 +114,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
 
-// Limit the description length to a certain number of characters
+        // Limit the description length to a certain number of characters
         int maxDescriptionLength = 20; // Change this value to your desired length
         if (description.length() > maxDescriptionLength) {
             description = description.substring(0, maxDescriptionLength) + "...";
@@ -103,18 +122,47 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         // Format the price to two decimal places
         double formattedPrice = Double.parseDouble(price);
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-        double totalPrice = formattedPrice ;
+        double totalPrice = formattedPrice;
         String totalPriceString = decimalFormat.format(totalPrice);
-
 
         holder.ItemIdTextView.setText(id);
         holder.nameTextView.setText(description);
-        holder.QuantityTextView.setText("x  " + quantity ); // Add a multiplication sign after the quantity value
+        holder.QuantityTextView.setText("x  " + quantity); // Add a multiplication sign after the quantity value
         holder.PriceTextView.setText("Rs " + totalPriceString);
 
+        holder.checkBox.setVisibility(isCheckBoxVisible ? View.VISIBLE : View.GONE);
+
+        // Bind data to the view holder
+        holder.checkBox.setChecked(checkedItems.contains(id));
+
+        // Set an OnClickListener for the checkbox
+        holder.checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Update IS_SELECTED field in the database when the checkbox is clicked
+                updateItemSelectedInDatabase(id, holder.checkBox.isChecked());
+
+                // Update the list of checked items
+                if (holder.checkBox.isChecked()) {
+                    checkedItems.add(id);
+                } else {
+                    checkedItems.remove(id);
+                }
+            }
+        });
     }
 
 
+    private void updateItemSelectedInDatabase(String itemId, boolean isSelected) {
+        // Get the instance of your DatabaseHelper
+        DatabaseHelper dbHelper = new DatabaseHelper(mContext);
+
+        // Update IS_SELECTED field
+        dbHelper.updateItemSelected(Long.parseLong(itemId), isSelected);
+
+        // Close the database connection
+        dbHelper.close();
+    }
     @Override
     public int getItemCount() {
         return (mCursor != null) ? mCursor.getCount() : 0;
@@ -129,6 +177,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         if (newCursor != null) {
             notifyDataSetChanged();
         }
+    }
+
+    public void setCheckBoxVisibility(boolean isVisible) {
+        isCheckBoxVisible = isVisible;
+        notifyDataSetChanged();
     }
     public Cursor getCursor() {
         return mCursor;

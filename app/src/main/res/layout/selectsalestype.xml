@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/welcome_background">
+
+
+
+        <Button
+            android:id="@+id/onspot"
+            android:text="On Spot"
+            android:drawableRight="@drawable/onspot"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="200dp"
+            android:layout_marginEnd="32dp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+        <Button
+            android:id="@+id/delivery"
+            android:text="Delivery"
+            android:drawableRight="@drawable/delivery"
+            android:textSize="18sp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/onspot"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+        <Button
+            android:id="@+id/FreeSales"
+            android:text="Free Sales"
+            android:textSize="18sp"
+            android:drawableRight="@drawable/drivethru"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_below="@id/delivery"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
+
+
+
+
+
+    </RelativeLayout>
+</ScrollView>
+

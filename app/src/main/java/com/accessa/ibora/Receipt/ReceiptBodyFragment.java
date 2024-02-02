@@ -345,7 +345,7 @@ if(!TransactionType.equals("InProgress") ) {
 // Close the cursor
             cursor.close();
 
-            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionId);
+            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes1(transactionId);
             if (vatCursor != null && vatCursor.moveToFirst()) {
                 StringBuilder vatTypesBuilder = new StringBuilder();
                 do {

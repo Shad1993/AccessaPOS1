@@ -102,10 +102,10 @@
                 android:layout_weight="0.5" />
             <fragment
                 android:id="@+id/TableFragment"
-                class="com.accessa.ibora.sales.RoomsAndTable.RoomsFragment"
-                android:layout_width="760dp"
+                class="com.accessa.ibora.sales.Tables.TablesFragment"
+                android:layout_width="800dp"
                 android:layout_height="50dp"
-                android:layout_weight="0.10" />
+                android:layout_weight="0.5" />
         </LinearLayout>
         </LinearLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -125,6 +125,15 @@
         <activity android:name="com.accessa.ibora.product.couponcode.ModifyCouponActivity"/>
         <activity android:name=".Settings.Rooms.TableDetailsActivity"/>
         <activity android:name=".sales.RoomsAndTable.EditTableActivity"/>
+        <activity android:name=".printer.externalprinterlibrary2.printerSetupforPRF"/>
+        <activity android:name=".printer.PrintSave"/>
+        <activity android:name=".MRA.MRASPLIT"/>
+        <activity android:name=".printer.printerSetupforSPLIT"/>
+        <activity android:name=".printer.PrintSplit"/>
+        <activity android:name=".salestype"/>
+        <activity android:name=".product.options.ModifyOptionsActivity"/>
+        <activity android:name=".product.options.AddOptionsActivity"/>
+
 
 
 

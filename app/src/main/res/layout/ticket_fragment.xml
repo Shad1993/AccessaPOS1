@@ -23,6 +23,70 @@
 
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <!-- Room Icon -->
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/room"
+            android:tint="@color/BleuAccessaText" />
+
+        <!-- Room Number -->
+        <TextView
+            android:id="@+id/textViewRoom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Room: "
+            android:textSize="9sp"
+            android:textColor="@color/BleuAccessaText"
+            android:textStyle="bold" />
+
+
+        <!-- Table Icon -->
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/tableimg"
+            android:tint="@color/BleuAccessaText" />
+
+        <!-- Table Number -->
+        <TextView
+            android:id="@+id/textViewTable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" - Table: "
+            android:textSize="9sp"
+            android:textColor="@color/BleuAccessaText"
+            android:textStyle="bold" />
+
+
+
+        <!-- Cashier Icon -->
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/cashier"
+            android:tint="@color/BleuAccessaText" />
+
+        <!-- Cashier Name -->
+        <TextView
+            android:id="@+id/textViewCashier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" - Cashier: "
+            android:textSize="9sp"
+            android:textColor="@color/BleuAccessaText"
+            android:textStyle="bold" />
+
+
+
+    </LinearLayout>
 
     <!-- Product List -->
 
@@ -41,7 +105,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/baseline_add_24"
-        app:tint="@android:color/white"
+       app:tint="@android:color/white"
         app:backgroundTint="@color/BleuAccessaText"
         app:fabSize="normal" />
 
@@ -50,24 +114,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
-        android:visibility="gone"
+        android:visibility="visible"
         android:gravity="center">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/empty_image_view"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center" />
 
-        <TextView
-            android:id="@+id/empty_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/noticket"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="16dp"
-            android:layout_gravity="center" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -178,7 +228,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_centerInParent="true"
-                android:src="@drawable/save" />
+                android:src="@drawable/receiptwhite" />
 
         </RelativeLayout>
 

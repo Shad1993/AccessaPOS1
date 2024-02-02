@@ -118,7 +118,7 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
 
     } else {
             // Set the default drawableEnd for other cases here
-            holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.cash, 0);
+            holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.meanspayment, 0);
             holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
         }
 

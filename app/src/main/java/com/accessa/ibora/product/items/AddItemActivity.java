@@ -1,7 +1,12 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.OPTIONS_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_NAME;
+
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,13 +22,16 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.view.View;
+import android.view.Window;
 import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -79,18 +87,24 @@ public class AddItemActivity extends Activity {
     private DatePicker expiryDatePicker;
     private EditText vatEditText;
     private String formattedDate;
-    private RadioGroup soldByRadioGroup;
+    private RadioGroup soldByRadioGroup,comments_radioGroup;
     private RadioGroup vatRadioGroup;
     private SQLiteDatabase database;
-    private SwitchCompat Available4Sale;
+    private SwitchCompat Available4Sale,hascomment,Options;
     private SwitchCompat ExpirydateSwitch;
-    private boolean isAvailableForSale;
+    private boolean isAvailableForSale, isCommentRequired,isOptionrequired;
     private TextView ExpiryDateText;
     private String cashorId;
     private String cashorName;
     private SharedPreferences sharedPreferences;
     private EditText Userid_Edittext;
     private EditText LastModified_Edittext;
+    private SwitchCompat optionsSwitch;
+    private LinearLayout optionsContainer;
+    private  long optionIds;
+
+    private int optionCounter = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,19 +114,17 @@ public class AddItemActivity extends Activity {
         String locale = getIntent().getStringExtra("locale");
         setTitle(getString(R.string.send));
 
-
-
-
-
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
-
-
         setContentView(R.layout.activity_add_record);
+
+
+
+
+
 
         subjectEditText = findViewById(R.id.itemName_edittext);
         descEditText = findViewById(R.id.description_edittext);
@@ -132,7 +144,10 @@ public class AddItemActivity extends Activity {
         expiryDatePicker = findViewById(R.id.expirydate_picker);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
+        hascomment=findViewById(R.id.comment_switch);
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
+        optionsSwitch = findViewById(R.id.options_switch);
+        optionsContainer = findViewById(R.id.options_container);
         ExpirydateSwitch = findViewById(R.id.perishable_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
         Discount = findViewById(R.id.discount_spinner);
@@ -219,7 +234,20 @@ public class AddItemActivity extends Activity {
             }
         });
 
+        hascomment.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isCommentRequired = isChecked;
 
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(AddItemActivity.this, R.string.hascomment, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(AddItemActivity.this, R.string.hanocomment, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         Available4Sale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -234,6 +262,8 @@ public class AddItemActivity extends Activity {
                 }
             }
         });
+
+
 
         ExpirydateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -380,7 +410,58 @@ public class AddItemActivity extends Activity {
 
         //set userid and last Modified
         Userid_Edittext.setText(String.valueOf(cashorId));
+
+        optionsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isOptionrequired = isChecked;
+                if (isChecked) {
+                    // Display options
+                    displayOptions();
+
+                } else {
+                    // Clear options
+                    optionsContainer.removeAllViews();
+
+                }
+            }
+        });
     }
+    private void displayOptions() {
+
+        // Retrieve options from the database
+        List<Options> variantsList = mDatabaseHelper.getAllVariants();
+
+        // Clear previous options
+        optionsContainer.removeAllViews();
+
+        // Dynamically create checkboxes for each variant
+        for (Options options : variantsList) {
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(options.getOptionname());
+            checkBox.setChecked(false); // Set the initial state as unchecked
+
+             optionIds = options.getOptionId(); // Get the option ID from the Options object
+
+            // Set a listener for checkbox changes
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Checkbox is checked, show a toast with the option ID
+                        Toast.makeText(AddItemActivity.this, "Option ID: " + optionIds + " checked", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            // Add the checkbox to the container
+            optionsContainer.addView(checkBox);
+        }
+    }
+
+
+
 
     private void populateDiscountSpinner() {
         Cursor discountCursor = mDatabaseHelper.getAllDiscounts();
@@ -626,6 +707,8 @@ public class AddItemActivity extends Activity {
         }
         String expiryDate = formattedDate;
         String availableForSale = String.valueOf(isAvailableForSale);
+        String commentrequired = String.valueOf(isCommentRequired);
+        String optionStatus= String.valueOf(isOptionrequired);
         String soldBy = selectedSoldBy;
 
         String UserId = cashorId;
@@ -640,7 +723,7 @@ public class AddItemActivity extends Activity {
 
         // Check if all required fields are filled
         if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || price2.isEmpty() || price3.isEmpty() || barcode.isEmpty()
-                || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty()
+                || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty() || commentrequired.isEmpty()
                 || availableForSale.isEmpty() || longDescription.isEmpty()
                 || variant.isEmpty() || sku.isEmpty() || cost.isEmpty()) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
@@ -658,7 +741,7 @@ public class AddItemActivity extends Activity {
 
         showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
+                availableForSale,optionStatus, String.valueOf(optionIds),   commentrequired,soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode, VatCode, String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice, currentPrice2, currentPrice3);
 
 
@@ -703,7 +786,7 @@ public class AddItemActivity extends Activity {
     }
 
 
-    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
+    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String options,String commentrequired,String optionIds, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         if (isFinishing()) {
             // Activity is finishing, do not show the dialog
             return;
@@ -739,6 +822,9 @@ public class AddItemActivity extends Activity {
                 String ExpiryDate = expiryDate;
                 String VAT = vat;
                 String AvailableForSale = availableForSale;
+                String Options = options;
+                String hascomment = commentrequired;
+                String Optionselectedid=optionIds;
                 String SoldBy = soldBy;
                 String Image = image;
                 String Variant = variant;
@@ -761,14 +847,14 @@ public class AddItemActivity extends Activity {
 
                 dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
-                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        availableForSale,options,optionIds, commentrequired,soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Online");
 
 
 // Trigger the service to insert data
                 SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript,discountrate, Price,Price2,Price3, Category, Barcode, Weight, Department,
                         SubDepartment, LongDescription, Quantity, ExpiryDate, VAT,
-                        AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
+                        AvailableForSale,Options,hascomment,Optionselectedid, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
                         SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf,Discountedamount2,Discountedamount3, CurrentPrice,CurrentPrice2,CurrentPrice3);
 
                 // Redirect to the Product activity
@@ -786,7 +872,7 @@ public class AddItemActivity extends Activity {
 
                 dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
-                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        availableForSale,options,optionIds,commentrequired, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Offline");
 
                 dbManager.close();

@@ -5,6 +5,10 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,7 +21,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
 
     private Context mContext;
     private Cursor mCursor;
-
+    private boolean isSearching = false;
     public RoomAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
@@ -38,6 +42,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
             Tan = itemView.findViewById(R.id.textViewTAN);
             brn = itemView.findViewById(R.id.textViewBRN);
             addresse = itemView.findViewById(R.id.textViewAdress);
+
         }
     }
 
@@ -49,7 +54,20 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
 
         // Set a blue background for each item
        // view.setBackgroundResource(R.drawable.restaurant);
+        ImageView searchIcon = view.findViewById(R.id.searchIcon);
+        EditText searchEditText = view.findViewById(R.id.searchEditText);
 
+        searchIcon.setOnClickListener(v -> {
+            isSearching = !isSearching;
+            if (isSearching) {
+                searchIcon.setVisibility(View.GONE);
+                searchEditText.setVisibility(View.VISIBLE);
+            } else {
+                searchIcon.setVisibility(View.VISIBLE);
+                searchEditText.setVisibility(View.GONE);
+                // Clear search EditText if needed: searchEditText.setText("");
+            }
+        });
         // Calculate the width of each item to achieve a grid layout with 5 items on the screen
         int screenWidth = mContext.getResources().getDisplayMetrics().widthPixels;
         int itemWidth = screenWidth / 1;
@@ -72,6 +90,21 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
         holder.nameTextView.setText(name);
         //holder.Tan.setText(longDescription);
 
+
+        if (isSearching) {
+            holder.nameTextView.setVisibility(View.GONE);
+            holder.idTextView.setVisibility(View.GONE);
+
+        } else {
+            holder.nameTextView.setVisibility(View.VISIBLE);
+            holder.idTextView.setVisibility(View.VISIBLE);
+
+
+            // Set data to views for non-search mode
+            holder.idTextView.setText(id);
+            holder.nameTextView.setText(name);
+            //holder.Tan.setText(longDescription);
+        }
         holder.itemView.setTag(id);
     }
 

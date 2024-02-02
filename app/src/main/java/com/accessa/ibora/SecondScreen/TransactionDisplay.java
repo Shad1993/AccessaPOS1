@@ -43,6 +43,8 @@ public class TransactionDisplay extends Presentation {
     private DatabaseHelper mDatabaseHelper;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
 
+    private String tableid;
+    private int roomid;
     private FrameLayout emptyFrameLayout;
     private LinearLayout total;
     private RecyclerView recyclerView;
@@ -58,7 +60,9 @@ public class TransactionDisplay extends Presentation {
         setContentView(R.layout.second_screen_presentation);
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
-
+        SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
 
         textViewTime = findViewById(R.id.textViewTime);
         handler = new Handler(Looper.getMainLooper());
@@ -80,7 +84,7 @@ public class TransactionDisplay extends Presentation {
         mDatabaseHelper = new DatabaseHelper(getContext());
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         adapter= new TicketAdapter(getContext(), cursor1);
         recyclerView.setAdapter(adapter);
 
@@ -115,7 +119,7 @@ public class TransactionDisplay extends Presentation {
         }
         // Retrieve the total amount and total tax amount from the transactionheader table
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
-        Cursor cursor3 = mDatabaseHelper.getTransactionHeader();
+        Cursor cursor3 = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
 
         if (cursor3 != null && cursor3.moveToFirst()) {
             int columnIndexTotalAmount = cursor3.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);

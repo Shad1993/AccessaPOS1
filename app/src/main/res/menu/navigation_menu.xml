@@ -37,5 +37,8 @@
     <item
         android:id="@+id/SalesReport"
         android:title="@string/salesreport" />
+    <item
+        android:id="@+id/SplitBill"
+        android:title="@string/Splitbill" />
 
 </menu>

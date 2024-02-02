@@ -64,7 +64,8 @@ import nl.dionsegijn.konfetti.models.Size;
 
 public class PrintDuplicata extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
-
+    private String tableid;
+    private int roomid;
     private String transactionIdInProgress;
 
     private DatabaseHelper mDatabaseHelper;
@@ -345,7 +346,7 @@ public class PrintDuplicata extends AppCompatActivity {
 
 
                             // Query the transaction table to get distinct VAT types
-                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress);
+                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes1(transactionIdInProgress);
                             if (vatCursor != null && vatCursor.moveToFirst()) {
                                 StringBuilder vatTypesBuilder = new StringBuilder();
                                 do {
@@ -437,7 +438,7 @@ public class PrintDuplicata extends AppCompatActivity {
                                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                                     String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
 
-                                    boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate);
+                                    boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate, String.valueOf(roomid),tableid);
 
 
                                     if (updated) {
@@ -605,6 +606,10 @@ public class PrintDuplicata extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recycleview_printer);
 
+        // Initialize SharedPreferences
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
         // Retrieve the extras from the intent
         Intent intent = getIntent();
         if (intent != null) {

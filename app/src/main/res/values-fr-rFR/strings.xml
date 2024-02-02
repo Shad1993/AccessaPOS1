@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AccessaPOS</string>
+    <string name="app_name">IboraPOS</string>
     <string name="Accessa">Accessa</string>
     <string name="heading">Deux fragments dans une activité</string>
     <string name="fragment1_button">Afficher le premier fragment</string>
@@ -491,6 +491,27 @@
     <string name="Roomstable">Rooms and Table</string>
     <string name="ALLRooms">All Rooms</string>
     <string name="status_prompt">Status</string>
+    <string name="ALLTables">All Tables</string>
+    <string name="Splitbill">Split Bill</string>
+    <string name="searchtable">Search Table</string>
+    <string name="hascomment">Comment Required</string>
+    <string name="options">Options</string>
+    <string name="comments">comments</string>
+    <string name="hascomment_text">Comment Required</string>
+    <string name="hascomment_texts">Comment Required</string>
+    <string name="hanocomment">No comment is required</string>
+    <string name="Options">Options</string>
+    <string name="addOptions">Add Options</string>
+    <string name="AllOptions">All Options</string>
+    <string name="nooptionfound">No Option Found.</string>
+    <string name="optionName">Option Name</string>
+    <string name="Options_updated_successfully">Option Updated sucessfully.</string>
+    <string name="failed_to_update_options">Failed to update Options</string>
+    <string name="OPTION_deleted_successfully">Option Deleted Sucessfully.</string>
+    <string name="failed_to_delete_Options">Failed to delete option.</string>
+    <string name="addVariant">Add a Variant</string>
+    <string name="Variants_deleted_successfully">Variants Deleted</string>
+    <string name="failed_to_delete_Variants">Variants Deletion Failed</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

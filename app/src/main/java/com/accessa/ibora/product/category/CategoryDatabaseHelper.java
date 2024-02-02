@@ -1,8 +1,12 @@
 package com.accessa.ibora.product.category;
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.accessa.ibora.Constants;
 
@@ -44,6 +48,7 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         
         db.execSQL(CREATE_TABLE);
+        addDefaultSupplement(db, "Supplement", "1");
     }
 
     @Override
@@ -51,7 +56,17 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
+    private void addDefaultSupplement(SQLiteDatabase db, String paymentMethod, String cashOrId) {
+        ContentValues values = new ContentValues();
+        values.put(CatName, paymentMethod);
+        values.put(Color, "#EBFFD0");
 
+
+        long result = db.insert(TABLE_NAME, null, values);
+        if (result == -1) {
+            Log.e(TAG, "Error inserting default item into the database");
+        }
+    }
     public Cursor getAllCategory() {
         SQLiteDatabase db = this.getReadableDatabase();
          db.execSQL(CREATE_TABLE);

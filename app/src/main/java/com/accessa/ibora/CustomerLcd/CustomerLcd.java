@@ -47,7 +47,8 @@ public class CustomerLcd extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private static IWoyouService woyouService;
     private double totalAmount,TaxtotalAmount;
-    private String transactionIdInProgress;
+    private String transactionIdInProgress,tableid;
+    private int roomid;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private ServiceConnection connService = new ServiceConnection() {
 
@@ -79,7 +80,9 @@ public class CustomerLcd extends AppCompatActivity {
 
 
         mDatabaseHelper = new DatabaseHelper(this); // Initialize DatabaseHelper
-
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
 
     }
     public  void displayOnLCD() {
@@ -90,7 +93,7 @@ public class CustomerLcd extends AppCompatActivity {
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);

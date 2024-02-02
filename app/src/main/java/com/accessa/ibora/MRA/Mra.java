@@ -13,6 +13,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CO
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TAX_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_HT_A;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
@@ -99,7 +100,7 @@ public class Mra extends AppCompatActivity {
     private  ArrayList<SettlementItem> settlementItems = new ArrayList<>();
 
 
-    String selectedBuyerTAN ,SelectedBuyerProfile;
+    String selectedBuyerTAN ,SelectedBuyerProfile,roomid,tableid;
     String selectedBuyerCompanyName ;
     String selectedBuyerType ;
     String selectedBuyerBRN ;
@@ -161,9 +162,10 @@ public class Mra extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
-
+                    System.out.println("roomid: " + roomid);
+                    System.out.println("tableid: " + tableid);
                     // Retrieve the total amount and total tax amount from the transactionheader table
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
                     int currentCounter = 1; // Default value if no data is present in the table
 
                     if (cursor != null && cursor.moveToFirst()) {
@@ -172,26 +174,31 @@ public class Mra extends AppCompatActivity {
                         int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                         int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
                         int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
+                        int transid=cursor.getColumnIndex(TRANSACTION_TICKET_NO);
                         currentCounter = cursor.getInt(columnIndexCounter);
+                        double totaldiscount = mDatabaseHelper.getTotalDiscountSumForInProgressTransaction(roomid,tableid);
 
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                         double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
+                        String transactionid= cursor.getString(transid);
+                        double Totalinvoice= totalAmount + totaldiscount;
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
 
                         // Step 2: Increment the counter value
                         int newCounter = currentCounter + 1;
 
-// Step 3: Update the counter value in the transactionheader table
+                        // Step 3: Update the counter value in the transactionheader table
                         mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
 
 
-// Convert the doubles to formatted strings with 2 decimal places
+                        // Convert the doubles to formatted strings with 2 decimal places
+                        String formattedTotalInvoice = String.format("%.2f", Totalinvoice);
                         String formattedTotalAmount = String.format("%.2f", totalAmount);
                         String formattedTaxtotalAmount = String.format("%.2f", TaxtotalAmount);
                         String formattedTotalHT = String.format("%.2f", TotalHT);
-
+                        transactionIdInProgress=mDatabaseHelper.getInProgressTransactionIdnew(roomid,tableid);
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
                         Log.d("cashier", cashorlevel);
@@ -208,10 +215,12 @@ if(SelectedBuyerProfile==null) {
         jsondetailedtransacs.put("personType", "NVTR");
         jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
         jsondetailedtransacs.put("currency", "MUR");
-        jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
+        jsondetailedtransacs.put("invoiceIdentifier", transactionid);
         jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
         jsondetailedtransacs.put("previousNoteHash", "prevNote");
         jsondetailedtransacs.put("reasonStated", "test");
+    jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
+    jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
         jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
         jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
         jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
@@ -228,10 +237,12 @@ if(SelectedBuyerProfile==null) {
     jsondetailedtransacs.put("personType", selectedBuyerType);
     jsondetailedtransacs.put("invoiceTypeDesc", transactionType);
     jsondetailedtransacs.put("currency", "MUR");
-    jsondetailedtransacs.put("invoiceIdentifier", transactionIdInProgress);
+    jsondetailedtransacs.put("invoiceIdentifier", transactionid);
     jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
     jsondetailedtransacs.put("previousNoteHash", "prevNote");
     jsondetailedtransacs.put("reasonStated", "test");
+    jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
+    jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
     jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
     jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
@@ -402,7 +413,11 @@ if(SelectedBuyerProfile==null) {
                         intent.putExtra("cash_return", cashReturn);
                         intent.putExtra("settlement_items", settlementItems);
                         intent.putExtra("mraQR", result);
+                        intent.putExtra("transactionid", Transaction_Id);
                         intent.putExtra("MRAIRN", irn);
+                        intent.putExtra("roomid", roomid);
+                        intent.putExtra("tableid", tableid);
+                        System.out.println("tr: " + Transaction_Id);
 
                         String MRAMETHOD="Single";
                         insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
@@ -419,6 +434,11 @@ if(SelectedBuyerProfile==null) {
                         intent.putExtra("settlement_items", settlementItems);
                         intent.putExtra("mraQR", result);
                         intent.putExtra("MRAIRN", irn);
+                        intent.putExtra("roomid", roomid);
+                        intent.putExtra("tableid", tableid);
+
+                        System.out.println("tr: " + Transaction_Id);
+
 
                         String MRAMETHOD="Single";
                         insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
@@ -435,7 +455,7 @@ if(SelectedBuyerProfile==null) {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.mra);
+
         mDatabaseHelper = new DatabaseHelper(this);
 
         // Retrieve the passed buyer information from the intent
@@ -453,16 +473,14 @@ if(SelectedBuyerProfile==null) {
              selectedBuyerNIC = intent.getStringExtra("selectedBuyerNIC");
              selectedBuyerAddresse = intent.getStringExtra("selectedBuyerAddresse");
              SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
+            roomid= getIntent().getStringExtra("roomid");
+            tableid  = getIntent().getStringExtra("tableid");
 
 
             // Retrieve other buyer information as needed
         }
 
 
-
-
-        SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
         SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -641,7 +659,7 @@ if(SelectedBuyerProfile==null) {
         List<Transaction> itemList = new ArrayList<>();
 
         // Replace the following with your actual database query logic
-        Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(mDatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
+        Cursor cursor = mDatabaseHelper.getTransactionsByRoomAndTable(mDatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS,roomid,tableid);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {

@@ -67,8 +67,8 @@ public class QRFragment extends Fragment {
 
     private static final String TRANSACTION_ID_KEY = "transaction_id";
 
-    private  String transactionIdInProgress;
-
+    private  String transactionIdInProgress,tableid;
+private int roomid;
 
 
     @Override
@@ -81,7 +81,9 @@ public class QRFragment extends Fragment {
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
-
+        SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
         dbManager = new DBManager(getContext());
@@ -231,7 +233,7 @@ public class QRFragment extends Fragment {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
                     if (cursor != null && cursor.moveToFirst()) {
                         int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
 
@@ -324,7 +326,7 @@ public class QRFragment extends Fragment {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
                     if (cursor != null && cursor.moveToFirst()) {
                         int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
 
@@ -383,7 +385,7 @@ public class QRFragment extends Fragment {
 
             // Show the secondary display
             secondaryDisplay.show();
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);

@@ -1,20 +1,28 @@
 package com.accessa.ibora.sales.ticket;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
+
+import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
+import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_HT_A;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PRICE;
+import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
+import static com.accessa.ibora.product.items.DatabaseHelper.VAT_Type;
 
 import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
-import android.content.pm.ActivityInfo;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -33,10 +41,9 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,7 +53,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -56,28 +62,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.accessa.ibora.Buyer.Buyer;
+import com.accessa.ibora.ItemsReport.DataModel;
+import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
+import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
+import com.accessa.ibora.ItemsReport.SalesReportAdapter;
 import com.accessa.ibora.MRA.MRADBN;
 import com.accessa.ibora.MRA.MRAdaptor;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
-import com.accessa.ibora.QR.QRFragment;
-import com.accessa.ibora.QR.QRGenerator;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.ReportActivity;
-import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
-import com.accessa.ibora.Settings.MRASettings.MRAAdaptor;
 import com.accessa.ibora.Settings.SettingsDashboard;
 
 import com.accessa.ibora.SplashFlashActivity;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.ItemData;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.scanner.InbuiltScannerFragment;
-import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.DecimalFormat;
@@ -90,13 +94,20 @@ import java.util.Locale;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
+
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
+    private List<String> checkedItems;
     private Buyer selectedBuyer;
-    private String cashierId,cashierLevel,shopname;
+    private String cashierId,cashierLevel,shopname, cashiername;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
     private   FrameLayout emptyFrameLayout;
+    private Spinner spinnerReportType;
+    private RecyclerView recyclerViewReports;
+    private RecyclerView secondRecyclerView;
+    private SalesReportAdapter reportAdapter;
+    private PaymentMethodAdapter paymentMethodAdapter;
 
     FloatingActionButton mAddItem;
     private  String ItemId,PosNum;
@@ -108,11 +119,13 @@ private TextView textViewVATs,textViewTotals;
     private SoundPool soundPool;
     private int soundId;
     private IWoyouService woyouService;
+    private static final String TRANSACTION_ID_KEY = "transaction_id";
     private Toolbar toolbar;
     private DBManager dbManager;
-    private String actualdate;
+    private String actualdate,tableid;
+    private int roomid;
     private boolean isBuyerSelected = false;
-    private static final String TRANSACTION_ID_KEY = "transaction_id";
+
      private  List<String> data ;
     private ServiceConnection connService = new ServiceConnection() {
 
@@ -138,6 +151,14 @@ private TextView textViewVATs,textViewTotals;
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
         String deviceType = sharedPreferences.getString("device_type", null);
 
+        // Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
+
+
+        mDatabaseHelper = new DatabaseHelper(getContext());
+    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
 
         if ("sunmiT2".equalsIgnoreCase(deviceType)) {
            // showSecondaryScreen(data);
@@ -173,7 +194,7 @@ private TextView textViewVATs,textViewTotals;
                 startActivity(intent);
             }
             return true;
-        }else if (id == R.id.nav_buyer) {
+        } else if (id == R.id.nav_buyer) {
             if (isBuyerSelected) {
                 // Handle "Remove Buyer" behavior
                 // For example, clear the selection and update the title
@@ -232,31 +253,28 @@ private TextView textViewVATs,textViewTotals;
                                         public void onClick(DialogInterface dialog, int which) {
 
 
-
                                             // Retrieve the TRANSACTION_TICKET_NO where TRANSACTION_STATUS is 'InProgress'
                                             String transactionTicketNo = mDatabaseHelper.getInProgressTransactionTicketNo();
                                             if (selectedPriceLevel.equals("Price Level 1")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
-                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 1");
-                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
-
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo, "Price Level 1");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
 
                                                 refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             } else if (selectedPriceLevel.equals("Price Level 2")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
-                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 2");
-                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo, "Price Level 2");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
                                                 refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             } else if (selectedPriceLevel.equals("Price Level 3")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
-                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo,"Price Level 3");
-                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount();
+                                                mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo, "Price Level 3");
+                                                double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
                                                 refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
                                             }
-
 
 
                                             // Navigate to MainActivity when OK is clicked
@@ -276,70 +294,319 @@ private TextView textViewVATs,textViewTotals;
                 item.setTitle("Remove Buyer"); // Update the menu item's title
             }
             return true;
-        }
-
-        else if
+        } else if
         (id == R.id.nav_logout) {
             MainActivity mainActivity = (MainActivity) requireActivity(); // Get the MainActivity object
             mainActivity.logout(); // Call the logout() function
             // Remove the buyer info from shared preferences
             clearBuyerInfoFromPrefs();
             return true;
-        }else if
+        } else if
         (id == R.id.nav_scan) {
             InbuiltScannerFragment newScannerFragment = new InbuiltScannerFragment();
             replaceFragment(newScannerFragment);
 
             return true;
-        }else if
+        } else if
         (id == R.id.clear_ticket) {
 
-               clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
+            clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
             return true;
-        }else if
-        (id == R.id.open_drawer ) {
-            int level= Integer.parseInt(cashierLevel);
-            if(level == 7){
+        } else if
+        (id == R.id.open_drawer) {
+            int level = Integer.parseInt(cashierLevel);
+            if (level == 7) {
                 try {
                     woyouService.openDrawer(null);
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
-        }else {
+            } else {
                 Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
             }
             return true;
-        }else if
+        } else if
         (id == R.id.Report) {
-            int level= Integer.parseInt(cashierLevel);
-            if(level >= 6){
+            int level = Integer.parseInt(cashierLevel);
+            if (level >= 6) {
                 Context context = getContext(); // Get the Context object
                 Intent intent = new Intent(context, ReportActivity.class);
                 startActivity(intent);
 
-            }else {
+            } else {
                 Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
             }
 
             return true;
-        }else if
-        (id == R.id.SalesReport) {
-            int level= Integer.parseInt(cashierLevel);
-            if(level >= 6){
-                Context context = getContext(); // Get the Context object
-                Intent intent = new Intent(context, SalesReportActivity.class);
-                startActivity(intent);
+        } // In your activity or fragment
+        else if (id == R.id.SalesReport) {
+            int level = Integer.parseInt(cashierLevel);
+            if (level >= 6) {
+                // Create a dialog with a custom layout
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                LayoutInflater inflater = requireActivity().getLayoutInflater();
+                View dialogView = inflater.inflate(R.layout.sales_report_popup, null);
+                builder.setView(dialogView);
 
-            }else {
+                 spinnerReportType = dialogView.findViewById(R.id.spinnerReportType);
+                 recyclerViewReports = dialogView.findViewById(R.id.recyclerViewSalesReport);
+                 secondRecyclerView = dialogView.findViewById(R.id.secondRecyclerView);
+
+                // Initialize the database helper
+                mDatabaseHelper = new DatabaseHelper(requireContext());
+
+                // Populate spinner with report types (daily, weekly, monthly, yearly)
+                ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(requireContext(),
+                        R.array.report_types, android.R.layout.simple_spinner_item);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerReportType.setAdapter(adapter);
+
+                // Set up RecyclerViews and their adapters
+                setUpRecyclerViews(dialogView);
+
+                // Set the spinner's item selected listener
+                spinnerReportType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                        // Fetch data based on the selected report type and update the adapter
+                        String selectedReportType = spinnerReportType.getSelectedItem().toString();
+
+                        // Log the selected report type for debugging
+                        Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType);
+
+                        // Fetch data based on the selected report type
+                        List<DataModel> newDataList = fetchDataBasedOnReportType(selectedReportType);
+                        List<PaymentMethodDataModel> newDataLists = fetchPaymentMethodDataBasedOnReportType(selectedReportType);
+                        // Log the fetched data for debugging
+                        Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
+
+                        // Update the adapter with the new data
+                        reportAdapter.updateData(newDataList);
+                        paymentMethodAdapter.updateData(newDataLists);
+                        // Update total tax and total amount TextViews
+
+                            // Assuming you have a method to fetch total tax and total amount based on report type
+                            double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportType(selectedReportType);
+                            double totalAmount = mDatabaseHelper.getTotalAmountBasedOnReportType(selectedReportType);
+
+                        // Update TextViews
+                        TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
+                        TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
+
+                        // Format totalTax and totalAmount to display only two decimal places
+                        String formattedTotalTax = String.format(Locale.getDefault(), "%.2f", totalTax);
+                        String formattedTotalAmount = String.format(Locale.getDefault(), "%.2f", totalAmount);
+
+                        textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax);
+                        textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount);
+
+
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parentView) {
+                        // Do nothing here
+                    }
+                });
+
+                builder.setTitle("Item Sales Report")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        })
+                        .setNegativeButton("Cancel", null) // Optional: Add a cancel button
+                        .show();
+                //ReportPopupDialog reportPopupDialog = new ReportPopupDialog();
+                //reportPopupDialog.show(getChildFragmentManager(), "ReportPopupDialog");
+            } else {
                 Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
             }
 
             return true;
         }
-        // Handle other menu items as needed
+        else if (id == R.id.SplitBill) {
+            int level = Integer.parseInt(cashierLevel);
+            if (level >= 6) {
+                // Create a dialog with a custom layout
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                LayoutInflater inflater = requireActivity().getLayoutInflater();
+                View dialogView = inflater.inflate(R.layout.splitbill, null);
+                builder.setView(dialogView);
 
-        return super.onOptionsItemSelected(item);
+                // Set up the dialog's UI elements
+                EditText numberOfPeopleEditText = dialogView.findViewById(R.id.editTextNumberOfPeople);
+                TextView resultTextView = dialogView.findViewById(R.id.resultTextView);
+                EditText splitAmountEditText = dialogView.findViewById(R.id.editTextSplitAmount);
+                EditText splitTaxtotalAmount = dialogView.findViewById(R.id.editTextSplitVat);
+                Button splitButton = dialogView.findViewById(R.id.splitButton);
+                // Retrieve roomid and tableid from SharedPreferences
+                SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                int roomid = preferences.getInt("roomnum", 0);
+                String tableid = preferences.getString("table_id", "");
+                String transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid), tableid);
+
+// Retrieve the total amount and total tax amount from the transactionheader table
+                double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+                double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
+
+                splitAmountEditText.setText(String.valueOf(totalAmount));
+                splitTaxtotalAmount.setText(String.valueOf(TaxtotalAmount));
+
+                splitButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        // Format the current date and time as per your requirement
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                        String currentDate = dateFormat.format(new Date());
+                        double totalAmount = Double.parseDouble(splitAmountEditText.getText().toString());
+                        double totalTax = Double.parseDouble(splitTaxtotalAmount.getText().toString());
+                        int numberOfPeople = Integer.parseInt(numberOfPeopleEditText.getText().toString());
+                        double splitAmount = totalAmount / numberOfPeople;
+                        double SpliVat = totalTax / numberOfPeople;
+                        SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        int roomid = preferences.getInt("roomnum", 0);
+                        String tableid = preferences.getString("table_id", "");
+
+                        String transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid), tableid);
+                        StringBuilder resultTextBuilder = new StringBuilder();
+                        mDatabaseHelper.getWritableDatabase().delete(
+                                TRANSACTION_TABLE_NAME,
+                                ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + TRANSACTION_ID + " = ?",
+                                new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
+                        );
+                        for (int i = 0; i < numberOfPeople; i++) {
+
+                            // Insert new records
+                            ContentValues values = new ContentValues();
+                            values.put(ROOM_ID, roomid);
+                            values.put(TABLE_ID, tableid);
+                            values.put(TRANSACTION_ID, transactionIdInProgress);
+                            long uniqueItemId = System.currentTimeMillis();
+                            values.put(ITEM_ID, uniqueItemId);
+                            values.put(TRANSACTION_DATE, currentDate);
+                            values.put(QUANTITY, 1);
+                            values.put(TOTAL_PRICE, splitAmount);
+                            values.put(TRANSACTION_UNIT_PRICE, splitAmount);
+
+                            // Parse VAT and VAT_Type from existing records
+                            Cursor cursor = mDatabaseHelper.getReadableDatabase().rawQuery(
+                                    "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                                            " WHERE " + ROOM_ID + " = ? AND " +
+                                            TABLE_ID + " = ? AND " +
+                                            TRANSACTION_ID + " = ?",
+                                    new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
+                            );
+
+
+                            values.put(VAT, SpliVat); // Replace with default value or retrieve from somewhere else
+                            if(SpliVat>0) {
+                                values.put(VAT_Type, "VAT 0%"); // Replace with default value or retrieve from somewhere else
+                            } else{
+                                values.put(VAT_Type, "VAT 15%");
+                            }
+
+                            values.put(LongDescription, "Menu Repas");
+
+                            mDatabaseHelper.getWritableDatabase().insert(TRANSACTION_TABLE_NAME, null, values);
+
+                            mDatabaseHelper.updateTransactionSplitType(transactionIdInProgress,"Splitted");
+                            // Build result text
+                            resultTextBuilder.append("Menu Repas - Rs ").append(formatDecimal(splitAmount));
+                            if (i < numberOfPeople - 1) {
+                                resultTextBuilder.append("\n");
+                            }
+                        }
+
+                        // Display result text
+                        resultTextView.setText(resultTextBuilder.toString());
+                        refreshData(totalAmount,TaxtotalAmount);
+                    }
+                });
+                builder.setTitle("Split Bill")
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            // Get the number of people from the EditText
+                            int numberOfPeople = Integer.parseInt(numberOfPeopleEditText.getText().toString());
+
+
+
+                            // Format the current date and time as per your requirement
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                            String currentDate = dateFormat.format(new Date());
+
+                            // Clear existing in-progress transaction
+                            mDatabaseHelper.getWritableDatabase().delete(
+                                    TRANSACTION_TABLE_NAME,
+                                    ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + TRANSACTION_ID + " = ?",
+                                    new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
+                            );
+
+                            // Split the bill and insert new records
+                            double splitAmount = totalAmount / numberOfPeople;
+                            double splitVat = TaxtotalAmount / numberOfPeople;
+
+                            StringBuilder resultTextBuilder = new StringBuilder();
+                            for (int i = 0; i < numberOfPeople; i++) {
+                                ContentValues values = new ContentValues();
+                                values.put(ROOM_ID, roomid);
+                                values.put(TABLE_ID, tableid);
+                                values.put(TRANSACTION_ID, transactionIdInProgress);
+                                long uniqueItemId = System.currentTimeMillis();
+                                values.put(ITEM_ID, uniqueItemId);
+                                values.put(TRANSACTION_DATE, currentDate);
+                                values.put(QUANTITY, 1);
+                                values.put(TOTAL_PRICE, splitAmount);
+                                values.put(TRANSACTION_UNIT_PRICE, splitAmount);
+
+                                // Parse VAT and VAT_Type from existing records
+                                Cursor cursor = mDatabaseHelper.getReadableDatabase().rawQuery(
+                                        "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                                                " WHERE " + ROOM_ID + " = ? AND " +
+                                                TABLE_ID + " = ? AND " +
+                                                TRANSACTION_ID + " = ?",
+                                        new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
+                                );
+
+                                values.put(VAT, splitVat); // Replace with default value or retrieve from somewhere else
+                                if (splitVat > 0) {
+                                    values.put(VAT_Type, "VAT 0%"); // Replace with default value or retrieve from somewhere else
+                                } else {
+                                    values.put(VAT_Type, "VAT 15%");
+                                }
+
+                                values.put(LongDescription, "Menu Repas");
+
+                                mDatabaseHelper.getWritableDatabase().insert(TRANSACTION_TABLE_NAME, null, values);
+
+                                mDatabaseHelper.updateTransactionSplitType(transactionIdInProgress, "Splitted");
+
+                                // Build result text
+                                resultTextBuilder.append("Menu Repas - Rs ").append(formatDecimal(splitAmount));
+                                if (i < numberOfPeople - 1) {
+                                    resultTextBuilder.append("\n");
+                                }
+                            }
+
+                            // Display result text
+                            resultTextView.setText(resultTextBuilder.toString());
+                            refreshData(totalAmount,TaxtotalAmount);
+                        })
+                        .setNegativeButton("Cancel", null) // Optional: Add a cancel button
+                        .show();
+            } else {
+                Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+            }
+
+
+    } else {
+            // Handle other menu item clicks
+            return super.onOptionsItemSelected(item);
+        }
+
+        return true;
+
     }
+
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         return onOptionsItemSelected(item);
@@ -348,6 +615,8 @@ private TextView textViewVATs,textViewTotals;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ticket_fragment, container, false);
+
+
 
         // Find the toolbar view
         toolbar = view.findViewById(R.id.topAppBar);
@@ -366,6 +635,8 @@ private TextView textViewVATs,textViewTotals;
             toolbar.setNavigationIcon(R.drawable.people);
 
         }
+
+
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -387,8 +658,8 @@ private TextView textViewVATs,textViewTotals;
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
-        mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
+
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         actualdate = mDatabaseHelper.getCurrentDate();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
@@ -403,14 +674,13 @@ private TextView textViewVATs,textViewTotals;
         textViewTotals.setText(getString(R.string.Total) + " : Rs 0.00");
 
         mAddItem = view.findViewById(R.id.fab);
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
 
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
         cashierLevel = sharedPreference.getString("cashorlevel", null);
         shopname = sharedPreference.getString("ShopName", null);
+        cashiername = sharedPreference.getString("cashorName", null);
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
@@ -423,7 +693,7 @@ private TextView textViewVATs,textViewTotals;
 
 
         // Retrieve the total amount and total tax amount from the transactionheader table
-        Cursor cursor = mDatabaseHelper.getTransactionHeader();
+        Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
         if (cursor != null && cursor.moveToFirst()) {
             int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
             int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -446,11 +716,7 @@ private TextView textViewVATs,textViewTotals;
             mAdapter.swapCursor(cursor2);
         }
 
-        AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
-        Glide.with(getContext())
-                .asGif()
-                .load(R.drawable.transact)
-                .into(imageView);
+
 
          emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         if (mAdapter.getItemCount() <= 0) {
@@ -614,7 +880,7 @@ private TextView textViewVATs,textViewTotals;
 
                         SendToHeader(enteredAmount,0.00);
                         // Perform your desired action with the data (e.g., save it)
-                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid), transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00);
+                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid), transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00, String.valueOf(roomid),tableid,0);
 
 
                         // Dismiss the dialog
@@ -635,7 +901,7 @@ private TextView textViewVATs,textViewTotals;
             public void onClick(View v) {
                 if (selectedBuyer != null) {
                     // Retrieve the total amount and total tax amount from the transactionheader table
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
                     int currentCounter = 1; // Default value if no data is present in the table
 
                     if (cursor != null && cursor.moveToFirst()) {
@@ -647,6 +913,11 @@ private TextView textViewVATs,textViewTotals;
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                         // Access selectedBuyer properties here
                         Intent intent = new Intent(getActivity(), Mra.class);
+
+                        intent.putExtra("roomid", roomid);
+                        intent.putExtra("tableid", tableid);
+                        intent.putExtra("transactionIdInProgress", transactionIdInProgress);
+                        System.out.println("tr1: " + transactionIdInProgress);
                         SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                         transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
 
@@ -680,8 +951,10 @@ private TextView textViewVATs,textViewTotals;
                                 selectedBuyer.getNic(),
                                 selectedBuyer.getProfile()
                         );
+                        System.out.println("tr2: " + transactionIdInProgress);
 
-// Use getChildFragmentManager() to show the dialog within the fragment.
+
+                        // Use getChildFragmentManager() to show the dialog within the fragment.
                         dialogFragment.show(getChildFragmentManager(), "validate_transaction_dialog");
 
                     }
@@ -703,6 +976,8 @@ private TextView textViewVATs,textViewTotals;
                             null,
                             null
                     );
+
+
                     dialogFragment.show(getChildFragmentManager(), "validate_transaction_dialog");
 
 
@@ -737,22 +1012,57 @@ private TextView textViewVATs,textViewTotals;
                         TextView itemIdEditText = view.findViewById(R.id.id_text_view);
 
                         String LongDesc = LongDescTextView.getText().toString();
-                        String Quatity = QuantityEditText.getText().toString();
+                        String Quantity = QuantityEditText.getText().toString();
                         String Price = PriceEditText.getText().toString();
-                         ItemId = itemIdEditText.getText().toString();
+                        ItemId = itemIdEditText.getText().toString();
+
+                        // Update CheckBox visibility on item click
+                        CheckBox checkBox = view.findViewById(R.id.checkbox);
+                        boolean isCheckBoxVisible = checkBox.getVisibility() == View.VISIBLE;
+
+                        // Create and show the dialog fragment with the data only if the CheckBox is not visible
+                        if (!isCheckBoxVisible) {
+                            ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quantity, Price, LongDesc, ItemId);
+                            dialogFragment.setTargetFragment(TicketFragment.this, 0);
+                            dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
+                        } else {
+                            // CheckBox is visible, toggle the checked state
+                            checkBox.setChecked(!checkBox.isChecked());
+                            checkedItems = mAdapter.checkedItems;
+                            // Update the list of checked items
+                            if (checkBox.isChecked()) {
+                                checkedItems.add(ItemId);
+                                // Update the isSelected field in the database
+                                mDatabaseHelper.updateItemSelected(Long.parseLong(ItemId), checkBox.isChecked());
+                                double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
+                                double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
+                                refreshData(totalAmount, totalTax);
+
+                            } else {
+                                checkedItems.remove(ItemId);
+                                // Update the isSelected field in the database
+                                mDatabaseHelper.updateItemSelected(Long.parseLong(ItemId), checkBox.isChecked());
+                                double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
+                                double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
+                                refreshData(totalAmount, totalTax);
+                            }
+
+// Calculate the total amount
+                            double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
+                            double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
+                            refreshData(totalAmount, totalTax);
 
 
-                        // Create and show the dialog fragment with the data
-                        ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quatity, Price, LongDesc,ItemId);
-                        dialogFragment.setTargetFragment(TicketFragment.this, 0);
-                        dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
 
+                        }
                     }
+
 
 
                     @Override
                     public void onLongItemClick(View view, int position) {
-                        // Do whatever you want on long item click
+                        TicketAdapter adapter = (TicketAdapter) mRecyclerView.getAdapter();
+                        adapter.setCheckBoxVisibility(true);
                     }
                 })
         );
@@ -760,7 +1070,24 @@ private TextView textViewVATs,textViewTotals;
         return view;
     }
 
+    private double calculateTotalAmounts() {
+        double totalAmount = 0.0;
 
+        for (String itemId : checkedItems) {
+            // Get the total price for the checked item and add it to the total amount
+            // You need to implement a method to get the total price based on the itemId
+            double itemTotalPrice = getTotalPriceForItemId(itemId);
+            totalAmount += itemTotalPrice;
+        }
+
+        return totalAmount;
+    }
+
+    private double getTotalPriceForItemId(String itemId) {
+        // Implement this method to get the total price for the specified itemId from your data
+        // Return 0.0 or handle the case when the item is not found
+        return 0.0;
+    }
     private void SendToHeader(double totalAmount, double taxtotalAmount) {
 
 
@@ -805,7 +1132,9 @@ private TextView textViewVATs,textViewTotals;
                         cashierId,
                         transactionStatus,
                         PosNum,
-                        MRAMETHOD
+                        MRAMETHOD,
+                        String.valueOf(roomid),
+                        tableid
 
                 );
 
@@ -815,7 +1144,7 @@ private TextView textViewVATs,textViewTotals;
     private void showSaveOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Save Transaction as");
-        String[] options = {"Proforma", "Debit Note", "Credit Note"};
+        String[] options = {"Addition", "Debit Note", "Credit Note"};
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -852,7 +1181,7 @@ private TextView textViewVATs,textViewTotals;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());
     }
-    private void startNewActivity(String type, String newTransactionId,String invoiceRefIdentifier) {
+    private void startNewActivity(String type, String newTransactionId,String invoiceRefIdentifier,String roomid, String tableid) {
         // Create an Intent to start the desired activity based on the selected type
         Intent intent = new Intent(getContext(), MRADBN.class);
 
@@ -860,6 +1189,8 @@ private TextView textViewVATs,textViewTotals;
         intent.putExtra("TransactionType", type);
         intent.putExtra("newtransactionid", newTransactionId);
         intent.putExtra("invoiceRefIdentifier", invoiceRefIdentifier);
+        intent.putExtra("roomid", roomid);
+        intent.putExtra("tableid", tableid);
         if (selectedBuyer != null) {
             // Access selectedBuyer properties here
 
@@ -955,8 +1286,12 @@ if(Type.equals("DRN")) {
                     SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
                     int latestTransactionDBNCounter = sharedPreferences.getInt("transaction_counter_DBN", 0);
                     SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
-
+                    // Initialize SharedPreferences
+                    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                    roomid = preferences.getInt("roomnum", 0);
+                    tableid = preferences.getString("table_id", "");
+                    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
+                    System.out.println("transactionIdInProgress: " + transactionIdInProgress);
                     // Increment the transaction counter
                     latestTransactionDBNCounter++;
                     SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
@@ -964,9 +1299,9 @@ if(Type.equals("DRN")) {
                     // Generate the transaction ID with the format "MEMO-integer"
                     String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
                     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-                    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+                    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
                     // Update the transaction ID in the header table for transactions with status "InProgress"
-                    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+                    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
                     // Update the transaction counter in SharedPreferences
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -980,7 +1315,7 @@ if(Type.equals("DRN")) {
 
 
                     // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, name);
+                    startNewActivity(Type, newTransactionId, name, String.valueOf(roomid),tableid);
                     getActivity().finish();
 
 
@@ -1004,8 +1339,15 @@ if(Type.equals("DRN")) {
     SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
     int latestTransactionProformaCounter = sharedPreferences.getInt("transaction_counter_Proforma", 0);
 
-    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+
+    // Initialize SharedPreferences
+    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+    roomid = preferences.getInt("roomnum", 0);
+    tableid = preferences.getString("table_id", "");
+    System.out.println("roomid: " + roomid);
+    System.out.println("tableid: " + tableid);
+    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
+    System.out.println("transactionIdInProgressprf: " + transactionIdInProgress);
 
     SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
     PosNum = shardPreference.getString(POSNumber, null);
@@ -1016,9 +1358,9 @@ if(Type.equals("DRN")) {
     // Generate the transaction ID with the format "MEMO-integer"
     String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionProformaCounter;
     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
     // Update the transaction ID in the header table for transactions with status "InProgress"
-    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
     // Update the transaction counter in SharedPreferences
     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1027,10 +1369,11 @@ if(Type.equals("DRN")) {
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
     mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
-    updateTransactionStatus();
+  //  updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, null);
+
+    startNewActivity(Type, newTransactionId, null, String.valueOf(roomid),tableid);
                     getActivity().finish();
 
 
@@ -1057,9 +1400,12 @@ if(Type.equals("DRN")) {
             // Get the latest transaction counter value from SharedPreferences
             SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
             int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
+            // Initialize SharedPreferences
+            SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+            roomid = preferences.getInt("roomnum", 0);
+            tableid = preferences.getString("table_id", "");
+            transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
 
-            SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-            transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
 
             SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
             PosNum = shardPreference.getString(POSNumber, null);
@@ -1071,9 +1417,9 @@ if(Type.equals("DRN")) {
             // Generate the transaction ID with the format "MEMO-integer"
             String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
             // Update the transaction ID in the transaction table for transactions with status "InProgress"
-            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
             // Update the transaction ID in the header table for transactions with status "InProgress"
-            mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+            mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
             // Update the transaction counter in SharedPreferences
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1085,7 +1431,9 @@ if(Type.equals("DRN")) {
             updateTransactionStatus();
 
             // Start the activity with the selected receipt data
-            startNewActivity(Type, newTransactionId, "null");
+
+            startNewActivity(Type, newTransactionId, "null", String.valueOf(roomid),tableid);
+
             getActivity().finish();
 
 
@@ -1132,9 +1480,9 @@ if(Type.equals("DRN")) {
     // Generate the transaction ID with the format "MEMO-integer"
     String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId);
+    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
     // Update the transaction ID in the header table for transactions with status "InProgress"
-    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId);
+    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
     // Update the transaction counter in SharedPreferences
     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1146,7 +1494,8 @@ if(Type.equals("DRN")) {
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, name);
+                    startNewActivity(Type, newTransactionId, name, String.valueOf(roomid),tableid);
+
                     getActivity().finish();
 
 
@@ -1168,6 +1517,7 @@ if(Type.equals("DRN")) {
 }
 
     }
+    // Function to update total tax and total amount TextViews
 
     public void updateTransactionStatus() {
 
@@ -1188,8 +1538,12 @@ if(Type.equals("DRN")) {
 
     public void clearTransact(){
         // Create an instance of the DatabaseHelper class
+// Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
+        mDatabaseHelper.deleteDataByInProgressStatus(String.valueOf(roomid),tableid);
 
-        mDatabaseHelper.deleteDataByInProgressStatus();
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
 // Notify the listener that an item is added
@@ -1207,7 +1561,7 @@ if(Type.equals("DRN")) {
             Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
         }
      //   recreate(getActivity());
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
@@ -1251,10 +1605,10 @@ if(Type.equals("DRN")) {
     }
 
     public  double calculateTotalAmount1() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         double totalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            int totalPriceColumnIndex = cursor.getColumnIndex(TOTAL_PRICE);
             do {
                 double totalPrice = cursor.getDouble(totalPriceColumnIndex);
                 totalAmount += totalPrice;
@@ -1266,11 +1620,11 @@ if(Type.equals("DRN")) {
         return totalAmount;
     }
     public  double calculateTotalTax1() {
-        Cursor cursor = mDatabaseHelper.getTransactionHeader();
+        Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
 
         double TaxtotalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
-            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            int totalTaxColumnIndex = cursor.getColumnIndex(VAT);
             do {
                 double totalPrice = cursor.getDouble(totalTaxColumnIndex);
                 TaxtotalAmount += totalPrice;
@@ -1289,7 +1643,7 @@ if(Type.equals("DRN")) {
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -1322,7 +1676,7 @@ if(Type.equals("DRN")) {
 
         return TaxtotalAmount;
     }
-public void updateheader(double totalAmount, double TaxtotalAmount) {
+    public void updateheadertable(double totalAmount, double TaxtotalAmount, String roomid, String tableid) {
 
         // Get the current date and time
         String currentDate = mDatabaseHelper.getCurrentDate();
@@ -1333,14 +1687,9 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         double totalTTC = totalAmount;
         double totaltax = TaxtotalAmount;
         double totalHT_A = totalTTC - totaltax;
+        Toast.makeText(getContext(), "Room:" + roomid + " - Table" + tableid, Toast.LENGTH_SHORT).show();
 
-    String amount = String.valueOf(totalAmount);
-    String billNumber = transactionIdInProgress;
-    String loyaltyNumber = "987654321";
-    String qrString = QRGenerator.generateQRString(amount, billNumber, loyaltyNumber);
-    // Update the QR code in the PAYMENTBYQY table
-    boolean qrCodeUpdateSuccess = mDatabaseHelper.updateQRCodeNum(TABLE_NAME_PAYMENTBYQY, "1", "POP", qrString);
-    System.out.println(qrString);
+
         // Get the total quantity of items in the transaction
         int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
 
@@ -1354,10 +1703,66 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
                 totalTTC,
                 quantityItem,
                 totaltax,
-                cashierId
+                cashierId,
+                String.valueOf(roomid),
+                tableid
         );
 
-        if (success && qrCodeUpdateSuccess) {
+        if (success) {
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+            String deviceType = sharedPreferences.getString("device_type", null);
+
+
+            if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+                showSecondaryScreen(data);
+            } else {
+                Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+            }
+
+        } else {
+
+            Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
+            startActivity(intent);
+            getActivity().finish();
+
+
+        }
+
+    }
+
+        public void updateheader(double totalAmount, double TaxtotalAmount) {
+
+        // Get the current date and time
+        String currentDate = mDatabaseHelper.getCurrentDate();
+        String currentTime = mDatabaseHelper.getCurrentTime();
+
+        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+
+        double totalTTC = totalAmount;
+        double totaltax = TaxtotalAmount;
+        double totalHT_A = totalTTC - totaltax;
+
+
+        // Get the total quantity of items in the transaction
+        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
+
+        // Save the transaction details in the TRANSACTION_HEADER table
+        boolean success = mDatabaseHelper.updateTransactionHeader(
+
+                totalAmount,
+                currentDate,
+                currentTime,
+                totalHT_A,
+                totalTTC,
+                quantityItem,
+                totaltax,
+                cashierId,
+                String.valueOf(roomid),
+                tableid
+        );
+
+        if (success) {
             SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
             String deviceType = sharedPreferences.getString("device_type", null);
 
@@ -1379,13 +1784,20 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         }
 
 
-}
+    }
+
+
+
+
 
 
     public  void refreshData(double totalAmount, double TaxtotalAmount) {
 
-
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
+Log.d("room and table", roomid+ " " +tableid);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 
@@ -1418,7 +1830,91 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         // Play the sound effect
         playSoundEffect();
     }
+    public  void refreshDatatable(double totalAmount, double TaxtotalAmount,String roonum,String tableid) {
+        TicketAdapter adapter = (TicketAdapter) mRecyclerView.getAdapter();
 
+        adapter.setCheckBoxVisibility(false);
+        // Set the data to the fragment views
+        TextView roomTextView = getView().findViewById(R.id.textViewRoom);
+        roomTextView.setText("Room: " + roonum);
+
+        TextView tableTextView = getView().findViewById(R.id.textViewTable);
+        tableTextView.setText(" - Table: " + tableid);
+
+        TextView cashierTextView = getView().findViewById(R.id.textViewCashier);
+        cashierTextView.setText(" - Cashier: " + cashierId);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(roonum,tableid);
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged();
+
+        // Scroll to the last item in the RecyclerView
+        int itemCount = mAdapter.getItemCount();
+        if (itemCount > 0) {
+            mRecyclerView.smoothScrollToPosition(itemCount - 1);
+        }
+
+        // Show or hide the RecyclerView and empty view based on the cursor count
+        if (cursor != null && cursor.getCount() > 0) {
+            mRecyclerView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+        } else {
+            mRecyclerView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+        }
+
+        // Update the tax and total amount TextViews
+        TextView taxTextView = getView().findViewById(R.id.textViewVAT);
+        String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
+        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+        TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
+        String formattedTotalAmount = String.format("%.2f", totalAmount);
+        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+
+
+
+        // Play the sound effect
+        playSoundEffect();
+    }
+    private void setUpRecyclerViews(View view) {
+        // Set up RecyclerView and its adapter for Transaction Details
+        List<DataModel> transactionDataList = fetchDataBasedOnReportType("Daily");
+        reportAdapter = new SalesReportAdapter(transactionDataList);
+        recyclerViewReports.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerViewReports.setAdapter(reportAdapter);
+
+        // Set up RecyclerView and its adapter for Payment Method Details
+        List<PaymentMethodDataModel> paymentMethodDataList = fetchPaymentMethodDataBasedOnReportType("Daily");
+        paymentMethodAdapter = new PaymentMethodAdapter(paymentMethodDataList);
+        secondRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        secondRecyclerView.setAdapter(paymentMethodAdapter);
+    }
+
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportType(String reportType) {
+        // Implement logic to fetch data based on the selected report type for payment method
+        // Replace it with your actual logic
+        List<PaymentMethodDataModel> paymentMethodDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
+        // Replace the method and parameters with your actual database queries
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataBasedOnReportType(reportType);
+        Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
+
+        return paymentMethodDataList;
+    }
+
+
+    private List<DataModel> fetchDataBasedOnReportType(String reportType) {
+        // Implement your logic to fetch data based on the selected report type
+        // For now, return a dummy list
+        List<DataModel> dummyDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
+        // Replace the method and parameters with your actual database queries
+        dummyDataList = mDatabaseHelper.getDataBasedOnReportType(reportType);
+
+        return dummyDataList;
+    }
     // Helper method to save buyer info to shared preferences
     private void saveBuyerInfoToPrefs(String buyerName, String priceLevel) {
         SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
@@ -1427,7 +1923,10 @@ public void updateheader(double totalAmount, double TaxtotalAmount) {
         editor.putString("PriceLevel", priceLevel);
         editor.apply();
     }
-
+    private String formatDecimal(double value) {
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+        return decimalFormat.format(value);
+    }
     // Helper method to clear buyer info from shared preferences
     private void clearBuyerInfoFromPrefs() {
         SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);

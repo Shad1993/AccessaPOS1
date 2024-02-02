@@ -28,6 +28,7 @@ import com.accessa.ibora.MainActivityMobile;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.salestype;
 import com.bumptech.glide.Glide;
 
 public class login extends AppCompatActivity {
@@ -35,7 +36,8 @@ public class login extends AppCompatActivity {
     private static final String TABLE_NAME_Users = "Users";
 
     // Column names
-
+    private static final String PREFS_NAME = "PaymentPrefs";
+    private static final String PAYMENT_TYPE_KEY = "PaymentType";
     static final String COLUMN_CASHOR_id = "cashorid";
     private static final String COLUMN_PIN = "pin";
     private static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
@@ -62,9 +64,30 @@ public class login extends AppCompatActivity {
         // remove onscreen Keyboard
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.login);
+
+
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        // Create or open the SharedPreferences file
+        SharedPreferences sharedPreferences = getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
 
+        // Check if the key is already present
+        if (!sharedPreferences.contains("selectedPriceLevel")) {
+            // If not present, set the default value
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("selectedPriceLevel", "Price Level 1");
+            editor.apply();
+        }
 
+        // Initialize SharedPreferences
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        // Set "roomnum" to 1
+        editor.putInt("roomnum", 1);
+        editor.putInt("table_id", 1);
+
+        // Commit the changes
+        editor.apply();
         // Initialize views
         editTextPIN = findViewById(R.id.editTextPIN);
 
@@ -108,10 +131,7 @@ public class login extends AppCompatActivity {
             String cashorlevel = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
             String ShopName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_Shop));
 
-            // Create and show the AlertDialog with the welcome message and cashor's name
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.welcome);
-            builder.setMessage(getString(R.string.welcomes) + " " + cashorName + "!");
+
 
             // Remove the buyer info from shared preferences
             clearBuyerInfoFromPrefs();
@@ -121,49 +141,17 @@ public class login extends AppCompatActivity {
             editor.putString("cashorlevel", cashorlevel); // Store cashor's level
             editor.putString("ShopName", ShopName); // Store company name
             editor.apply();
-
-            // Inflate the custom view for the AlertDialog
-            View view = LayoutInflater.from(this).inflate(R.layout.custom_dialog_layout, null);
-
-            // Get a reference to the AppCompatImageView
-            AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
-
-            // Load the GIF using Glide
-            Glide.with(this)
-                    .asGif()
-                    .load(R.drawable.hello)
-                    .into(gifImageView);
-                  // Find the "Retry" button
-                Button retryButton = view.findViewById(R.id.button_retry);
-
-                // Set the visibility of the "Retry" button to GONE
-                retryButton.setVisibility(View.GONE);
-
-                 // Remove the click listener for the "Retry" button
-                retryButton.setOnClickListener(null);
-
-            // Set the custom view to the AlertDialog
-            builder.setView(view);
-            builder.setCancelable(false);
-            alertDialog = builder.create();
-            alertDialog.show();
+            getSelectedPaymentType();
 
 
-                final Intent intent = new Intent(this, MainActivity.class);
-                intent.putExtra("cashorName", cashorName); // Pass cashorName to MainActivity
-                intent.putExtra("cashorId", cashorId); // Pass cashorId to MainActivity
-                intent.putExtra("ShopName", ShopName); // Pass cashorId to MainActivity
+
+            Intent intent = new Intent(this, salestype.class);
+            intent.putExtra("cashorName", cashorName);
+            intent.putExtra("cashorId", cashorId);
+            intent.putExtra("ShopName", ShopName);
+            startActivity(intent);
                 // Use a Handler to delay the redirection
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!isFinishing()) { // Check if the activity is still running
-                            startActivity(intent);
-                            finish(); // Optional: Finish the current activity if needed
-                        }
-                    }
-                }, 1000);  // Delay in milliseconds (1 second
-                builder.setCancelable(false);
+
 
 
 
@@ -244,6 +232,17 @@ public class login extends AppCompatActivity {
 
         // Update the PIN EditText with the entered numbers
         editTextPIN.setText(enteredPIN.toString());
+    }
+    private String getSelectedPaymentType() {
+        SharedPreferences prefs = this.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(PAYMENT_TYPE_KEY, "full"); // Default to "full" if not found
+    }
+
+    private void saveSelectedPaymentType(String paymentType) {
+        SharedPreferences prefs = this.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(PAYMENT_TYPE_KEY, paymentType);
+        editor.apply();
     }
 
     public void onClearButtonClick(View view) {

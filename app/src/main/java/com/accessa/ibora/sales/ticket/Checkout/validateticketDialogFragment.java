@@ -44,11 +44,13 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +60,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.Functions.FunctionFragment;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.POP.PopMobileAmountDialogFragment;
@@ -66,10 +69,13 @@ import com.accessa.ibora.POP.PopQRDialogFragment;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.Settings.Rooms.Rooms;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -94,6 +100,8 @@ public class validateticketDialogFragment extends DialogFragment  {
         void onDataPass(String name, String id, String QR);
     }
     private QRFragment.DataPassListener dataPassListener;
+    private String tableid;
+    private String roomid;
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
 
@@ -108,7 +116,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn,Buyname,BuyBRN,BuyTAN,BuyAdd,BuyComp,BuyNIC,BuyProfile,BuyType;
     private String cashierId,cashierName,cashorlevel,CompanyName,posNum;
 
-
+    TextView totalAmountTextView;
     private double cashReturn;
     private Set<String> selectedItems; // Store selected items
     private TextView IDselectedQRTextView;
@@ -133,7 +141,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
     private String receivedQRCode; // Declare a member variable
 
-
+    private static final String PREFS_NAME = "PaymentPrefs";
+    private static final String PAYMENT_TYPE_KEY = "PaymentType";
 
     // You can create a public method to get the stored QR code string
 
@@ -170,7 +179,9 @@ public class validateticketDialogFragment extends DialogFragment  {
 
         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         PosNum = shardPreference.getString(POSNumber, null);
-
+        SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = String.valueOf(preferences.getInt("roomnum", 0));
+        tableid = preferences.getString("table_id", "");
 
         SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -179,6 +190,9 @@ public class validateticketDialogFragment extends DialogFragment  {
         CompanyName=sharedPreference.getString("CompanyName",null);
         SharedPreferences sharedPreferencepos = requireContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         posNum = sharedPreferencepos.getString("posNumber", null);
+
+
+
         // Check if intent has data
         Intent intent = getActivity().getIntent();
         if (intent != null) {
@@ -197,13 +211,21 @@ public class validateticketDialogFragment extends DialogFragment  {
         }
     }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.dialog_validate_transaction, container, false);
+
+
+
+        return view;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-         view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_validate_transaction, null);
+        view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_validate_transaction, null);
 
         containerLayout = view.findViewById(R.id.container_layout); // Initialize the container layout
-
         int numberOfColumns = 2;
         mRecyclerView = view.findViewById(R.id.recycler_view1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
@@ -213,6 +235,12 @@ public class validateticketDialogFragment extends DialogFragment  {
 
         mAdapter = new CheckoutGridAdapter(getContext(), cursor3);
         mRecyclerView.setAdapter(mAdapter);
+
+
+
+
+
+
 
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
             @Override
@@ -224,7 +252,12 @@ public class validateticketDialogFragment extends DialogFragment  {
                 String id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
                 String name = nameTextView.getText().toString();
-                if(id !=null && (id.equals("1") && name.equals("POP")))
+
+                if (!isPaymentSplitted()) {
+                    // Full payment: Take the total amount as the value
+                    handleFullPayment(id);
+                }
+                else if (id !=null && (id.equals("1") && name.equals("POP")))
                 {
                     showPopAmountOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
@@ -375,17 +408,95 @@ public class validateticketDialogFragment extends DialogFragment  {
             mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
 
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeaderTotal(roomid,tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+                int columnIndexSplitType = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
-                totalAmount = cursor.getDouble(columnIndexTotalAmount);
-                TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                boolean allItemsSelected =  mDatabaseHelper.areAllItemsSelected(roomid,tableid);
 
-                TextView totalAmountTextView = view.findViewById(R.id.textViewAmount);
-                String formattedTotalAmount = String.format("%.2f", totalAmount);
-                totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
+                Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid,String.valueOf(roomid),tableid);
+                Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
+
+                boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
+                boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionid);
+                boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(transactionid);
+                Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
+                Log.e("areAllItemsNotSelectedNotPaid" , String.valueOf(areAllItemsNotSelectedNotPaid));
+                Log.e("areNoItemsSelectedNorPaid" , String.valueOf(areNoItemsSelectedNorPaid));
+                if(areAllItemsNotSelectedNotPaid) {
+                    if (cursor1 != null && cursor1.moveToFirst()) {
+
+                        totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                        TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                        totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                        String formattedTotalAmount = String.format("%.2f", totalAmount);
+                        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                    }
+
+                } else if (areNoItemsSelectedNorPaid) {
+                    totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                    TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                    totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                    String formattedTotalAmount = String.format("%.2f", totalAmount);
+                    totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+
+                } else if
+                (areNOItemsSelected) {
+                    if (cursor1 != null && cursor1.moveToFirst()) {
+
+                        totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                        TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                        totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                        String formattedTotalAmount = String.format("%.2f", totalAmount);
+                        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                    }
+
+
+                }else {
+
+
+                        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        roomid = String.valueOf(preferences.getInt("roomnum", 0));
+                        tableid = preferences.getString("table_id", "");
+                        Log.e("rooms table" , roomid + " " +tableid);
+                        double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
+                        totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                        String formattedTotalAmount = String.format("%.2f", totalsplit);
+                        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+
+
+                }
+
+            /*    if (allItemsSelected) {
+
+                    totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                    TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                    totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                    String formattedTotalAmount = String.format("%.2f", totalAmount);
+                    totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                } else if (areNOItemsSelected) {
+                    totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                    TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+
+                    totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                    String formattedTotalAmount = String.format("%.2f", totalAmount);
+                    totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                } else {
+                    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                    roomid = String.valueOf(preferences.getInt("roomnum", 0));
+                    tableid = preferences.getString("table_id", "");
+                    Log.e("rooms table" , roomid + " " +tableid);
+                    double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
+                    totalAmountTextView = view.findViewById(R.id.textViewAmount);
+                    String formattedTotalAmount = String.format("%.2f", totalsplit);
+                    totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+                }
+*/
             }
         }
 
@@ -449,14 +560,15 @@ public class validateticketDialogFragment extends DialogFragment  {
                     textViewCashReturn.setVisibility(View.GONE);
                 }
 
+
+
                 remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
 
                 TextView textViewCashReturnAmount = view.findViewById(R.id.textViewCashReturnAmount);
                 TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
-                if (totalAmountEntered >= totalAmount) {
+                if (totalAmountEntered >= totalAmount || isPaymentSplitted()) {
                     double cashReturn = totalAmountEntered - totalAmount;
                     cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
-
 
                     textViewCashReturnAmount.setVisibility(View.VISIBLE);
                     cashReturnTextView.setVisibility(View.VISIBLE);
@@ -466,6 +578,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     cashReturnTextView.setVisibility(View.GONE);
                     validateButton.setVisibility(View.GONE);
                 }
+
             }
         });
 
@@ -515,7 +628,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                     String currentDate = dateFormat.format(new Date());
 
-                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate);
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate, String.valueOf(roomid),tableid);
 
                     SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
                     ContentValues values = new ContentValues();
@@ -603,6 +716,8 @@ public class validateticketDialogFragment extends DialogFragment  {
                 intent.putExtra("selectedBuyerNIC", BuyNIC);
                 intent.putExtra("selectedBuyerAddresse", BuyAdd);
                 intent.putExtra("selectedBuyerprofile", BuyProfile);
+                intent.putExtra("roomid", roomid);
+                intent.putExtra("tableid", tableid);
 
 
                 if (cashReturn != 0.0) {
@@ -667,17 +782,230 @@ public class validateticketDialogFragment extends DialogFragment  {
 
         });
 
+
+        Button splitPaymentButton = view.findViewById(R.id.Splitpayment);
+        Button fullPaymentButton = view.findViewById(R.id.full_payment);
+
+        // Retrieve the selected payment type from SharedPreferences
+        String selectedPaymentType = getSelectedPaymentType();
+
+        // Set button colors based on the selected payment type
+        updateButtonColors(selectedPaymentType, splitPaymentButton, fullPaymentButton);
+
+        splitPaymentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Save the selected payment type to SharedPreferences
+                saveSelectedPaymentType("splitted");
+
+                // Update button colors
+                updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
+            }
+        });
+
+        fullPaymentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Save the selected payment type to SharedPreferences
+                saveSelectedPaymentType("full");
+
+                // Update button colors
+                updateButtonColors("full", splitPaymentButton, fullPaymentButton);
+            }
+        });
         return new AlertDialog.Builder(getActivity())
                 .setView(view)
+                .setTitle("Checkout")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Handle the positive button click
+                        // You can leave it empty if you don't need to do anything on positive click
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Handle the negative button click
+                        // You can leave it empty if you don't need to do anything on negative click
+                    }
+                })
                 .create();
+
+
+    }
+    private void handleFullPayment(String id) {
+        // Iterate over the container layout to get the settlement details
+        // Iterate over the container layout to get the settlement details
+        ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+        for (int i = 0; i < containerLayout.getChildCount(); i += 2) {
+            View childView = containerLayout.getChildAt(i);
+            if (childView instanceof TextView) {
+                // Use the loop variable i to identify the correct payment details
+                PaymentDetails paymentDetails = mDatabaseHelper.getPaymentDetailsById(id);
+                String paymentName = paymentDetails.getPaymentName();
+                double settlementAmount = totalAmount;
+                // Use a specific Locale for date formatting
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                String currentDate = dateFormat.format(new Date());
+                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,currentDate, String.valueOf(roomid),tableid);
+
+                settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+            }
+        }
+// Assuming you have a method in your DatabaseHelper to fetch payment details by id
+        PaymentDetails paymentDetails = mDatabaseHelper.getPaymentDetailsById(id);
+
+        if (paymentDetails != null) {
+            // Assuming PaymentDetails has methods to get paymentName and amount
+            String paymentName = paymentDetails.getPaymentName();
+            double settlementAmount = totalAmount;
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            String currentDate = dateFormat.format(new Date());
+            settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,currentDate, String.valueOf(roomid),tableid);
+            Log.d("PaymentDetails", "Name: " + paymentName + ", Amount: " + settlementAmount);
+
+            Log.d("settlementItems", String.valueOf(settlementItems));
+        }
+
+        Log.d("id", String.valueOf(id));
+        // Take the total amount as the value
+        // This logic is the same as before, replace it with your own logic
+
+        double cashReturn= 0.0;
+        // Pass the amount received and settlement items as extras to the print activity
+        Intent intent = new Intent(getActivity(), Mra.class);
+        intent.putExtra("amount_received", String.valueOf(totalAmount));
+        intent.putExtra("cash_return", String.valueOf(cashReturn));
+        intent.putExtra("settlement_items", settlementItems);
+        intent.putExtra("id", Transaction_Id);
+        intent.putExtra("selectedBuyerName", Buyname);
+        intent.putExtra("selectedBuyerTAN", BuyTAN);
+        intent.putExtra("selectedBuyerCompanyName", BuyComp);
+        intent.putExtra("selectedBuyerType",BuyType);
+        intent.putExtra("selectedBuyerBRN", BuyBRN);
+        intent.putExtra("selectedBuyerNIC", BuyNIC);
+        intent.putExtra("selectedBuyerAddresse", BuyAdd);
+        intent.putExtra("selectedBuyerprofile", BuyProfile);
+        intent.putExtra("roomid", roomid);
+        intent.putExtra("tableid", tableid);
+
+  // Update the table with settlement details
+        for (SettlementItem settlementItem : settlementItems) {
+
+            // Use a specific Locale for date formatting
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            String currentDate = dateFormat.format(new Date());
+
+            boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate, String.valueOf(roomid),tableid);
+
+            SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Use the current date
+            values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+            values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, settlementItem.getPaymentName());
+            values.put(FINANCIAL_COLUMN_POSNUM, PosNum); // Insert the posnum
+
+// Check if a row with the same payment name, current date, cashier ID, and posnum already exists
+            String[] whereArgs = new String[] {settlementItem.getPaymentName(), currentDate, cashierId, PosNum};
+            Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                    FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                            FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                    whereArgs, null, null, null);
+
+            if (cursor.moveToFirst()) {
+                // If a row with the same payment name, current date, cashier ID, and posnum exists, update the values
+                int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + settlementItem.getSettlementAmount()); // Update the total
+
+                // Check if the payment name is "Cash" or "Cheques" to update the totalizer
+                if ("Cash".equals(settlementItem.getPaymentName()) || "Cheque".equals(settlementItem.getPaymentName())) {
+                    values.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + settlementItem.getSettlementAmount()); // Update the totalizer
+
+                } else {
+                    // If the payment name is not "Cash" or "Cheques," do not update the totalizer
+                    values.put(FINANCIAL_COLUMN_TOTALIZER, 0.00);
+                }
+
+                db.update(FINANCIAL_TABLE_NAME, values, FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " +
+                        FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                        FINANCIAL_COLUMN_POSNUM + " = ?", whereArgs);
+            } else {
+                // If no row with the same payment name and current date exists, insert a new row
+                values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
+                values.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Initialize total
+                values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getSettlementAmount()); // Initialize totalizer
+
+                db.insert(FINANCIAL_TABLE_NAME, null, values);
+            }
+            if ("Cash".equals(settlementItem.getPaymentName()) ) {
+                ContentValues cashReportValues = new ContentValues();
+                cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                cashReportValues.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Positive cash in amount
+                cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+
+                db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+            }
+            if (updated) {
+                Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+            }
+
+        }
+
+
+        String MRAMETHOD="Single";
+        insertCashReturn(String.valueOf(cashReturn), String.valueOf(totalAmount),qrMra,mrairn,MRAMETHOD);
+        startActivity(intent);
     }
 
+    private boolean isFullPayment() {
+        // Check whether the payment is full based on your condition
+        // For example, if no items are selected, consider it as full payment
+        return selectedItems.isEmpty();
+    }
+
+    private boolean isPaymentSplitted() {
+        SharedPreferences prefs = getActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String paymentType = prefs.getString(PAYMENT_TYPE_KEY, "");
+        return "splitted".equals(paymentType);
+    }
     public String getCurrentDate() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
         return dateFormat.format(currentDate);
     }
+    private String getSelectedPaymentType() {
+        SharedPreferences prefs = getActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(PAYMENT_TYPE_KEY, "full"); // Default to "full" if not found
+    }
 
+    private void saveSelectedPaymentType(String paymentType) {
+        SharedPreferences prefs = getActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(PAYMENT_TYPE_KEY, paymentType);
+        editor.apply();
+    }
+
+    private void updateButtonColors(String selectedPaymentType, Button splitButton, Button fullButton) {
+        if ("splitted".equals(selectedPaymentType)) {
+            // Set colors for split payment button
+            splitButton.setBackgroundColor(getResources().getColor(R.color.BleuAccessaText));
+            fullButton.setBackgroundColor(Color.GRAY);
+        } else {
+            // Set colors for full payment button
+            splitButton.setBackgroundColor(Color.GRAY);
+            fullButton.setBackgroundColor(getResources().getColor(R.color.BleuAccessaText));
+        }
+    }
     private void showPopAmountOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Select Amount");
@@ -764,7 +1092,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
                     if (cursor != null && cursor.moveToFirst()) {
                         int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
 
@@ -859,7 +1187,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     // User selected "Pay by QR code"
                     // Perform the action for this option
                     // For example, open a QR code scanner activity
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader();
+                    Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
                     if (cursor != null && cursor.moveToFirst()) {
                         int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
 
@@ -930,7 +1258,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
             // Show the secondary display
             secondaryDisplay.show();
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -1177,6 +1505,33 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
     }
 
 
+    private void showNumberOfPeopleDialog() {
+        // Example: Show a dialog to get the number of people
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View numberPickerView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_number_picker, null);
+        builder.setView(numberPickerView);
 
+        final NumberPicker numberPicker = numberPickerView.findViewById(R.id.numberPicker);
+        numberPicker.setMinValue(1);
+        numberPicker.setMaxValue(30); // Adjust the maximum value as needed
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int numberOfPeople = numberPicker.getValue();
+                // Handle the selected number of people
+                Toast.makeText(getActivity(), "Number of People: " + numberOfPeople, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle cancel button click
+            }
+        });
+
+        builder.create().show();
+    }
 
 }

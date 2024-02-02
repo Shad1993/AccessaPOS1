@@ -85,9 +85,9 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
     private GifImageView     loadingGifImageView;
     private String key,IV;
-    private String ReqRefId;
+    private String ReqRefId,tableid;
     private SoundPool soundPool;
-    private int soundId;
+    private int soundId,roomid;
     private  String encryptedRequest;
     private static final String ARG_POPREQID = "popreqid";
     private String popreqid;
@@ -174,6 +174,9 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
                 }
             }
         });
+        SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
 
     }
     @Override
@@ -253,7 +256,7 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
          clientID = clientId;
 
-         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV);
+         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV,roomid,tableid);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
@@ -589,11 +592,11 @@ public class CancelPaymentPOPDialogFragment extends DialogFragment {
 
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV,int roomid,String tableid) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);

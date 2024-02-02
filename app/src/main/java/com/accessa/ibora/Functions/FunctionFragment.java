@@ -9,6 +9,8 @@ import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TO
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTALIZER;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TRANSACTION_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_TABLE_NAME;
+import static com.accessa.ibora.sales.Sales.SalesFragment.mRecyclerView;
+
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,11 +29,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import android.text.Editable;
@@ -41,7 +46,10 @@ import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.keyboard.CustomEditText;
+import com.bumptech.glide.Glide;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,9 +69,17 @@ public class FunctionFragment extends Fragment {
     private String transactionIdInProgress;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private TextWatcher textWatcher;
+    private TableAdapter mAdapter;
+    int roomid;
+    String tableid;
     private IWoyouService woyouService;
     private String cashierId,cashierLevel,shopname,posNum;
     String dbName = Constants.DB_NAME;
+
+    TextView totalTextView = null;
+    TextView totalizerTextView =null ;
+    TextView differenceTextView ;
+    double total;
     private ServiceConnection connService = new ServiceConnection() {
 
         @Override
@@ -101,18 +117,21 @@ public class FunctionFragment extends Fragment {
         SharedPreferences sharedPreferencepos = requireContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         posNum = sharedPreferencepos.getString("posNumber", null);
 
-
-
-
         DatabaseHelper dbHelper = new DatabaseHelper(getContext());
         String currentDate = getCurrentDate();
         double totalizerSum = dbHelper.getTotalizerSumForCurrentDate(currentDate);
+
         // Check the value and set the content view accordingly
         if ("mobile".equalsIgnoreCase(deviceType)) {
             view = inflater.inflate(R.layout.mobile_keyboard_fragment, container, false);
         } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
              view = inflater.inflate(R.layout.functions_fragment, container, false);
         }
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        Cursor roomCursor = dbHelper.getAllTables1(String.valueOf(roomid));
+        mAdapter = new TableAdapter(getActivity(), roomCursor);
 
         // Find the number buttons and set OnClickListener
         CardView buttonloan = view.findViewById(R.id.buttonLoan);
@@ -121,9 +140,15 @@ public class FunctionFragment extends Fragment {
         CardView buttoncount = view.findViewById(R.id.buttonCount);
         CardView buttondrawer = view.findViewById(R.id.buttonopendrawer);
         CardView buttonpricelevel = view.findViewById(R.id.buttonpricelevel);
+        CardView buttonsearchTable = view.findViewById(R.id.buttonSearchTable);
 
 
-
+        buttonsearchTable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTableSearchPopup(v);
+            }
+        });
         buttonpricelevel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -522,10 +547,78 @@ public class FunctionFragment extends Fragment {
         return view;
     }
 
+
     public String getCurrentDate() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
         return dateFormat.format(currentDate);
+    }
+    private void showTableSearchPopup(View anchorView) {
+        View popupView = LayoutInflater.from(getContext()).inflate(R.layout.searchtable, null);
+
+        EditText searchEditText = popupView.findViewById(R.id.popup_searchEditText);
+        Button okButton = popupView.findViewById(R.id.popup_okButton);
+        Button cancelButton = popupView.findViewById(R.id.popup_cancelButton);
+
+        PopupWindow popupWindow = new PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+        );
+
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String newTableName = searchEditText.getText().toString().trim();
+                popupWindow.dismiss();
+
+                // Call a method in TablesFragment to handle the insert and filter
+                ((MainActivity) requireActivity()).filterAndInsertTable(newTableName);
+            }
+        });
+
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+
+        popupWindow.showAsDropDown(anchorView);
+    }
+
+
+
+    private void handleTableSearch(String searchQuery) {
+        // Implement the logic to search tables based on the provided query
+        // You can use the searchQuery to filter the tables in your RecyclerView or perform any other action.
+        // Update the RecyclerView adapter accordingly.
+        // For example, you can call filterRecyclerView(searchQuery) method or update the query directly in your RecyclerView adapter.
+        filterRecyclerView(searchQuery);
+    }
+    private void filterRecyclerView(String searchQuery) {
+        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+        // Use the modified searchTables() method to fetch filtered tables data
+        Cursor filteredCursor = dbHelper.searchTables(String.valueOf(roomid), searchQuery);
+        mAdapter.swapCursor(filteredCursor);
+
+        // Check if the dataset is empty and show/hide the empty state accordingly
+        showEmptyState(filteredCursor.getCount() <= 0);
+    }
+    private void showEmptyState(boolean showEmpty) {
+        AppCompatImageView imageView = getView().findViewById(R.id.empty_image_view);
+        Glide.with(getContext()).asGif()
+                .load(R.drawable.folderwalk)
+                .into(imageView);
+        FrameLayout emptyFrameLayout = getView().findViewById(R.id.empty_frame_layout);
+        if (showEmpty) {
+            mRecyclerView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+        } else {
+            mRecyclerView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+        }
     }
 
     public void showCoinCountPopup(View view) {
@@ -545,9 +638,9 @@ public class FunctionFragment extends Fragment {
         dialog.show();
 
         // Find the total EditText in your count dialog layout
-        TextView totalTextView = popupView.findViewById(R.id.totalTextView);
-        TextView totalizerTextView = popupView.findViewById(R.id.totalizerTotalTextView);
-        TextView differenceTextView = popupView.findViewById(R.id.differenceTextView);
+         totalTextView = popupView.findViewById(R.id.totalTextView);
+         totalizerTextView = popupView.findViewById(R.id.totalizerTotalTextView);
+         differenceTextView = popupView.findViewById(R.id.differenceTextView);
         Button saveButton = popupView.findViewById(R.id.saveButton);
 
         // Find all the EditText fields for coin denominations
@@ -603,7 +696,7 @@ public class FunctionFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 // Calculate the total value
-                double total = 0.0;
+                 total = 0.0;
                   total += getEditTextValueAsDouble(editText1Cent) * 0.01; // 1 cent = 0.01
                 total += getEditTextValueAsDouble(editText5Cents) * 0.05; // 5 cents = 0.05
                 total += getEditTextValueAsDouble(editText10Cents) * 0.10; // 10 cents = 0.10

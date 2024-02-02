@@ -1,6 +1,10 @@
 package com.accessa.ibora.printer;
 
 import static android.app.PendingIntent.getActivity;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import androidx.appcompat.app.AlertDialog;
@@ -18,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -35,6 +40,7 @@ import java.text.DecimalFormat;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
@@ -43,6 +49,10 @@ import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;
@@ -51,6 +61,7 @@ import com.sunmi.peripheral.printer.SunmiPrinterService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -64,7 +75,9 @@ public class printerSetup extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress;
-
+    private String tableid;
+    private String roomid;
+    private String      splittype;
     private DatabaseHelper mDatabaseHelper;
     private String   itemLine, itemLine1;
     private String cashierName,cashierId;
@@ -99,8 +112,7 @@ public class printerSetup extends AppCompatActivity {
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
 
 
-                    SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                    transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+
 
                     SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
                     cashierId = sharedPreference.getString("cashorId", null);
@@ -125,12 +137,6 @@ public class printerSetup extends AppCompatActivity {
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
                     recyclerView.setLayoutManager(new LinearLayoutManager(printerSetup.this));
-                    Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions();
-                    adapter = new TicketAdapter(printerSetup.this, cursor1);
-                    recyclerView.setAdapter(adapter);
-
-                    // Get the data from the adapter
-                    List<Transaction> item = adapter.getData();
 
 
                     try {
@@ -168,11 +174,16 @@ public class printerSetup extends AppCompatActivity {
                             String ShopAdress3= cursorCompany.getString(columnShopAddress3Index);
                             String CompanyVatNo= cursorCompany.getString(columnCompanyVATIndex);
                             String CompanyBRNNo= cursorCompany.getString(columnCompanyBRNIndex);
+                            String inv= "Invoice" + "\n";
                              OpeningHours= cursorCompany.getString(columnOpeningHoursIndex);
                              TelNum= cursorCompany.getString(columnTelNumIndex);
                              FaxNum= cursorCompany.getString(columnFaxIndex);
                             compTelNum= cursorCompany.getString(columncompTelNumIndex);
                             compFaxNum= cursorCompany.getString(columncompFaxIndex);
+                            service.setFontSize(24, null);
+                            service.setAlignment(1, null);
+                            // Print the formatted company name line
+                            service.printText(inv, null);
 
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
 
@@ -231,42 +242,105 @@ public class printerSetup extends AppCompatActivity {
                         // Print the custom layout
                         service.printText(titleTextView.getText().toString(), null);
                         String cashierid= "Cashier Id: " + cashierId ;
+                        String room= "Room Number: " + roomid + "\n";
+                        String table= "Table Number: " + tableid +"\n";
+
                         service.printText(cashierid + "\n", null);
+
                         service.printText(contentTextView.getText().toString(), null);
+                        service.printText(room , null);
+                        service.printText(table, null);
 
                         // Print a line separator
 
                         String lineSeparator = "=".repeat(lineWidth);
                         String singlelineSeparator = "-".repeat(lineWidth);
                         service.printText(lineSeparator + "\n", null);
+                        // Retrieve the total amount and total tax amount from the transactionheader table
+                        Cursor cursorsplit = mDatabaseHelper.getTransactionHeaderTotal(roomid,tableid);
+                        if (cursorsplit != null && cursorsplit.moveToFirst()) {
+                            int columnIndexSplitType = cursorsplit.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
-                        // Print the data from the RecyclerView
-                        for (Transaction items : item) {
-                            String itemName = items.getItemName();
-                            int itemQuantity = items.getItemQuantity();
-                            String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
+                            String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
+                            Log.e("transactionid" , String.valueOf(transactionid));
+                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
 
-                            // Calculate the padding for the item name
-                            int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
-
-
-                            // Inside the for loop where you print the data from the RecyclerView
-
-
-                            double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
-                            String formattedUnitPrice = "Rs " + String.format("%.2f", numericUnitPrice);
+                              splittype = cursorsplit.getString(columnIndexSplitType);
+                            Log.e("splittype" , splittype );
+                            if(areNOItemsSelected) {
+                                Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(String.valueOf(roomid),tableid);
+                                adapter = new TicketAdapter(printerSetup.this, cursor1);
+                                recyclerView.setAdapter(adapter);
 
 
-                            // Create the formatted item line
 
-                            String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+                                List<Transaction> item = adapter.getData();
+                                // Print the data from the RecyclerView
+                                for (Transaction items : item) {
+                                    String itemName = items.getItemName();
+                                    int itemQuantity = items.getItemQuantity();
+                                    String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
 
-                            // Create the formatted item price line
-                            String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
+                                    // Calculate the padding for the item name
+                                    int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
 
-                            service.printText(itemPriceLine + "\n" , null);
-                            service.printText(QuantityLine + "\n", null);
-                        }
+                                    Log.e("splittype" , splittype );
+                                    // Inside the for loop where you print the data from the RecyclerView
+
+
+                                    double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
+                                    String formattedUnitPrice = "Rs " + String.format("%.2f", numericUnitPrice);
+
+
+                                    // Create the formatted item line
+
+                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+
+                                    // Create the formatted item price line
+                                    String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
+
+                                    service.printText(itemPriceLine + "\n" , null);
+                                    service.printText(QuantityLine + "\n", null);
+                                }
+                            }else{
+
+
+                                Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
+                                adapter = new TicketAdapter(printerSetup.this, cursor2);
+                                recyclerView.setAdapter(adapter);
+
+
+                                List<Transaction> itemsplitted = adapter.getData();
+
+                                for (Transaction items : itemsplitted) {
+                                    String itemName = items.getItemName();
+                                    int itemQuantity = items.getItemQuantity();
+                                    String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
+
+                                    // Calculate the padding for the item name
+                                    int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
+
+
+                                    // Inside the for loop where you print the data from the RecyclerView
+
+
+                                    double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
+                                    String formattedUnitPrice = "Rs " + String.format("%.2f", numericUnitPrice);
+
+                                    // Create the formatted item line
+                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+
+                                    // Create the formatted item price line
+                                    String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
+
+                                    service.printText(itemPriceLine + "\n" , null);
+                                    service.printText(QuantityLine + "\n", null);
+                                }
+
+
+                            }
+                            }
+
                         // Print a line separator
 
                         service.printText(lineSeparator + "\n", null);
@@ -274,33 +348,68 @@ public class printerSetup extends AppCompatActivity {
 
 
                         // Retrieve the total amount and total tax amount from the transactionheader table
-                        Cursor cursor = mDatabaseHelper.getTransactionHeader();
-
+                        Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
+                        int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                        int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+                        int columnIndexTimeCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
+                        int columnIndexDateCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
                         if (cursor != null && cursor.moveToFirst()) {
-                            int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
-                            int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
-                            int columnIndexTimeCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
-                            int columnIndexDateCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
 
-                            totalAmount = cursor.getDouble(columnIndexTotalAmount);
-                            TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
-                            DateCreated = cursor.getString(columnIndexDateCreated);
-                            timeCreated = cursor.getString(columnIndexTimeCreated);
+                            String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
+                            Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid,String.valueOf(roomid),tableid);
+                            Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
 
+                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
+                            boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionid);
+                            boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(transactionid);
+                            if(areAllItemsNotSelectedNotPaid) {
+                                if (cursor1 != null && cursor1.moveToFirst()) {
 
+                                    totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                                    TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                                }
+                                DateCreated = cursor.getString(columnIndexDateCreated);
+                                timeCreated = cursor.getString(columnIndexTimeCreated);
+                            } else if (areNoItemsSelectedNorPaid) {
+                                totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                                TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                                DateCreated = cursor.getString(columnIndexDateCreated);
+                                timeCreated = cursor.getString(columnIndexTimeCreated);
+                            } else if
+                            (areNOItemsSelected) {
+                                if (cursor1 != null && cursor1.moveToFirst()) {
 
-                            String formattedTotalAmount = String.format("%.2f", totalAmount);
-                            String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
+                                    totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                                    TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                                }
+                                //totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                                //TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                                DateCreated = cursor.getString(columnIndexDateCreated);
+                                timeCreated = cursor.getString(columnIndexTimeCreated);
+
+                            }else {
+
+                                if (cursor2 != null && cursor2.moveToFirst()) {
+
+                                totalAmount =mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
+                                TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmounts(roomid,tableid);
+                                }
+                                DateCreated = cursor.getString(columnIndexDateCreated);
+                                timeCreated = cursor.getString(columnIndexTimeCreated);
+                            }
 
                             String Total= getString(R.string.Total);
                             String TVA= getString(R.string.Vat);
+                            String formattedTotalAmount = String.format("%.2f", totalAmount);
+                            String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
 
                             String TotalValue= "Rs " + formattedTotalAmount;
                             String TotalVAT= "Rs " + formattedTotalTAXAmount;
-                                int lineWidths= 38;
+                            int lineWidths= 38;
                             // Calculate the padding for the item name
                             int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
                             int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+
 
 
                     // Enable bold text and set font size to 30
@@ -319,7 +428,7 @@ public class printerSetup extends AppCompatActivity {
 
 
                             // Query the transaction table to get distinct VAT types
-                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress);
+                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress, String.valueOf(roomid),tableid);
                             if (vatCursor != null && vatCursor.moveToFirst()) {
                                 StringBuilder vatTypesBuilder = new StringBuilder();
                                 do {
@@ -404,7 +513,7 @@ public class printerSetup extends AppCompatActivity {
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                                 String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
 
-                               mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate);
+                               mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate, String.valueOf(roomid),tableid);
 
                             }
 
@@ -426,9 +535,36 @@ public class printerSetup extends AppCompatActivity {
                         String Openinghours= Footer2Text + OpeningHours ;
 
                         if (mraqr != null && !mraqr.equals("Request Failed")) {
-                            service.printText("MRA Response" + "\n", null);
-                            service.printQRCode(mraqr + "\n", 2, 1, null);
+                            // Log the received QR code string
+                            Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
+
+                            // Decode Base64 string to byte array
+                            byte[] imageBytes;
+                            try {
+                                imageBytes = android.util.Base64.decode(mraqr, android.util.Base64.DEFAULT);
+                            } catch (IllegalArgumentException e) {
+                                // Handle decoding errors
+                                e.printStackTrace();
+                                return;
+                            }
+
+                            // Log the decoded byte array for debugging
+                            Log.d("QR_DEBUG", "Decoded byte array length: " + imageBytes.length);
+
+                            try {
+                                // Convert the decoded byte array to a Bitmap
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+                                // Print the Bitmap using your existing print method
+                                service.printBitmap(bitmap, null);
+
+                            } catch (Exception e) {
+                                // Handle decoding or printing errors
+                                e.printStackTrace();
+                            }
                         }
+
+
 
                         // Print the centered footer text
                         service.printText(FooterText + "\n", null);
@@ -503,11 +639,68 @@ public class printerSetup extends AppCompatActivity {
 
                         }
                        String transactionType;
+                        mDatabaseHelper.updatePaidStatusForSelectedRows(roomid,tableid);
                         if(cashorlevel.equals("1")) {
 
-                            mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN);
+
+                            String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
+                            Log.e("transactionid" , String.valueOf(transactionid));
+                            boolean areAllItemsPaid =  mDatabaseHelper.areAllItemsPaid(transactionid);
+                            Log.e("areAllItemsPaid" , String.valueOf(areAllItemsPaid));
+                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
+                            Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
+                            if (areNOItemsSelected) {
+                                mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionid);
+                                mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN, String.valueOf(roomid),tableid);
+                            }
+                            if (areAllItemsPaid ) {
+                                // All items with the specified roomId, tableId, and status are selected
+                                mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN, String.valueOf(roomid),tableid);
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(roomid,tableid);
+
+                            } else {
+                                // Some items are not selected
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(roomid,tableid);
+                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid,tableid);
+                                Log.e("paid" , String.valueOf(paid));
+                                if(paid)
+                                {
+
+                                    mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid),tableid);
+                                }
+                            }
+
+
                         }else{
-                            mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED);
+
+                           String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
+                            Log.e("transactionid" , String.valueOf(transactionid));
+                            boolean areAllItemsPaid =  mDatabaseHelper.areAllItemsPaid(transactionid);
+                            Log.e("areAllItemsPaid" , String.valueOf(areAllItemsPaid));
+                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
+                            Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
+                            if (areNOItemsSelected) {
+                                mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionid);
+                                mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid),tableid);
+                            }
+                             if (areAllItemsPaid ) {
+                                // All items with the specified roomId, tableId, and status are selected
+                                mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid),tableid);
+                                 mDatabaseHelper.updatePaidStatusForSelectedRows(roomid,tableid);
+
+                            } else {
+                                // Some items are not selected
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(roomid,tableid);
+                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid,tableid);
+                                Log.e("paid" , String.valueOf(paid));
+                                if(paid)
+                                {
+
+                                    mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid),tableid);
+                                }
+                            }
+
+
                         }
 
 
@@ -524,23 +717,9 @@ public class printerSetup extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(printerSetup.this);
-                                builder.setTitle("Transaction Completed");
-                                builder.setMessage("Thanks for Using AccessaPOS. Next customer?");
-                                builder.setPositiveButton("Next Customer", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(printerSetup.this, MainActivity.class);
+                                Intent intent = new Intent(printerSetup.this, MainActivity.class);
 
-                                        startActivity(intent);
-                                    }
-                                });
-
-                                builder.setCancelable(false); // Prevent dialog from being dismissed by clicking outside
-
-// Show the dialog using the builder's context
-                                AlertDialog alertDialog = builder.create();
-                                alertDialog.show();
+                                startActivity(intent);
 
 
                             }
@@ -570,16 +749,18 @@ public class printerSetup extends AppCompatActivity {
         setContentView(R.layout.recycleview_printer);
         String anReturbed = getIntent().getStringExtra("amount_received");
         String Cashreturn = getIntent().getStringExtra("cash_return");
-         amountReceived = Double.parseDouble(anReturbed);
+        tableid = getIntent().getStringExtra("tableid");
+        roomid = getIntent().getStringExtra("roomid");
          cashReturn = Double.parseDouble(Cashreturn);
-
-
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
         mraqr = getIntent().getStringExtra("mraQR");
 
 
-        // Initialize the DatabaseHelper
+
+
         mDatabaseHelper = new DatabaseHelper(this);
+        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+        amountReceived = Double.parseDouble(anReturbed);
 
         final KonfettiView konfettiView = findViewById(R.id.konfettiView);
         konfettiView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {

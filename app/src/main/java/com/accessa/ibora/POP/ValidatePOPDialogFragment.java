@@ -96,9 +96,9 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     private String key,IV;
     private String ReqRefId;
     private SoundPool soundPool;
-    private int soundId;
+    private int soundId,roomid;
     private  String encryptedRequest;
-    private  String popreqid,amount;
+    private  String popreqid,amount,tableid;
     // Add a handler as a class member
     private final Handler handler = new Handler();
 
@@ -152,7 +152,9 @@ public class ValidatePOPDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
         // Get the mobile number from the arguments
         popreqid = getArguments().getString("popReqId");
         amount = getArguments().getString("amount");
@@ -256,7 +258,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
          clientID = clientId;
 
-         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV);
+         encryptedRequest = createEncryptedRequest(mDatabaseHelper,tillnum,outletnum,popreqid, context,clientID, jsonRequestBody,key,IV,roomid,tableid);
         String hCheckValue = generateHCheckValue(jsonRequestBody);
 
 
@@ -481,7 +483,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     .load(R.drawable.paycancelgif)
                     .into(gifImageView);
             cancelBtn.setVisibility(View.GONE);
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);
@@ -515,7 +517,7 @@ public class ValidatePOPDialogFragment extends DialogFragment {
                     .asGif()
                     .load(R.drawable.paymentsucessgif)
                     .into(gifImageView);
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);
@@ -649,11 +651,11 @@ public class ValidatePOPDialogFragment extends DialogFragment {
 
 
 
-    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV) {
+    public static String createEncryptedRequest( DatabaseHelper mDatabaseHelper,String Till_id,String Outlet_id,String popreqid,Context  context, String clientID, String requestBody, String key, String IV,int roomid,String tableid) {
         try {
 
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);

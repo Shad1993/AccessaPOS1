@@ -11,5 +11,7 @@
     <dimen name="drawable_size">24dp</dimen>
     <dimen name="headerTextSize">30sp</dimen>
     <dimen name="spacing_between_rooms">80dp</dimen>
+    <dimen name="spacing_between_tables">2dp</dimen>
     <dimen name="item_fixed_height">200dp</dimen>
 </resources>
+

@@ -36,6 +36,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME
 import static com.accessa.ibora.product.items.DatabaseHelper.DateCreated;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
+import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.OpenDrawer;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
@@ -61,9 +62,12 @@ import com.accessa.ibora.product.Discount.Discount;
 import com.accessa.ibora.product.SubDepartment.SubDepartment;
 import com.accessa.ibora.product.Vendor.Vendor;
 import com.accessa.ibora.product.couponcode.Coupon;
+import com.accessa.ibora.product.options.Options1;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class DBManager {
@@ -86,7 +90,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String hascomment,String optionsid, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -105,6 +109,9 @@ public class DBManager {
         contentValue.put(DatabaseHelper.VAT, VAT);
         contentValue.put(DatabaseHelper.Weight, weight);
         contentValue.put(DatabaseHelper.AvailableForSale, AvailableForSale);
+        contentValue.put(DatabaseHelper.hasoptions, options);
+        contentValue.put(DatabaseHelper.related_item, optionsid);
+        contentValue.put(DatabaseHelper.comment, hascomment);
         contentValue.put(DatabaseHelper.SoldBy, SoldBy);
         contentValue.put(DatabaseHelper.Image, Image);
         contentValue.put(DatabaseHelper.Variant, Variant);
@@ -763,6 +770,13 @@ public class DBManager {
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, departmentId);
         database.insert(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, null, contentValue);
     }
+    public void insertOpt(String subDeptName) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.OPTION_NAME, subDeptName);
+
+        database.insert(DatabaseHelper.OPTIONS_TABLE_NAME, null, contentValue);
+    }
 
 
     public SubDepartment getSubDepartmentById(String id) {
@@ -925,6 +939,68 @@ public class DBManager {
         }
         return vendor;
     }
+    public Options1 getOptionsById(String id) {
+
+        Options1 options = null;
+        String[] columns = new String[]{
+                DatabaseHelper.OPTION_ID,
+                DatabaseHelper.OPTION_NAME,
+
+
+        };
+
+        String selection = DatabaseHelper.OPTION_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.OPTIONS_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            options = new Options1();
+            options.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.OPTION_ID)));
+            options.setNames(cursor.getString(cursor.getColumnIndex(DatabaseHelper.OPTION_NAME)));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return options;
+    }
+
+    public List<Variant> getVariantsById(String id) {
+        List<Variant> variantList = new ArrayList<>();
+        String[] columns = new String[]{
+                DatabaseHelper.VARIANTS_OPTIONS_ID,
+                DatabaseHelper.VARIANT_ID,
+                DatabaseHelper.VARIANT_BARCODE,
+                DatabaseHelper.VARIANT_DESC,
+                DatabaseHelper.VARIANT_PRICE
+        };
+
+        String selection = DatabaseHelper.VARIANT_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.VARIANTS_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Variant variant = new Variant();
+                variant.setVariantId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VARIANTS_OPTIONS_ID)));
+                variant.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_DESC)));
+                variant.setItemId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VARIANT_ID)));
+                variant.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_BARCODE)));
+                variant.setPrice(cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.VARIANT_PRICE)));
+
+                variantList.add(variant);
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return variantList;
+    }
 
     public boolean deleteVendor(long id) {
         String selection = DatabaseHelper.VendorID + "=?";
@@ -932,7 +1008,25 @@ public class DBManager {
         database.delete(DatabaseHelper.VENDOR_TABLE_NAME, selection, selectionArgs);
         return true;
     }
+    public boolean deleteOption(long id) {
+        String selection = DatabaseHelper.OPTION_ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.OPTIONS_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+    public boolean deleteVariants(long id) {
+        String selection = DatabaseHelper.VARIANT_ID + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.VARIANTS_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
 
+    public boolean deleteVariant(String barcode) {
+        String selection = DatabaseHelper.VARIANT_BARCODE + "=?";
+        String[] selectionArgs = { String.valueOf(barcode) };
+        database.delete(DatabaseHelper.VARIANTS_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
     public boolean deleteDisc(long id) {
         String selection = DatabaseHelper.DISCOUNT_ID + "=?";
         String[] selectionArgs = { String.valueOf(id) };
@@ -1041,7 +1135,14 @@ public class DBManager {
         database.update(DatabaseHelper.COST_TABLE_NAME, contentValue, DatabaseHelper.CostID + " = " + id, null);
         return true;
     }
+    public boolean updateOptions(long id, String name) {
 
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(OPTION_NAME, name);
+
+        database.update(DatabaseHelper.OPTIONS_TABLE_NAME, contentValue, DatabaseHelper.OPTION_ID + " = " + id, null);
+        return true;
+    }
 
     // Method to retrieve the count of discounts
     public int getDiscountCount() {

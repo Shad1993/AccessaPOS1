@@ -1,6 +1,8 @@
 package com.accessa.ibora.sales.RoomsAndTable;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -38,6 +41,14 @@ import java.util.List;
 import java.util.Locale;
 
 public class RoomsFragment extends Fragment {
+
+    private OnRoomUpdateListener onRoomUpdateListener;
+
+    private static final String PREF_FILE_NAME = "room_and_table_prefs";
+    private static final String PREF_ROOM_ID = "room_id";
+    private static final String PREF_TABLE_ID = "table_id";
+
+    private PopupWindow popupWindow;
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
@@ -48,6 +59,8 @@ public class RoomsFragment extends Fragment {
     private Spinner spinner;
     private ImageView arrow;
     private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences sharedPreferences;
+    private static final String PREF_CURRENT_ID = "current_id";
 
     final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
     final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
@@ -65,7 +78,15 @@ public class RoomsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_roomstable, container, false);
         // Get the current locale
+// Initialize SharedPreferences
+        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        // Use the modified getAllRooms() method to fetch rooms
 
+
+        // Set default value for current ID if not set
+        if (!sharedPreferences.contains(PREF_CURRENT_ID)) {
+            sharedPreferences.edit().putInt(PREF_CURRENT_ID, 1).apply();
+        }
         // Spinner
         spinner = view.findViewById(R.id.spinner);
 
@@ -175,7 +196,8 @@ public class RoomsFragment extends Fragment {
         mRecyclerView.addItemDecoration(itemDecoration);
 
         // Use the modified getAllRooms() method to fetch rooms
-        Cursor roomCursor = mDatabaseHelper.getAllRooms();
+        Cursor roomCursor = mDatabaseHelper.getAllRooms(); // Assuming mDatabaseHelper is your DatabaseHelper instance
+
         mAdapter = new RoomAdapter(getActivity(), roomCursor);
         mRecyclerView.setAdapter(mAdapter);
         // Empty state
@@ -291,6 +313,10 @@ public class RoomsFragment extends Fragment {
             emptyFrameLayout.setVisibility(View.GONE);
         }
     }
+
+    public void setOnRoomUpdateListener(OnRoomUpdateListener listener) {
+        this.onRoomUpdateListener = listener;
+    }
     public void openNewActivity() {
         Configuration configuration = getResources().getConfiguration();
         Locale currentLocale = configuration.locale;
@@ -301,18 +327,48 @@ public class RoomsFragment extends Fragment {
         startActivity(intent);
     }
     private void updateUIForClickedItem(String id, String title) {
-        // Update your UI elements based on the clicked item's data
-        // For example, change the text of a TextView or update an ImageView
-        // You can also load a new fragment, replace the current fragment, or start a new activity
-        // with the details of the clicked item.
+        // Get the maximum ID from the database
+        int maxRoomId = mDatabaseHelper.getMaxRoomId();
+        int newRoomId = Integer.parseInt(id);
 
-        // For demonstration, let's assume you have a TextView with id 'textViewSelectedItem'
+        // Get the next room ID from SharedPreferences
+        int currentRoomId = sharedPreferences.getInt(PREF_ROOM_ID, newRoomId);
+
+        // Get the room name associated with the current room ID
+        String roomName = mDatabaseHelper.getRoomNameForId(String.valueOf(currentRoomId));
+
+        // Update your UI elements based on the room name
         TextView selectedItemTextView = getView().findViewById(R.id.BuyerAdapter);
-        selectedItemTextView.setText(title);
+        selectedItemTextView.setText(roomName);
 
-        // You can add more logic here based on your requirements
+        // Notify the listener to update the TablesFragment with room ID
+        if (onRoomUpdateListener != null) {
+            onRoomUpdateListener.onRoomUpdate(currentRoomId);
+        }
+        int actualroom=currentRoomId;
+        // Increment the current room ID and save it to SharedPreferences
+        currentRoomId = (currentRoomId % maxRoomId) + 1;
+        sharedPreferences.edit().putInt(PREF_ROOM_ID, currentRoomId).apply();
+
+        // Now, handle the table ID (assuming you want to set it to 1)
+        int defaultTableId = 0;
+        sharedPreferences.edit().putInt(PREF_TABLE_ID, defaultTableId).apply();
+        sharedPreferences.edit().putString("roomnum", String.valueOf(actualroom)).apply();
     }
 
 
+
+    public interface OnRoomUpdateListener {
+        void onRoomUpdate(int currentId);
+    }
+
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            onRoomUpdateListener = (OnRoomUpdateListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement OnRoomUpdateListener");
+        }
+    }
 
 }

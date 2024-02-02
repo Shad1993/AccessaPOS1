@@ -8,4 +8,10 @@
         <item>5</item>
         <item>6</item>
     </string-array>
+    <array name="report_types">
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+        <item>Yearly</item>
+    </array>
 </resources>

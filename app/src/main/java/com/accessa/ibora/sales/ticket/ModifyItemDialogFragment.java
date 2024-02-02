@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -32,6 +33,8 @@ import java.util.Locale;
 public class ModifyItemDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
     private ItemClearedListener itemclearedListener;
+    private String tableid;
+    private int roomid;
     private static final String ARG_QUANTITY = "quantity";
     private static final String ARG_PRICE = "price";
     private static final String ARG_LONG_DESC = "long_desc";
@@ -59,7 +62,10 @@ public class ModifyItemDialogFragment extends DialogFragment {
         EditText priceEditText = view.findViewById(R.id.price_edit_text);
         EditText longDescEditText = view.findViewById(R.id.long_desc_edit_text);
 
-
+        // Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
 
         Xdatabasemanager = new DBManager(getContext());
         Xdatabasemanager.open();
@@ -177,26 +183,49 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private void refreshTicketFragment() {
         TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            ticketFragment.refreshData(calculateTotalAmount(),calculateTotalTax());
+            ticketFragment.refreshData(calculateTotalAmount(String.valueOf(roomid),tableid),calculateTotalTax(roomid,tableid));
         }
     }
-    public static double calculateTotalAmount() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
+    public static double calculateTotalAmount(String roomid, String tableid) {
+        if (roomid == null && tableid ==null) {
+            // Continue with the rest of your logic
+            Cursor cursor = mDatabaseHelper.getAllInProgressTransactions("0", "0");
+            double totalAmount = 0.0;
+            if (cursor != null && cursor.moveToFirst()) {
+                int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+                do {
+                    double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                    totalAmount += totalPrice;
+                } while (cursor.moveToNext());
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            return totalAmount;
+        } else {
+            // Continue with the rest of your logic
+            Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(roomid, tableid);
+            double totalAmount = 0.0;
+            if (cursor != null && cursor.moveToFirst()) {
+                int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+                do {
+                    double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                    totalAmount += totalPrice;
+                } while (cursor.moveToNext());
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            return totalAmount;
         }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
     }
-    public static double calculateTotalTax() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions();
+
+    public static double calculateTotalTax(int roomid,String tableid) {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         double TaxtotalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
             int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);

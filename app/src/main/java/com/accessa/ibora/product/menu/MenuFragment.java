@@ -23,6 +23,7 @@ import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.couponcode.CouponDialogFragment;
 import com.accessa.ibora.product.couponcode.CouponFragment;
 import com.accessa.ibora.product.items.FirstFragment;
+import com.accessa.ibora.product.options.OptionsFragment;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class MenuFragment extends Fragment {
@@ -68,6 +69,7 @@ public class MenuFragment extends Fragment {
                 getString(R.string.SubDept),
                 getString(R.string.Category),
                 getString(R.string.vendor),
+                getString(R.string.Options),
                 getString(R.string.cost),
                 getString(R.string.discount),
                 getString(R.string.Coupon)
@@ -78,6 +80,7 @@ public class MenuFragment extends Fragment {
                 R.drawable.department,
                 R.drawable.category,
                 R.drawable.vendor,
+                R.drawable.menu_option,
                 R.drawable.cost,
                 R.drawable.baseline_discount_24,
                 R.drawable.coupon
@@ -192,7 +195,20 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
 
-                } else if (position == 5) {
+                }else if (position == 5) {
+                    toolbarTitle = getString(R.string.Options);
+                    Fragment newFragment = new OptionsFragment();
+                    // create a FragmentManager
+                    FragmentManager fm = getFragmentManager();
+                    // create a FragmentTransaction to begin the transaction and replace the Fragment
+                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                    // replace the FrameLayout with new Fragment
+                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                    fragmentTransaction.addToBackStack(newFragment.toString());
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    fragmentTransaction.commit();
+
+                } else if (position == 6) {
                     toolbarTitle = getString(R.string.cost);
                     Fragment newFragment = new CostFragment();
                     // create a FragmentManager
@@ -204,7 +220,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
-                } else if (position == 6) {
+                } else if (position == 7) {
                     toolbarTitle = getString(R.string.discount);
                     Fragment newFragment = new DiscountFragment();
                     // create a FragmentManager
@@ -216,7 +232,7 @@ public class MenuFragment extends Fragment {
                     fragmentTransaction.addToBackStack(newFragment.toString());
                     fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     fragmentTransaction.commit();
-                } else if (position == 7) {
+                } else if (position == 8) {
                     toolbarTitle = getString(R.string.couponcode);
 
                     Fragment newFragment = new CouponFragment();

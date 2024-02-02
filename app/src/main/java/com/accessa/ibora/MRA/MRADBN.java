@@ -37,6 +37,9 @@ import android.widget.Toast;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.PrintDuplicata;
+import com.accessa.ibora.printer.PrintSave;
+import com.accessa.ibora.printer.externalprinterlibrary2.printerSetupforPRF;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Transaction;
 
@@ -75,7 +78,7 @@ import okhttp3.Response;
 
 public class MRADBN extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
-    private String cashorlevel,ShopName,LogoPath,CompanyName;
+    private String cashorlevel,ShopName,LogoPath,CompanyName,roomid,tableid;
     private String cashierName,cashierId;
     private String   irn;
     private double totalAmount,TaxtotalAmount,TotalHT;
@@ -162,12 +165,14 @@ public class MRADBN extends AppCompatActivity {
                         int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
                         int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
                         currentCounter = cursor.getInt(columnIndexCounter);
+                        double totaldiscount = mDatabaseHelper.getTotalDiscountSumForInProgressTransaction(roomid,tableid);
 
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                         double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
+                        double Totalinvoice= totalAmount + totaldiscount;
                         // Step 2: Increment the counter value
                         int newCounter = currentCounter + 1;
 
@@ -178,6 +183,7 @@ public class MRADBN extends AppCompatActivity {
 
 
 // Convert the doubles to formatted strings with 2 decimal places
+                        String formattedTotalInvoice = String.format("%.2f", Totalinvoice);
                         String formattedTotalAmount = String.format("%.2f", totalAmount);
                         String formattedTaxtotalAmount = String.format("%.2f", TaxtotalAmount);
                         String formattedTotalHT = String.format("%.2f", TotalHT);
@@ -207,6 +213,8 @@ public class MRADBN extends AppCompatActivity {
                                 jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
                                 jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
                                 jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
+                                jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
                                 jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
                                 jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
                                 jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
@@ -227,6 +235,8 @@ public class MRADBN extends AppCompatActivity {
                                 jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
                                 jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
                                 jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
+                                jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
                                 jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
                                 jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
                                 jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
@@ -390,16 +400,43 @@ public class MRADBN extends AppCompatActivity {
                 public void run() {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
-                       String MRAMETHOD="Single";
+                        Intent intent = new Intent(getApplication(), printerSetupforPRF.class);
+                        //intent.putExtra("transactionId", newtransactionid);
+                        //intent.putExtra("transactionType", TransactionType);
+                        intent.putExtra("amount_received", "0.00");
+                        intent.putExtra("cash_return", "0.00");
+                        intent.putExtra("settlement_items", "0.00");
+                        intent.putExtra("invoicetype", transactionType);
+                        intent.putExtra("newtransactionid", newtransactionid);
+                        intent.putExtra("mraQR", result);
+                        intent.putExtra("MRAIRN", irn);
+                        intent.putExtra("roomid", roomid);
+                        intent.putExtra("tableid", tableid);
+
+                        String MRAMETHOD="Single";
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
-                        navigateToNextScreen();
+                        startActivity(intent);
+
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
+                        Intent intent = new Intent(getApplication(), printerSetupforPRF.class);
+                        //intent.putExtra("transactionId", newtransactionid);
+                        //intent.putExtra("transactionType", TransactionType);
+                        intent.putExtra("amount_received", "0.00");
+                        intent.putExtra("cash_return", "0.00");
+                        intent.putExtra("settlement_items", "0.00");
+                        intent.putExtra("invoicetype", TransactionType);
+                        intent.putExtra("newtransactionid", newtransactionid);
+                        intent.putExtra("mraQR", result);
+                        intent.putExtra("MRAIRN", irn);
+                        intent.putExtra("roomid", roomid);
+                        intent.putExtra("tableid", tableid);
                         String MRAMETHOD="Single";
+
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
-                        navigateToNextScreen();
+
                     }
                 }
             });
@@ -430,7 +467,8 @@ public class MRADBN extends AppCompatActivity {
             selectedBuyerNIC = intent.getStringExtra("selectedBuyerNIC");
             selectedBuyerAddresse = intent.getStringExtra("selectedBuyerAddresse");
             SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
-
+            roomid= intent.getStringExtra("roomid");
+            tableid  = intent.getStringExtra("tableid");
 
             // Retrieve other buyer information as needed
         }
@@ -438,7 +476,7 @@ public class MRADBN extends AppCompatActivity {
         mDatabaseHelper = new DatabaseHelper(this);
 
 
-
+       // Log.e("test1", roomid);
 
         SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -683,11 +721,6 @@ public class MRADBN extends AppCompatActivity {
 
         return itemList;
     }
-    private void navigateToNextScreen() {
-        // Start the next activity (e.g., main activity)
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
+
 
 }

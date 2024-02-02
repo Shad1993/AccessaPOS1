@@ -221,7 +221,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
                 BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
                 // Calculate the desired sample size to scale down the image
-                options.inSampleSize = calculateInSampleSize(options, 200, 200); // Replace desiredWidth and desiredHeight with the desired dimensions
+                options.inSampleSize = calculateInSampleSize(options, 100, 100); // Replace desiredWidth and desiredHeight with the desired dimensions
 
                 // Set options to load the scaled-down version of the image
                 options.inJustDecodeBounds = false;

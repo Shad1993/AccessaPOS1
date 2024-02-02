@@ -59,7 +59,9 @@ import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.sales.RoomsAndTable.RoomsFragment;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.Tables.TablesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
@@ -82,10 +84,11 @@ import java.util.List;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener {
+public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener , RoomsFragment.OnRoomUpdateListener,TablesFragment.OnTableClickListener, TablesFragment.OnReloadFragmentListener {
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
-
+    private String tableid;
+    private int roomid;
     private TextView name;
     private TextView CashorId;
     private ItemAdapter mAdapter;
@@ -174,7 +177,11 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         TicketFragment ticketFragment1=new TicketFragment();
         ticketFragment1.setHasOptionsMenu(true);
 
+        // Initialize SharedPreferences
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
 
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
         SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
         // remove onscreen Keyboard
@@ -465,7 +472,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
 
     @Override
-    public void onItemAdded() {
+    public void onItemAdded(String roomid, String tableid) {
 
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
@@ -474,8 +481,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
             double TaxtotalAmount = salesFragment.calculateTotalTax();
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshData(totalAmount, TaxtotalAmount);
-               ticketFragment.updateheader(totalAmount,TaxtotalAmount);
+                ticketFragment.refreshDatatable(totalAmount, TaxtotalAmount, String.valueOf(roomid),tableid);
+               ticketFragment.updateheadertable(totalAmount,TaxtotalAmount, String.valueOf(roomid), tableid);
                 CustomerLcd instance = new CustomerLcd();
                 displayOnLCD();
             }
@@ -490,7 +497,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
 
         try {
             // Retrieve the total amount and total tax amount from the transactionheader table
-            Cursor cursor = mDatabaseHelper.getTransactionHeader();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
@@ -514,7 +521,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (customerLcdFragment != null) {
             double totalAmount = customerLcdFragment.calculateTotalAmount();
-            double taxTotalAmount = customerLcdFragment.calculateTotalTax();
+            double taxTotalAmount = customerLcdFragment.calculateTotalTax(roomid,tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);
@@ -528,8 +535,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     public void onItemDeleted() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
@@ -543,8 +550,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     public void onAmountModified() {
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount();
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax();
+            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
@@ -792,4 +799,82 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         unregisterReceiver(cancelReceiver);
     }
 
+    @Override
+    public void onRoomUpdate(int currentId) {
+
+        // Implement the logic to refresh the TablesFragment here
+        // Get the TablesFragment instance and update its UI
+        TablesFragment tablesFragment = (TablesFragment) getSupportFragmentManager().findFragmentById(R.id.TableFragment);
+        if (tablesFragment != null) {
+            // Update the UI in TablesFragment
+            tablesFragment.updateUIForRoomUpdate(currentId);
+        }
+    }
+
+    @Override
+    public void onTableClicked(String tableId,String roomnum) {
+        // Handle the table click event
+        // Example: Refresh the TicketFragment
+        refreshTicketFragment(tableId,roomnum);
+    }
+
+    private void refreshTicketFragment(String tableId, String roomnum) {
+        // Refresh the TicketFragment when an item is added in the SalesFragment
+
+            TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
+            if (ticketFragment != null) {
+                ticketFragment.refreshDatatable(calculateTotalAmount(roomnum,tableId), calculateTotalTaxAmount(roomnum,tableId),roomnum,tableId);
+
+                //ticketFragment.updateheader(calculateTotalAmount(roomnum,tableId),1);
+                CustomerLcd instance = new CustomerLcd();
+                displayOnLCD();
+            }
+
+    }
+    public double calculateTotalAmount(String roomid,String tableid) {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+    public double calculateTotalTaxAmount(String roomid,String tableid) {
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        double totalAmount = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
+            do {
+                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
+                totalAmount += totalPrice;
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return totalAmount;
+    }
+    public void filterAndInsertTable(String newTableName) {
+        TablesFragment tablesFragment = (TablesFragment) getSupportFragmentManager().findFragmentById(R.id.TableFragment);
+
+        if (tablesFragment != null) {
+            tablesFragment.handleFilterAndInsert(newTableName);
+        }
+    }
+    @Override
+    public void onReloadFragment(String tableId, String roomnum) {
+        // Reload the other fragment
+        SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
+
+        if (salesFragment != null) {
+            salesFragment.reload(tableId,roomnum); // Define a method like this in YourOtherFragment to handle the reload
+        }
+    }
 }
