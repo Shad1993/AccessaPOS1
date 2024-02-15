@@ -21,12 +21,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import androidx.appcompat.widget.SwitchCompat;
 
@@ -64,6 +66,8 @@ import java.util.Locale;
 public class ModifyItemActivity extends Activity {
     private static final int REQUEST_IMAGE_GALLERY = 1;
     private String formattedDate;
+
+    private  long optionIds;
     private String imagePath;
     private EditText NameText;
     private EditText descText;
@@ -89,8 +93,12 @@ public class ModifyItemActivity extends Activity {
     private Button buttonUpdate;
     private Button buttonDelete;
     private SwitchCompat Available4Sale;
+    private SwitchCompat optionsSwitch;
+    private SwitchCompat hascomment,Options;
     private SwitchCompat ExpirydateSwitch;
-    private boolean isAvailableForSale;
+    private LinearLayout optionsContainer;
+    private boolean isAvailableForSale,isOptionrequired;
+    private boolean isCommentRequired;
     private TextView ExpiryDateText;
     private DBManager dbManager;
     private String ImageLink,cashorId;
@@ -136,7 +144,10 @@ private ImageView image_view;
         CostEditText = findViewById(R.id.cost_edittext);
         soldByRadioGroup = findViewById(R.id.soldBy_radioGroup);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
+        hascomment=findViewById(R.id.comment_switch);
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
+        optionsSwitch = findViewById(R.id.options_switch);
+        optionsContainer = findViewById(R.id.options_container);
         ExpirydateSwitch = findViewById(R.id.perishable_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
         ItemCode = findViewById(R.id.IdItemCode_edittext);
@@ -258,7 +269,36 @@ private ImageView image_view;
                 }
             }
         });
+        hascomment.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isCommentRequired = isChecked;
 
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(ModifyItemActivity.this, R.string.hascomment, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(ModifyItemActivity.this, R.string.hanocomment, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        optionsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isOptionrequired = isChecked;
+                if (isChecked) {
+                    // Display options
+                    displayOptions();
+
+                } else {
+                    // Clear options
+                    optionsContainer.removeAllViews();
+
+                }
+            }
+        });
         ExpirydateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -356,6 +396,20 @@ private ImageView image_view;
                 Available4Sale.setChecked(true);
             }
 
+
+            Boolean hasoptions =item.gethasoptions();
+
+            Log.d("hasoption", String.valueOf(hasoptions));
+            if (Boolean.TRUE.equals(hasoptions)) {
+                optionsSwitch.setChecked(true);
+            }
+
+            String hascomments =item.gethascomment();
+
+            if (hascomments.trim().equals("true")){
+                Log.d("hascomments", hascomments);
+                hascomment.setChecked(true);
+            }
         }
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
@@ -560,6 +614,37 @@ private ImageView image_view;
             }
         });
         builder.show();
+    }
+    private void displayOptions() {
+
+        // Retrieve options from the database
+        List<Options> variantsList = mDatabaseHelper.getAllVariants();
+
+        // Clear previous options
+        optionsContainer.removeAllViews();
+
+        // Dynamically create checkboxes for each variant
+        for (Options options : variantsList) {
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(options.getOptionname());
+            checkBox.setChecked(false); // Set the initial state as unchecked
+
+            optionIds = options.getOptionId(); // Get the option ID from the Options object
+
+            // Set a listener for checkbox changes
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Checkbox is checked, show a toast with the option ID
+                        Toast.makeText(ModifyItemActivity.this, "Option ID: " + optionIds + " checked", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            // Add the checkbox to the container
+            optionsContainer.addView(checkBox);
+        }
     }
 
     private void openWebImageDialog() {

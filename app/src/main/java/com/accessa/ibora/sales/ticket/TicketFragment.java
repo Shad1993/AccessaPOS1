@@ -939,6 +939,7 @@ private TextView textViewVATs,textViewTotals;
                         String popFraction = "novalue";
                         // Create and show the dialog fragment with the data
                         validateticketDialogFragment dialogFragment = validateticketDialogFragment.newInstance(
+
                                 transactionIdInProgress,
                                 amount,
                                 popFraction,
@@ -1191,6 +1192,7 @@ private TextView textViewVATs,textViewTotals;
         intent.putExtra("invoiceRefIdentifier", invoiceRefIdentifier);
         intent.putExtra("roomid", roomid);
         intent.putExtra("tableid", tableid);
+
         if (selectedBuyer != null) {
             // Access selectedBuyer properties here
 
@@ -1247,11 +1249,7 @@ private TextView textViewVATs,textViewTotals;
 
 if(Type.equals("DRN")) {
     // Retrieve the data for receipts with QR codes
-    Cursor receiptCursor = mDatabaseHelper.getAllReceipt();
-
-
-
-
+    Cursor receiptCursor = mDatabaseHelper.getAllReceipts(transactionIdInProgress);
     // Create a custom dialog to display the receipt data
     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
     View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
@@ -1289,7 +1287,7 @@ if(Type.equals("DRN")) {
                     // Initialize SharedPreferences
                     SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
                     roomid = preferences.getInt("roomnum", 0);
-                    tableid = preferences.getString("table_id", "");
+                    tableid = String.valueOf(preferences.getInt("table_id", 0));
                     transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
                     System.out.println("transactionIdInProgress: " + transactionIdInProgress);
                     // Increment the transaction counter
@@ -1343,7 +1341,8 @@ if(Type.equals("DRN")) {
     // Initialize SharedPreferences
     SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
     roomid = preferences.getInt("roomnum", 0);
-    tableid = preferences.getString("table_id", "");
+    tableid = String.valueOf(preferences.getInt("table_id", 0));
+
     System.out.println("roomid: " + roomid);
     System.out.println("tableid: " + tableid);
     transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
@@ -1381,7 +1380,7 @@ if(Type.equals("DRN")) {
 
 }else if (Type.equals("CRN")) {
     // Retrieve the data for receipts with QR codes
-    Cursor newCursor1 = mDatabaseHelper.getAllReceiptWithQR();
+    Cursor newCursor1 = mDatabaseHelper.getAllReceipts(transactionIdInProgress);
 
     // Create a custom dialog to display the receipt data
     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
@@ -1495,9 +1494,7 @@ if(Type.equals("DRN")) {
 
                     // Start the activity with the selected receipt data
                     startNewActivity(Type, newTransactionId, name, String.valueOf(roomid),tableid);
-
                     getActivity().finish();
-
 
                 }
 
@@ -1604,37 +1601,8 @@ if(Type.equals("DRN")) {
         return null;
     }
 
-    public  double calculateTotalAmount1() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(TOTAL_PRICE);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
-    }
-    public  double calculateTotalTax1() {
-        Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
 
-        double TaxtotalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalTaxColumnIndex = cursor.getColumnIndex(VAT);
-            do {
-                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
-                TaxtotalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return TaxtotalAmount;
-    }
+
     public void displayOnLCD() {
         if (woyouService == null) {
 
@@ -1795,7 +1763,7 @@ if(Type.equals("DRN")) {
 
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
-        tableid = preferences.getString("table_id", "");
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
 Log.d("room and table", roomid+ " " +tableid);
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);

@@ -78,6 +78,7 @@ public class printerSetup extends AppCompatActivity {
     private String tableid;
     private String roomid;
     private String      splittype;
+    private   String newtransactionIdInProgress;
     private DatabaseHelper mDatabaseHelper;
     private String   itemLine, itemLine1;
     private String cashierName,cashierId;
@@ -275,6 +276,10 @@ public class printerSetup extends AppCompatActivity {
 
 
                                 List<Transaction> item = adapter.getData();
+
+                                Log.d("room", roomid);
+                                Log.d("table", tableid);
+                                Log.d("trans11", item.toString());
                                 // Print the data from the RecyclerView
                                 for (Transaction items : item) {
                                     String itemName = items.getItemName();
@@ -537,6 +542,13 @@ public class printerSetup extends AppCompatActivity {
                         if (mraqr != null && !mraqr.equals("Request Failed")) {
                             // Log the received QR code string
                             Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
+                            String MraFiscalised="MRA Fiscalised";
+                            String MRATransid=transactionIdInProgress;
+                            service.printText(MraFiscalised + "\n", null);
+                            service.setFontSize(22, null);
+                            service.printText("MRA Transaction Id: "+ MRATransid + "\n", null);
+                            service.setFontSize(24, null);
+
 
                             // Decode Base64 string to byte array
                             byte[] imageBytes;
@@ -557,7 +569,7 @@ public class printerSetup extends AppCompatActivity {
 
                                 // Print the Bitmap using your existing print method
                                 service.printBitmap(bitmap, null);
-
+                                service.printText(" " + "\n", null);
                             } catch (Exception e) {
                                 // Handle decoding or printing errors
                                 e.printStackTrace();
@@ -760,6 +772,21 @@ public class printerSetup extends AppCompatActivity {
 
         mDatabaseHelper = new DatabaseHelper(this);
         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+        boolean isprf=  startsWithPRF(transactionIdInProgress);
+        Log.d("isprf",transactionIdInProgress);
+        if(isprf) {
+            newtransactionIdInProgress = generateNewTransactionId();
+            Log.d("isprf", String.valueOf(isprf));
+
+
+
+            // Update the transaction ID in the transaction table for transactions with status "InProgress"
+            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newtransactionIdInProgress, String.valueOf(roomid),tableid);
+            // Update the transaction ID in the header table for transactions with status "InProgress"
+            mDatabaseHelper.updateHeaderTransactionIdInProgress(newtransactionIdInProgress, String.valueOf(roomid),tableid);
+            transactionIdInProgress=newtransactionIdInProgress;
+
+        }
         amountReceived = Double.parseDouble(anReturbed);
 
         final KonfettiView konfettiView = findViewById(R.id.konfettiView);
@@ -817,6 +844,47 @@ public class printerSetup extends AppCompatActivity {
         }
     }
 
+    public String generateNewTransactionId() {
+        SharedPreferences sharedPreference = this.getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+        String ShopName = sharedPreference.getString("ShopName", null);
+        // Retrieve the last used counter value from shared preferences
+        SharedPreferences sharedPreferences = this.getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
+        int lastCounter = sharedPreferences.getInt("counter", 1);
+
+        // Increment the counter for the next transaction
+        int currentCounter = lastCounter + 1;
+
+        // Save the updated counter value in shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("counter", currentCounter);
+        editor.apply();
+
+        // Extract the first three letters from companyName
+        String companyLetters = ShopName.substring(0, Math.min(ShopName.length(), 3)).toUpperCase();
+
+        String posNumberLetters = null;
+        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+            int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+            PosNum= cursorCompany.getString(columnCompanyNameIndex);
+            posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+
+        }
+        // Generate the transaction ID by combining the three letters and the counter
+        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
+    }
+    public static boolean startsWithPRF(String str) {
+        // Check if the string is not null and has at least 3 characters
+        if (str != null && str.length() >= 3) {
+            // Extract the first three characters of the string
+            String firstThreeChars = str.substring(0, 3);
+            // Check if the first three characters are "PRF"
+            return firstThreeChars.equals("PRF");
+        }
+        // Return false if the string is null or has less than 3 characters
+        return false;
+    }
     private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath, int desiredLogoWidth, int desiredLogoHeight) {
         try {
             // Check if the service is connected

@@ -21,6 +21,13 @@ public class Item {
     private String barcode;
     private float weight;
     private String expiryDate;
+    private String hascomment;
+    private boolean hasoption;
+    private String relateditem;
+    private String relateditem2;
+    private String relateditem3;
+    private String relateditem4;
+    private String relateditem5;
     private String VAT;
     private String Currency;
     private String soldBy;
@@ -85,6 +92,13 @@ public class Item {
         this.LastModified = LastModified;
         this.priceAfterDiscount = priceAfterDiscount;
         this.TotalDiscount=TotalDiscount;
+        this.hascomment=hascomment;
+        this.hasoption=hasoption;
+        this.relateditem=relateditem;
+        this.relateditem2=relateditem2;
+        this.relateditem3=relateditem3;
+        this.relateditem4=relateditem4;
+        this.relateditem4=relateditem5;
     }
 
     public Item(String name, String id, String price, String description, String productImageName) {
@@ -101,6 +115,58 @@ public class Item {
     }
     public void setAvailableForSale(boolean AvailableForSale) {
         this.AvailableForSale = AvailableForSale;
+    }
+    public String gethascomment() {
+        return hascomment;
+    }
+    public void setHascomment(String hascomment) {
+        this.hascomment = hascomment;
+    }
+
+    public boolean  gethasoptions() {
+        return hasoption;
+    }
+    public void setHasoption(Boolean hasoption) {
+        this.hasoption = hasoption;
+    }
+
+    public String getRelateditem() {
+        return relateditem;
+    }
+
+    public void setRelateditem(String relateditem) {
+        this.relateditem = relateditem;
+    }
+    public String getRelateditem2() {
+        return relateditem2;
+    }
+
+    public void setRelateditem2(String relateditem2) {
+        this.relateditem2 = relateditem2;
+    }
+
+    public String getRelateditem3() {
+        return relateditem3;
+    }
+
+    public void setRelateditem3(String relateditem3) {
+        this.relateditem3 = relateditem3;
+    }
+
+    public String getRelateditem4() {
+        return relateditem4;
+    }
+
+    public void setRelateditem4(String relateditem4) {
+        this.relateditem4 = relateditem4;
+    }
+
+    public String getRelateditem5() {
+        return relateditem5;
+    }
+
+    public void setRelateditem5(String relateditem5) {
+        this.relateditem5 = relateditem5;
     }
     public void setId(int id) {
         this.id = id;

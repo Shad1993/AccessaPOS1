@@ -181,7 +181,7 @@ public class validateticketDialogFragment extends DialogFragment  {
         PosNum = shardPreference.getString(POSNumber, null);
         SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = String.valueOf(preferences.getInt("roomnum", 0));
-        tableid = preferences.getString("table_id", "");
+        tableid = String.valueOf(preferences.getInt("table_id", 0));
 
         SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -585,10 +585,13 @@ public class validateticketDialogFragment extends DialogFragment  {
         validateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 printData();
             }
 
             private void printData() {
+
 
 
 
@@ -834,7 +837,39 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
     }
+    public String generateNewTransactionId() {
+       SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+        String ShopName = sharedPreference.getString("ShopName", null);
+        // Retrieve the last used counter value from shared preferences
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
+        int lastCounter = sharedPreferences.getInt("counter", 1);
+
+        // Increment the counter for the next transaction
+        int currentCounter = lastCounter + 1;
+
+        // Save the updated counter value in shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("counter", currentCounter);
+        editor.apply();
+
+        // Extract the first three letters from companyName
+        String companyLetters = ShopName.substring(0, Math.min(ShopName.length(), 3)).toUpperCase();
+
+        String posNumberLetters = null;
+        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+            int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
+            PosNum= cursorCompany.getString(columnCompanyNameIndex);
+            posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+
+        }
+        // Generate the transaction ID by combining the three letters and the counter
+        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
+    }
+
     private void handleFullPayment(String id) {
+
         // Iterate over the container layout to get the settlement details
         // Iterate over the container layout to get the settlement details
         ArrayList<SettlementItem> settlementItems = new ArrayList<>();

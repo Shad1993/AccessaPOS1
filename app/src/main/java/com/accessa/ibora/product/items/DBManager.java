@@ -90,7 +90,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String hascomment,String optionsid, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String hascomment, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -110,8 +110,13 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Weight, weight);
         contentValue.put(DatabaseHelper.AvailableForSale, AvailableForSale);
         contentValue.put(DatabaseHelper.hasoptions, options);
-        contentValue.put(DatabaseHelper.related_item, optionsid);
         contentValue.put(DatabaseHelper.comment, hascomment);
+        contentValue.put(DatabaseHelper.related_item, optionsid);
+        contentValue.put(DatabaseHelper.related_item2, optionsid2);
+        contentValue.put(DatabaseHelper.related_item3, optionsid3);
+        contentValue.put(DatabaseHelper.related_item4, optionsid4);
+        contentValue.put(DatabaseHelper.related_item5, optionsid5);
+
         contentValue.put(DatabaseHelper.SoldBy, SoldBy);
         contentValue.put(DatabaseHelper.Image, Image);
         contentValue.put(DatabaseHelper.Variant, Variant);
@@ -432,6 +437,13 @@ public class DBManager {
                 DatabaseHelper.Cost,
                 DatabaseHelper.SKU,
                 DatabaseHelper.AvailableForSale,
+                DatabaseHelper.hasoptions,
+                DatabaseHelper.comment,
+                DatabaseHelper.related_item,
+                DatabaseHelper.related_item2,
+                DatabaseHelper.related_item3,
+                DatabaseHelper.related_item4,
+                DatabaseHelper.related_item5,
                 DatabaseHelper.Variant,
                 DatabaseHelper.Image,
                 DatabaseHelper.Nature,
@@ -484,7 +496,14 @@ public class DBManager {
 
             item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
             item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
+            item.setHasoption(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.hasoptions))));
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
+            item.setHascomment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.comment)));
+            item.setRelateditem(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item)));
+            item.setRelateditem2(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item2)));
+            item.setRelateditem3(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item3)));
+            item.setRelateditem4(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item4)));
+            item.setRelateditem5(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item5)));
             item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
             item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
             item.setNature(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Nature)));
@@ -519,6 +538,9 @@ public class DBManager {
                 DatabaseHelper.Cost,
                 DatabaseHelper.SKU,
                 DatabaseHelper.AvailableForSale,
+                DatabaseHelper.hasoptions,
+                DatabaseHelper.comment,
+                DatabaseHelper.related_item,
                 DatabaseHelper.Variant,
                 DatabaseHelper.Image
                 // Add other columns as needed
@@ -558,7 +580,10 @@ public class DBManager {
 
             item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
             item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
+            item.setHasoption(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.hasoptions))));
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
+            item.setHascomment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.comment)));
+            item.setRelateditem(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item)));
             item.setVariant(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Variant)));
             item.setImage(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image)));
             // Set other properties of the item

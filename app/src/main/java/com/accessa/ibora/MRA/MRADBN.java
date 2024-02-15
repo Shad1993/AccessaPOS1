@@ -406,13 +406,13 @@ public class MRADBN extends AppCompatActivity {
                         intent.putExtra("amount_received", "0.00");
                         intent.putExtra("cash_return", "0.00");
                         intent.putExtra("settlement_items", "0.00");
-                        intent.putExtra("invoicetype", transactionType);
+                        intent.putExtra("invoicetype", TransactionType);
                         intent.putExtra("newtransactionid", newtransactionid);
                         intent.putExtra("mraQR", result);
                         intent.putExtra("MRAIRN", irn);
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
-
+                        Log.d("transactionType", TransactionType);
                         String MRAMETHOD="Single";
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
                         startActivity(intent);
@@ -434,7 +434,7 @@ public class MRADBN extends AppCompatActivity {
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
                         String MRAMETHOD="Single";
-
+                        Log.d("transactionType", TransactionType);
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
 
                     }
@@ -469,6 +469,7 @@ public class MRADBN extends AppCompatActivity {
             SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
             roomid= intent.getStringExtra("roomid");
             tableid  = intent.getStringExtra("tableid");
+
 
             // Retrieve other buyer information as needed
         }

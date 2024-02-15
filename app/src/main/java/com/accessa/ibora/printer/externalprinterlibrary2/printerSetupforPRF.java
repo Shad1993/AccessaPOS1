@@ -111,14 +111,28 @@ public class printerSetupforPRF extends AppCompatActivity {
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
                     recyclerView.setLayoutManager(new LinearLayoutManager(printerSetupforPRF.this));
-                    Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(roomid,tableid);
+                    Cursor cursor1;
+                    if (invoicetype.equals("DRN") || invoicetype.equals("CRN")) {
+                        cursor1 = mDatabaseHelper.getTransactionById1(newtransactionid);
+                        Log.d("room1", roomid);
+                        Log.d("table1", tableid);
+                        Log.d("invoicetype1", invoicetype);
+                        Log.d("newtransactionid", newtransactionid);
+                    }else
+
+                    {
+                        cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(String.valueOf(roomid),tableid);
+                        Log.d("room11", roomid);
+                        Log.d("table11", tableid);
+                    }
                     adapter = new TicketAdapter(printerSetupforPRF.this, cursor1);
                     recyclerView.setAdapter(adapter);
 
                     // Get the data from the adapter
                     List<Transaction> item = adapter.getData();
-
-
+                    Log.d("room", roomid);
+                    Log.d("table", tableid);
+                Log.d("trans11", item.toString());
                     try {
 
 
@@ -169,7 +183,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                             } else if (invoicetype.equals("CRN")) {
                                 TransactionTypename = "Credit Note";
                             } else if (invoicetype.equals("DRN")) {
-                                TransactionTypename.equals("Debit Note");
+                                TransactionTypename="Debit Note";
                             } else if (invoicetype.equals("Completed")) {
                                 TransactionTypename = "Duplicata";
                             } else if (invoicetype.equals("InProgress")) {
@@ -416,6 +430,13 @@ public class printerSetupforPRF extends AppCompatActivity {
                         if (mraqr != null && !mraqr.equals("Request Failed")) {
                             // Log the received QR code string
                             Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
+                            String MraFiscalised="MRA Fiscalised";
+                            String MRATransid = newtransactionid;
+                            service.printText(MraFiscalised + "\n", null);
+                            service.setFontSize(22, null);
+                            service.printText("MRA Transaction Id: "+ MRATransid + "\n", null);
+                            service.setFontSize(24, null);
+
 
                             // Decode Base64 string to byte array
                             byte[] imageBytes;
@@ -436,12 +457,13 @@ public class printerSetupforPRF extends AppCompatActivity {
 
                                 // Print the Bitmap using your existing print method
                                 service.printBitmap(bitmap, null);
-
+                                service.printText(" " + "\n", null);
                             } catch (Exception e) {
                                 // Handle decoding or printing errors
                                 e.printStackTrace();
                             }
                         }
+
 
 
                         // Print the centered footer text
@@ -531,6 +553,8 @@ public class printerSetupforPRF extends AppCompatActivity {
                         if(!"PRF".equals(invoicetype)) {
                             updateTransactionStatus();
                         }
+
+
                         MainActivity mainActivity = MainActivity.getInstance();
                         if (mainActivity != null) {
                             mainActivity.onTransationCompleted();
@@ -579,7 +603,7 @@ public class printerSetupforPRF extends AppCompatActivity {
         mraqr = getIntent().getStringExtra("mraQR");
         irn = getIntent().getStringExtra("MRAIRN");
         invoicetype = getIntent().getStringExtra("invoicetype");
-newtransactionid= getIntent().getStringExtra("newtransactionid");
+        newtransactionid= getIntent().getStringExtra("newtransactionid");
 
         // Initialize the DatabaseHelper
         mDatabaseHelper = new DatabaseHelper(this);

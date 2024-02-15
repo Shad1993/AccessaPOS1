@@ -5,11 +5,15 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,12 +33,14 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.product.items.Variant;
 import com.accessa.ibora.sales.Tables.TablesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import androidx.fragment.app.FragmentResultListener;
@@ -54,7 +60,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private double UnitPrice,priceAfterDiscount,TotalDiscount;
     private int transactionCounter = 1;
     private String VatVall;
-    private String Nature;
+    private String Nature,Hascomment, RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5;
+    private boolean HasOptions;
     private String TaxCode;
     private String tableid;
     private static int roomid;
@@ -226,6 +233,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     TaxCode = item.getTaxCode();
                     Currency = item.getCurrency();
                     ItemCode = item.getItemCode();
+                    HasOptions=item.gethasoptions();
+                    Hascomment=item.gethascomment();
+                    RelatedItem=item.getRelateditem();
+                    RelatedItem2=item.getRelateditem2();
+                    RelatedItem3=item.getRelateditem3();
+                    RelatedItem4=item.getRelateditem4();
+                    RelatedItem5=item.getRelateditem5();
 
                 }
 
@@ -234,6 +248,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String transactionSaved = "PRF";
                 String transactionCDN = "CRN";
                 String transactionDBN = "DRN";
+
 
                 if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF") || transactionSaved.equals("PRF") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")) {
                     if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
@@ -274,7 +289,19 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
 // Check if the item with the same ID is already selected
                 Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId, String.valueOf(roomid),tableid);
-                if (cursor != null && cursor.moveToFirst()) {
+                    HasOptions=item.gethasoptions();
+                    Hascomment=item.gethascomment();
+                    RelatedItem=item.getRelateditem();
+                    RelatedItem2=item.getRelateditem2();
+                    RelatedItem3=item.getRelateditem3();
+                    RelatedItem4=item.getRelateditem4();
+                    RelatedItem5=item.getRelateditem5();
+
+                    if (Boolean.TRUE.equals(HasOptions) || Hascomment.trim().equals("true")) {
+
+                        showOptionPopup(RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5);
+                    } else if
+                    (cursor != null && cursor.moveToFirst()) {
                     // Retrieve the existing transaction ID for the item
                     existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
 
@@ -372,6 +399,239 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         Cursor cursor = mDatabaseHelper.getInProgressRecord(roomid, tableid);
         return cursor != null && cursor.moveToFirst();
     }
+
+
+    private void showOptionPopup(String id,String id2,String id3,String id4,String id5) {
+
+        // Create a custom layout for the dialog
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.custom_comment_dialog, null);
+        List<Variant> variantList = dbManager.getVariantsById(id);
+        List<Variant> variantList2 = dbManager.getVariantsById(id2);
+        List<Variant> variantList3 = dbManager.getVariantsById(id3);
+        List<Variant> variantList4 = dbManager.getVariantsById(id4);
+        List<Variant> variantList5 = dbManager.getVariantsById(id5);
+
+
+
+        if (variantList != null && !variantList.isEmpty()) {
+            for (Variant variant : variantList) {
+                // Log each VARIANT_DESC
+
+
+
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout);
+
+                Button variantButton = new Button(getContext());
+                variantButton.setText(variant.getDescription()); // Set the button text to the variant description
+                variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+
+                // Click listener for normal click
+                variantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                // Long click listener for deletion
+                variantButton.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        // Handle long click, e.g., show confirmation dialog and delete the variant
+
+                        return true; // Consume the long click event
+                    }
+                });
+
+                // Add the button to the layout
+                variantButtonsLayout.addView(variantButton);
+            }
+        } else {
+            Log.d("relateditems", "No variants found for ID " + id);
+        }
+
+
+        if (variantList2 != null && !variantList2.isEmpty()) {
+            for (Variant variant : variantList2) {
+                // Log each VARIANT_DESC
+
+
+
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
+
+                Button variantButton = new Button(getContext());
+                variantButton.setText(variant.getDescription()); // Set the button text to the variant description
+                variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+
+                // Click listener for normal click
+                variantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                // Long click listener for deletion
+                variantButton.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        // Handle long click, e.g., show confirmation dialog and delete the variant
+
+                        return true; // Consume the long click event
+                    }
+                });
+
+                // Add the button to the layout
+                variantButtonsLayout.addView(variantButton);
+            }
+        } else {
+            Log.d("relateditems", "No variants found for ID " + id);
+        }
+
+        if (variantList3 != null && !variantList3.isEmpty()) {
+            for (Variant variant : variantList3) {
+                // Log each VARIANT_DESC
+
+
+
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout3);
+
+                Button variantButton = new Button(getContext());
+                variantButton.setText(variant.getDescription()); // Set the button text to the variant description
+                variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+
+                // Click listener for normal click
+                variantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                // Long click listener for deletion
+                variantButton.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        // Handle long click, e.g., show confirmation dialog and delete the variant
+
+                        return true; // Consume the long click event
+                    }
+                });
+
+                // Add the button to the layout
+                variantButtonsLayout.addView(variantButton);
+            }
+        } else {
+            Log.d("relateditems", "No variants found for ID " + id);
+        }
+
+        if (variantList4 != null && !variantList4.isEmpty()) {
+            for (Variant variant : variantList4) {
+                // Log each VARIANT_DESC
+
+
+
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout4);
+
+                Button variantButton = new Button(getContext());
+                variantButton.setText(variant.getDescription()); // Set the button text to the variant description
+                variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+
+                // Click listener for normal click
+                variantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                // Long click listener for deletion
+                variantButton.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        // Handle long click, e.g., show confirmation dialog and delete the variant
+
+                        return true; // Consume the long click event
+                    }
+                });
+
+                // Add the button to the layout
+                variantButtonsLayout.addView(variantButton);
+            }
+        } else {
+            Log.d("relateditems", "No variants found for ID " + id);
+        }
+
+        if (variantList5 != null && !variantList5.isEmpty()) {
+            for (Variant variant : variantList5) {
+                // Log each VARIANT_DESC
+
+
+
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout5);
+
+                Button variantButton = new Button(getContext());
+                variantButton.setText(variant.getDescription()); // Set the button text to the variant description
+                variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+
+                // Click listener for normal click
+                variantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                // Long click listener for deletion
+                variantButton.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        // Handle long click, e.g., show confirmation dialog and delete the variant
+
+                        return true; // Consume the long click event
+                    }
+                });
+
+                // Add the button to the layout
+                variantButtonsLayout.addView(variantButton);
+            }
+        } else {
+            Log.d("relateditems", "No variants found for ID " + id);
+        }
+        // Find the EditText in the custom layout
+        EditText commentEditText = dialogView.findViewById(R.id.commentEditText);
+
+        // Build the dialog with the custom layout
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setView(dialogView);
+        builder.setTitle("Write a Comment");
+
+        // Add positive button (OK button)
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the OK button click, and retrieve the comment from the EditText
+                String comment = commentEditText.getText().toString();
+                // Process the comment as needed
+                // ...
+            }
+        });
+
+        // Add negative button (Cancel button)
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle the Cancel button click or leave it empty
+            }
+        });
+
+        // Show the dialog
+        builder.show();
+    }
+
+
+
     public void insertItemIntoTransaction(String barcode) {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);

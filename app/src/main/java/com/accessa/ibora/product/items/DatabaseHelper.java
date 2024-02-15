@@ -61,6 +61,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static String hasoptions ="hasoptions";
     public static String comment= "comment";
     public static String related_item="related_item";
+    public static String related_item2= "related_item2";
+    public static String related_item3= "related_item3";
+    public static String related_item4= "related_item4";
+    public static String related_item5= "related_item5";
     // Items table columns
     public static final String Name = "name";
     public static final String Category = "category";
@@ -385,7 +389,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String ID = "id";
     public static final String ROOM_NAME = "room_name";
     public static final String TABLE_COUNT = "table_count";
-
+    public static final String TRANSACTION_COMMENT = "Comment";
     public static final String TABLE_ID = "id";
     public static final String MERGED = "Merged";
     public static final String ROOM_ID = "room_id";
@@ -454,6 +458,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "FOREIGN KEY (" + DEPARTMENT_CASHIER_ID + ") REFERENCES " +
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
+
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -495,6 +500,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + hasoptions + " BOOLEAN NOT NULL DEFAULT 0, "
             + comment + " TEXT, "
             + related_item + " TEXT, "
+            + related_item2 + " TEXT, "
+            + related_item3 + " TEXT, "
+            + related_item4 + " TEXT, "
+            + related_item5 + " TEXT, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
             + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
             + "FOREIGN KEY (" + UserId + ") REFERENCES "
@@ -628,6 +637,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_FAMILLE + " TEXT, " +
             TRANSACTION_ID_SALES_D + " TEXT, " +
             TRANSACTION_TOTALIZER + " TEXT, " +
+            TRANSACTION_COMMENT + " TEXT, " +
             "FOREIGN KEY (" + ROOM_ID + ") REFERENCES " + ROOMS + "(" + ID + ")," +
 
             "FOREIGN KEY (" + TABLE_ID + ") REFERENCES " + TABLES + "(" + TABLE_ID + ") , " +
@@ -982,6 +992,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return totalTax;
     }
+    public List<Options> getAllOptions1() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Options> optionsList = new ArrayList<>();
+
+        // Query the database to get all options
+        Cursor cursor = db.query(DatabaseHelper.OPTIONS_TABLE_NAME, null, null, null, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Options options = new Options();
+                // Populate the Options object from the cursor
+                options.setOptionId(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.OPTION_ID)));
+                options.setOptionName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.OPTION_NAME)));
+
+                optionsList.add(options);
+            } while (cursor.moveToNext());
+
+            // Close the cursor
+            cursor.close();
+        }
+
+        // Close the database connection if needed
+         db.close();
+
+        return optionsList;
+    }
+
     public Cursor getAllOptions() {
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -2025,6 +2062,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return cursor;
     }
+    public Cursor getTransactionById1(String transactionId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + TRANSACTION_ID + "=?";
+
+        String[] selectionArgs = {transactionId};
+
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        // Do not close the database connection here
+
+        return cursor;
+    }
+
 
     public boolean areAllItemsSelectedInTransactions(String roomId, String tableId) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -2621,7 +2673,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public void updateTransactionIdsforPRF(String newTransactionId, String roomid, String tableid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_ID, newTransactionId);
 
+        String joinQuery = "UPDATE " + TRANSACTION_TABLE_NAME +
+                " SET " + TRANSACTION_ID + " = ?" +
+                " WHERE " + TRANSACTION_ID + " IN (" +
+                " SELECT " + TRANSACTION_TICKET_NO +
+                " FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = ?" +
+                " AND " + ROOM_ID + " = ?" +
+                " AND " + TABLE_ID + " = ?" +
+                ")";
+
+        String[] selectionArgs = {newTransactionId, "InProgress", roomid, tableid};
+
+        db.execSQL(joinQuery, selectionArgs);
+    }
 
 
 
@@ -3388,6 +3458,49 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
         return db.query(TRANSACTION_HEADER_TABLE_NAME, null, null, null, null, null, sortOrder);
     }
+
+    public Cursor getAllReceipts(String excludedTransactionIdsString) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        // Check if excludedTransactionIdsString is null
+        if (excludedTransactionIdsString == null) {
+            // If it's null, return all receipts without excluding any transaction IDs
+            String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
+            return db.query(TRANSACTION_HEADER_TABLE_NAME, null,
+                    null, null, null, null, sortOrder);
+        }
+
+        // Convert the comma-separated string of transaction IDs to an array
+        String[] excludedTransactionIds = excludedTransactionIdsString.split(",");
+
+        // Trim each transaction ID to remove leading/trailing whitespaces
+        for (int i = 0; i < excludedTransactionIds.length; i++) {
+            excludedTransactionIds[i] = excludedTransactionIds[i].trim();
+        }
+
+        // Build the WHERE clause to exclude specific transaction IDs
+        StringBuilder whereClauseBuilder = new StringBuilder();
+        if (excludedTransactionIds.length > 0) {
+            whereClauseBuilder.append(TRANSACTION_ID).append(" NOT IN (");
+            for (int i = 0; i < excludedTransactionIds.length; i++) {
+                if (i > 0) {
+                    whereClauseBuilder.append(", ");
+                }
+                whereClauseBuilder.append("?");
+            }
+            whereClauseBuilder.append(")");
+        }
+
+        String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";
+
+        // Execute the query with the WHERE clause and excluded transaction IDs
+        return db.query(TRANSACTION_HEADER_TABLE_NAME, null,
+                whereClauseBuilder.toString(),
+                excludedTransactionIds.length > 0 ? excludedTransactionIds : null,
+                null, null, sortOrder);
+    }
+
+
     public Cursor getAllReceiptwithoutQR() {
         SQLiteDatabase db = getReadableDatabase();
         String sortOrder = TRANSACTION_DATE_MODIFIED + " DESC, " + TRANSACTION_TIME_MODIFIED + " DESC";

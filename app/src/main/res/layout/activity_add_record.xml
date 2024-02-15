@@ -11,542 +11,551 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/ItemsCard"
-            style="@style/centreLocatorCardDesign"
-            app:cardCornerRadius="16dp"
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_marginStart="200dp"
-            android:layout_marginEnd="200dp"
-            app:cardElevation="0dp">
+            android:layout_height="wrap_content">
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
+                android:id="@+id/ItemsCard"
+                style="@style/centreLocatorCardDesign"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:focusableInTouchMode="false"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/name" />
-
-                <EditText
-                    android:id="@+id/itemName_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/name"
-                    android:singleLine="true"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/Barcode" />
-
-                <EditText
-                    android:id="@+id/IdBarcode_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/Barcode"
-                    android:singleLine="true"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/options_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/Options"
-                    android:checked="false"
-                    android:textSize="18sp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_gravity="center" />
-                <!-- Button for adding options -->
+                android:layout_marginStart="200dp"
+                android:layout_marginEnd="200dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
-                    android:id="@+id/options_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:focusableInTouchMode="false"
                     android:orientation="vertical"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_gravity="center"/>
+                    android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/Nature" />
-
-                <Spinner
-                    android:id="@+id/Nature_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/ItemCode" />
-
-                <EditText
-                    android:id="@+id/IdItemCode_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/ItemCode"
-                    android:singleLine="true"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-                <!-- Add this code within the LinearLayout that contains other fields -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/SoldBy" />
-
-                <RadioGroup
-                    android:id="@+id/soldBy_radioGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <RadioButton
-                        android:id="@+id/soldBy_each_radio"
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/soldBy_each" />
+                        android:layout_gravity="start"
+                        android:text="@string/name"
+                        android:textSize="18sp" />
 
-                    <RadioButton
-                        android:id="@+id/soldBy_volume_radio"
+                    <EditText
+                        android:id="@+id/itemName_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/name"
+                        android:inputType="text"
+                        android:singleLine="true" />
+
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/soldBy_volume" />
-                </RadioGroup>
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
+                        android:layout_gravity="start"
+                        android:text="@string/Barcode"
+                        android:textSize="18sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:visibility="gone"
-                    android:text="@string/weight" />
+                    <EditText
+                        android:id="@+id/IdBarcode_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/Barcode"
+                        android:inputType="text"
+                        android:singleLine="true" />
 
-                <EditText
-                    android:id="@+id/weight_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/weight"
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:visibility="gone"
-                    android:text="@string/quantity" />
-
-                <EditText
-                    android:id="@+id/quantity_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/quantity"
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/CurrencySpinner" />
-
-
-
-                <Spinner
-                    android:id="@+id/Currency_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/Department" />
-
-
-
-                <Spinner
-                    android:id="@+id/Dept_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/SubDept" />
-
-
-                <Spinner
-                    android:id="@+id/SubDept_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/category" />
-
-                <Spinner
-                    android:id="@+id/category_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
-
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/Desc" />
-
-                <EditText
-                    android:id="@+id/description_edittext"
-                    style="@style/modifiedEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textMultiLine"
-                    android:hint="@string/Desc" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/price1" />
-
-                <EditText
-                    android:id="@+id/price_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/price"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/price2" />
-
-                <EditText
-                    android:id="@+id/price2_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/price"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/price3" />
-
-                <EditText
-                    android:id="@+id/price3_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/price3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/cost" />
-
-                <EditText
-                    android:id="@+id/cost_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/cost"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/sku" />
-
-                <EditText
-                    android:id="@+id/sku_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/sku"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/LongDesc" />
-
-                <EditText
-                    android:id="@+id/long_description_edittext"
-                    style="@style/modifiedEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:hint="@string/LongDesc" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/discount" />
-
-                <Spinner
-                    android:id="@+id/discount_spinner"
-                    style="@style/CustomSpinnerStyle"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/variant" />
-
-                <EditText
-                    android:id="@+id/variant_edittext"
-                    style="@style/modifiedEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:hint="@string/variant" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:text="@string/Vat" />
-
-
-
-                <RadioGroup
-                    android:id="@+id/VAT_radioGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <RadioButton
-                        android:id="@+id/VAT_0_radio"
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/options_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/VAT_0" />
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:checked="false"
+                        android:text="@string/Options"
+                        android:textSize="18sp" />
+                    <!-- Button for adding options -->
 
-                    <RadioButton
-                        android:id="@+id/VAT_Exempted_radio"
+                    <LinearLayout
+                        android:id="@+id/options_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="vertical" />
+
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/VAT_Exempted" />
-                    <RadioButton
-                        android:id="@+id/VAT_15_radio"
+                        android:layout_gravity="start"
+                        android:text="@string/Nature"
+                        android:textSize="18sp" />
+
+                    <Spinner
+                        android:id="@+id/Nature_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/VAT_15" />
-                </RadioGroup>
-                <View
-                    android:id="@+id/line"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
+                        android:layout_gravity="start"
+                        android:text="@string/ItemCode"
+                        android:textSize="18sp" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/perishable_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/Perishable"
-                    android:checked="false"
-                    android:textSize="18sp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_gravity="center" />
+                    <EditText
+                        android:id="@+id/IdItemCode_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/ItemCode"
+                        android:inputType="text"
+                        android:singleLine="true" />
+                    <!-- Add this code within the LinearLayout that contains other fields -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/SoldBy"
+                        android:textSize="18sp" />
 
-                <TextView
-                    android:id="@+id/ExpiryText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:visibility="gone"
-                    android:textSize="18sp"
-                    android:text="@string/expirydate" />
+                    <RadioGroup
+                        android:id="@+id/soldBy_radioGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
+                        <RadioButton
+                            android:id="@+id/soldBy_each_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/soldBy_each" />
 
-                <DatePicker
-                    android:id="@+id/expirydate_picker"
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                        <RadioButton
+                            android:id="@+id/soldBy_volume_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/soldBy_volume" />
+                    </RadioGroup>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/whiteTextColor" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
 
-                <Button
-                    android:id="@+id/image_button"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/Select_Image"
-                    android:textSize="10sp"
-                    android:drawableLeft="@drawable/select_image"
-                    android:background="@drawable/button_bleu_accessa"
-                    android:textColor="@android:color/white"
-                    android:layout_marginTop="10dp"
-                    android:layout_below="@id/line"
-                    android:backgroundTint="@color/BleuAccessaText"
-                    android:layout_gravity="center" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/weight"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
 
-                <ImageView
-                    android:id="@+id/image_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scaleType="centerCrop"
-                    android:adjustViewBounds="true"
-                    android:src="@drawable/accessalogo"
-                    android:visibility="gone" />
+                    <EditText
+                        android:id="@+id/weight_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/weight"
+                        android:inputType="numberDecimal"
+                        android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/image_path_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Image Path: "
-                    android:visibility="gone" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/quantity"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/Avail4Sale_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/toggle_button_text"
-                android:checked="false"
-                android:textSize="18sp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:layout_gravity="center" />
+                    <EditText
+                        android:id="@+id/quantity_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/quantity"
+                        android:inputType="number"
+                        android:visibility="gone" />
 
-
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:visibility="gone"
-                    android:text="@string/LastModified" />
-
-                <EditText
-                    android:id="@+id/LastModified_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/LastModified"
-                    android:singleLine="true"
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/CurrencySpinner"
+                        android:textSize="18sp" />
 
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:textSize="18sp"
-                    android:visibility="gone"
-                    android:text="@string/userid" />
+                    <Spinner
+                        android:id="@+id/Currency_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
 
-                <EditText
-                    android:id="@+id/userid_edittext"
-                    style="@style/modifiedEditText"
-                    android:hint="@string/userid"
-                    android:singleLine="true"
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/comment_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/hascomment_texts"
-                    android:checked="false"
-                    android:textSize="18sp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_gravity="center" />
-
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/Department"
+                        android:textSize="18sp" />
 
 
-        </androidx.cardview.widget.CardView>
+                    <Spinner
+                        android:id="@+id/Dept_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
 
-    </androidx.core.widget.NestedScrollView>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/SubDept"
+                        android:textSize="18sp" />
+
+
+                    <Spinner
+                        android:id="@+id/SubDept_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/category"
+                        android:textSize="18sp" />
+
+                    <Spinner
+                        android:id="@+id/category_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/Desc"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/description_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/Desc"
+                        android:inputType="textMultiLine" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/price1"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/price_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/price"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/price2"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/price2_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/price"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/price3"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/price3_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/price3"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/cost"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/cost_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/cost"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/sku"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/sku_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/sku"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/LongDesc"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/long_description_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/LongDesc"
+                        android:inputType="text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/discount"
+                        android:textSize="18sp" />
+
+                    <Spinner
+                        android:id="@+id/discount_spinner"
+                        style="@style/CustomSpinnerStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/variant"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/variant_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/variant"
+                        android:inputType="text" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/Vat"
+                        android:textSize="18sp" />
+
+
+                    <RadioGroup
+                        android:id="@+id/VAT_radioGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/VAT_0_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/VAT_0" />
+
+                        <RadioButton
+                            android:id="@+id/VAT_Exempted_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/VAT_Exempted" />
+
+                        <RadioButton
+                            android:id="@+id/VAT_15_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/VAT_15" />
+                    </RadioGroup>
+
+                    <View
+                        android:id="@+id/line"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/perishable_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:checked="false"
+                        android:text="@string/Perishable"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/ExpiryText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/expirydate"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+
+
+                    <DatePicker
+                        android:id="@+id/expirydate_picker"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/whiteTextColor" />
+
+                    <Button
+                        android:id="@+id/image_button"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/line"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/button_bleu_accessa"
+                        android:backgroundTint="@color/BleuAccessaText"
+                        android:drawableLeft="@drawable/select_image"
+                        android:text="@string/Select_Image"
+                        android:textColor="@android:color/white"
+                        android:textSize="10sp" />
+
+                    <ImageView
+                        android:id="@+id/image_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:adjustViewBounds="true"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/accessalogo"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/image_path_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Image Path: "
+                        android:visibility="gone" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/Avail4Sale_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:checked="false"
+                        android:text="@string/toggle_button_text"
+                        android:textSize="18sp" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/LastModified"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+
+                    <EditText
+                        android:id="@+id/LastModified_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/LastModified"
+                        android:inputType="text"
+                        android:singleLine="true"
+                        android:visibility="gone" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:text="@string/userid"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+
+                    <EditText
+                        android:id="@+id/userid_edittext"
+                        style="@style/modifiedEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/userid"
+                        android:inputType="text"
+                        android:singleLine="true"
+                        android:visibility="gone" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/comment_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:checked="false"
+                        android:text="@string/hascomment_texts"
+                        android:textSize="18sp" />
+
+                </LinearLayout>
+
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.core.widget.NestedScrollView>
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -101,7 +101,15 @@ public class AddItemActivity extends Activity {
     private EditText LastModified_Edittext;
     private SwitchCompat optionsSwitch;
     private LinearLayout optionsContainer;
-    private  long optionIds;
+    private List<Integer> selectedOptionIds = new ArrayList<>();
+    private static final int MAX_SELECTION_LIMIT = 5;
+    private int[] selectedOptions = new int[MAX_SELECTION_LIMIT];
+
+    private long optionId1;
+    private long optionId2;
+    private long optionId3;
+    private long optionId4;
+    private long optionId5;
 
     private int optionCounter = 1;
 
@@ -429,29 +437,79 @@ public class AddItemActivity extends Activity {
         });
     }
     private void displayOptions() {
-
         // Retrieve options from the database
-        List<Options> variantsList = mDatabaseHelper.getAllVariants();
+        List<Options> optionsList = mDatabaseHelper.getAllOptions1();
 
         // Clear previous options
         optionsContainer.removeAllViews();
 
-        // Dynamically create checkboxes for each variant
-        for (Options options : variantsList) {
+        // Dynamically create checkboxes for each option
+        for (int i = 0; i < optionsList.size(); i++) {
+            Options options = optionsList.get(i);
             CheckBox checkBox = new CheckBox(this);
             checkBox.setText(options.getOptionname());
             checkBox.setChecked(false); // Set the initial state as unchecked
 
-             optionIds = options.getOptionId(); // Get the option ID from the Options object
+            final long optionId = options.getOptionId(); // Get the option ID from the Options object
 
             // Set a listener for checkbox changes
+            final int finalIndex = i; // Store the index in a final variable for use inside the listener
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
-                        // Checkbox is checked, show a toast with the option ID
-                        Toast.makeText(AddItemActivity.this, "Option ID: " + optionIds + " checked", Toast.LENGTH_SHORT).show();
+                        // Check if the maximum limit is reached
+                        if (selectedOptionIds.size() < MAX_SELECTION_LIMIT) {
+                            // Checkbox is checked, add the option ID to the selected list
+                            selectedOptionIds.add((int) optionId);
+                            // Store the option ID in the corresponding variable
+                            switch (finalIndex) {
+                                case 0:
+                                    optionId1 = optionId;
+                                    break;
+                                case 1:
+                                    optionId2 = optionId;
+                                    break;
+                                case 2:
+                                    optionId3 = optionId;
+                                    break;
+                                case 3:
+                                    optionId4 = optionId;
+                                    break;
+                                case 4:
+                                    optionId5 = optionId;
+                                    break;
+                            }
+                            // Toast the option ID
+                            Toast.makeText(AddItemActivity.this, "Option ID: " + optionId + " checked", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Maximum limit reached, uncheck the checkbox and display a message
+                            checkBox.setChecked(false);
+                            Toast.makeText(AddItemActivity.this, "Maximum limit of 5 options reached", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Checkbox is unchecked, remove the option ID from the selected list
+                        selectedOptionIds.remove(Integer.valueOf((int) optionId));
+                        // Clear the corresponding variable
+                        switch (finalIndex) {
+                            case 0:
+                                optionId1 = 0;
+                                break;
+                            case 1:
+                                optionId2 = 0;
+                                break;
+                            case 2:
+                                optionId3 = 0;
+                                break;
+                            case 3:
+                                optionId4 = 0;
+                                break;
+                            case 4:
+                                optionId5 = 0;
+                                break;
+                        }
                     }
+                    updateSelectedOptions(); // Display selected option IDs
                 }
             });
 
@@ -460,7 +518,23 @@ public class AddItemActivity extends Activity {
         }
     }
 
+    private void updateSelectedOptions() {
+        // Display the selected option IDs
+        StringBuilder selectedOptionsText = new StringBuilder("Selected Option IDs: ");
+        if (optionId1 != 0) selectedOptionsText.append(optionId1).append(", ");
+        if (optionId2 != 0) selectedOptionsText.append(optionId2).append(", ");
+        if (optionId3 != 0) selectedOptionsText.append(optionId3).append(", ");
+        if (optionId4 != 0) selectedOptionsText.append(optionId4).append(", ");
+        if (optionId5 != 0) selectedOptionsText.append(optionId5).append(", ");
 
+        // Remove the trailing comma and space
+        if (selectedOptionsText.length() > 2) {
+            selectedOptionsText.setLength(selectedOptionsText.length() - 2);
+        }
+
+        // Show the selected option IDs in a Toast
+        Toast.makeText(AddItemActivity.this, selectedOptionsText.toString(), Toast.LENGTH_SHORT).show();
+    }
 
 
     private void populateDiscountSpinner() {
@@ -741,7 +815,7 @@ public class AddItemActivity extends Activity {
 
         showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale,optionStatus, String.valueOf(optionIds),   commentrequired,soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
+                availableForSale,optionStatus, String.valueOf(optionId1), String.valueOf(optionId2),String.valueOf(optionId3),String.valueOf(optionId4),String.valueOf(optionId5),  commentrequired,soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode, VatCode, String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice, currentPrice2, currentPrice3);
 
 
@@ -786,7 +860,7 @@ public class AddItemActivity extends Activity {
     }
 
 
-    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String options,String commentrequired,String optionIds, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
+    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String options,String commentrequired,String optionIds,String optionId2, String optionId3,String optionId4,String optionId5, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         if (isFinishing()) {
             // Activity is finishing, do not show the dialog
             return;
@@ -825,6 +899,10 @@ public class AddItemActivity extends Activity {
                 String Options = options;
                 String hascomment = commentrequired;
                 String Optionselectedid=optionIds;
+                String Optionselectedid2=optionId2;
+                String Optionselectedid3=optionId3;
+                String Optionselectedid4=optionId4;
+                String Optionselectedid5=optionId5;
                 String SoldBy = soldBy;
                 String Image = image;
                 String Variant = variant;
@@ -847,14 +925,14 @@ public class AddItemActivity extends Activity {
 
                 dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
-                        availableForSale,options,optionIds, commentrequired,soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        availableForSale,options,commentrequired,optionIds,optionId2,optionId3,optionId4,optionId5,soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Online");
 
 
 // Trigger the service to insert data
                 SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript,discountrate, Price,Price2,Price3, Category, Barcode, Weight, Department,
                         SubDepartment, LongDescription, Quantity, ExpiryDate, VAT,
-                        AvailableForSale,Options,hascomment,Optionselectedid, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
+                        AvailableForSale,Options,hascomment,Optionselectedid,Optionselectedid2,Optionselectedid3,Optionselectedid4,Optionselectedid5, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
                         SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf,Discountedamount2,Discountedamount3, CurrentPrice,CurrentPrice2,CurrentPrice3);
 
                 // Redirect to the Product activity
@@ -872,7 +950,7 @@ public class AddItemActivity extends Activity {
 
                 dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
-                        availableForSale,options,optionIds,commentrequired, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
+                        availableForSale,options,commentrequired,optionIds,optionId2,optionId3,optionId4,optionId5, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Offline");
 
                 dbManager.close();

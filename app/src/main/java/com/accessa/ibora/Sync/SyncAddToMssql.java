@@ -240,7 +240,7 @@ public class SyncAddToMssql extends IntentService {
 
     }
 
-    public static void startSync(Context context, String name, String desc,int DiscountAmount, String price,String price2,String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale,String options,String hascomment, String optionIds, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
+    public static void startSync(Context context, String name, String desc,int DiscountAmount, String price,String price2,String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale,String options,String hascomment, String optionIds,String optionId2,String optionId3,String optionId4,String optionId5, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         Intent intent = new Intent(context, SyncAddToMssql.class);
         intent.putExtra("Name", name);
         intent.putExtra("Desc", desc);
@@ -260,6 +260,10 @@ public class SyncAddToMssql extends IntentService {
         intent.putExtra("hasoptions", options);
         intent.putExtra("hascomment", hascomment);
         intent.putExtra("related_item", optionIds);
+        intent.putExtra("related_item2", optionId2);
+        intent.putExtra("related_item3", optionId3);
+        intent.putExtra("related_item4", optionId4);
+        intent.putExtra("related_item5", optionId5);
         intent.putExtra("SoldBy", soldBy);
         intent.putExtra("Image", image);
         intent.putExtra("Variant", variant);
