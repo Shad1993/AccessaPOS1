@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
 
         roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
         SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
         // remove onscreen Keyboard

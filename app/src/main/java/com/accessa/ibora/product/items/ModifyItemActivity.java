@@ -419,7 +419,7 @@ private ImageView image_view;
 
 
         List<String> categories = new ArrayList<>();
-        categories.add("All Category");
+        categories.add("All Categories");
         if (categoryCursor.moveToFirst()) {
             do {
                 String category = categoryCursor.getString(categoryCursor.getColumnIndex(CatName));

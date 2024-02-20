@@ -154,7 +154,7 @@ private TextView textViewVATs,textViewTotals;
         // Initialize SharedPreferences
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = preferences.getString("table_id", "0");
 
 
         mDatabaseHelper = new DatabaseHelper(getContext());
@@ -1287,7 +1287,7 @@ if(Type.equals("DRN")) {
                     // Initialize SharedPreferences
                     SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
                     roomid = preferences.getInt("roomnum", 0);
-                    tableid = String.valueOf(preferences.getInt("table_id", 0));
+                    tableid = preferences.getString("table_id", "0");
                     transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
                     System.out.println("transactionIdInProgress: " + transactionIdInProgress);
                     // Increment the transaction counter
@@ -1341,7 +1341,7 @@ if(Type.equals("DRN")) {
     // Initialize SharedPreferences
     SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
     roomid = preferences.getInt("roomnum", 0);
-    tableid = String.valueOf(preferences.getInt("table_id", 0));
+    tableid = String.valueOf(preferences.getString("table_id", "0"));
 
     System.out.println("roomid: " + roomid);
     System.out.println("tableid: " + tableid);
@@ -1763,7 +1763,7 @@ if(Type.equals("DRN")) {
 
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
 Log.d("room and table", roomid+ " " +tableid);
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);

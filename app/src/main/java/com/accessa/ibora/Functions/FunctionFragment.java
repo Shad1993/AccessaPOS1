@@ -129,7 +129,7 @@ public class FunctionFragment extends Fragment {
         }
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
         Cursor roomCursor = dbHelper.getAllTables1(String.valueOf(roomid));
         mAdapter = new TableAdapter(getActivity(), roomCursor);
 

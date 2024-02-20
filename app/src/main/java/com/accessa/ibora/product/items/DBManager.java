@@ -802,7 +802,13 @@ public class DBManager {
 
         database.insert(DatabaseHelper.OPTIONS_TABLE_NAME, null, contentValue);
     }
+    public void insertSup(String subDeptName) {
 
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper.SUPPLEMENT_OPTION_NAME , subDeptName);
+
+        database.insert(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME , null, contentValue);
+    }
 
     public SubDepartment getSubDepartmentById(String id) {
         SubDepartment Subdepartment = null;
@@ -974,6 +980,8 @@ public class DBManager {
 
         };
 
+
+
         String selection = DatabaseHelper.OPTION_ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
@@ -992,12 +1000,42 @@ public class DBManager {
         return options;
     }
 
+    public Options1 getSupplementsById(String id) {
+
+        Options1 options = null;
+        String[] columns = new String[]{
+                DatabaseHelper.SUPPLEMENT_OPTION_ID ,
+                DatabaseHelper.SUPPLEMENT_OPTION_NAME ,
+
+
+        };
+
+
+        String selection = DatabaseHelper.SUPPLEMENT_OPTION_ID + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME , columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            options = new Options1();
+            options.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_ID )));
+            options.setNames(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_NAME )));
+
+
+
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return options;
+    }
     public List<Variant> getVariantsById(String id) {
+
         List<Variant> variantList = new ArrayList<>();
         String[] columns = new String[]{
                 DatabaseHelper.VARIANTS_OPTIONS_ID,
                 DatabaseHelper.VARIANT_ID,
                 DatabaseHelper.VARIANT_BARCODE,
+                DatabaseHelper.VARIANT_ITEM_ID,
                 DatabaseHelper.VARIANT_DESC,
                 DatabaseHelper.VARIANT_PRICE
         };
@@ -1011,10 +1049,49 @@ public class DBManager {
             do {
                 Variant variant = new Variant();
                 variant.setVariantId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VARIANTS_OPTIONS_ID)));
+                variant.setVariantitemid(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_ITEM_ID)));
                 variant.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_DESC)));
                 variant.setItemId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.VARIANT_ID)));
                 variant.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_BARCODE)));
                 variant.setPrice(cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.VARIANT_PRICE)));
+
+                variantList.add(variant);
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return variantList;
+    }
+
+    public List<Variant> getSupplementListById(String id) {
+
+        List<Variant> variantList = new ArrayList<>();
+        String[] columns = new String[]{
+                DatabaseHelper.SUPPLEMENT_ID,
+                DatabaseHelper.SUPPLEMENT_NAME,
+                DatabaseHelper.VARIANT_BARCODE,
+                DatabaseHelper.SUPPLEMENT_OPTION_ID,
+                DatabaseHelper.SUPPLEMENT_DESCRIPTION,
+                DatabaseHelper.SUPPLEMENT_PRICE
+        };
+
+        String selection = DatabaseHelper.SUPPLEMENT_NAME + " = ?";
+        String[] selectionArgs = new String[]{id};
+
+        Cursor cursor = database.query(DatabaseHelper.SUPPLEMENTS_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Variant variant = new Variant();
+                variant.setVariantId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_ID)));
+                variant.setVariantitemid(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_ITEM_ID)));
+                variant.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_DESCRIPTION)));
+                variant.setItemId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_NAME)));
+                variant.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_BARCODE)));
+                variant.setPrice(cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_PRICE)));
 
                 variantList.add(variant);
             } while (cursor.moveToNext());
@@ -1034,15 +1111,29 @@ public class DBManager {
         return true;
     }
     public boolean deleteOption(long id) {
-        String selection = DatabaseHelper.OPTION_ID + "=?";
+        String selection = DatabaseHelper.OPTION_ID  + "=?";
         String[] selectionArgs = { String.valueOf(id) };
-        database.delete(DatabaseHelper.OPTIONS_TABLE_NAME, selection, selectionArgs);
+        database.delete(DatabaseHelper.OPTIONS_TABLE_NAME , selection, selectionArgs);
+        return true;
+    }
+
+    public boolean deleteSupplements(long id) {
+        String selection = DatabaseHelper.SUPPLEMENT_OPTION_ID  + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME , selection, selectionArgs);
         return true;
     }
     public boolean deleteVariants(long id) {
         String selection = DatabaseHelper.VARIANT_ID + "=?";
         String[] selectionArgs = { String.valueOf(id) };
         database.delete(DatabaseHelper.VARIANTS_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
+    public boolean deleteSupplementList(long id) {
+        String selection = DatabaseHelper.SUPPLEMENT_ID  + "=?";
+        String[] selectionArgs = { String.valueOf(id) };
+        database.delete(DatabaseHelper.SUPPLEMENTS_TABLE_NAME , selection, selectionArgs);
         return true;
     }
 

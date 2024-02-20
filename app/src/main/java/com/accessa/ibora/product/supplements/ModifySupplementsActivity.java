@@ -1,9 +1,7 @@
-package com.accessa.ibora.product.options;
+package com.accessa.ibora.product.supplements;
 
 
 
-import static com.accessa.ibora.product.items.DatabaseHelper.OPTIONS_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANTS_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_BARCODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_DESC;
@@ -29,23 +27,20 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.product.Vendor.Vendor;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Variant;
 import com.accessa.ibora.product.menu.Product;
+import com.accessa.ibora.product.options.Options1;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
-public class ModifyOptionsActivity extends Activity {
+public class ModifySupplementsActivity extends Activity {
 
     private Button buttonUpdate;
     private Button buttonDelete;
@@ -67,7 +62,7 @@ public class ModifyOptionsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("Modify Options");
+        setTitle("Modify Supplements");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.modify_options_activity);
 
@@ -94,13 +89,13 @@ public class ModifyOptionsActivity extends Activity {
 
 
 
-        Options1 Options = dbManager.getOptionsById(id);
+        Options1 Options = dbManager.getSupplementsById(id);
         if (Options != null) {
             OptionName.setText(Options.getOptionsName());
 
 
         }
-        List<Variant> variantList = dbManager.getVariantsById(id);
+        List<Variant> variantList = dbManager.getSupplementListById(id);
         if (variantList != null && !variantList.isEmpty()) {
             for (Variant variant : variantList) {
                 createVariantButton(Long.parseLong(id), variant.getBarcode(), variant.getDescription(), variant.getPrice(),variant.getVariantitemid());
@@ -109,7 +104,7 @@ public class ModifyOptionsActivity extends Activity {
 
 // Inside your onCreate or setup method
         Button addVariantButton = findViewById(R.id.add_variant);
-        addVariantButton.setOnClickListener(new View.OnClickListener() {
+        addVariantButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 showAddVariantDialogs(id);
@@ -178,7 +173,7 @@ public class ModifyOptionsActivity extends Activity {
             // Handle any exceptions that occur during the update process
             e.printStackTrace();
             // Display a toast or perform any other action as needed
-            Toast.makeText(ModifyOptionsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(ModifySupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 
             Log.e("DatabaseUpdate", "Exception: " + e.getMessage());
         }
@@ -223,7 +218,7 @@ public class ModifyOptionsActivity extends Activity {
         variantButton.setTag(barcode); // Set a tag to identify the variant (you can use barcode or variantId)
 
         // Click listener for normal click
-        variantButton.setOnClickListener(new View.OnClickListener() {
+        variantButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Handle button click, e.g., open details or perform an action
@@ -302,7 +297,7 @@ public class ModifyOptionsActivity extends Activity {
         EditText ItemidEditText = dialog.findViewById(R.id.editTextitemid);
         Button addButton = dialog.findViewById(R.id.addButton);
 
-        addButton.setOnClickListener(new View.OnClickListener() {
+        addButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Retrieve input values
@@ -339,7 +334,7 @@ public class ModifyOptionsActivity extends Activity {
                     // Close the dialog
                     dialog.dismiss();
                 } else {
-                    Toast.makeText(ModifyOptionsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ModifySupplementsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -383,13 +378,13 @@ public class ModifyOptionsActivity extends Activity {
                 }
             } else {
                 // Barcode is not unique, show a popup or toast
-                Toast.makeText(ModifyOptionsActivity.this, "Barcode/Item ID already exists", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ModifySupplementsActivity.this, "Barcode/Item ID already exists", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             // Handle any exceptions that occur during the insertion process
             e.printStackTrace();
             // Display a toast or perform any other action as needed
-            Toast.makeText(ModifyOptionsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(ModifySupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 
             Log.e("DatabaseInsert", "Exception: " + e.getMessage());
         }
@@ -410,7 +405,7 @@ public class ModifyOptionsActivity extends Activity {
         barcodeEditText.setText(barcode);
         priceEditText.setText(price);
         ItemIdEditText.setText(variantitemid);
-        addButton.setOnClickListener(new View.OnClickListener() {
+        addButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Retrieve input values
@@ -446,7 +441,7 @@ public class ModifyOptionsActivity extends Activity {
                     // Close the dialog
                     dialog.dismiss();
                 } else {
-                    Toast.makeText(ModifyOptionsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ModifySupplementsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -479,7 +474,7 @@ public class ModifyOptionsActivity extends Activity {
     }
 
     private void deleteItem() {
-        boolean isDeleted = dbManager.deleteOption(_id);
+        boolean isDeleted = dbManager.deleteSupplements(_id);
         returnHome();
         if (isDeleted) {
 
@@ -492,7 +487,7 @@ public class ModifyOptionsActivity extends Activity {
     }
 
     private void deleteVariants() {
-        boolean isDeleted = dbManager.deleteVariants(_id);
+        boolean isDeleted = dbManager.deleteSupplementList(_id);
         returnHome();
         if (isDeleted) {
 

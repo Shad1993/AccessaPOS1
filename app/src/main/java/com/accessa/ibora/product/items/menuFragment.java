@@ -18,7 +18,9 @@ import com.accessa.ibora.sales.Sales.ItemGridAdapter;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class menuFragment extends Fragment {
 
@@ -112,20 +114,28 @@ public class menuFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query(true, DatabaseHelper.TABLE_NAME, new String[]{DatabaseHelper.Category}, null, null, null, null, null, null);
 
-        List<String> categories = new ArrayList<>();
-        // Add "All Categories" at the top
-        categories.add("All Categories");
+        Set<String> uniqueCategories = new HashSet<>();
+
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String category = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category));
-                categories.add(category);
+                uniqueCategories.add(category);
             }
             cursor.close();
         }
 
         db.close();
+
+        // Convert set to list
+        List<String> categories = new ArrayList<>(uniqueCategories);
+
+        // Ensure "All Categories" is at the top
+        categories.add(0, "All Categories");
+
         return categories;
     }
+
+
 
 }
 

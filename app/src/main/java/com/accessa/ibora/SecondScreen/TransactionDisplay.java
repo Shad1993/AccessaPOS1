@@ -62,7 +62,7 @@ public class TransactionDisplay extends Presentation {
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
         SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
 
         textViewTime = findViewById(R.id.textViewTime);
         handler = new Handler(Looper.getMainLooper());

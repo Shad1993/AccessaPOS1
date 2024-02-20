@@ -4,7 +4,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
-
+    <EditText
+        android:id="@+id/editTextitemid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Item Id" />
     <EditText
         android:id="@+id/editTextBarcode"
         android:layout_width="match_parent"

@@ -609,7 +609,7 @@ public class PrintDuplicata extends AppCompatActivity {
         // Initialize SharedPreferences
         SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
         // Retrieve the extras from the intent
         Intent intent = getIntent();
         if (intent != null) {

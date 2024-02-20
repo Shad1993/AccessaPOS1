@@ -5,6 +5,8 @@ public class Variant {
     private long itemId;
     private String barcode;
     private String description;
+
+    private String Variantitemid;
     private double price;
 
     public Variant(long variantId, long itemId, String barcode, String description, double price) {
@@ -24,6 +26,12 @@ public class Variant {
     }
     public void setVariantId(int variantId) {
         this.variantId = variantId;
+    }
+    public String getVariantitemid() {
+        return Variantitemid;
+    }
+    public void setVariantitemid(String Variantitemid) {
+        this.Variantitemid = Variantitemid;
     }
     public long getItemId() {
         return itemId;

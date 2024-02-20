@@ -1,5 +1,6 @@
 package com.accessa.ibora.sales.Sales;
 
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -109,17 +110,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             // Use 'receivedData' as needed in your fragment logic
         }
 
-        // Update the table ID in SharedPreferences
-        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("table_id", 1);
-        editor.putInt("roomnum", 1);
-        editor.apply();
+
+
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = preferences.getString("table_id", "0");
 // Get data from SharedPreferences
 // Now the table ID in SharedPreferences is updated and can be accessed elsewhere in your app
 
 // Retrieve table_id and roomnum
-        tableid = String.valueOf(preferences.getInt("table_id", 0)); // "defaultTableId" is a default value in case the key is not found
+        tableid = String.valueOf(preferences.getString("table_id", "0")); // "defaultTableId" is a default value in case the key is not found
         roomid = preferences.getInt("roomnum", 0); // -1 is a default value in case the key is not found
 
 
@@ -296,10 +296,14 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     RelatedItem3=item.getRelateditem3();
                     RelatedItem4=item.getRelateditem4();
                     RelatedItem5=item.getRelateditem5();
+                    float quantity= item.getQuantity();
 
                     if (Boolean.TRUE.equals(HasOptions) || Hascomment.trim().equals("true")) {
 
-                        showOptionPopup(RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5);
+
+                        Log.d("relateditems1", RelatedItem+ " " +RelatedItem2 + " " + RelatedItem3 + " " + RelatedItem4 + " " + RelatedItem5 );
+
+                        showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                     } else if
                     (cursor != null && cursor.moveToFirst()) {
                     // Retrieve the existing transaction ID for the item
@@ -401,7 +405,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     }
 
 
-    private void showOptionPopup(String id,String id2,String id3,String id4,String id5) {
+    private void showOptionPopup(String Hascomment,String id,String id2,String id3,String id4,String id5,int itemId,String transactionId,String transactionDate,int quantity, double newTotalPrice, double vat, String longDescription,Double unitPrice, Double priceWithoutVat,String VatType,String PosNum,String Nature,String ItemCode, String currency,String TaxCode,double priceAfterDiscount,Double TotalDiscount,String roomid,String tableid,int ispaid ) {
+
 
         // Create a custom layout for the dialog
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -412,7 +417,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         List<Variant> variantList4 = dbManager.getVariantsById(id4);
         List<Variant> variantList5 = dbManager.getVariantsById(id5);
 
-
+        if(Hascomment.trim().equals("false")) {
+            EditText comment= dialogView.findViewById(R.id.commentEditText);
+            comment.setVisibility(View.GONE);
+        }
 
         if (variantList != null && !variantList.isEmpty()) {
             for (Variant variant : variantList) {
@@ -425,13 +433,33 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+                String newbarcode=variant.getBarcode();
+                String newDesc=variant.getDescription();
+                String newitemid=variant.getVariantitemid();
+                double newprice=variant.getPrice();
+                String optionName= mDatabaseHelper.getOptionNameById(Integer.parseInt(id));
+                String optionName2= mDatabaseHelper.getOptionNameById(Integer.parseInt(id2));
+                String optionName3= mDatabaseHelper.getOptionNameById(Integer.parseInt(id3));
+                String optionName4= mDatabaseHelper.getOptionNameById(Integer.parseInt(id4));
+                String optionName5= mDatabaseHelper.getOptionNameById(Integer.parseInt(id5));
 
+                TextView textView = dialogView.findViewById(R.id.OptionNametextView); // Replace R.id.textView with the ID of your TextView
+                TextView textView2 = dialogView.findViewById(R.id.OptionNametextView2);
+                TextView textView3 = dialogView.findViewById(R.id.OptionNametextView3);
+                TextView textView4 = dialogView.findViewById(R.id.OptionNametextView4);
+                TextView textView5 = dialogView.findViewById(R.id.OptionNametextView5);
+                textView.setText(optionName);
+                textView2.setText(optionName2);
+                textView3.setText(optionName3);
+                textView4.setText(optionName4);
+                textView5.setText(optionName5);// Set the text for the option
                 // Click listener for normal click
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                    };
 
-                    }
                 });
 
                 // Long click listener for deletion
@@ -449,28 +477,53 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
         } else {
             Log.d("relateditems", "No variants found for ID " + id);
+            // Hide the layout containing buttons and option names if no data is available
+            dialogView.findViewById(R.id.variantButtonsLayout).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView5).setVisibility(View.GONE);
         }
 
 
         if (variantList2 != null && !variantList2.isEmpty()) {
             for (Variant variant : variantList2) {
-                // Log each VARIANT_DESC
-
-
-
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
+               LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
 
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+                String newbarcode=variant.getBarcode();
+                String newDesc=variant.getDescription();
+                String newitemid=variant.getVariantitemid();
+                double newprice=variant.getPrice();
+                String optionName= mDatabaseHelper.getOptionNameById(Integer.parseInt(id));
+                String optionName2= mDatabaseHelper.getOptionNameById(Integer.parseInt(id2));
+                String optionName3= mDatabaseHelper.getOptionNameById(Integer.parseInt(id3));
+                String optionName4= mDatabaseHelper.getOptionNameById(Integer.parseInt(id4));
+                String optionName5= mDatabaseHelper.getOptionNameById(Integer.parseInt(id5));
 
+                TextView textView = dialogView.findViewById(R.id.OptionNametextView); // Replace R.id.textView with the ID of your TextView
+                TextView textView2 = dialogView.findViewById(R.id.OptionNametextView2);
+                TextView textView3 = dialogView.findViewById(R.id.OptionNametextView3);
+                TextView textView4 = dialogView.findViewById(R.id.OptionNametextView4);
+                TextView textView5 = dialogView.findViewById(R.id.OptionNametextView5);
+                textView.setText(optionName);
+                textView2.setText(optionName2);
+                textView3.setText(optionName3);
+                textView4.setText(optionName4);
+                textView5.setText(optionName5);// Set the text for the option
                 // Click listener for normal click
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                    };
 
-                    }
                 });
+
+
 
                 // Long click listener for deletion
                 variantButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -487,6 +540,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
         } else {
             Log.d("relateditems", "No variants found for ID " + id);
+            // Hide the layout containing buttons and option names if no data is available
+            dialogView.findViewById(R.id.variantButtonsLayout2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView5).setVisibility(View.GONE);
         }
 
         if (variantList3 != null && !variantList3.isEmpty()) {
@@ -500,14 +560,36 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+                String newbarcode=variant.getBarcode();
+                String newDesc=variant.getDescription();
+                String newitemid=variant.getVariantitemid();
+                double newprice=variant.getPrice();
+                String optionName= mDatabaseHelper.getOptionNameById(Integer.parseInt(id));
+                String optionName2= mDatabaseHelper.getOptionNameById(Integer.parseInt(id2));
+                String optionName3= mDatabaseHelper.getOptionNameById(Integer.parseInt(id3));
+                String optionName4= mDatabaseHelper.getOptionNameById(Integer.parseInt(id4));
+                String optionName5= mDatabaseHelper.getOptionNameById(Integer.parseInt(id5));
 
+                TextView textView = dialogView.findViewById(R.id.OptionNametextView); // Replace R.id.textView with the ID of your TextView
+                TextView textView2 = dialogView.findViewById(R.id.OptionNametextView2);
+                TextView textView3 = dialogView.findViewById(R.id.OptionNametextView3);
+                TextView textView4 = dialogView.findViewById(R.id.OptionNametextView4);
+                TextView textView5 = dialogView.findViewById(R.id.OptionNametextView5);
+                textView.setText(optionName);
+                textView2.setText(optionName2);
+                textView3.setText(optionName3);
+                textView4.setText(optionName4);
+                textView5.setText(optionName5);// Set the text for the option
                 // Click listener for normal click
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                    };
 
-                    }
                 });
+
+
 
                 // Long click listener for deletion
                 variantButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -524,6 +606,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
         } else {
             Log.d("relateditems", "No variants found for ID " + id);
+            // Hide the layout containing buttons and option names if no data is available
+            dialogView.findViewById(R.id.variantButtonsLayout3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView5).setVisibility(View.GONE);
         }
 
         if (variantList4 != null && !variantList4.isEmpty()) {
@@ -537,14 +626,36 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+                String newbarcode=variant.getBarcode();
+                String newDesc=variant.getDescription();
+                String newitemid=variant.getVariantitemid();
+                double newprice=variant.getPrice();
+                String optionName= mDatabaseHelper.getOptionNameById(Integer.parseInt(id));
+                String optionName2= mDatabaseHelper.getOptionNameById(Integer.parseInt(id2));
+                String optionName3= mDatabaseHelper.getOptionNameById(Integer.parseInt(id3));
+                String optionName4= mDatabaseHelper.getOptionNameById(Integer.parseInt(id4));
+                String optionName5= mDatabaseHelper.getOptionNameById(Integer.parseInt(id5));
 
+                TextView textView = dialogView.findViewById(R.id.OptionNametextView); // Replace R.id.textView with the ID of your TextView
+                TextView textView2 = dialogView.findViewById(R.id.OptionNametextView2);
+                TextView textView3 = dialogView.findViewById(R.id.OptionNametextView3);
+                TextView textView4 = dialogView.findViewById(R.id.OptionNametextView4);
+                TextView textView5 = dialogView.findViewById(R.id.OptionNametextView5);
+                textView.setText(optionName);
+                textView2.setText(optionName2);
+                textView3.setText(optionName3);
+                textView4.setText(optionName4);
+                textView5.setText(optionName5);// Set the text for the option
                 // Click listener for normal click
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                    };
 
-                    }
                 });
+
+
 
                 // Long click listener for deletion
                 variantButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -561,6 +672,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
         } else {
             Log.d("relateditems", "No variants found for ID " + id);
+            // Hide the layout containing buttons and option names if no data is available
+            dialogView.findViewById(R.id.variantButtonsLayout4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView5).setVisibility(View.GONE);
         }
 
         if (variantList5 != null && !variantList5.isEmpty()) {
@@ -574,14 +692,36 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
+                String newbarcode=variant.getBarcode();
+                String newDesc=variant.getDescription();
+                String newitemid=variant.getVariantitemid();
+                double newprice=variant.getPrice();
+                String optionName= mDatabaseHelper.getOptionNameById(Integer.parseInt(id));
+                String optionName2= mDatabaseHelper.getOptionNameById(Integer.parseInt(id2));
+                String optionName3= mDatabaseHelper.getOptionNameById(Integer.parseInt(id3));
+                String optionName4= mDatabaseHelper.getOptionNameById(Integer.parseInt(id4));
+                String optionName5= mDatabaseHelper.getOptionNameById(Integer.parseInt(id5));
 
+                TextView textView = dialogView.findViewById(R.id.OptionNametextView); // Replace R.id.textView with the ID of your TextView
+                TextView textView2 = dialogView.findViewById(R.id.OptionNametextView2);
+                TextView textView3 = dialogView.findViewById(R.id.OptionNametextView3);
+                TextView textView4 = dialogView.findViewById(R.id.OptionNametextView4);
+                TextView textView5 = dialogView.findViewById(R.id.OptionNametextView5);
+                textView.setText(optionName);
+                textView2.setText(optionName2);
+                textView3.setText(optionName3);
+                textView4.setText(optionName4);
+                textView5.setText(optionName5);// Set the text for the option
                 // Click listener for normal click
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                    };
 
-                    }
                 });
+
+
 
                 // Long click listener for deletion
                 variantButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -598,6 +738,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
         } else {
             Log.d("relateditems", "No variants found for ID " + id);
+            // Hide the layout containing buttons and option names if no data is available
+            dialogView.findViewById(R.id.variantButtonsLayout5).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView2).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView3).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView4).setVisibility(View.GONE);
+            dialogView.findViewById(R.id.OptionNametextView5).setVisibility(View.GONE);
         }
         // Find the EditText in the custom layout
         EditText commentEditText = dialogView.findViewById(R.id.commentEditText);
@@ -605,7 +752,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         // Build the dialog with the custom layout
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setView(dialogView);
-        builder.setTitle("Write a Comment");
+        builder.setTitle("Options/Comments");
 
         // Add positive button (OK button)
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -630,7 +777,79 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         builder.show();
     }
 
+    public void insertdata(String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String newbarcode, String newdesc,double newprice,String newitemid) {
+        Item item = dbManager.getItemById(id);
+        Log.d("newbarcode", newbarcode);
+        Cursor cursor = mDatabaseHelper.getTransactionByItemId(Integer.parseInt(newitemid), String.valueOf(roomid), tableid);
+            longDescription= longDescription+"-"+newdesc;
 
+        if
+        (cursor != null && cursor.moveToFirst()) {
+            // Retrieve the existing transaction ID for the item
+            existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
+
+            // Check if the existing transaction ID matches the current transaction ID
+            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+                // Item already selected, update the quantity and total price
+                int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+
+                UnitPrice = newprice;
+
+
+                int newQuantity = currentQuantity + 1;
+                double newTotalPrice = UnitPrice * newQuantity;
+                double newVat = newQuantity * calculateTax();
+                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid), newQuantity, newTotalPrice, newVat, VatType, String.valueOf(roomid), tableid);
+                refreshTicketFragment();
+                refreshTotal();
+            } else {
+                if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
+                    // Item is paid, insert a new transaction with IS_PAID as 0
+                    item = dbManager.getItemById(String.valueOf(itemId));
+                    if (item != null) {
+                        // Other item details extraction code...
+
+                        double UnitPrice = newprice;
+                        double newTotalPrice = UnitPrice * 1;
+
+                        // Insert a new transaction with IS_PAID as 0
+                        mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+                        refreshTicketFragment();
+                        refreshTotal();
+                    }
+                }
+            }
+        } else {
+            item = dbManager.getItemById(String.valueOf(itemId));
+
+            double UnitPrice = newprice;
+            double newTotalPrice = UnitPrice * 1;
+
+            // Item not selected, insert a new transaction with quantity 1 and total price
+            mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+            refreshTicketFragment();
+            refreshTotal();
+
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        item = dbManager.getItemById(id);
+        if (item != null) {
+            VatVall = item.getVAT();
+
+            double unitprice = item.getPrice();
+
+            SendToHeader(unitprice, calculateTax());
+        }
+        // Notify the listener that an item is added
+        if (itemAddedListener != null) {
+            itemAddedListener.onItemAdded(String.valueOf(roomid), tableid);
+        }
+
+    }
 
     public void insertItemIntoTransaction(String barcode) {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);

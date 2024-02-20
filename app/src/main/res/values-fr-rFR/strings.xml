@@ -512,6 +512,11 @@
     <string name="addVariant">Add a Variant</string>
     <string name="Variants_deleted_successfully">Variants Deleted</string>
     <string name="failed_to_delete_Variants">Variants Deletion Failed</string>
+    <string name="Supplements">Supplements</string>
+    <string name="AllSupplements">All Supplements</string>
+    <string name="SupplementName">Supplement Name</string>
+    <string name="addsupplements">Add Supplement</string>
+    <string name="noSupplementfound">No Supplements Found</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

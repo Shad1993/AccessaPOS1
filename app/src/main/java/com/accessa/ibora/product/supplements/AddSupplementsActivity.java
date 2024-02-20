@@ -1,15 +1,21 @@
-package com.accessa.ibora.product.options;
+package com.accessa.ibora.product.supplements;
 
 
 import static com.accessa.ibora.product.items.DatabaseHelper.OPTIONS_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENTS_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_DESCRIPTION;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_OPTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANTS_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_BARCODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_DESC;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_PRICE;
-import static com.accessa.ibora.product.items.DatabaseHelper.Variant_OPTION_ID;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -24,12 +30,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.accessa.ibora.R;
@@ -37,12 +40,7 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-public class AddOptionsActivity extends Activity {
+public class AddSupplementsActivity extends Activity {
     private DatabaseHelper mDatabaseHelper;
 
     private EditText OptName_Edittext;
@@ -57,7 +55,7 @@ public class AddOptionsActivity extends Activity {
         super.onCreate(savedInstanceState);
         // Set the screen orientation to landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setTitle("Add Options");
+        setTitle("Add Supplements");
 
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -68,7 +66,7 @@ public class AddOptionsActivity extends Activity {
 
 
 
-        setContentView(R.layout.add_options_activity);
+        setContentView(R.layout.add_supplements_activity);
 
         OptName_Edittext = findViewById(R.id.DeptName_edittext);
 
@@ -144,7 +142,7 @@ public class AddOptionsActivity extends Activity {
                     // Close the dialog
                     dialog.dismiss();
                 } else {
-                    Toast.makeText(AddOptionsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddSupplementsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -164,13 +162,13 @@ public class AddOptionsActivity extends Activity {
             if (isBarcodeUnique(db, barcode) || isItemidUnique(db,itemid)) {
                 // Prepare the ContentValues to insert into the VARIANTS_TABLE_NAME
                 ContentValues values = new ContentValues();
-                values.put(VARIANT_ID, optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
+                values.put(SUPPLEMENT_ID , optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
                 values.put(VARIANT_BARCODE, barcode);
-                values.put(VARIANT_DESC, description);
-                values.put(VARIANT_PRICE, price);
-                values.put(VARIANT_ITEM_ID, itemid);
+                values.put(SUPPLEMENT_DESCRIPTION , description);
+                values.put(SUPPLEMENT_PRICE , price);
+                values.put(SUPPLEMENT_NAME, itemid);
                 // Insert the data into the VARIANTS_TABLE_NAME
-                long variantId = db.insert(VARIANTS_TABLE_NAME, null, values);
+                long variantId = db.insert(SUPPLEMENTS_TABLE_NAME , null, values);
 
                 // Close the database
                 db.close();
@@ -186,13 +184,13 @@ public class AddOptionsActivity extends Activity {
                 }
             } else {
                 // Barcode is not unique, show a popup or toast
-                Toast.makeText(AddOptionsActivity.this, "Barcode already exists", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddSupplementsActivity.this, "Barcode already exists", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             // Handle any exceptions that occur during the insertion process
             e.printStackTrace();
             // Display a toast or perform any other action as needed
-            Toast.makeText(AddOptionsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(AddSupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 
             Log.e("DatabaseInsert", "Exception: " + e.getMessage());
         }
@@ -236,7 +234,7 @@ public class AddOptionsActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Handle button click, e.g., open details or perform an action
-                Toast.makeText(AddOptionsActivity.this, "Variant Clicked: " + description, Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddSupplementsActivity.this, "Variant Clicked: " + description, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -255,19 +253,19 @@ public class AddOptionsActivity extends Activity {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         // Define the columns you want to retrieve
-        String[] projection = {OPTION_ID}; // Replace "OPTION_ID" with the actual column name
+        String[] projection = {SUPPLEMENT_OPTION_ID  }; // Replace "OPTION_ID" with the actual column name
 
         // Order the results by descending order of "OPTION_ID" to get the latest ID
-        String sortOrder = OPTION_ID + " DESC";
+        String sortOrder = SUPPLEMENT_OPTION_ID   + " DESC";
 
         // Perform the query to get the last inserted row's ID
-        Cursor cursor = db.query(OPTIONS_TABLE_NAME, projection, null, null, null, null, sortOrder);
+        Cursor cursor = db.query(SUPPLEMENTS_OPTIONS_TABLE_NAME  , projection, null, null, null, null, sortOrder);
 
         long lastOptionId = -1;
 
         if (cursor.moveToFirst()) {
             // Retrieve the last inserted row's ID
-            lastOptionId = cursor.getLong(cursor.getColumnIndex(OPTION_ID));
+            lastOptionId = cursor.getLong(cursor.getColumnIndex(SUPPLEMENT_OPTION_ID ));
         }
 
         // Close the cursor and database
@@ -293,7 +291,7 @@ public class AddOptionsActivity extends Activity {
         DBManager dbManager = new DBManager(this);
         dbManager.open();
 
-        dbManager.insertOpt(OptName );
+        dbManager.insertSup(OptName );
         dbManager.close();
 
         // Clear the input

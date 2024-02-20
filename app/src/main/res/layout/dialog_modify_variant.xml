@@ -12,6 +12,12 @@
         android:editable="false"
         android:hint="Barcode" />
 
+
+    <EditText
+        android:id="@+id/editTextitemid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Item Id" />
     <EditText
         android:id="@+id/editTextDescription"
         android:layout_width="match_parent"

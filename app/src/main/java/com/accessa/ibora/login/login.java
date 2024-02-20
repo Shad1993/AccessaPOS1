@@ -84,7 +84,7 @@ public class login extends AppCompatActivity {
 
         // Set "roomnum" to 1
         editor.putInt("roomnum", 1);
-        editor.putInt("table_id", 1);
+        editor.putString("table_id", "1");
 
         // Commit the changes
         editor.apply();

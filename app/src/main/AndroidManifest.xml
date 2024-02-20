@@ -133,6 +133,8 @@
         <activity android:name=".salestype"/>
         <activity android:name=".product.options.ModifyOptionsActivity"/>
         <activity android:name=".product.options.AddOptionsActivity"/>
+        <activity android:name=".product.supplements.AddSupplementsActivity"/>
+        <activity android:name=".product.supplements.ModifySupplementsActivity"/>
 
 
 

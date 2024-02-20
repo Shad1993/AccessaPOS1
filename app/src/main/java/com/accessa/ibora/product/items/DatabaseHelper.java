@@ -98,6 +98,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String VARIANT_BARCODE = "barcode";
     public static final String VARIANT_DESC = "Desc";
     public static final String VARIANT_PRICE = "Price";
+    public static final String VARIANT_ITEM_ID = "variantItemId";
+
     // Vendor table columns
     public static final String VendorID = "ID";
     public static final String CodeFournisseur = "CodeFournisseur";
@@ -405,6 +407,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String OPTION_ID = "id" ;
     public static final String OPTION_NAME = "optionName";
     public static final String VARIANTS_OPTIONS_ID = "VariantOptionId";
+
+    public static final String SUPPLEMENTS_OPTIONS_TABLE_NAME = "SupplementTableName";
+    public static final String SUPPLEMENTS_TABLE_NAME = "SupplementTable";
+    public static final String SUPPLEMENT_ID ="SupplementId" ;
+    public static final String SUPPLEMENT_NAME = "RelatedSupplementID";
+    public static final String SUPPLEMENT_DESCRIPTION = "SupplementDescriptions" ;
+    public static final String SUPPLEMENT_PRICE = "SupplementPrice";
+    public static final String SUPPLEMENT_OPTION_ID = "SupplementOptionId";
+    public static final String SUPPLEMENT_OPTION_NAME = "SupplementOptionName";
     private static final String CREATE_CAT_TABLE = "CREATE TABLE IF NOT EXISTS " + CAT_TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             CatName + " TEXT UNIQUE NOT NULL, " +
@@ -518,14 +529,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + OPTION_NAME + " TEXT NOT NULL);";
 
 
+
     private static final String CREATE_VARIANTS_TABLE = "CREATE TABLE " + VARIANTS_TABLE_NAME + " ("
             + VARIANTS_OPTIONS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + VARIANT_ID + " INTEGER NOT NULL, "
+            + VARIANT_ITEM_ID + " TEXT NOT NULL, "
             + VARIANT_BARCODE + " TEXT(20) UNIQUE NOT NULL, "
             + VARIANT_DESC + " TEXT NOT NULL, "
             + VARIANT_PRICE + " DECIMAL(10, 2) NOT NULL, "
             + "FOREIGN KEY (" + VARIANT_ID + ") REFERENCES " + VARIANTS_TABLE_NAME + "(" + VARIANT_ID + "), "
             + "FOREIGN KEY (" + OPTION_ID + ") REFERENCES " + OPTIONS_TABLE_NAME + "(" + OPTION_ID + "));";
+
+
+    // SQL statement to create the options table for supplements
+    private static final String CREATE_SUPPLEMENTS_OPTIONS_TABLE = "CREATE TABLE " + SUPPLEMENTS_OPTIONS_TABLE_NAME + " ("
+            + SUPPLEMENT_OPTION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + SUPPLEMENT_OPTION_NAME + " TEXT NOT NULL);";
+
+
+
+    // SQL statement to create the supplements table
+    private static final String CREATE_SUPPLEMENTS_TABLE = "CREATE TABLE " + SUPPLEMENTS_TABLE_NAME + " ("
+            + SUPPLEMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + SUPPLEMENT_NAME + " TEXT NOT NULL, "
+            + SUPPLEMENT_DESCRIPTION + " TEXT NOT NULL, "
+            + SUPPLEMENT_PRICE + " DECIMAL(10, 2) NOT NULL, "
+            + VARIANT_BARCODE + " TEXT(20) UNIQUE NOT NULL, "
+            + SUPPLEMENT_OPTION_ID + " INTEGER, " // Define the SUPPLEMENT_OPTION_ID column
+            + "FOREIGN KEY (" + SUPPLEMENT_OPTION_ID + ") REFERENCES " + SUPPLEMENTS_OPTIONS_TABLE_NAME + "(" + SUPPLEMENT_OPTION_ID + "));";
+
 
     // Creating PaymentByQy table query
     private static final String CREATE_PAYMENTBYQY_TABLE = "CREATE TABLE " + TABLE_NAME_PAYMENTBYQY + "(" +
@@ -869,6 +901,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_CASH_REPORT_TABLE);
         db.execSQL(CREATE_ROOM_TABLE);
         db.execSQL(CREATE_TABLE_TABLE);
+        db.execSQL(CREATE_SUPPLEMENTS_TABLE);
+        db.execSQL(CREATE_SUPPLEMENTS_OPTIONS_TABLE);
         db.execSQL(CREATE_VARIANTS_TABLE);
         addDefaultItem(db);
         addDefaultCat(db);
@@ -916,8 +950,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + CASH_REPORT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ROOMS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLES);
+        db.execSQL("DROP TABLE IF EXISTS " + SUPPLEMENTS_OPTIONS_TABLE_NAME );
+        db.execSQL("DROP TABLE IF EXISTS " + SUPPLEMENTS_TABLE_NAME );
 
         onCreate(db);
+    }
+
+
+    public String getOptionNameById(int optionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {OPTION_NAME};
+        String selection = OPTION_ID + "=?";
+        String[] selectionArgs = {String.valueOf(optionId)};
+        String optionName = null;
+
+        Cursor cursor = db.query(OPTIONS_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            optionName = cursor.getString(cursor.getColumnIndex(OPTION_NAME));
+            cursor.close();
+        }
+        return optionName;
     }
 
     // Add this method to your DatabaseHelper class
@@ -1024,6 +1076,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
         return db.query(OPTIONS_TABLE_NAME, null, null, null, null, null, null);
+    }
+
+    public Cursor getAllSupplements() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+
+        return db.query(SUPPLEMENTS_OPTIONS_TABLE_NAME , null, null, null, null, null, null);
     }
 
     public double getTotalAmountBasedOnReportType(String reportType) {
@@ -2646,6 +2705,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.rawQuery(joinQuery, selectionArgs);
     }
+
 
 
 

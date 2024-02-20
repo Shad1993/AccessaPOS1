@@ -181,7 +181,7 @@ public class validateticketDialogFragment extends DialogFragment  {
         PosNum = shardPreference.getString(POSNumber, null);
         SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = String.valueOf(preferences.getInt("roomnum", 0));
-        tableid = String.valueOf(preferences.getInt("table_id", 0));
+        tableid = preferences.getString("table_id", "0");
 
         SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
