@@ -1087,7 +1087,7 @@ public class DBManager {
             do {
                 Variant variant = new Variant();
                 variant.setVariantId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_ID)));
-                variant.setVariantitemid(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_ITEM_ID)));
+                variant.setVariantitemid(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_ID)));
                 variant.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_DESCRIPTION)));
                 variant.setItemId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_NAME)));
                 variant.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_BARCODE)));

@@ -345,7 +345,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COUPON_DISCOUNT = "discount";
     public static final String TRANSACTION_CLIENT_NIC = "ClientNIC";
 
-
+    public static String hasSupplements="HasSupplements";
+    public static String relatedSupplements="RelatedSupplements";
         //financial report table
     public static final String FINANCIAL_COLUMN_ID = "id";
     public static final String FINANCIAL_COLUMN_DATETIME = "date";
@@ -470,6 +471,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + Barcode + " TEXT(20) UNIQUE NOT NULL, "
@@ -515,6 +517,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + related_item3 + " TEXT, "
             + related_item4 + " TEXT, "
             + related_item5 + " TEXT, "
+            + hasSupplements + " BOOLEAN NOT NULL DEFAULT 0, "
+            + relatedSupplements + " TEXT, "
             + "FOREIGN KEY (" + SKU + ", " + Cost + ") REFERENCES "
             + COST_TABLE_NAME + "(" + SKUCost + ", " + Cost + "), "
             + "FOREIGN KEY (" + UserId + ") REFERENCES "
@@ -551,7 +555,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // SQL statement to create the supplements table
     private static final String CREATE_SUPPLEMENTS_TABLE = "CREATE TABLE " + SUPPLEMENTS_TABLE_NAME + " ("
             + SUPPLEMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + SUPPLEMENT_NAME + " TEXT NOT NULL, "
+            + SUPPLEMENT_NAME + " INTEGER NOT NULL, "
             + SUPPLEMENT_DESCRIPTION + " TEXT NOT NULL, "
             + SUPPLEMENT_PRICE + " DECIMAL(10, 2) NOT NULL, "
             + VARIANT_BARCODE + " TEXT(20) UNIQUE NOT NULL, "
@@ -1071,6 +1075,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return optionsList;
     }
 
+
+
+    public List<Options> getAllSupplements1() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Options> optionsList = new ArrayList<>();
+
+        // Query the database to get all options
+        Cursor cursor = db.query(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME, null, null, null, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Options options = new Options();
+                // Populate the Options object from the cursor
+                options.setOptionId(cursor.getInt(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_ID)));
+                options.setOptionName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_NAME)));
+
+                optionsList.add(options);
+            } while (cursor.moveToNext());
+
+            // Close the cursor
+            cursor.close();
+        }
+
+        // Close the database connection if needed
+        db.close();
+
+        return optionsList;
+    }
     public Cursor getAllOptions() {
         SQLiteDatabase db = this.getReadableDatabase();
 

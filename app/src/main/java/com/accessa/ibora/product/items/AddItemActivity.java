@@ -92,15 +92,15 @@ public class AddItemActivity extends Activity {
     private SQLiteDatabase database;
     private SwitchCompat Available4Sale,hascomment,Options;
     private SwitchCompat ExpirydateSwitch;
-    private boolean isAvailableForSale, isCommentRequired,isOptionrequired;
+    private boolean isAvailableForSale, isCommentRequired,isOptionrequired,IsSupplementRequired;
     private TextView ExpiryDateText;
     private String cashorId;
     private String cashorName;
     private SharedPreferences sharedPreferences;
     private EditText Userid_Edittext;
     private EditText LastModified_Edittext;
-    private SwitchCompat optionsSwitch;
-    private LinearLayout optionsContainer;
+    private SwitchCompat optionsSwitch,SupplementSwitch;
+    private LinearLayout optionsContainer,supplementContainer;
     private List<Integer> selectedOptionIds = new ArrayList<>();
     private static final int MAX_SELECTION_LIMIT = 5;
     private int[] selectedOptions = new int[MAX_SELECTION_LIMIT];
@@ -155,7 +155,9 @@ public class AddItemActivity extends Activity {
         hascomment=findViewById(R.id.comment_switch);
         Available4Sale = findViewById(R.id.Avail4Sale_switch);
         optionsSwitch = findViewById(R.id.options_switch);
+        SupplementSwitch= findViewById(R.id.supplements_switch);
         optionsContainer = findViewById(R.id.options_container);
+        supplementContainer = findViewById(R.id.supplements_container);
         ExpirydateSwitch = findViewById(R.id.perishable_switch);
         ExpiryDateText= findViewById(R.id.ExpiryText);
         Discount = findViewById(R.id.discount_spinner);
@@ -435,6 +437,104 @@ public class AddItemActivity extends Activity {
                 }
             }
         });
+        SupplementSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                IsSupplementRequired = isChecked;
+                if (isChecked) {
+                    // Display options
+                    displaySupplements();
+
+                } else {
+                    // Clear options
+                    supplementContainer.removeAllViews();
+
+                }
+            }
+        });
+    }
+
+    private void displaySupplements() {
+        // Retrieve options from the database
+        List<Options> optionsList = mDatabaseHelper.getAllSupplements1();
+
+        // Clear previous options
+        optionsContainer.removeAllViews();
+
+        // Dynamically create checkboxes for each option
+        for (int i = 0; i < optionsList.size(); i++) {
+            Options options = optionsList.get(i);
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(options.getOptionname());
+            checkBox.setChecked(false); // Set the initial state as unchecked
+
+            final long optionId = options.getOptionId(); // Get the option ID from the Options object
+
+            // Set a listener for checkbox changes
+            final int finalIndex = i; // Store the index in a final variable for use inside the listener
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Check if the maximum limit is reached
+                        if (selectedOptionIds.size() < MAX_SELECTION_LIMIT) {
+                            // Checkbox is checked, add the option ID to the selected list
+                            selectedOptionIds.add((int) optionId);
+                            // Store the option ID in the corresponding variable
+                            switch (finalIndex) {
+                                case 0:
+                                    optionId1 = optionId;
+                                    break;
+                                case 1:
+                                    optionId2 = optionId;
+                                    break;
+                                case 2:
+                                    optionId3 = optionId;
+                                    break;
+                                case 3:
+                                    optionId4 = optionId;
+                                    break;
+                                case 4:
+                                    optionId5 = optionId;
+                                    break;
+                            }
+                            // Toast the option ID
+                            Toast.makeText(AddItemActivity.this, "Option ID: " + optionId + " checked", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Maximum limit reached, uncheck the checkbox and display a message
+                            checkBox.setChecked(false);
+                            Toast.makeText(AddItemActivity.this, "Maximum limit of 5 options reached", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Checkbox is unchecked, remove the option ID from the selected list
+                        selectedOptionIds.remove(Integer.valueOf((int) optionId));
+                        // Clear the corresponding variable
+                        switch (finalIndex) {
+                            case 0:
+                                optionId1 = 0;
+                                break;
+                            case 1:
+                                optionId2 = 0;
+                                break;
+                            case 2:
+                                optionId3 = 0;
+                                break;
+                            case 3:
+                                optionId4 = 0;
+                                break;
+                            case 4:
+                                optionId5 = 0;
+                                break;
+                        }
+                    }
+                    updateSelectedOptions(); // Display selected option IDs
+                }
+            });
+
+            // Add the checkbox to the container
+            optionsContainer.addView(checkBox);
+        }
     }
     private void displayOptions() {
         // Retrieve options from the database

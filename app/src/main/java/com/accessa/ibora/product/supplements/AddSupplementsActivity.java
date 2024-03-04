@@ -162,11 +162,11 @@ public class AddSupplementsActivity extends Activity {
             if (isBarcodeUnique(db, barcode) || isItemidUnique(db,itemid)) {
                 // Prepare the ContentValues to insert into the VARIANTS_TABLE_NAME
                 ContentValues values = new ContentValues();
-                values.put(SUPPLEMENT_ID , optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
+                values.put(SUPPLEMENT_NAME , optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
                 values.put(VARIANT_BARCODE, barcode);
                 values.put(SUPPLEMENT_DESCRIPTION , description);
                 values.put(SUPPLEMENT_PRICE , price);
-                values.put(SUPPLEMENT_NAME, itemid);
+                values.put(SUPPLEMENT_OPTION_ID, itemid);
                 // Insert the data into the VARIANTS_TABLE_NAME
                 long variantId = db.insert(SUPPLEMENTS_TABLE_NAME , null, values);
 
