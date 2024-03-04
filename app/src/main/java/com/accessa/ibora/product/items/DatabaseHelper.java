@@ -1959,6 +1959,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return newRowId; // Return the newly inserted row ID or -1 if an error occurred
     }
 
+    public void updateTransactionComment(String transactionId, String comment) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_COMMENT, comment); // Assuming LongDescription is the column name for the comment
+
+        // Define the WHERE clause to update the row for the given transaction ID
+        String whereClause = TRANSACTION_ID + " = ?";
+        String[] whereArgs = { transactionId };
+
+        // Perform the update operation
+        db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+    }
 
     public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,

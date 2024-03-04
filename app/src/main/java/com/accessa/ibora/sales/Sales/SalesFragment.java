@@ -76,6 +76,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public TextView idTextView;
     public TextView priceTextView;
     public ImageView productImage;
+    EditText option1edittext ;
+    EditText option2edittext ;
+    EditText option3edittext ;
+    EditText option4edittext ;
+    EditText option5edittext ;
+    EditText supplementsedittext ;
+
     private String actualdate;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private static final String POSNumber="posNumber";
@@ -240,6 +247,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     RelatedItem3=item.getRelateditem3();
                     RelatedItem4=item.getRelateditem4();
                     RelatedItem5=item.getRelateditem5();
+                    SupplementsItem=item.getRelateditem();
 
 
                 }
@@ -297,6 +305,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     RelatedItem3=item.getRelateditem3();
                     RelatedItem4=item.getRelateditem4();
                     RelatedItem5=item.getRelateditem5();
+                    SupplementsItem=item.getRelateditem();
                     float quantity= item.getQuantity();
 
                     if (Boolean.TRUE.equals(HasOptions) || Hascomment.trim().equals("true")) {
@@ -304,7 +313,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         Log.d("relateditems1", RelatedItem+ " " +RelatedItem2 + " " + RelatedItem3 + " " + RelatedItem4 + " " + RelatedItem5 );
 
-                        showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                        showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                     } else if
                     (cursor != null && cursor.moveToFirst()) {
                     // Retrieve the existing transaction ID for the item
@@ -406,7 +415,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     }
 
 
-    private void showOptionPopup(String Hascomment,String id,String id2,String id3,String id4,String id5,int itemId,String transactionId,String transactionDate,int quantity, double newTotalPrice, double vat, String longDescription,Double unitPrice, Double priceWithoutVat,String VatType,String PosNum,String Nature,String ItemCode, String currency,String TaxCode,double priceAfterDiscount,Double TotalDiscount,String roomid,String tableid,int ispaid ) {
+    private void showOptionPopup(String Hascomment,String id,String id2,String id3,String id4,String id5,String relatensupplement,int itemId,String transactionId,String transactionDate,int quantity, double newTotalPrice, double vat, String longDescription,Double unitPrice, Double priceWithoutVat,String VatType,String PosNum,String Nature,String ItemCode, String currency,String TaxCode,double priceAfterDiscount,Double TotalDiscount,String roomid,String tableid,int ispaid ) {
 
 
         // Create a custom layout for the dialog
@@ -417,12 +426,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         List<Variant> variantList3 = dbManager.getVariantsById(id3);
         List<Variant> variantList4 = dbManager.getVariantsById(id4);
         List<Variant> variantList5 = dbManager.getVariantsById(id5);
-        List<Variant> supplementList = dbManager.getSupplementListById("6");
+        List<Variant> supplementList = dbManager.getSupplementListById(relatensupplement);
 
-        if(Hascomment.trim().equals("false")) {
-            EditText comment= dialogView.findViewById(R.id.commentEditText);
-            comment.setVisibility(View.GONE);
-        }
+
 
         if (variantList != null && !variantList.isEmpty()) {
             for (Variant variant : variantList) {
@@ -460,6 +466,24 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+
+                        if (getContext() != null && variantButtonsLayout != null) { // Create and add EditText dynamically
+                        option1edittext = new EditText(getContext());
+                        option1edittext.setHint(variant.getDescription() +" - Enter your comment");
+
+                        // Create layout parameters to define how the EditText should be positioned
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        params.setMargins(0, 20, 0, 0); // Adjust margins as needed
+
+                        // Add the EditText below the button
+                        variantButtonsLayout.addView(option1edittext, params);
+
+                        } else {
+                            Log.e("InsertData", "Context or variantButtonsLayout is null");
+                        }
                     };
 
                 });
@@ -521,6 +545,22 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+                        // Create and add EditText dynamically
+                        if (getContext() != null && variantButtonsLayout != null) {
+                            option2edittext = new EditText(getContext());
+                            option2edittext.setHint(variant.getDescription() + " - Enter your comment");
+                            // Create layout parameters to define how the EditText should be positioned
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                            );
+                            params.setMargins(0, 20, 0, 0); // Adjust margins as needed
+
+                            // Add the EditText below the button
+                            variantButtonsLayout.addView(option2edittext, params);
+                        }else {
+                                Log.e("InsertData", "Context or variantButtonsLayout is null");
+                            }
                     };
 
                 });
@@ -587,6 +627,19 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+
+                        option3edittext = new EditText(getContext());
+                        option3edittext.setHint(variant.getDescription() +" - Enter your comment");
+
+                        // Create layout parameters to define how the EditText should be positioned
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        params.setMargins(0, 16, 0, 0); // Adjust margins as needed
+
+                        // Add the EditText below the button
+                        variantButtonsLayout.addView(option3edittext, params);
                     };
 
                 });
@@ -653,6 +706,18 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+
+                        option4edittext = new EditText(getContext());
+                        option4edittext.setHint(variant.getDescription() +" - Enter your comment");
+                        // Create layout parameters to define how the EditText should be positioned
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        params.setMargins(0, 16, 0, 0); // Adjust margins as needed
+
+                        // Add the EditText below the button
+                        variantButtonsLayout.addView(option4edittext, params);
                     };
 
                 });
@@ -719,6 +784,19 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+
+                        // Create and add EditText dynamically
+                        option5edittext = new EditText(getContext());
+                        option5edittext.setHint(variant.getDescription() +" - Enter your comment");
+                        // Create layout parameters to define how the EditText should be positioned
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        params.setMargins(0, 16, 0, 0); // Adjust margins as needed
+
+                        // Add the EditText below the button
+                        variantButtonsLayout.addView(option5edittext, params);
                     };
 
                 });
@@ -784,6 +862,19 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     @Override
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,newbarcode,newDesc,newprice,newitemid);
+
+                        // Create and add EditText dynamically
+                       supplementsedittext= new EditText(getContext());
+                        supplementsedittext.setHint(variant.getDescription() +" - Enter your comment");
+                        // Create layout parameters to define how the EditText should be positioned
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        params.setMargins(0, 20, 0, 0); // Adjust margins as needed
+
+                        // Add the EditText below the button
+                        variantButtonsLayout.addView(supplementsedittext, params);
                     };
 
                 });
@@ -807,8 +898,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             dialogView.findViewById(R.id.SupplementsButtonsLayout).setVisibility(View.GONE);
 
         }
-        // Find the EditText in the custom layout
-        EditText commentEditText = dialogView.findViewById(R.id.commentEditText);
+
 
         // Build the dialog with the custom layout
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -819,12 +909,94 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // Handle the OK button click, and retrieve the comment from the EditText
-                String comment = commentEditText.getText().toString();
-                // Process the comment as needed
-                // ...
+                // Retrieve the comment from the EditText fields
+
+                String commentoption3 = null;
+                String commentoption4 = null;
+                String commentoption5 = null;
+                String commentSupplements1 = null;
+                String commentoption1 = null;
+                if (option1edittext != null) {
+                    commentoption1 = option1edittext.getText().toString();
+                }
+                else {
+                    commentoption1 = "test";
+                }
+                String commentoption2 = null;
+                if (option2edittext != null) {
+                    commentoption2 = option2edittext.getText().toString();
+                }
+                else {
+                    commentoption2 = "test";
+                }
+                if (option3edittext != null) {
+                    // Access option2edittext here
+                    commentoption3 = option3edittext.getText().toString();
+                    // Other operations...
+                } else {
+                    // EditText has not been created yet
+                    commentoption3 = "test";
+                }
+                if (option4edittext != null) {
+                    // Access option2edittext here
+                    commentoption4 = option4edittext.getText().toString();
+                    // Other operations...
+                } else {
+                    // EditText has not been created yet
+                    commentoption4 = "test";
+                }
+
+                if (option5edittext != null) {
+                    // Access option2edittext here
+                    commentoption5 = option5edittext.getText().toString();
+                    // Other operations...
+                } else {
+                    // EditText has not been created yet
+                    commentoption5 = "test";
+                }
+
+                if (supplementsedittext != null) {
+                    // Access option2edittext here
+                    commentSupplements1 = supplementsedittext.getText().toString();
+                    // Other operations...
+                } else {
+                    // EditText has not been created yet
+                    commentSupplements1 = "test";
+                }
+                // Update the comments in the database
+                updateCommentForTransaction(transactionIdInProgress,  commentoption1,id);
+                updateCommentForTransaction(transactionIdInProgress, commentoption2,id2);
+                updateCommentForTransaction(transactionIdInProgress, commentoption3,id3);
+                updateCommentForTransaction(transactionIdInProgress, commentoption4,id4);
+                updateCommentForTransaction(transactionIdInProgress,  commentoption5,id5);
+                updateCommentForTransaction(transactionIdInProgress,  commentSupplements1,relatensupplement);
+
+                // Reset the EditText fields for the next use
+                if (option1edittext != null) {
+                    option1edittext.setText("");
+                }
+                if (option2edittext != null) {
+                    option2edittext.setText("");
+                }
+
+                if (option3edittext != null) {
+                    option3edittext.setText("");
+                }
+
+                if (option4edittext != null) {
+                    option4edittext.setText("");
+                }
+                if (option5edittext != null) {
+                    option5edittext.setText("");
+                }
+                if (supplementsedittext != null) {
+                    supplementsedittext.setText("");
+                }
+
+
             }
         });
+
 
         // Add negative button (Cancel button)
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -910,6 +1082,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             itemAddedListener.onItemAdded(String.valueOf(roomid), tableid);
         }
 
+    }
+    public void updateCommentForTransaction(String transactionId, String comment,String id) {
+        // Call your database helper method to update the comment for the given transaction ID
+        mDatabaseHelper.updateTransactionComment(transactionId, comment,id);
     }
 
     public void insertItemIntoTransaction(String barcode) {

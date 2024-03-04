@@ -90,7 +90,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String hascomment, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String hascomment, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -116,6 +116,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.related_item3, optionsid3);
         contentValue.put(DatabaseHelper.related_item4, optionsid4);
         contentValue.put(DatabaseHelper.related_item5, optionsid5);
+        contentValue.put(DatabaseHelper.relatedSupplements, supplementid);
 
         contentValue.put(DatabaseHelper.SoldBy, SoldBy);
         contentValue.put(DatabaseHelper.Image, Image);

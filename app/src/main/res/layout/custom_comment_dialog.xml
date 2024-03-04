@@ -5,13 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/commentEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Write your comment here"
-        android:inputType="textMultiLine"
-        android:maxLines="5" />
+
     <TextView
         android:id="@+id/OptionNametextView"
         android:layout_width="wrap_content"
