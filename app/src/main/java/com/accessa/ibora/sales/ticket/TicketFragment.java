@@ -880,7 +880,7 @@ private TextView textViewVATs,textViewTotals;
 
                         SendToHeader(enteredAmount,0.00);
                         // Perform your desired action with the data (e.g., save it)
-                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid), transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00, String.valueOf(roomid),tableid,0);
+                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid),"00",0,0,0,"0","Supplements", transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00, String.valueOf(roomid),tableid,0);
 
 
                         // Dismiss the dialog

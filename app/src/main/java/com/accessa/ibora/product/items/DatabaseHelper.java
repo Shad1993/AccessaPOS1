@@ -537,7 +537,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String CREATE_VARIANTS_TABLE = "CREATE TABLE " + VARIANTS_TABLE_NAME + " ("
             + VARIANTS_OPTIONS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + VARIANT_ID + " INTEGER NOT NULL, "
-            + VARIANT_ITEM_ID + " TEXT NOT NULL, "
+            + VARIANT_ITEM_ID + " INTEGER NOT NULL, "
             + VARIANT_BARCODE + " TEXT(20) UNIQUE NOT NULL, "
             + VARIANT_DESC + " TEXT NOT NULL, "
             + VARIANT_PRICE + " DECIMAL(10, 2) NOT NULL, "
@@ -974,6 +974,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return optionName;
+    }
+    public int getCatIdFromName(String catName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        int catId = -1; // Default value if no matching cat name is found
+
+        String query = "SELECT " + _ID + " FROM " + CAT_TABLE_NAME +
+                " WHERE " + CatName + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{catName});
+
+        if (cursor.moveToFirst()) {
+            catId = cursor.getInt(cursor.getColumnIndex(_ID));
+        }
+
+        cursor.close();
+        db.close();
+
+        return catId;
     }
 
     // Add this method to your DatabaseHelper class
@@ -1589,14 +1607,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         double taxAmount = 0.0;
 
         if ("VAT 15%".equals(vatType)) {
-            taxAmount = unitPrice * 0.15;
-        } else {
-            taxAmount = 0.0;
-        }
+            // To find the tax amount, first calculate the portion of the price that is VAT
+            double vatPortion = unitPrice - (unitPrice / 1.15);
 
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
-        String formattedTaxAmount = decimalFormat.format(taxAmount);
-        taxAmount = Double.parseDouble(formattedTaxAmount);
+            // Then, round it to two decimal places to handle precision issues
+            taxAmount = Math.round(vatPortion * 100.0) / 100.0;
+        } // No need for an 'else' condition since taxAmount is already initialized to 0.0
 
         return taxAmount;
     }
@@ -1959,36 +1975,53 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return newRowId; // Return the newly inserted row ID or -1 if an error occurred
     }
 
-    public void updateTransactionComment(String transactionId, String comment) {
+    public void updateTransactionComment(String transactionId, String comment, String barcode) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TRANSACTION_COMMENT, comment); // Assuming LongDescription is the column name for the comment
+        values.put(TRANSACTION_COMMENT, comment); // Assuming TRANSACTION_COMMENT is the column name for the comment
 
-        // Define the WHERE clause to update the row for the given transaction ID
-        String whereClause = TRANSACTION_ID + " = ?";
-        String[] whereArgs = { transactionId };
+        // Define the WHERE clause to update the row for the given transaction ID and item ID
+        String whereClause = TRANSACTION_ID + " = ? AND " + Barcode + " = ?";
+        String[] whereArgs = { transactionId, barcode };
 
         // Perform the update operation
-        db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+        int rowsUpdated = db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+
+        if (rowsUpdated > 0) {
+            // Log success message
+            Log.d("UpdateTransaction", "Transaction comment updated successfully" );
+        } else {
+            // Log error message
+            Log.e("UpdateTransactionfailed", barcode + "-Failed to update transaction comment. No rows updated.");
+        }
     }
 
-    public long insertTransaction(int itemId, String transactionId, String transactionDate, int quantity,
+
+
+    public long insertTransaction(int itemId,String Barcode,float weight,double taxwithoutdiscount,double totaldiscbeforetax,String shopnumber,String catId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
                                   String vatType, String posNum, String Nature, String ItemCode, String Currency, String taxCode,
                                   double priceAfterDiscount, double totalDiscount, String roomid, String tabeid, int isPaid) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
+
+
         values.put(ITEM_ID, itemId);
         values.put(TRANSACTION_ID, transactionId);
         values.put(TRANSACTION_DATE, transactionDate);
+        values.put(TRANSACTION_BARCODE, Barcode);
         values.put(QUANTITY, quantity);
         values.put(TOTAL_PRICE, totalPrice);
         values.put(VAT, vat);
+        values.put(TRANSACTION_VAT_BEFORE_DISC, taxwithoutdiscount);
+        values.put(TRANSACTION_SHOP_NO, shopnumber);
         values.put(LongDescription, longDescription);
+        values.put(TRANSACTION_DESCRIPTION, longDescription);
         double roundedUnitPrice = Math.round(unitPrice * 100.0) / 100.0;
         values.put(TRANSACTION_UNIT_PRICE, roundedUnitPrice);
         values.put(TRANSACTION_TOTAL_HT_A, priceWithoutVat);
+        values.put(TRANSACTION_TOTAL_HT_B, totaldiscbeforetax);
         values.put(TRANSACTION_TOTAL_TTC, totalPrice);
         values.put(VAT_Type, vatType);
         values.put(TRANSACTION_TERMINAL_NO, posNum);
@@ -1996,11 +2029,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(TRANSACTION_ITEM_CODE, ItemCode);
         values.put(TRANSACTION_CURRENCY, Currency);
         values.put(TRANSACTION_TAX_CODE, taxCode);
-        values.put(PriceAfterDiscount, priceAfterDiscount);
+        values.put(PriceAfterDiscount, totalPrice);
+        values.put(TRANSACTION_TYPE_TAX, taxCode);
+        values.put(TRANSACTION_IS_TAXABLE, taxCode.equals("TC01") ? 1 : 0); // If taxCode is "TC01", set to 1, otherwise set to 0
+        values.put(TRANSACTION_TOTALIZER, "SALES");
+        values.put(TRANSACTION_FAMILLE, catId);
+        values.put(TRANSACTION_VAT_AFTER_DISC, vat);
+
+        // Get current date and time
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        // Format date and time
+        String formattedDate = dateFormat.format(currentDate);
+        String formattedTime = timeFormat.format(currentDate);
+
+        values.put(TRANSACTION_DATE_TRANSACTION, formattedDate);
+        values.put(TRANSACTION_TIME_TRANSACTION, formattedTime);
+        values.put(TRANSACTION_DATE_CREATED, formattedDate);
+        values.put(TRANSACTION_DATE_MODIFIED, formattedDate);
+        values.put(TRANSACTION_TIME_CREATED, formattedTime);
+        values.put(TRANSACTION_TIME_MODIFIED, formattedTime);
+        values.put(TRANSACTION_CODE, transactionId);
+        values.put(TRANSACTION_QUANTITY, quantity);
+
+
+
+        values.put(TRANSACTION_WEIGHTS, weight);
         values.put(ROOM_ID, roomid);
         values.put(TABLE_ID, tabeid);
         double roundedTotalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
         values.put(TRANSACTION_TOTAL_DISCOUNT, roundedTotalDiscount);
+        values.put(TRANSACTION_DISCOUNT, roundedTotalDiscount);
         values.put(IS_PAID, isPaid); // Add IS_PAID to the ContentValues
         return db.insert(TRANSACTION_TABLE_NAME, null, values);
     }
@@ -3062,22 +3123,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         double totalDiscountSum = 0;
 
         // Use a parameterized query to handle string values safely
-        String query = "SELECT SUM(" + TRANSACTION_TOTAL_DISCOUNT + ") FROM " +
-                TRANSACTION_TABLE_NAME +
-                " WHERE " + ROOM_ID + " = ?" +
-                " AND " + TABLE_ID + " = ?";
+        String query = "SELECT ROUND(SUM(t1." + TRANSACTION_TOTAL_DISCOUNT + "), 2) FROM " +
+                TRANSACTION_TABLE_NAME + " t1" +
+                " JOIN " + TRANSACTION_HEADER_TABLE_NAME + " t2 ON t1." + TRANSACTION_TICKET_NO + " = t2." + TRANSACTION_TICKET_NO +
+                " WHERE t2." + ROOM_ID + " = ?" +
+                " AND t2." + TABLE_ID + " = ?" +
+                " AND t2." + TRANSACTION_STATUS + " = 'InProgress'";
 
         Cursor cursor = db.rawQuery(query, new String[]{roomId, tableId});
 
         if (cursor.moveToFirst()) {
-            totalDiscountSum = cursor.getDouble(0);
+            do {
+                double discountValue = cursor.getDouble(0);
+                Log.d("DiscountValue", "Discount value: " + discountValue);
+                totalDiscountSum += discountValue;
+            } while (cursor.moveToNext());
         }
 
         cursor.close();
         db.close();
 
+        Log.d("TotalDiscountSum", "Total discount sum: " + totalDiscountSum);
+
         return totalDiscountSum;
     }
+
 
 
 
@@ -4187,20 +4257,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void updateTransaction(int itemId, int newQuantity, double newTotalPrice, double newVat, String vatType, String roomid, String tableid) {
+    public void updateTransaction(int itemId,double newpriceWithoutVat, int newQuantity,double totaltaxbeforedisc,double totaltaxafterisc, String transactionid, double newTotalPrice, double newTotalDisc,double newVat, String vatType, String roomid, String tableid) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
+        // Get current date and time
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        // Format date and time
+        String formattedDate = dateFormat.format(currentDate);
+        String formattedTime = timeFormat.format(currentDate);
+
+
+        values.put(TRANSACTION_TIME_TRANSACTION, formattedTime);
+        values.put(TRANSACTION_DATE_MODIFIED, formattedDate);
+        values.put(TRANSACTION_TIME_MODIFIED, formattedTime);
         values.put(QUANTITY, newQuantity);
+        values.put(TRANSACTION_QUANTITY, newQuantity);
         values.put(TOTAL_PRICE, newTotalPrice);
+        values.put(TRANSACTION_TOTAL_TTC, newTotalPrice);
         values.put(VAT, newVat);
+        values.put(TRANSACTION_TOTAL_HT_A, newpriceWithoutVat);
+        values.put(TRANSACTION_VAT_BEFORE_DISC, totaltaxbeforedisc);
+        values.put(TRANSACTION_VAT_AFTER_DISC, totaltaxafterisc);
+        values.put(TRANSACTION_TOTAL_DISCOUNT, newTotalDisc);
         values.put(VAT_Type, vatType);
 
-        String selection = ITEM_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(itemId), roomid, tableid};
+        String selection = TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
+        String[] selectionArgs = {transactionid, String.valueOf(itemId), roomid, tableid};
 
         db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
     }
+
 
     public boolean areAllItemsSelected(String roomId, String tableId) {
         SQLiteDatabase db = this.getReadableDatabase();

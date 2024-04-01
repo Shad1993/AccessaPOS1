@@ -15,10 +15,10 @@ public class ConnectionHelper {
     public static Connection CONN() {
 
 
-        String _user = "db_a9c818_test_admin";
-        String _pass = "Test1234";
-        String _DB = "db_a9c818_test";
-        String _server = "SQL8005.site4now.net";
+        String _user = "sa";
+        String _pass = "Logi2131";
+        String _DB = "IboraPOS";
+        String _server = "192.168.1.89";
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);

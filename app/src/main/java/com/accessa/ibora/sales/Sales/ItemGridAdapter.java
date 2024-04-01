@@ -92,7 +92,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         public TextView nameTextView;
         public TextView descriptionTextView;
         public TextView idTextView;
-        public TextView priceTextView,priceNorsTextView;
+        public TextView priceTextView,priceNorsTextView,initialprice;
         public ImageView productImage;
 
 
@@ -105,6 +105,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             priceTextView = itemView.findViewById(R.id.price_text_view);
             priceNorsTextView=itemView.findViewById(R.id.priceNoRs_text_view);
             productImage = itemView.findViewById(R.id.ProductImage);
+            initialprice= itemView.findViewById(R.id.initialprice_text_view);
 
         }
     }
@@ -135,23 +136,31 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
         String pLevel = sharedPreferencepos.getString("selectedPriceLevel", null);
         String price = null;
+        String initialprice = null;
         String PriceInRs = null;
 
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         if(pLevel.equals("Price Level 1")) {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
             PriceInRs = "Rs " + price;
         } else if (pLevel.equals("Price Level 2")) {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
+            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2));
+
             PriceInRs = "Rs " + price;
 
         } else if (pLevel.equals("Price Level 3")) {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
+            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3));
+
             PriceInRs = "Rs " + price;
 
         } else   {
             price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
+
             PriceInRs = "Rs " + price;
 
         }
@@ -165,6 +174,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         holder.descriptionTextView.setText(description);
         holder.priceTextView.setText(PriceInRs);
         holder.priceNorsTextView.setText(price);
+        holder.initialprice.setText(initialprice);
 
         if (isWebLink(productImageName)) {
             // Load image from web link

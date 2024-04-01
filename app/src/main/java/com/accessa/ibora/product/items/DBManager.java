@@ -451,7 +451,8 @@ public class DBManager {
                 DatabaseHelper.ItemCode,
                 DatabaseHelper.Currency,
                 DatabaseHelper.TaxCode,
-                DatabaseHelper.TotalDiscount
+                DatabaseHelper.TotalDiscount,
+
                 // Add other columns as needed
         };
 

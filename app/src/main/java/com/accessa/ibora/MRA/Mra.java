@@ -177,7 +177,7 @@ public class Mra extends AppCompatActivity {
                         int transid=cursor.getColumnIndex(TRANSACTION_TICKET_NO);
                         currentCounter = cursor.getInt(columnIndexCounter);
                         double totaldiscount = mDatabaseHelper.getTotalDiscountSumForInProgressTransaction(roomid,tableid);
-
+                        System.out.println("totaldiscount: " + totaldiscount);
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);

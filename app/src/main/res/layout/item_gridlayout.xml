@@ -71,6 +71,16 @@
                 android:textColor="#002244"
                 android:textSize="10sp" />
             <TextView
+                android:id="@+id/initialprice_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/name_text_view"
+                android:layout_centerInParent="true"
+                android:text="Price"
+                android:visibility="gone"
+                android:textColor="#002244"
+                android:textSize="10sp" />
+            <TextView
                 android:id="@+id/priceNoRs_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

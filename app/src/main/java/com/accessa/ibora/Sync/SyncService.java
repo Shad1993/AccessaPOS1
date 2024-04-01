@@ -52,10 +52,10 @@ public class SyncService extends IntentService {
     private static final String TAG = "SyncService";
 
     // Your database connection parameters
-    private static final String _user = "db_a9c818_test_admin";
-    private static final String _pass = "Test1234";
-    private static final String _DB = "db_a9c818_test";
-    private static final String _server = "SQL8005.site4now.net";
+    private static final String _user = "sa";
+    private static final String _pass = "Logi2131";
+    private static final String _DB = "IboraPOS";
+    private static final String _server = "192.168.1.89";
 
     public SyncService() {
         super("SyncService");
