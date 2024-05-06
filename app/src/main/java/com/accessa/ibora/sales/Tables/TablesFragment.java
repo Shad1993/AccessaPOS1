@@ -1,8 +1,12 @@
 package com.accessa.ibora.sales.Tables;
 
+import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalAmount;
+import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalTax;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -14,11 +18,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -33,16 +35,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-
 import com.accessa.ibora.Settings.Rooms.SpacesItemDecoration;
-
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.Sales.SalesFragment;
-import com.accessa.ibora.sales.ticket.TicketAdapter;
+import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -51,14 +51,17 @@ import java.util.List;
 import java.util.Locale;
 
 public class TablesFragment extends Fragment {
+    private SharedPreferences sharedPreferences;
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
     private DBManager dbManager;
     private OnTableClickListener tableClickListener;
-
+    String cashierId;
+String transactionIdInProgress;
     private OnReloadFragmentListener reloadListener;
-
+    private String selectedTableToMerge;
+    private String selectedTableToTransfer;
 
     public  String roomId;
     private TableAdapter mAdapter;
@@ -85,14 +88,16 @@ public class TablesFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_table, container, false);
         // Get the current locale
         // Retrieve the room ID from the arguments bundle
-
+        SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorId", null);
 // Assume "your_preferences_name" is the name of your SharedPreferences file
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
 
 // Retrieve the room id, with a default value of 1 if not found
-         roomId = preferences.getString("room_id_key", "1");
+         roomId = String.valueOf(preferences.getInt("room_id", 0));
 
-
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        transactionIdInProgress = sharedPreferences.getString("transaction_id", null);
         // Spinner
         spinner = view.findViewById(R.id.spinner);
 
@@ -271,10 +276,10 @@ public class TablesFragment extends Fragment {
 
                         refreshsales(roomnum,tableNum);
                         // Update the room ID in SharedPreferences
-                        updateTableId(tableNum);
+                        updateTableId(tableNum,roomnum);
 
                         // Update the selected table ID in the adapter
-                        mAdapter.setSelectedTableId(tableNum);
+                        mAdapter.setSelectedTableId(id,tableNum);
 
                         mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
 
@@ -286,13 +291,19 @@ public class TablesFragment extends Fragment {
 
                     @Override
                     public void onLongItemClick(View view, int position) {
+
+
                         // Get the table ID from the clicked item
                         TextView tableNumTextView = view.findViewById(R.id.textViewTAN);
+                        TextView roomnumTextView = view.findViewById(R.id.roomid);
                         String tableNum = tableNumTextView.getText().toString();
+                        String roomnumNum = roomnumTextView.getText().toString();
 
                         // Show a dialog or a popup to select tables for merging
-                        showMergeDialog(tableNum);
+                        showMergeDialog(tableNum,roomnumNum);
                     }
+
+
                 })
         );
 
@@ -307,11 +318,15 @@ public class TablesFragment extends Fragment {
     }
 
 
-    private void updateTableId(String newTableId) {
+    private void updateTableId(String newTableId,String roomId) {
         // Update the table ID in SharedPreferences
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("table_id", newTableId);
+
+        editor.putInt("roomnum", Integer.parseInt(roomId));
+        editor.putInt("room_id", Integer.parseInt(roomId));
+        Log.d("roomtable", roomId + " " + newTableId);
         editor.apply();
 
         // Now the table ID in SharedPreferences is updated and can be accessed elsewhere in your app
@@ -350,12 +365,15 @@ public class TablesFragment extends Fragment {
 
 
     // Method to show the merge dialog
-    private void showMergeDialog(final String selectedTableNum) {
+
+
+    private void showMergeDialog(final String selectedTableNum,String roomId) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Select a Table to Merge");
 
         // Fetch the list of available tables from your database
-        List<String> availableTables = getAvailableTables(selectedTableNum);
+        List<String> availableTables = getAvailableTables(selectedTableNum,roomId);
+        Log.d("tab1",  selectedTableNum );
 
         // Convert the list to an array for dialog selection
         final CharSequence[] tableArray = availableTables.toArray(new CharSequence[availableTables.size()]);
@@ -363,18 +381,149 @@ public class TablesFragment extends Fragment {
         builder.setItems(tableArray, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String selectedTableToMerge = tableArray[which].toString();
+                selectedTableToMerge = tableArray[which].toString();  // Store the selected table to merge
+
+                mergeTables(selectedTableNum, selectedTableToMerge,roomId);
+                // Call the interface method to notify the MainActivity about the table click
+
+            }
+        });
 
 
-                mergeTables(selectedTableNum, selectedTableToMerge);
+        // Add a button for transfer
+        builder.setPositiveButton("Transfer", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Handle transfer action here
+                transferTable(selectedTableNum, roomId);
+            }
+        });
+        // Add an "Unmerge" button
+        builder.setNegativeButton("Unmerge", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                unmergeTable(selectedTableNum);  // Pass the selected table to merge to the unmergeTable method
+
             }
         });
 
         builder.show();
     }
 
-    private List<String> getAvailableTables(String selectedTableNum) {
-        // Query your database to get a list of tables excluding the selected one and merged tables
+    private void transferTable(final String selectedTableNum,String roomId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Select a Table to Transfer");
+
+        // Fetch the list of available tables from your database
+        List<String> availableTables = getAvailableTables(selectedTableNum,roomId);
+        Log.d("tab1",  selectedTableNum );
+
+        // Convert the list to an array for dialog selection
+        final CharSequence[] tableArray = availableTables.toArray(new CharSequence[availableTables.size()]);
+
+        builder.setItems(tableArray, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                selectedTableToTransfer = tableArray[which].toString();  // Store the selected table to merge
+
+                transfer(selectedTableNum, selectedTableToTransfer,roomId);
+                // Call the interface method to notify the MainActivity about the table click
+
+            }
+        });
+
+
+        builder.show();
+    }
+
+
+
+    public void clearTransact(){
+        // Create an instance of the DatabaseHelper class
+// Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+      int  roomid = preferences.getInt("roomnum", 0);
+    String    tableid = preferences.getString("table_id", "");
+        mDatabaseHelper.deleteDataByInProgressStatus(String.valueOf(roomid),tableid);
+
+
+        // Optionally, you can notify the user or perform any other actions after clearing the transaction
+// Notify the listener that an item is added
+
+
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+        String deviceType = sharedPreferences.getString("device_type", null);
+
+
+        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+            //showSecondaryScreen(data);
+        }  else {
+            Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+        }
+        //   recreate(getActivity());
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged();
+        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
+
+
+    }
+    private void unmergeTable(String selectedTableNum) {
+//delete  data from transac
+        clearTransact();
+        // Extract the numeric part from selectedTableToMerge
+        String numericPart = extractNumericPart(selectedTableNum);
+
+        // Update your database to unmerge the table
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        ContentValues valuesTable2 = new ContentValues();
+        // Update MERGED and MERGED_SET_ID columns
+        values.put(DatabaseHelper.MERGED, 0);
+        values.put(DatabaseHelper.MERGED_SET_ID,"0");
+
+        int rowsUpdated = db.update(DatabaseHelper.TABLES, values, DatabaseHelper.MERGED_SET_ID + " = ?",
+                new String[]{selectedTableNum});
+        valuesTable2.put(DatabaseHelper.MERGED, 0);
+
+        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
+                new String[]{numericPart});
+        db.close();
+
+        if (rowsUpdated > 0) {
+            // Table unmerged successfully
+            Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
+        } else if (rowsUpdated == 0) {
+            // No rows were updated
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
+        } else {
+            // An error occurred
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
+        }
+
+        // Refresh the UI to reflect the changes
+        // You may need to update your RecyclerView adapter or rerun the database query to fetch updated data
+        mAdapter.notifyDataSetChanged();
+        // Send broadcast to refresh MainActivity
+        // Navigate to MainActivity when OK is clicked
+
+        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", "0").apply();
+        sharedPreferences.edit().putInt("roomnum", 0).apply();
+
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        startActivity(intent);
+
+    }
+    private String extractNumericPart(String tableString) {
+        // Split the string based on space and return the last part
+        String[] parts = tableString.split(" ");
+        return parts[parts.length - 1];
+    }
+
+    private List<String> getAvailableTables(String selectedTableNum, String roomId) {
+        // Query your database to get a list of tables excluding the selected one, merged tables, and those with a different roomId
         // Adjust the query based on your database schema
 
         // For example:
@@ -382,9 +531,10 @@ public class TablesFragment extends Fragment {
 
         SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
         String query = "SELECT " + DatabaseHelper.TABLE_NUMBER + " FROM " + DatabaseHelper.TABLES +
-                " WHERE " + DatabaseHelper.TABLE_NUMBER + " != ? AND (" +
+                " WHERE " + DatabaseHelper.TABLE_NUMBER + " != ? AND " +
+                DatabaseHelper.ROOM_ID + " = ? AND (" +
                 DatabaseHelper.MERGED + " = 0 OR " + DatabaseHelper.MERGED + " IS NULL)";
-        Cursor cursor = db.rawQuery(query, new String[]{selectedTableNum});
+        Cursor cursor = db.rawQuery(query, new String[]{selectedTableNum, roomId});
 
         if (cursor.moveToFirst()) {
             do {
@@ -400,7 +550,8 @@ public class TablesFragment extends Fragment {
     }
 
 
-    private void mergeTables(String selectedTableNum, String selectedTableToMerge) {
+
+    private void mergeTables(String selectedTableNum, String selectedTableToMerge,String roomnum) {
         // Update your database to mark both tables with the same MERGED_SET_ID
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
         ContentValues valuesTable1 = new ContentValues();
@@ -409,27 +560,60 @@ public class TablesFragment extends Fragment {
         // Concatenate the TABLE_NUMBER of the first table with the second table
         String newTableNumber = "T " + selectedTableNum + " + T " + selectedTableToMerge;
 
+
+        Log.d("mergeTables", "Before calling updateTableIdInTransactions");
+        Log.d("test", selectedTableNum + " " + selectedTableToMerge );
+        mDatabaseHelper.updateTableIdInTransactions(db,cashierId,roomnum, selectedTableNum, newTableNumber);
+
+
+        Log.d("test", selectedTableNum + " " + selectedTableToMerge );
+        if (newTableNumber.startsWith("T T")) {
+            newTableNumber = newTableNumber.replaceFirst("T", ""); // Remove first "T " from the beginning
+            Log.e("newTableId1", "newTableId1: " + newTableNumber);
+        }
+        Log.d("newTableNumber", newTableNumber);
+        Log.d("newTableNumber", newTableNumber);
         // Update the first table
         valuesTable1.put(DatabaseHelper.MERGED_SET_ID, newTableNumber);
         valuesTable1.put(DatabaseHelper.MERGED, 1);
 
-        db.update(DatabaseHelper.TABLES, valuesTable1, DatabaseHelper.TABLE_NUMBER + " = ?",
-                new String[]{selectedTableNum});
 
+        int rowsUpdated1 = db.update(DatabaseHelper.TABLES, valuesTable1,
+                DatabaseHelper.TABLE_NUMBER + " = ? AND " + DatabaseHelper.ROOM_ID + " = ?",
+                new String[]{selectedTableNum, roomnum});
+
+// If updating based on TABLE_NUMBER fails, update based on MERGED_SET_ID
+        if (rowsUpdated1 == 0) {
+            db.update(DatabaseHelper.TABLES, valuesTable1, DatabaseHelper.MERGED_SET_ID + " = ?",
+                    new String[]{selectedTableNum});
+        }
         // Update the second table
-
         valuesTable2.put(DatabaseHelper.MERGED, 1);
+// Update the second table based on TABLE_NUMBER
+        int rowsUpdated2 = db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
+                new String[]{selectedTableToMerge});
 
+// If updating based on TABLE_NUMBER fails, update based on MERGED_SET_ID
+        if (rowsUpdated2 == 0) {
+             db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.MERGED_SET_ID + " = ?",
+                    new String[]{newTableNumber});
+        }
+
+// Log the number of rows updated
+        Log.d("mergeTables", "Rows Updated for " + selectedTableNum + ": " + rowsUpdated1);
+        Log.d("mergeTables", "Rows Updated for " + selectedTableToMerge + ": " + rowsUpdated2);
         db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
                 new String[]{selectedTableToMerge});
 
         db.close();
 
-        // Refresh the UI to reflect the changes
-        // You may need to update your RecyclerView adapter or rerun the database query to fetch updated data
         mAdapter.notifyDataSetChanged();
+        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", newTableNumber).apply();
+        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomId)).apply();
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        startActivity(intent);
     }
-
 
 
 
@@ -459,6 +643,22 @@ public class TablesFragment extends Fragment {
         }
     }
 
+    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId) {
+        // Perform the transfer operation by updating the database
+        // For example, update the table number of the selected table with the new table number
+        Log.d("selectedTableNum", selectedTableNum);
+        Log.d("selectedTableToTransfer", selectedTableToTransfer);
+
+        mDatabaseHelper.updateTableNumber(selectedTableNum, selectedTableToTransfer, roomId);
+        mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId);
+        mAdapter.notifyDataSetChanged();
+        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", selectedTableToTransfer).apply();
+        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomId)).apply();
+
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        startActivity(intent);
+    }
 
 
     public void openNewActivity() {

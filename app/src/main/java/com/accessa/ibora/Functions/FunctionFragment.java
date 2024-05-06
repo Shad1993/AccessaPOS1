@@ -2,9 +2,12 @@ package com.accessa.ibora.Functions;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.CASH_REPORT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CASHOR_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CURRENT_TIME;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_DATETIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_PAYMENT;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_POSNUM;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_SHOP_NUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTAL;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTALIZER;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TRANSACTION_CODE;
@@ -24,6 +27,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,14 +48,18 @@ import android.text.TextWatcher;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.externalprinterlibrary2.printerSetupforPRF;
 import com.accessa.ibora.printer.printerSetup;
+import com.accessa.ibora.printer.printerSetupForPickUp;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.keyboard.CustomEditText;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -73,7 +81,7 @@ public class FunctionFragment extends Fragment {
     int roomid;
     String tableid;
     private IWoyouService woyouService;
-    private String cashierId,cashierLevel,shopname,posNum;
+    private String cashierId,cashierLevel,shopname,posNum,shopId;
     String dbName = Constants.DB_NAME;
 
     TextView totalTextView = null;
@@ -113,6 +121,7 @@ public class FunctionFragment extends Fragment {
         cashierId = sharedPreference.getString("cashorId", null);
         cashierLevel = sharedPreference.getString("cashorlevel", null);
         shopname = sharedPreference.getString("ShopName", null);
+        shopId = sharedPreference.getString("ShopId", null);
 
         SharedPreferences sharedPreferencepos = requireContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         posNum = sharedPreferencepos.getString("posNumber", null);
@@ -219,10 +228,22 @@ public class FunctionFragment extends Fragment {
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                                 String currentDate = dateFormat.format(new Date());
 
+                                Calendar calendar = Calendar.getInstance();
+                                int hour = calendar.get(Calendar.HOUR_OF_DAY); // 24-hour format
+                                int minute = calendar.get(Calendar.MINUTE);
+                                int second = calendar.get(Calendar.SECOND);
+
+                                // Format the time
+                                String formattedTime = String.format("%02d:%02d:%02d", hour, minute, second);
+
                                 values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Insert only the date
+                                values.put(FINANCIAL_COLUMN_CURRENT_TIME, formattedTime);
                                 values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId); // Use the current cashier ID
                                 values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, "Pick Up");
                                 values.put(FINANCIAL_COLUMN_POSNUM, posNum); // Insert the posnum
+                                values.put(FINANCIAL_COLUMN_TOTALIZER, "Pick Up"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_SHOP_NUMBER, shopId); // Update the totalizer
 
                                 // Check if a row with the same transaction code ("Pick Up"), date, cashier ID, and posnum already exists
                                 String[] whereArgs = new String[] {"Pick Up", currentDate, cashierId, posNum};
@@ -239,7 +260,8 @@ public class FunctionFragment extends Fragment {
 
                                     values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
                                     values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + negativePickupAmount); // Update the total
-                                    values.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + negativePickupAmount); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Pick Up"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
 
                                     db.update(FINANCIAL_TABLE_NAME, values,
                                             FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
@@ -249,7 +271,8 @@ public class FunctionFragment extends Fragment {
                                     // If no row with the same transaction code, date, cashier ID, and posnum exists, insert a new row
                                     values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
                                     values.put(FINANCIAL_COLUMN_TOTAL, negativePickupAmount); // Initialize total as the negative pickup amount
-                                    values.put(FINANCIAL_COLUMN_TOTALIZER, negativePickupAmount); // Initialize totalizer as the negative pickup amount
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Pick Up"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
 
                                     db.insert(FINANCIAL_TABLE_NAME, null, values);
                                 }
@@ -264,8 +287,17 @@ public class FunctionFragment extends Fragment {
 
                                 db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
 
-                                // Open the drawer (add your drawer opening code here)
 
+                                // Open the drawer (add your drawer opening code here)
+                                Intent intent = new Intent(getActivity(), printerSetupForPickUp.class);
+                                intent.putExtra("type", "Pick Up");
+                                intent.putExtra("amount", negativePickupAmount);
+                                intent.putExtra("date", currentDate);
+                                intent.putExtra("time", formattedTime);
+                                intent.putExtra("shopnum", shopId);
+                                Log.d("amount1", String.valueOf(negativePickupAmount));
+
+                                startActivity(intent);
                                 // Close the dialog
                                 dialog.dismiss();
                             } else {
@@ -338,11 +370,21 @@ public class FunctionFragment extends Fragment {
                                 // Use a specific Locale for date formatting
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                                 String currentDate = dateFormat.format(new Date());
+                                Calendar calendar = Calendar.getInstance();
+                                int hour = calendar.get(Calendar.HOUR_OF_DAY); // 24-hour format
+                                int minute = calendar.get(Calendar.MINUTE);
+                                int second = calendar.get(Calendar.SECOND);
+
+                                // Format the time
+                                String formattedTime = String.format("%02d:%02d:%02d", hour, minute, second);
 
                                 values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Insert only the date
                                 values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId); // Use the current cashier ID
                                 values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, "Cash In");
                                 values.put(FINANCIAL_COLUMN_POSNUM, posNum); // Insert the posNum
+                                values.put(FINANCIAL_COLUMN_TOTALIZER, "Cash In"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_SHOP_NUMBER, shopId); // Update the totalizer
 
                                 // Check if a row with the same transaction code ("Cash In"), date, cashier ID, and posNum already exists
                                 String[] whereArgs = new String[] {"Cash In", currentDate, cashierId, posNum};
@@ -369,7 +411,8 @@ public class FunctionFragment extends Fragment {
                                     // If no row with the same transaction code, date, cashier ID, and posNum exists, insert a new row
                                     values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
                                     values.put(FINANCIAL_COLUMN_TOTAL, Double.parseDouble(cashinAmount)); // Initialize total
-                                    values.put(FINANCIAL_COLUMN_TOTALIZER, Double.parseDouble(cashinAmount)); // Initialize totalizer
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Cash In"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
 
                                     db.insert(FINANCIAL_TABLE_NAME, null, values);
                                 }
@@ -385,7 +428,14 @@ public class FunctionFragment extends Fragment {
                                 db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
 
                                 // Open the drawer (add your drawer opening code here)
-
+                                Intent intent = new Intent(getActivity(), printerSetupForPickUp.class);
+                                intent.putExtra("type", "Cash In");
+                                intent.putExtra("amount", Double.parseDouble(cashinAmount));
+                                intent.putExtra("date", currentDate);
+                                intent.putExtra("time", formattedTime);
+                                intent.putExtra("shopnum", shopId);
+                                Log.d("amount1",cashinAmount);
+                                startActivity(intent);
                                 // Close the dialog
                                 dialog.dismiss();
                             } else {
@@ -453,21 +503,32 @@ public class FunctionFragment extends Fragment {
 
                                 ContentValues values = new ContentValues();
 
-                                // Use a specific Locale for date formatting
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                                 String currentDate = dateFormat.format(new Date());
+                                Calendar calendar = Calendar.getInstance();
+                                int hour = calendar.get(Calendar.HOUR_OF_DAY); // 24-hour format
+                                int minute = calendar.get(Calendar.MINUTE);
+                                int second = calendar.get(Calendar.SECOND);
+
+                                // Format the time
+                                String formattedTime = String.format("%02d:%02d:%02d", hour, minute, second);
 
                                 values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Insert only the date
+                                values.put(FINANCIAL_COLUMN_CURRENT_TIME, formattedTime); // Insert only the time
                                 values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId); // Use the current cashier ID
                                 values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, "Loan");
                                 values.put(FINANCIAL_COLUMN_POSNUM, posNum); // Insert the posnum
+                                values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+                                values.put(FINANCIAL_COLUMN_SHOP_NUMBER, shopId); // Update the totalizer
 
-                                // Check if a row with the same transaction code ("Loan"), date, cashier ID, and posnum already exists
-                                String[] whereArgs = new String[] {"Loan", currentDate, cashierId, posNum};
+// Check if a row with the same transaction code ("Loan"), date, cashier ID, and posnum already exists
+                                String[] whereArgs = new String[] {"Loan", currentDate, String.valueOf(cashierId), String.valueOf(posNum)};
                                 Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
                                         FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
                                                 FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
                                         whereArgs, null, null, null);
+
 
                                 if (cursor.moveToFirst()) {
                                     // If a row with the same transaction code, date, cashier ID, and posnum exists, update the values
@@ -477,7 +538,8 @@ public class FunctionFragment extends Fragment {
 
                                     values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
                                     values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + Double.parseDouble(loanAmount)); // Update the total
-                                    values.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + Double.parseDouble(loanAmount)); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
 
                                     db.update(FINANCIAL_TABLE_NAME, values,
                                             FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
@@ -487,7 +549,8 @@ public class FunctionFragment extends Fragment {
                                     // If no row with the same transaction code, date, cashier ID, and posnum exists, insert a new row
                                     values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
                                     values.put(FINANCIAL_COLUMN_TOTAL, Double.parseDouble(loanAmount)); // Initialize total
-                                    values.put(FINANCIAL_COLUMN_TOTALIZER, Double.parseDouble(loanAmount)); // Initialize totalizer
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
 
                                     db.insert(FINANCIAL_TABLE_NAME, null, values);
                                 }
@@ -503,6 +566,14 @@ public class FunctionFragment extends Fragment {
 
                                 // Open the drawer (add your drawer opening code here)
 
+                                Intent intent = new Intent(getActivity(), printerSetupForPickUp.class);
+                                intent.putExtra("type", "Loan");
+                                intent.putExtra("amount", Double.parseDouble(loanAmount));
+                                intent.putExtra("date", currentDate);
+                                intent.putExtra("time", formattedTime);
+                                intent.putExtra("shopnum", shopId);
+                                Log.d("amount1",loanAmount);
+                                startActivity(intent);
                                 // Close the dialog
                                 dialog.dismiss();
                             } else {

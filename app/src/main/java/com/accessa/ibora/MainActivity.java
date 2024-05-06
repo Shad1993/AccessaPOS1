@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -65,6 +66,7 @@ import com.accessa.ibora.sales.Tables.TablesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
+import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.zxing.BarcodeFormat;
@@ -113,6 +115,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private CustomerLcdFragment customerLcdFragment;
     private int transactionCounter = 1;
     private String actualdate;
+
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private BroadcastReceiver cancelReceiver = new BroadcastReceiver() {
         @Override
@@ -176,7 +179,34 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         super.onCreate(savedInstanceState);
         TicketFragment ticketFragment1=new TicketFragment();
         ticketFragment1.setHasOptionsMenu(true);
+        double cashReturn = getIntent().getDoubleExtra("cash_return_key", 0.0); // Replace 0.0 with a default value if needed
+if (cashReturn != 0.0) {
+    // Display cash return amount in a pop-up dialog
+    // Create a layout inflater to inflate a custom layout for the dialog
+    LayoutInflater inflater = getLayoutInflater();
+    View dialogLayout = inflater.inflate(R.layout.custom_dialog_cashreturn, null);
 
+// Find the ImageView in the custom layout to set the GIF animation
+    ImageView gifImageView = dialogLayout.findViewById(R.id.gifImageView);
+// Set the GIF animation to the ImageView
+    Glide.with(this).load(R.drawable.cashreturn).into(gifImageView); // Replace loading_animation with your actual GIF resource
+
+// Create the AlertDialog.Builder with the custom layout
+    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+    builder.setView(dialogLayout);
+
+// Set title and message as before
+    builder.setTitle("Cash Return")
+            .setMessage("Cash Return Amount:Rs " + cashReturn)
+            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    // Positive button click
+                    dialog.dismiss(); // Close the dialog
+                }
+            })
+            .show();
+
+}
         // Initialize SharedPreferences
         SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
 

@@ -1,5 +1,6 @@
 package com.accessa.ibora.Sync;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.AmountDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.AvailableForSale;
 import static com.accessa.ibora.product.items.DatabaseHelper.Barcode;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_ADR_1;
@@ -40,18 +41,34 @@ import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.Name;
 import static com.accessa.ibora.product.items.DatabaseHelper.Nature;
 import static com.accessa.ibora.product.items.DatabaseHelper.Price;
+import static com.accessa.ibora.product.items.DatabaseHelper.Price2;
+import static com.accessa.ibora.product.items.DatabaseHelper.Price2AfterDiscount;
+import static com.accessa.ibora.product.items.DatabaseHelper.Price3;
+import static com.accessa.ibora.product.items.DatabaseHelper.Price3AfterDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.PriceAfterDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.Quantity;
+import static com.accessa.ibora.product.items.DatabaseHelper.RateDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.SKU;
 import static com.accessa.ibora.product.items.DatabaseHelper.SoldBy;
 import static com.accessa.ibora.product.items.DatabaseHelper.SubDepartment;
 import static com.accessa.ibora.product.items.DatabaseHelper.SyncStatus;
 import static com.accessa.ibora.product.items.DatabaseHelper.TaxCode;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount;
+import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount2;
+import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount3;
 import static com.accessa.ibora.product.items.DatabaseHelper.UserId;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 import static com.accessa.ibora.product.items.DatabaseHelper.Variant;
 import static com.accessa.ibora.product.items.DatabaseHelper.Weight;
+import static com.accessa.ibora.product.items.DatabaseHelper.comment;
+import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
+import static com.accessa.ibora.product.items.DatabaseHelper.hasoptions;
+import static com.accessa.ibora.product.items.DatabaseHelper.relatedSupplements;
+import static com.accessa.ibora.product.items.DatabaseHelper.related_item;
+import static com.accessa.ibora.product.items.DatabaseHelper.related_item2;
+import static com.accessa.ibora.product.items.DatabaseHelper.related_item3;
+import static com.accessa.ibora.product.items.DatabaseHelper.related_item4;
+import static com.accessa.ibora.product.items.DatabaseHelper.related_item5;
 
 import android.app.AlertDialog;
 import android.app.IntentService;
@@ -88,7 +105,7 @@ public class SyncActivitySync extends IntentService {
     private static final String _user = "sa";
     private static final String _pass = "Logi2131";
     private static final String _DB = "IboraPOS";
-    private static final String _server = "192.168.1.89";
+    private static final String _server ="192.168.1.89";
     private Context context;
 
     public SyncActivitySync() {
@@ -135,11 +152,11 @@ public class SyncActivitySync extends IntentService {
             showToast("Connection successful");
 
         } catch (SQLException se) {
-            Log.e("ERROR", se.getMessage());
+            Log.e("ERROR1", se.getMessage());
         } catch (ClassNotFoundException e) {
-            Log.e("ERROR", e.getMessage());
+            Log.e("ERROR2", e.getMessage());
         } catch (Exception e) {
-            Log.e("ERROR", e.getMessage());
+            Log.e("ERROR3", e.getMessage());
         }
         return conn;
     }
@@ -190,18 +207,30 @@ public class SyncActivitySync extends IntentService {
                 int totalItems = resultSet.getInt("totalItems");
                 if (totalItems > 0) {
 // Define your SQL query to check for the presence of the POS number in the POS table
-                    String checkPosQuery = "SELECT COUNT(*) FROM POSTable WHERE TerminalNumber = ?";
+                    String checkPosQuery = "SELECT TerminalNumber FROM POSTable";
                     PreparedStatement checkPosStatement = conn.prepareStatement(checkPosQuery);
-                    checkPosStatement.setString(1, tillnum);
-
-// Execute the query to check if the POS number exists
                     ResultSet checkPosResultSet = checkPosStatement.executeQuery();
 
-                    if (checkPosResultSet.next()) {
-                        int count = checkPosResultSet.getInt(1);
+                    boolean terminalNumberExists = false;
+                    Log.d("POSTable1", checkPosQuery);
+                    Log.d("tillnum", "tillnum: " + tillnum);
 
-                        if (count > 0) {
-                            String stdAccessQuery = "SELECT * FROM std_access WHERE brn_no = ? AND ShopNumber = ? ";
+                    while (checkPosResultSet.next()) {
+                        String terminalNumber = checkPosResultSet.getString("TerminalNumber");
+
+                        Log.d("TerminalNumber", "Terminal Number: " + terminalNumber);
+
+                        // Check if TerminalNumber matches tillnum (assuming tillnum is a String)
+                        if (terminalNumber.equals(tillnum)) {
+                            terminalNumberExists = true;
+                            Log.d("terminalNumberExists", "terminalNumberExists Number: " + terminalNumberExists);
+                            break;
+                        }
+                    }
+
+                        if (terminalNumberExists) {
+
+                            String stdAccessQuery =  "SELECT * FROM std_access WHERE brn_no = ? AND ShopNumber = ?";
                             PreparedStatement stdAccessStatement = conn.prepareStatement(stdAccessQuery);
                             stdAccessStatement.setString(1, brn);
                             stdAccessStatement.setString(2, shopnum);
@@ -236,7 +265,7 @@ public class SyncActivitySync extends IntentService {
                                         adr1, adr2, adr3, telNo, faxNo, openingHours, companyName, cashorId, lastModified, dateCreated, tillnum);
 
 
-                                String usersQuery = "SELECT * FROM Users WHERE ShopName = ?";
+                                String usersQuery = "SELECT * FROM POSUser WHERE ShopName = ?";
                                 PreparedStatement usersStatement = conn.prepareStatement(usersQuery);
                                 usersStatement.setString(1, shopName);
                                 ResultSet usersResultSet = usersStatement.executeQuery();
@@ -260,8 +289,9 @@ public class SyncActivitySync extends IntentService {
                             }
 
 
-                            String query = "SELECT * FROM Items";
+                            String query = "SELECT * FROM POSITEMS";
                             resultSets = statement.executeQuery(query);
+                            Log.d("Items", query);
                             while (resultSets.next()) {
                                 // Process each row of data here
                                 String barcode = resultSets.getString(Barcode);
@@ -273,7 +303,13 @@ public class SyncActivitySync extends IntentService {
                                 String longDescription = resultSets.getString(LongDescription);
                                 String subDepartment = resultSets.getString(SubDepartment);
                                 String price = resultSets.getString(Price);
+                                //price
+                                String price2 = resultSets.getString(Price2);
+                                String price3 = resultSets.getString(Price3);
                                 String priceAfterDiscount = resultSets.getString(PriceAfterDiscount);
+                                //priceafterdisc
+                                String priceAfterDiscount2 = resultSets.getString(Price2AfterDiscount);
+                                String priceAfterDiscount3 = resultSets.getString(Price3AfterDiscount);
                                 String vAT = resultSets.getString(VAT);
                                 String expiryDate = resultSets.getString(ExpiryDate);
                                 String availableForSale = resultSets.getString(AvailableForSale);
@@ -292,17 +328,38 @@ public class SyncActivitySync extends IntentService {
                                 String nature = resultSets.getString(Nature);
                                 String taxCode = resultSets.getString(TaxCode);
                                 String currency = resultSets.getString(Currency);
+                                //rate
+                                String rateDiscount = resultSets.getString(RateDiscount);
+                                //AmountDiscount
+                                String amountDiscount = resultSets.getString(AmountDiscount);
+
                                 String itemCode = resultSets.getString(ItemCode);
                                 String totalDiscount = resultSets.getString(TotalDiscount);
+                                //totalDiscount
+                                String totalDiscount2 = resultSets.getString(TotalDiscount2);
+                                String totalDiscount3 = resultSets.getString(TotalDiscount3);
                                 String dateCreated = resultSets.getString(DateCreated);
                                 String lastModified = resultSets.getString(LastModified);
                                 String syncStatus = resultSets.getString(SyncStatus);
+                                //hasoptions
+                                String Hasoptions = resultSets.getString(hasoptions);
+                                //comment
+                                String Comment = resultSets.getString(comment);
+                                //related_item
+                                String Related_item = resultSets.getString(related_item);
+                                String Related_item2 = resultSets.getString(related_item2);
+                                String Related_item3 = resultSets.getString(related_item3);
+                                String Related_item4 = resultSets.getString(related_item4);
+                                String Related_item5 = resultSets.getString(related_item5);
+                                //hasSupplements
+                                String HasSupplements = resultSets.getString(hasSupplements);
+                                //relatedSupplements
+                                String RelatedSupplements = resultSets.getString(relatedSupplements);
 
-
-                                dbManager.insertwithnewbarcode(itemname, desc, price, category, barcode, Float.parseFloat(weight), department,
+                                dbManager.insertwithnewbarcode(itemname,RelatedSupplements, Comment,desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
                                         subDepartment, longDescription, quantity, expiryDate, vAT,
-                                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
-                                        nature, currency, itemCode, taxCode, totalDiscount, Double.parseDouble(priceAfterDiscount), syncStatus);
+                                        availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
+                                        nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
 
                                 // Redirect to the Product activity
                                 Intent intent = new Intent(SyncActivitySync.this, login.class);
@@ -310,7 +367,7 @@ public class SyncActivitySync extends IntentService {
                                 startActivity(intent);
                             }
                         }showToast("POS Number not  found .");
-                    }
+
                 } else {
                     showToast("No items found in MSSQL database.\"");
                 }
@@ -321,9 +378,9 @@ public class SyncActivitySync extends IntentService {
             statement.close();
             dbManager.close();
         } catch (SQLException se) {
-            Log.e("REMOTE_DATA_TEST_ERROR", se.getMessage());
+            Log.e("REMOTE_DATA_TEST_ERROR1", se.getMessage());
         } catch (Exception e) {
-            Log.e("REMOTE_DATA_TEST_ERROR", e.getMessage());
+            Log.e("REMOTE_DATA_TEST_ERROR2", e.getMessage());
         }
     }
 

@@ -18,6 +18,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -45,6 +46,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
@@ -76,6 +78,7 @@ public class printerSetup extends AppCompatActivity {
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress;
     private String tableid;
+    private SharedPreferences sharedPreferences;
     private String roomid;
     private String      splittype;
     private   String newtransactionIdInProgress;
@@ -625,11 +628,19 @@ public class printerSetup extends AppCompatActivity {
 
                                     // Remove the trailing comma and space
                                     String Drawer = vatTypesBuilder.toString().trim();
+                                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+                                    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                                    sharedPreferences.edit().putString("table_id", "0").apply();
+                                    sharedPreferences.edit().putString("table_num", "0").apply();
+                                    sharedPreferences.edit().putInt("roomnum", 0).apply();
+                                    List<String> tableIds = extractTableIds(tableid);
+                                    for (String tableId : tableIds) {
+                                        Log.d("extractTableIds", "Table ID: " + tableId);
+
+                                        mDatabaseHelper.resetMergedStatusToDefault(db,roomid,tableId);
 
 
-
-
-
+                                    }
 
                                 }
 
@@ -718,7 +729,7 @@ public class printerSetup extends AppCompatActivity {
 
                         // Update the transaction status for all in-progress transactions to "Completed"
 
-
+                        clearBuyerInfoFromPrefs();
                         updateTransactionStatus();
                         MainActivity mainActivity = MainActivity.getInstance();
                         if (mainActivity != null) {
@@ -729,11 +740,10 @@ public class printerSetup extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+
                                 Intent intent = new Intent(printerSetup.this, MainActivity.class);
-
+                                intent.putExtra("cash_return_key", cashReturn); // Replace cashReturn with your actual cash return value
                                 startActivity(intent);
-
-
                             }
                         });
                     } catch (RemoteException e) {
@@ -754,7 +764,20 @@ public class printerSetup extends AppCompatActivity {
             });
         }
     };
+    private List<String> extractTableIds(String newTableId) {
+        List<String> tableIds = new ArrayList<>();
 
+        // Split the newTableId string by the "+" symbol
+        String[] tableNumbers = newTableId.split("\\+");
+
+        for (String tableNum : tableNumbers) {
+            // Trim and remove "T " prefix if it exists
+            String cleanedTableNum = tableNum.trim().replace("T ", "");
+            tableIds.add(cleanedTableNum);
+        }
+
+        return tableIds;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -773,7 +796,7 @@ public class printerSetup extends AppCompatActivity {
         mDatabaseHelper = new DatabaseHelper(this);
         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
         boolean isprf=  startsWithPRF(transactionIdInProgress);
-        Log.d("isprf",transactionIdInProgress);
+
         if(isprf) {
             newtransactionIdInProgress = generateNewTransactionId();
             Log.d("isprf", String.valueOf(isprf));
@@ -942,7 +965,12 @@ public class printerSetup extends AppCompatActivity {
         }
     }
 
-
+    private void clearBuyerInfoFromPrefs() {
+        SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.clear();
+        editor.apply();
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

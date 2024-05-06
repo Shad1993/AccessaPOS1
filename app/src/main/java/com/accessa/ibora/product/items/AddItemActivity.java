@@ -47,6 +47,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.Sync.MasterSync.MSSQLDataInserter;
 import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
@@ -950,7 +951,8 @@ public class AddItemActivity extends Activity {
         btnYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Call a method to upload data to the online database here
+
+
                 String Name = name;
                 String Descript = desc;
                 String Price = price;

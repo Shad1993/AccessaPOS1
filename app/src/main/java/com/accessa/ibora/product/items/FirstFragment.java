@@ -27,6 +27,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.Sync.MasterSync.MSSQLDataInserter;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
+import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
@@ -38,6 +41,7 @@ import com.bumptech.glide.Glide;
 import com.accessa.ibora.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -262,8 +266,23 @@ private  EditText searchEditText;
             @Override
             public void onClick(View v) {
                 //clear table
+                // Create an instance of MssqlDataSync
+                MssqlDataSync mssqlDataSync = new MssqlDataSync();
 
-                    dbManager.deleteItemsWithSyncStatusNotOffline();
+                // Call the synchronization method
+
+                    //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
+                //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
+               // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
+              //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
+              //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
+              //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
+                mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
+                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
+                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+               // dbManager.deleteItemsWithSyncStatusNotOffline();
                     // Start the synchronization process when the FAB is clicked
                     SyncService.startSync(requireContext());
 
@@ -273,6 +292,8 @@ private  EditText searchEditText;
 
         return view;
     }
+
+
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;

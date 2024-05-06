@@ -79,7 +79,7 @@
         <activity android:name=".product.Vendor.ModifyVendorActivity" />
         <activity android:name=".product.category.AddCategoryActivity" />
         <activity android:name=".product.category.ModifyCategoryActivity" />
-        <activity android:name=".printer.printerSetup" />
+
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
         <activity android:name=".CustomerLcd.CustomerLcd"/>
@@ -135,9 +135,14 @@
         <activity android:name=".product.options.AddOptionsActivity"/>
         <activity android:name=".product.supplements.AddSupplementsActivity"/>
         <activity android:name=".product.supplements.ModifySupplementsActivity"/>
+        <activity android:name=".Sync.SyncService"/>
+        <activity android:name=".printer.printerSetupForPickUp"/>
 
 
-
+        <activity android:name=".printer.printerSetup"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <!-- Other activity attributes -->
+        </activity>
 
 
         <activity

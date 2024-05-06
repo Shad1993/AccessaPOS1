@@ -90,4 +90,18 @@
         android:orientation="horizontal"
         android:layout_marginTop="16dp">
     </LinearLayout>
+    <!-- Add EditText for Comments -->
+    <TextView
+        android:id="@+id/CommentstextView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:textSize="18sp"
+        android:text="Comments" />
+    <EditText
+        android:id="@+id/editTextOption1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Comment"
+        android:inputType="text"/>
 </LinearLayout>

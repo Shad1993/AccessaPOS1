@@ -45,12 +45,15 @@ import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABL
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
+import static com.accessa.ibora.product.items.DatabaseHelper.hasoptions;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.accessa.ibora.Admin.cashier;
 import com.accessa.ibora.Buyer.Buyer;
@@ -1506,13 +1509,28 @@ public class DBManager {
         return true;
     }
 
-    public void insertwithnewbarcode(String itemname, String desc, String price, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String nature, String currency, String itemCode, String taxCode, String totalDiscount, double priceAfterDiscount, String syncStatus) {
+    public void insertwithnewbarcode(String itemname,String RelatedSupplements,String Comment, String desc, String price,String price2,String price3, String ratediscount,String amountdiscount,String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified,String Hasoptions, String nature, String currency, String itemCode, String taxCode, String totalDiscount,String totalDiscount2,String totalDiscount3, double priceAfterDiscount,double priceAfterDiscount2,double priceAfterDiscount3,String Related_item,String Related_item2,String Related_item3,String Related_item4,String Related_item5,String HasSupplements, String syncStatus) {
+        try {
 
+            ContentValues costContentValue = new ContentValues();
+
+            costContentValue.put(DatabaseHelper.Barcode, barcode);
+            costContentValue.put(DatabaseHelper.SKU, sku);
+            costContentValue.put(DatabaseHelper.UserId, userId);
+            costContentValue.put(DatabaseHelper.LastModified, LastModified);
+            costContentValue.put(DatabaseHelper.Cost, cost);
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, itemname);
+        contentValue.put(DatabaseHelper.comment, Comment);
+        contentValue.put(DatabaseHelper.relatedSupplements, RelatedSupplements);
         contentValue.put(DatabaseHelper.DESC, desc);
         contentValue.put(DatabaseHelper.Price, price);
+        contentValue.put(DatabaseHelper.Price2, price2);
+        contentValue.put(DatabaseHelper.Price3, price3);
+        contentValue.put(DatabaseHelper.RateDiscount, ratediscount);
+        contentValue.put(DatabaseHelper.AmountDiscount, amountdiscount);
+        contentValue.put(DatabaseHelper.hasoptions, Hasoptions);
         contentValue.put(DatabaseHelper.Category, category);
         contentValue.put(DatabaseHelper.Barcode, barcode);
         contentValue.put(DatabaseHelper.Department, department);
@@ -1536,20 +1554,68 @@ public class DBManager {
         contentValue.put(DatabaseHelper.ItemCode, itemCode);
         contentValue.put(DatabaseHelper.TaxCode, taxCode);
         contentValue.put(DatabaseHelper.TotalDiscount, totalDiscount);
-        contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
-        contentValue.put(DatabaseHelper.SyncStatus, syncStatus);
-        database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
+        contentValue.put(DatabaseHelper.TotalDiscount2, totalDiscount2);
+        contentValue.put(DatabaseHelper.TotalDiscount3, totalDiscount3);
 
+        contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
+        contentValue.put(DatabaseHelper.Price2AfterDiscount, priceAfterDiscount2);
+        contentValue.put(DatabaseHelper.Price3AfterDiscount, priceAfterDiscount3);
+        contentValue.put(DatabaseHelper.related_item, Related_item);
+        contentValue.put(DatabaseHelper.related_item2, Related_item2);
+        contentValue.put(DatabaseHelper.related_item3, Related_item3);
+        contentValue.put(DatabaseHelper.related_item4, Related_item4);
+        contentValue.put(DatabaseHelper.related_item5, Related_item5);
+        contentValue.put(DatabaseHelper.hasSupplements, HasSupplements);
+        contentValue.put(DatabaseHelper.SyncStatus, syncStatus);
+            if (!dbHelper.checkBarcodeExistsForItems(barcode)) {
+                // Barcode does not exist, insert new row
+                long result = database.insert(DatabaseHelper.TABLE_NAME, null, contentValue);
+                if (result == -1) {
+                    // Insertion failed
+                    Log.e("Insertion", "Failed to insert data into ITEMS table");
+                } else {
+                    // Insertion successful
+                    Log.d("Insertion", "Data inserted successfully into POSITEMS table");
+                }
+            }else {
+                // Barcode exists, update existing row
+
+                // Update the existing record with the matching barcode
+                int result =    database.update(DatabaseHelper.TABLE_NAME, contentValue, DatabaseHelper.Barcode + "=?", new String[]{barcode});
+
+
+                if (result == -1) {
+                    // Insertion failed
+                    Log.e("Insertion", "Failed to update data in ITEMS table");
+                } else {
+                    // Insertion successful
+                    Log.d("Insertion", "Data updated successfully in POSITEMS table");
+                }
+            }
 
         if (!dbHelper.checkBarcodeExistsForcost(barcode)) {
             // Insert duplicates into the cost table
-            ContentValues costContentValue = new ContentValues();
-            costContentValue.put(DatabaseHelper.Barcode, barcode);
-            costContentValue.put(DatabaseHelper.SKU, sku);
-            costContentValue.put(DatabaseHelper.UserId, userId);
-            costContentValue.put(DatabaseHelper.LastModified, LastModified);
-            costContentValue.put(DatabaseHelper.Cost, cost);
+
             database.insert(DatabaseHelper.COST_TABLE_NAME, null, costContentValue);
+        }else {
+            // Barcode exists, update existing row
+
+            // Update the existing record with the matching barcode
+            int result = database.update(DatabaseHelper.COST_TABLE_NAME, costContentValue, DatabaseHelper.Barcode + "=?", new String[]{barcode});
+
+
+            if (result == -1) {
+                // Insertion failed
+                Log.e("Insertion", "Failed to update data in Cost table");
+            } else {
+                // Insertion successful
+                Log.d("Insertion", "Data updated successfully in Cost table");
+            }
+        }
+        } catch (Exception e) {
+            // Handle any exceptions
+            e.printStackTrace();
+            Log.e("Insertion", "Exception occurred during insertion: " + e.getMessage());
         }
     }
 

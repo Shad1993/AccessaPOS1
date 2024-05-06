@@ -4,6 +4,7 @@ package com.accessa.ibora.login;
 
 
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_Shop;
+import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_CASHOR_ShopNum;
 
 import android.content.Context;
 import android.content.Intent;
@@ -84,7 +85,9 @@ public class login extends AppCompatActivity {
 
         // Set "roomnum" to 1
         editor.putInt("roomnum", 1);
-        editor.putString("table_id", "1");
+        editor.putInt("room_id", 1);
+        editor.putString("table_id", "0");
+        editor.putString("table_num", "0");
 
         // Commit the changes
         editor.apply();
@@ -131,6 +134,8 @@ public class login extends AppCompatActivity {
             String cashorlevel = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
             String ShopName = cursor.getString(cursor.getColumnIndex(COLUMN_CASHOR_Shop));
 
+            SQLiteDatabase db = mDatabaseHelper.getReadableDatabase(); // Assume dbHelper is an instance of your SQLiteOpenHelper
+            String shopNumber = mDatabaseHelper.getShopNumber(db);
 
 
             // Remove the buyer info from shared preferences
@@ -140,6 +145,7 @@ public class login extends AppCompatActivity {
             editor.putString("cashorId", cashorId); // Store cashor's ID
             editor.putString("cashorlevel", cashorlevel); // Store cashor's level
             editor.putString("ShopName", ShopName); // Store company name
+            editor.putString("ShopId", shopNumber); // Store shopid
             editor.apply();
             getSelectedPaymentType();
 
@@ -151,7 +157,10 @@ public class login extends AppCompatActivity {
             intent.putExtra("ShopName", ShopName);
             startActivity(intent);
                 // Use a Handler to delay the redirection
-
+            int posNum = mDatabaseHelper.getPosNumFromFinancialTable(db);
+            if (posNum != -1) { // Check if posNum is not empty, null, or zero
+                savePosNumber(String.valueOf(posNum));
+            }
 
 
 
@@ -216,6 +225,13 @@ public class login extends AppCompatActivity {
         }
 
         cursor.close();
+    }
+
+    private void savePosNumber(String posNumber) {
+        SharedPreferences sharedPreferences = this.getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("posNumber", posNumber);
+        editor.apply();
     }
     private void clearBuyerInfoFromPrefs() {
         SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +48,7 @@ public class RoomsFragment extends Fragment {
     private static final String PREF_FILE_NAME = "room_and_table_prefs";
     private static final String PREF_ROOM_ID = "room_id";
     private static final String PREF_TABLE_ID = "table_id";
-
+    public int roomid;
     private PopupWindow popupWindow;
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
@@ -81,6 +82,7 @@ public class RoomsFragment extends Fragment {
 // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         // Use the modified getAllRooms() method to fetch rooms
+        roomid = sharedPreferences.getInt("room_id", 0);
 
 
         // Set default value for current ID if not set
@@ -196,9 +198,14 @@ public class RoomsFragment extends Fragment {
         mRecyclerView.addItemDecoration(itemDecoration);
 
         // Use the modified getAllRooms() method to fetch rooms
-        Cursor roomCursor = mDatabaseHelper.getAllRooms(); // Assuming mDatabaseHelper is your DatabaseHelper instance
+        //Cursor roomCursor = mDatabaseHelper.getAllRooms(); // Assuming mDatabaseHelper is your DatabaseHelper instance
 
-        mAdapter = new RoomAdapter(getActivity(), roomCursor);
+        // Assuming mDatabaseHelper is your DatabaseHelper instance
+        Cursor roomCursor = mDatabaseHelper.getRoomsForId(roomid);
+
+        String roomName = mDatabaseHelper.getRoomNameForId(String.valueOf(roomid));
+
+        mAdapter = new RoomAdapter(getActivity(), roomCursor,String.valueOf(roomid));
         mRecyclerView.setAdapter(mAdapter);
         // Empty state
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
@@ -212,6 +219,8 @@ public class RoomsFragment extends Fragment {
         } else {
             mRecyclerView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
+            // Update your UI elements based on the room name
+
         }
 
         // SearchView
@@ -263,9 +272,13 @@ public class RoomsFragment extends Fragment {
                         String id = idTextView.getText().toString();
                         String title = subjectEditText.getText().toString();
 
+                        Log.d("id", id);
+                        Log.d("title", title);
+
+
 
                         // Here, you can dynamically update your UI based on the clicked item
-                        updateUIForClickedItem(id, title);
+                        updateUIForClickedItem(id);
                     }
 
                     @Override
@@ -326,7 +339,7 @@ public class RoomsFragment extends Fragment {
         intent.putExtra("locale", currentLocale.toString());
         startActivity(intent);
     }
-    private void updateUIForClickedItem(String id, String title) {
+    private void updateUIForClickedItem(String id) {
         // Get the maximum ID from the database
         int maxRoomId = mDatabaseHelper.getMaxRoomId();
         int newRoomId = Integer.parseInt(id);
@@ -348,12 +361,13 @@ public class RoomsFragment extends Fragment {
         int actualroom=currentRoomId;
         // Increment the current room ID and save it to SharedPreferences
         currentRoomId = (currentRoomId % maxRoomId) + 1;
-        sharedPreferences.edit().putInt(PREF_ROOM_ID, currentRoomId).apply();
+        sharedPreferences.edit().putInt(PREF_ROOM_ID, actualroom).apply();
 
         // Now, handle the table ID (assuming you want to set it to 1)
         int defaultTableId = 0;
-        sharedPreferences.edit().putInt(PREF_TABLE_ID, defaultTableId).apply();
-        sharedPreferences.edit().putString("roomnum", String.valueOf(actualroom)).apply();
+        sharedPreferences.edit().putString(PREF_TABLE_ID, String.valueOf(defaultTableId)).apply();
+        sharedPreferences.edit().putInt("roomnum", actualroom).apply();
+
     }
 
 

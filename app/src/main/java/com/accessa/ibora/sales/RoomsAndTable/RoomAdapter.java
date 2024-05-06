@@ -21,10 +21,12 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
 
     private Context mContext;
     private Cursor mCursor;
+    private String defaultId; // Add a field to store the default id
     private boolean isSearching = false;
-    public RoomAdapter(Context context, Cursor cursor) {
+    public RoomAdapter(Context context, Cursor cursor, String defaultId) {
         mContext = context;
         mCursor = cursor;
+        this.defaultId = defaultId; // Set the default id
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
@@ -97,7 +99,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
 
         } else {
             holder.nameTextView.setVisibility(View.VISIBLE);
-            holder.idTextView.setVisibility(View.VISIBLE);
+            holder.idTextView.setVisibility(View.GONE);
 
 
             // Set data to views for non-search mode

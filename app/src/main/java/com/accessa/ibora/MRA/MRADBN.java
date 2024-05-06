@@ -21,11 +21,13 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_T
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
@@ -400,6 +402,8 @@ public class MRADBN extends AppCompatActivity {
                 public void run() {
                     if (result != null && !result.startsWith("Request Failed")) {
                         Log.d("qrcode", result); // Log the QR code string
+
+
                         Intent intent = new Intent(getApplication(), printerSetupforPRF.class);
                         //intent.putExtra("transactionId", newtransactionid);
                         //intent.putExtra("transactionType", TransactionType);
@@ -413,6 +417,9 @@ public class MRADBN extends AppCompatActivity {
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
                         Log.d("transactionType", TransactionType);
+                        if (!"PRF".equals(TransactionType)) {
+                            unmergeTable(tableid);
+                        }
                         String MRAMETHOD="Single";
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
                         startActivity(intent);
@@ -420,7 +427,7 @@ public class MRADBN extends AppCompatActivity {
                     } else {
                         String result="Request Failed";
                         // Show "MRA Request Failed" message
-                        Log.d("qrcode", result); // Log the QR code string
+
                         Intent intent = new Intent(getApplication(), printerSetupforPRF.class);
                         //intent.putExtra("transactionId", newtransactionid);
                         //intent.putExtra("transactionType", TransactionType);
@@ -435,6 +442,9 @@ public class MRADBN extends AppCompatActivity {
                         intent.putExtra("tableid", tableid);
                         String MRAMETHOD="Single";
                         Log.d("transactionType", TransactionType);
+                        if (!"PRF".equals(TransactionType)) {
+                            unmergeTable(tableid);
+                        }
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
 
                     }
@@ -574,6 +584,56 @@ public class MRADBN extends AppCompatActivity {
             e.printStackTrace();
         }
         return null; // Return null if qrCode is not found or an error occurs
+    }
+
+    private void unmergeTable(String selectedTableNum) {
+
+
+        // Extract the numeric part from selectedTableToMerge
+        String numericPart = extractNumericPart(selectedTableNum);
+
+        // Update your database to unmerge the table
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        ContentValues valuesTable2 = new ContentValues();
+        // Update MERGED and MERGED_SET_ID columns
+        values.put(DatabaseHelper.MERGED, 0);
+        values.put(DatabaseHelper.MERGED_SET_ID,"0");
+
+        int rowsUpdated = db.update(DatabaseHelper.TABLES, values, DatabaseHelper.MERGED_SET_ID + " = ?",
+                new String[]{selectedTableNum});
+        valuesTable2.put(DatabaseHelper.MERGED, 0);
+
+        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
+                new String[]{numericPart});
+        db.close();
+
+        if (rowsUpdated > 0) {
+            // Table unmerged successfully
+            Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
+        } else if (rowsUpdated == 0) {
+            // No rows were updated
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
+        } else {
+            // An error occurred
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
+        }
+
+        // Refresh the UI to reflect the changes
+        // You may need to update your RecyclerView adapter or rerun the database query to fetch updated data
+
+
+        SharedPreferences    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", "0").apply();
+        sharedPreferences.edit().putInt("roomnum", 0).apply();
+
+
+    }
+
+    private String extractNumericPart(String tableString) {
+        // Split the string based on space and return the last part
+        String[] parts = tableString.split(" ");
+        return parts[parts.length - 1];
     }
     public static String generateRandomAESKey() {
         try {

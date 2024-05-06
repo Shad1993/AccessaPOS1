@@ -22,11 +22,13 @@ import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT_Type;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +40,7 @@ import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -329,6 +332,8 @@ if(SelectedBuyerProfile==null) {
                         jsondetails = "[" + jsondetails + "]";
 
                         System.out.println("newjson: " + jsondetails);
+                        System.out.println("selectedBuyerName: " + selectedBuyerName);
+
 
 
                         // Parse the response JSON to extract the key
@@ -406,28 +411,32 @@ if(SelectedBuyerProfile==null) {
                 @Override
                 public void run() {
                     if (result != null && !result.startsWith("Request Failed")) {
+                        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
                         Log.d("qrcode", result); // Log the QR code string
-
+                        Log.d("result1", result); // Log the QR code string
+                        unmergeTable(tableid);
                         Intent intent = new Intent(getApplication(), printerSetup.class);
                         intent.putExtra("amount_received", totalAmountinserted);
                         intent.putExtra("cash_return", cashReturn);
                         intent.putExtra("settlement_items", settlementItems);
                         intent.putExtra("mraQR", result);
-                        intent.putExtra("transactionid", Transaction_Id);
+                        intent.putExtra("transactionid", transactionIdInProgress);
                         intent.putExtra("MRAIRN", irn);
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
-                        System.out.println("tr: " + Transaction_Id);
+                        System.out.println("tr: " + transactionIdInProgress);
+                        System.out.println("selectedBuyerTAN: " + selectedBuyerTAN);
 
                         String MRAMETHOD="Single";
-                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
+                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
                         startActivity(intent);
                     } else {
                         String result="Request Failed";
+                        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", result); // Log the QR code string
-
-
+                        Log.d("result2", result);
+                        unmergeTable(tableid);
                         Intent intent = new Intent(getApplication(), printerSetup.class);
                         intent.putExtra("amount_received", totalAmountinserted);
                         intent.putExtra("cash_return", cashReturn);
@@ -437,11 +446,11 @@ if(SelectedBuyerProfile==null) {
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
 
-                        System.out.println("tr: " + Transaction_Id);
+                        System.out.println("tr: " + transactionIdInProgress);
 
 
                         String MRAMETHOD="Single";
-                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType);
+                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
                         startActivity(intent);
                     }
                 }
@@ -455,7 +464,7 @@ if(SelectedBuyerProfile==null) {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setContentView(R.layout.splashflash);
         mDatabaseHelper = new DatabaseHelper(this);
 
         // Retrieve the passed buyer information from the intent
@@ -475,6 +484,7 @@ if(SelectedBuyerProfile==null) {
              SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
             roomid= getIntent().getStringExtra("roomid");
             tableid  = getIntent().getStringExtra("tableid");
+
 
 
             // Retrieve other buyer information as needed
@@ -535,9 +545,17 @@ if(SelectedBuyerProfile==null) {
     }
 
 
-    public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD,String Transactiontype){
+    public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD,String Transactiontype,String selectedBuyerName,String selectedBuyerTAN,String selectedBuyerBRN,String selectedBuyerNIC){
+        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+        Log.d("tr2", String.valueOf(transactionIdInProgress));
+        SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
-        mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD);
+        double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
+        double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
+
+        db.close();
+        mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, transactionIdInProgress,qrMra,mrairn,MRAMETHOD);
+        mDatabaseHelper.getTotalVATAndUpdateTransactionHeader(transactionIdInProgress,sumBeforeDisc,sumAfterDisc,selectedBuyerName,selectedBuyerTAN,selectedBuyerBRN,selectedBuyerNIC);
 
     }
     public static String extractQrCode(String apiResponse) {
@@ -722,5 +740,53 @@ if(SelectedBuyerProfile==null) {
 
         return itemList;
     }
+    private void unmergeTable(String selectedTableNum) {
 
+
+        // Extract the numeric part from selectedTableToMerge
+        String numericPart = extractNumericPart(selectedTableNum);
+
+        // Update your database to unmerge the table
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        ContentValues valuesTable2 = new ContentValues();
+        // Update MERGED and MERGED_SET_ID columns
+        values.put(DatabaseHelper.MERGED, 0);
+        values.put(DatabaseHelper.MERGED_SET_ID,"0");
+
+        int rowsUpdated = db.update(DatabaseHelper.TABLES, values, DatabaseHelper.MERGED_SET_ID + " = ?",
+                new String[]{selectedTableNum});
+        valuesTable2.put(DatabaseHelper.MERGED, 0);
+
+        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
+                new String[]{numericPart});
+        db.close();
+
+        if (rowsUpdated > 0) {
+            // Table unmerged successfully
+            Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
+        } else if (rowsUpdated == 0) {
+            // No rows were updated
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
+        } else {
+            // An error occurred
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
+        }
+
+        // Refresh the UI to reflect the changes
+        // You may need to update your RecyclerView adapter or rerun the database query to fetch updated data
+
+
+        SharedPreferences    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", "0").apply();
+        sharedPreferences.edit().putInt("roomnum", 0).apply();
+
+
+    }
+
+    private String extractNumericPart(String tableString) {
+        // Split the string based on space and return the last part
+        String[] parts = tableString.split(" ");
+        return parts[parts.length - 1];
+    }
 }

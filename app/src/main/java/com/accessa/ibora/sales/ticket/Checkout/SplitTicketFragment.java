@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.display.DisplayManager;
 import android.media.SoundPool;
 import android.os.Bundle;
@@ -323,7 +324,12 @@ private TextView textViewVATs,textViewTotals;
         // Save the transaction details in the TRANSACTION_HEADER table
         if (transactionIdInProgress != null) {
 
+            SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
+            double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
+            double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
+
+            db.close();
             // Get the current date and time
             String currentDate = mDatabaseHelper.getCurrentDate();
             String currentTime = mDatabaseHelper.getCurrentTime();
@@ -363,7 +369,9 @@ private TextView textViewVATs,textViewTotals;
                         PosNum,
                         MRAMETHOD,
                         String.valueOf(roomid),
-                        tableid
+                        tableid,
+                        sumBeforeDisc,
+                        sumAfterDisc
 
                 );
 
@@ -1105,6 +1113,7 @@ if(Type.equals("DRN")) {
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putString("BuyerName", buyerName);
         editor.putString("PriceLevel", priceLevel);
+
         editor.apply();
     }
 

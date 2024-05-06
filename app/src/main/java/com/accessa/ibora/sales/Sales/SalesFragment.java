@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -216,7 +217,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             public void onItemClick(View view, int position) {
 
 
-                if (tableid == "defaultTableId") {
+                if ((tableid == "defaultTableId") || ((tableid == "0") &&  (roomid == 0))){
                     // Table ID is 1, show a pop-up
                     showTableIdOnePopup();
                 } else {
@@ -319,10 +320,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     Weight=item.getWeight();
                     catname=item.getCategory();
 
-                    if (Boolean.TRUE.equals(HasOptions) || Hascomment.trim().equals("true")) {
+                    if (Boolean.TRUE.equals(HasOptions)|| Hascomment.trim().equals("1") || Hascomment.trim().equals("true")) {
 
 
-                        Log.d("relateditems1", RelatedItem+ " " +RelatedItem2 + " " + RelatedItem3 + " " + RelatedItem4 + " " + RelatedItem5 );
 
                         showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                     } else if
@@ -376,7 +376,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                     CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                     int catId = mDatabaseHelper.getCatIdFromName(catname);
                                     String Catnum= String.valueOf(catId);
-
+                                    Log.d("roomtable", roomid + " " + tableid);
                                     // Insert a new transaction with IS_PAID as 0
                                     mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                 }
@@ -417,6 +417,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                             String Catnum= String.valueOf(catId);
+                            Log.d("roomtable", roomid + " " + tableid);
                             // Item not selected, insert a new transaction with quantity 1 and total price
                             mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -519,7 +520,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
-                        if (getContext() != null && variantButtonsLayout != null) { // Create and add EditText dynamically
+                    /*   if (getContext() != null && variantButtonsLayout != null) { // Create and add EditText dynamically
                         option1edittext = new EditText(getContext());
                         option1edittext.setHint(variant.getDescription() +" - Enter your comment");
 
@@ -528,7 +529,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT
                         );
-                        params.setMargins(0, 20, 0, 0); // Adjust margins as needed
+                        params.setMargins(0, 1, 0, 0); // Adjust margins as needed
 
                         // Add the EditText below the button
                         variantButtonsLayout.addView(option1edittext, params);
@@ -536,6 +537,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         } else {
                             Log.e("InsertData", "Context or variantButtonsLayout is null");
                         }
+
+                     */
                     };
 
                 });
@@ -598,7 +601,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
                         // Create and add EditText dynamically
-                        if (getContext() != null && variantButtonsLayout != null) {
+                      /*  if (getContext() != null && variantButtonsLayout != null) {
                             option2edittext = new EditText(getContext());
                             option2edittext.setHint(variant.getDescription() + " - Enter your comment");
                             // Create layout parameters to define how the EditText should be positioned
@@ -613,6 +616,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         }else {
                                 Log.e("InsertData", "Context or variantButtonsLayout is null");
                             }
+
+                       */
                     };
 
                 });
@@ -680,7 +685,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
-                        option3edittext = new EditText(getContext());
+                     /*   option3edittext = new EditText(getContext());
                         option3edittext.setHint(variant.getDescription() +" - Enter your comment");
 
                         // Create layout parameters to define how the EditText should be positioned
@@ -692,6 +697,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         // Add the EditText below the button
                         variantButtonsLayout.addView(option3edittext, params);
+
+                      */
                     };
 
                 });
@@ -759,7 +766,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
-                        option4edittext = new EditText(getContext());
+                /*        option4edittext = new EditText(getContext());
                         option4edittext.setHint(variant.getDescription() +" - Enter your comment");
                         // Create layout parameters to define how the EditText should be positioned
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -770,7 +777,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         // Add the EditText below the button
                         variantButtonsLayout.addView(option4edittext, params);
+
+                 */
                     };
+
+
 
                 });
 
@@ -837,7 +848,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
-                        // Create and add EditText dynamically
+                     /*   // Create and add EditText dynamically
                         option5edittext = new EditText(getContext());
                         option5edittext.setHint(variant.getDescription() +" - Enter your comment");
                         // Create layout parameters to define how the EditText should be positioned
@@ -849,6 +860,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         // Add the EditText below the button
                         variantButtonsLayout.addView(option5edittext, params);
+
+                      */
                     };
 
                 });
@@ -915,7 +928,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     public void onClick(View v) {
                         insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
-                        // Create and add EditText dynamically
+                /*        // Create and add EditText dynamically
                        supplementsedittext= new EditText(getContext());
                         supplementsedittext.setHint(variant.getDescription() +" - Enter your comment");
                         // Create layout parameters to define how the EditText should be positioned
@@ -927,6 +940,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         // Add the EditText below the button
                         variantButtonsLayout.addView(supplementsedittext, params);
+
+                 */
                     };
 
                 });
@@ -963,65 +978,12 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             public void onClick(DialogInterface dialog, int which) {
                 // Retrieve the comment from the EditText fields
 
-                String commentoption3 = null;
-                String commentoption4 = null;
-                String commentoption5 = null;
-                String commentSupplements1 = null;
-                String commentoption1 = null;
-                if (option1edittext != null) {
-                    commentoption1 = option1edittext.getText().toString();
-                }
-                else {
-                    commentoption1 = "test";
-                }
-                String commentoption2 = null;
-                if (option2edittext != null) {
-                    commentoption2 = option2edittext.getText().toString();
-                }
-                else {
-                    commentoption2 = "test";
-                }
-                if (option3edittext != null) {
-                    // Access option2edittext here
-                    commentoption3 = option3edittext.getText().toString();
-                    // Other operations...
-                } else {
-                    // EditText has not been created yet
-                    commentoption3 = "test";
-                }
-                if (option4edittext != null) {
-                    // Access option2edittext here
-                    commentoption4 = option4edittext.getText().toString();
-                    // Other operations...
-                } else {
-                    // EditText has not been created yet
-                    commentoption4 = "test";
-                }
+                EditText editTextOption1 = dialogView.findViewById(R.id.editTextOption1);
 
-                if (option5edittext != null) {
-                    // Access option2edittext here
-                    commentoption5 = option5edittext.getText().toString();
-                    // Other operations...
-                } else {
-                    // EditText has not been created yet
-                    commentoption5 = "test";
-                }
-
-                if (supplementsedittext != null) {
-                    // Access option2edittext here
-                    commentSupplements1 = supplementsedittext.getText().toString();
-                    // Other operations...
-                } else {
-                    // EditText has not been created yet
-                    commentSupplements1 = "test";
-                }
+                String option1Text = editTextOption1.getText().toString();
                 // Update the comments in the database
-                updateCommentForTransaction(transactionIdInProgress,  commentoption1, String.valueOf(NewBarcode));
-                updateCommentForTransaction(transactionIdInProgress, commentoption2, String.valueOf(NewBarcode));
-                updateCommentForTransaction(transactionIdInProgress, commentoption3, String.valueOf(NewBarcode));
-                updateCommentForTransaction(transactionIdInProgress, commentoption4, String.valueOf(NewBarcode));
-                updateCommentForTransaction(transactionIdInProgress,  commentoption5, String.valueOf(NewBarcode));
-                updateCommentForTransaction(transactionIdInProgress,  commentSupplements1, String.valueOf(NewBarcode));
+                updateCommentForTransaction(transactionIdInProgress,  option1Text, String.valueOf(NewBarcode));
+
 
                 // Reset the EditText fields for the next use
                 if (option1edittext != null) {
@@ -1121,6 +1083,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                             String Catnum= String.valueOf(catId);
+                            Log.d("roomtable", roomid + " " + tableid);
                             // Insert a new transaction with IS_PAID as 0
                             mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                         }
@@ -1150,6 +1113,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                 String Catnum= String.valueOf(catId);
+                Log.d("INSERT_Transaction", "4");
                 // Item not selected, insert a new transaction with quantity 1 and total price
                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
             } refreshTicketFragment();
@@ -1176,7 +1140,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     }
     public void updateCommentForTransaction(String transactionId, String comment,String itemid) {
         // Call your database helper method to update the comment for the given transaction ID
-        mDatabaseHelper.updateTransactionComment(transactionId, comment,itemid);
+        mDatabaseHelper.updateTransactionComment(transactionId, comment);
     }
 
     public void insertItemIntoTransaction(String barcode) {
@@ -1308,7 +1272,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                         CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                         int catId = mDatabaseHelper.getCatIdFromName(catname);
                                         String Catnum= String.valueOf(catId);
-
+                                        Log.d("INSERT_Transaction", "5");
                                         // Item has a different transaction ID, insert a new transaction
                                         mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     }
@@ -1349,7 +1313,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum= String.valueOf(catId);
-
+                                Log.d("INSERT_Transaction", "6");
                                 // Item not selected, insert a new transaction with quantity 1 and total price
                                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                             }
@@ -1459,6 +1423,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         if (status.equals("InProgress") || status.equals("PRF") || status.equals("DRN") || status.equals("CRN")  ) {
                             if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
+                                Log.d("INSERT_Transactions", "test1" );
                                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                                 // Store the transaction ID in SharedPreferences
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1467,13 +1432,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 refreshTicketFragment();
                                 refreshTotal();
 
+
                             }
                             transactionId = transactionIdInProgress;
 
                         } else {
+
                             transactionId = generateNewTransactionId(); // Generate a new transaction ID
                             refreshTicketFragment();
                             refreshTotal();
+
                         }
 
                         // Get the current date and time for the transaction
@@ -1555,7 +1523,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                         CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                         int catId = mDatabaseHelper.getCatIdFromName(catname);
                                         String Catnum= String.valueOf(catId);
-
+                                        Log.d("INSERT_Transaction", "7 ");
                                         // Item has a different transaction ID, insert a new transaction
                                         mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     }
@@ -1595,6 +1563,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                     int catId = mDatabaseHelper.getCatIdFromName(catname);
                                     String Catnum= String.valueOf(catId);
+                                    Log.d("INSERT_Transaction", "8 ");
                                     // Item not selected, insert a new transaction with quantity 1 and total price
                                     mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                 }refreshTicketFragment();
@@ -1754,7 +1723,12 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         // Save the transaction details in the TRANSACTION_HEADER table
         if (transactionIdInProgress != null) {
 
+            SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
+            double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
+            double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
+
+            db.close();
             // Get the current date and time
             String currentDate = mDatabaseHelper.getCurrentDate();
             String currentTime = mDatabaseHelper.getCurrentTime();
@@ -1794,7 +1768,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         PosNum,
                          MRAMETHOD,
                          String.valueOf(roomid),
-                         tableid
+                         tableid,
+                         sumBeforeDisc,
+                         sumAfterDisc
 
                 );
 

@@ -41,17 +41,21 @@ import android.widget.Toast;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
 
 public class SyncAddToMssql extends IntentService {
     private DatabaseHelper mDatabaseHelper;
+    private Context mContext; // Context variable to store the Context
     private static final String TAG = "SyncService";
 
     // Your database connection parameters
@@ -114,7 +118,50 @@ public class SyncAddToMssql extends IntentService {
         }
     }
 
-    public Connection start() {
+    // Method to synchronize all data from SQLite to MSSQL
+    public  void syncAllDataFromSQLiteToMSSQL(Context context) {
+        Connection conn = start();
+        if (conn != null) {
+            try {
+                // Fetch all data from the local SQLite database
+                mDatabaseHelper = new DatabaseHelper(context);
+                Cursor localCursor = mDatabaseHelper.getAllItems();
+
+                // Iterate through the cursor and insert each record into MSSQL
+                if (localCursor != null && localCursor.moveToFirst()) {
+                    do {
+                        // Extract data from the cursor
+                        // Extract data from the cursor
+                        String name = localCursor.getString(localCursor.getColumnIndex(Name));
+                        String desc = localCursor.getString(localCursor.getColumnIndex(DESC));
+
+
+                        // Extract other fields similarly...
+
+                        // Insert the data into MSSQL
+                        addallitems(conn, name, desc);
+                    } while (localCursor.moveToNext());
+                }
+
+                // Close the cursor after use
+                if (localCursor != null && !localCursor.isClosed()) {
+                    localCursor.close();
+                }
+            } catch (Exception e) {
+                Log.e("SYNC_ERROR1", e.getMessage());
+            } finally {
+                try {
+                    // Close the database connection
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    Log.e("SYNC_ERROR2", e.getMessage());
+                }
+            }
+        }
+    }
+    public  Connection start() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -147,21 +194,34 @@ public class SyncAddToMssql extends IntentService {
             mDatabaseHelper = new DatabaseHelper(this);
             Cursor localCursor = mDatabaseHelper.getAllItems();
 
-            insertItemsFromMssql(conn,name,  desc,discamount,  price,price2,price3,  category,  barcode,  weight,  department,  subDepartment,  longDescription,  quantity,  expiryDate,  vat,  availableForSale,  soldBy,  image,  variant,  sku,  cost,  userId,  dateCreated,  lastModified,  selectedNature,  selectedCurrency,  itemCode,  vatCode,  valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3
+            insertItemsFromMssql(conn,name,  desc, String.valueOf(discamount),  price,price2,price3,  category,  barcode,  weight,  department,  subDepartment,  longDescription,  quantity,  expiryDate,  vat,  availableForSale,  soldBy,  image,  variant,  sku,  cost,  userId,  dateCreated,  lastModified,  selectedNature,  selectedCurrency,  itemCode,  vatCode,  valueOf,discountedamount2,discountedamount3, String.valueOf(currentPrice),String.valueOf(currentPrice2),String.valueOf(currentPrice3)
             );
 
         } catch (Exception e) {
-            Log.e("SYNC_ERROR", e.getMessage());
+            Log.e("SYNC_ERROR3", e.getMessage());
         }
     }
-    private void insertItemsFromMssql(Connection conn ,String name, String desc,int discamount, String price,String price2, String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
+    private void addallitems(Connection conn, String name, String desc) {
+        try {
+            // Step 1: Fetch data from the local SQLite database
+            mDatabaseHelper = new DatabaseHelper(this); // Use getContext() to obtain the Context
+            Cursor localCursor = mDatabaseHelper.getAllItems();
 
+            insertAllItemsFromMssql(conn, name, desc);
+        } catch (Exception e) {
+            Log.e("SYNC_ERROR4", e.getMessage());
+        }
+    }
+
+    private void insertItemsFromMssql(Connection conn ,String name, String desc,String discamount, String price,String price2, String price3, String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, String currentPrice,String currentPrice2,String currentPrice3) {
+
+        PreparedStatement preparedStatement = null; // Declare outside try block
 
         try {
             // Construct and execute your SQL insert statement here
-            String insertQuery = "INSERT INTO Items (name, description,DiscountAmount, price,price2,price3, category, Barcode, Weight, Department, SubDepartment, LongDescription, Quantity, ExpiryDate, VAT, AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified, Nature, Currency, ItemCode, TaxCode, TotalDiscount, CurrentPrice,SyncStatus) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
-            PreparedStatement preparedStatement = conn.prepareStatement(insertQuery);
+            String insertQuery = "INSERT INTO Items (name, description, price, price2, price3, category, Barcode, Weight, Department, SubDepartment, LongDescription, Quantity, ExpiryDate, VAT, AvailableForSale, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified, Nature, Currency, ItemCode, TaxCode, TotalDiscount,TotalDiscount2,TotalDiscount3, CurrentPrice, CurrentPrice2, CurrentPrice3, DiscountAmount, SyncStatus) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+             preparedStatement = conn.prepareStatement(insertQuery);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, desc);
             preparedStatement.setString(3, price);
@@ -192,10 +252,10 @@ public class SyncAddToMssql extends IntentService {
             preparedStatement.setString(28, valueOf);
             preparedStatement.setString(29, discountedamount2);
             preparedStatement.setString(30, discountedamount3);
-            preparedStatement.setDouble(31, currentPrice);
-            preparedStatement.setDouble(32, currentPrice2);
-            preparedStatement.setDouble(33, currentPrice3);
-            preparedStatement.setInt(34, discamount);
+            preparedStatement.setString(31, currentPrice);
+            preparedStatement.setString(32, currentPrice2);
+            preparedStatement.setString(33, currentPrice3);
+            preparedStatement.setString(34, discamount);
             preparedStatement.setString(35, "Online");
 
             preparedStatement.executeUpdate();
@@ -216,12 +276,14 @@ public class SyncAddToMssql extends IntentService {
             // If the insertion is successful, you can show a success message or handle as needed
         } catch (SQLException se) {
             if (se.getMessage() != null) {
-                Log.e("INSERT_ERROR", se.getMessage());
+                Log.e("INSERT_ERROR_Cost", se.getMessage());
+                // Log additional information to identify the field causing the error
+                Log.e("INSERT_ERROR_Cost_Field", "Field: " + getFieldName(preparedStatement));
             } else {
-                Log.e("INSERT_ERROR", "SQL Exception occurred without a message.");
+                Log.e("INSERT_ERROR_Cost", "SQL Exception occurred without a message.");
             }
         } catch (Exception e) {
-            Log.e("INSERT_ERROR", e.getMessage());
+            Log.e("INSERT_ERROR_Cost1", e.getMessage());
         } finally {
             if (conn != null) {
                 try {
@@ -232,6 +294,79 @@ public class SyncAddToMssql extends IntentService {
             }
 
         }
+    }
+
+    private void insertAllItemsFromMssql(Connection conn ,String name, String desc) {
+
+        PreparedStatement preparedStatement = null; // Declare outside try block
+
+        try {
+            // Construct and execute your SQL insert statement here
+            String insertQuery = "INSERT INTO POSITEMS (name, description,SyncStatus) " +
+                    "VALUES (?, ?, ?)";
+            preparedStatement = conn.prepareStatement(insertQuery);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, desc);
+
+            preparedStatement.setString(3, "Online");
+
+            preparedStatement.executeUpdate();
+
+            SyncService.startSync(this);
+            // If the insertion is successful, you can show a success message or handle as needed
+        } catch (SQLException se) {
+            if (se.getMessage() != null) {
+                Log.e("INSERT_ERROR_Cost", se.getMessage());
+                // Log additional information to identify the field causing the error
+                Log.e("INSERT_ERROR_Cost_Field", "Field: " + getFieldName(preparedStatement));
+            } else {
+                Log.e("INSERT_ERROR_Cost", "SQL Exception occurred without a message.");
+            }
+        } catch (Exception e) {
+            Log.e("INSERT_ERROR_Cost1", e.getMessage());
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+    // Helper method to get the name of the field being set in the PreparedStatement
+    // Helper method to get the name of the field being set in the PreparedStatement
+    // Helper method to get the name of the field being set in the PreparedStatement
+    private String getFieldName(PreparedStatement preparedStatement) {
+        try {
+            // Assuming you're using placeholders like '?' in your SQL statement
+            ParameterMetaData metaData = preparedStatement.getParameterMetaData();
+            int parameterCount = metaData.getParameterCount();
+            for (int i = 1; i <= parameterCount; i++) {
+                String paramTypeName = metaData.getParameterTypeName(i);
+                // Add additional conditions here based on your field's data types
+                if (paramTypeName.equals("REAL") || paramTypeName.equals("FLOAT") || paramTypeName.equals("DOUBLE")) {
+                    // Return the name of the field being set
+                    return getColumnName(preparedStatement, i);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Unknown";
+    }
+
+    // Helper method to get the name of the column being set
+    private String getColumnName(PreparedStatement preparedStatement, int index) {
+        try {
+            // Assuming you're using placeholders like '?' in your SQL statement
+            ParameterMetaData metaData = preparedStatement.getParameterMetaData();
+            return metaData.getParameterClassName(index);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Unknown";
     }
 
     private void showToast(String message) {

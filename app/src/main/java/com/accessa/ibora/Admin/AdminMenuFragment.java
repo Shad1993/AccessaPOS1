@@ -213,8 +213,9 @@ public class AdminMenuFragment extends Fragment {
                         @Override
                         public void onClick(View v) {
 
-                            Intent intent = new Intent(getContext(), SyncService.class);
-                            startActivity(intent);
+                            Intent serviceIntent = new Intent(getContext(), SyncService.class);
+                            getContext().startService(serviceIntent);
+
                         }
                     });
 

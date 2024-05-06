@@ -75,6 +75,7 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.Tables.TablesFragment;
 import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -704,7 +705,10 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 // Print or use the total amount as needed
 
-                double cashReturn= totalAmountinserted- totalAmount;
+                 cashReturn= totalAmountinserted- totalAmount;
+
+
+
                 // Pass the amount received and settlement items as extras to the print activity
                 Intent intent = new Intent(getActivity(), Mra.class);
                 intent.putExtra("amount_received", String.valueOf(totalAmountinserted));
@@ -724,6 +728,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
                 if (cashReturn != 0.0) {
+
+
                     cashReturn = -cashReturn; // Make cashReturn negative
 
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -775,6 +781,8 @@ public class validateticketDialogFragment extends DialogFragment  {
                     cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
 
                     db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+                    startActivity(intent);
+
                 }
 
 
@@ -837,6 +845,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
     }
+
+
     public String generateNewTransactionId() {
        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -925,7 +935,7 @@ public class validateticketDialogFragment extends DialogFragment  {
         intent.putExtra("selectedBuyerprofile", BuyProfile);
         intent.putExtra("roomid", roomid);
         intent.putExtra("tableid", tableid);
-
+        System.out.println("selectedBuyerTANs: " + BuyTAN);
   // Update the table with settlement details
         for (SettlementItem settlementItem : settlementItems) {
 
@@ -1356,8 +1366,9 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
 public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD){
-
-     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, Transaction_Id,qrMra,mrairn,MRAMETHOD);
+    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+    Log.d("tr1", String.valueOf(transactionIdInProgress));
+     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, transactionIdInProgress,qrMra,mrairn,MRAMETHOD);
 
 }
     private ServiceConnection connService = new ServiceConnection() {

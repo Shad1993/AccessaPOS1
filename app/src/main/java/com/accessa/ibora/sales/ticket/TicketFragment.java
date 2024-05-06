@@ -20,6 +20,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -224,11 +225,13 @@ private TextView textViewVATs,textViewTotals;
                 builder.setAdapter(adapter, (dialog, which) -> {
                     selectedBuyer = buyerList.get(which);
                     isBuyerSelected = true; // Update the flag
-
+                    System.out.println("selectedBuyer1: " + selectedBuyer);
                     // Update the app bar title with the buyer's name and price level
                     if (selectedBuyer != null) {
                         String buyerName = selectedBuyer.getNames();
                         String priceLevel = selectedBuyer.getPriceLevel();
+                        String tan = selectedBuyer.getTan();
+                        String brn=selectedBuyer.getBrn();
                         toolbar.setTitle(buyerName);
                         toolbar.setSubtitle(priceLevel);
                         toolbar.setNavigationIcon(R.drawable.people);
@@ -693,23 +696,27 @@ private TextView textViewVATs,textViewTotals;
 
 
         // Retrieve the total amount and total tax amount from the transactionheader table
-        Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
-        if (cursor != null && cursor.moveToFirst()) {
-            int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
-            int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
 
-            totalAmount = cursor.getDouble(columnIndexTotalAmount);
-            TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
-            // Update the tax and total amount TextViews
-            TextView taxTextView = view.findViewById(R.id.textViewVAT);
-            String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
-            taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+        double totalPriceSum = mDatabaseHelper.calculateTotalPriceForUnpaidTransactions(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalVATForUnpaidTransactions(String.valueOf(roomid), tableid);
 
-            TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
-            String formattedTotalAmount = String.format("%.2f", totalAmount);
-            totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-        }
+        TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
+        String formattedTotalAmount = String.format("%.2f", totalPriceSum);
+        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
+        // Update the tax and total amount TextViews
+        TextView taxTextView = view.findViewById(R.id.textViewVAT);
+        String formattedTaxAmount = String.format("%.2f", totalVATSum);
+        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+        TextView roomTextView = view.findViewById(R.id.textViewRoom);
+        roomTextView.setText("Room: " + roomid);
+
+        TextView tableTextView = view.findViewById(R.id.textViewTable);
+        tableTextView.setText(" - Table: " + tableid);
+
+        TextView cashierTextView = view.findViewById(R.id.textViewCashier);
+        cashierTextView.setText(" - Cashier: " + cashierId);
         // Load the data based on the transaction ID
         if (transactionIdInProgress != null) {
             Cursor cursor2 = mDatabaseHelper.getTransactionsByStatusAndId(DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
@@ -899,6 +906,7 @@ private TextView textViewVATs,textViewTotals;
         checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                System.out.println("selectedBuyer: " + selectedBuyer);
                 if (selectedBuyer != null) {
                     // Retrieve the total amount and total tax amount from the transactionheader table
                     Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
@@ -917,7 +925,7 @@ private TextView textViewVATs,textViewTotals;
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
                         intent.putExtra("transactionIdInProgress", transactionIdInProgress);
-                        System.out.println("tr1: " + transactionIdInProgress);
+
                         SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                         transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
 
@@ -983,7 +991,7 @@ private TextView textViewVATs,textViewTotals;
 
 
                 }
-                clearBuyerInfoFromPrefs();
+                //clearBuyerInfoFromPrefs();
             }
 
         });
@@ -1094,7 +1102,12 @@ private TextView textViewVATs,textViewTotals;
 
         // Save the transaction details in the TRANSACTION_HEADER table
         if (transactionIdInProgress != null) {
+            SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
+            double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
+            double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
+
+            db.close();
 
             // Get the current date and time
             String currentDate = mDatabaseHelper.getCurrentDate();
@@ -1135,7 +1148,9 @@ private TextView textViewVATs,textViewTotals;
                         PosNum,
                         MRAMETHOD,
                         String.valueOf(roomid),
-                        tableid
+                        tableid,
+                        sumBeforeDisc,
+                        sumAfterDisc
 
                 );
 
@@ -1367,7 +1382,7 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
+    mDatabaseHelper.updateTransactionStatusByRoomAndTableId(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
   //  updateTransactionStatus();
 
                     // Start the activity with the selected receipt data

@@ -1,6 +1,7 @@
 package com.accessa.ibora.sales.Tables;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -26,9 +27,11 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
     private Context mContext;
     private Cursor mCursor;
     private Cursor originalCursor; // Store the original cursor for filtering
-
+String roomid;
+String tableid;
     private DatabaseHelper mDatabaseHelper;
     private String selectedTableId = ""; // New field to store the selected table ID
+    private String selectedTableName = ""; // New field to store the selected table name
 
     public TableAdapter(Context context, Cursor cursor) {
         mContext = context;
@@ -69,7 +72,9 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
         int screenWidth = mContext.getResources().getDisplayMetrics().widthPixels;
         int itemWidth = screenWidth / 8;
         view.getLayoutParams().width = itemWidth;
-
+        SharedPreferences preferences = mContext.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getString("table_id", "0");
+        tableid = preferences.getString("table_id", "0");
         return new ItemViewHolder(view);
     }
     @Override
@@ -82,11 +87,13 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
         String tablenum = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
        String roomid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ROOM_ID));
+        String mergedtableId = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.MERGED_SET_ID));
 
         holder.idTextView.setText(id);
        // holder.nameTextView.setText("Table " + name);
-       // holder.Table.setText(tablenum);
+        holder.Table.setText(tablenum);
         holder.room.setText(roomid);
+
 
         // Check if the table is merged
         int mergedStatus = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.MERGED));
@@ -109,7 +116,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
         } else {
             // The table is not merged or has a MERGED_SET_ID of "0", display the individual table number
             holder.nameTextView.setText("T " + name);
-            holder.Table.setText(tablenum);
+            holder.Table.setText(name);
         }
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
@@ -117,18 +124,40 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
             ((StaggeredGridLayoutManager.LayoutParams) layoutParams).setFullSpan(false);
         }
         List<String[]> prfRoomAndTableIds = mDatabaseHelper.getRoomAndTableIdsWithPRFStatus();
+
+
         String currentRoomId = holder.room.getText().toString();
         String currentTableId = holder.idTextView.getText().toString();
+        String currentTableId1 = holder.Table.getText().toString();
         List<String[]> inProgressRoomAndTableIds = mDatabaseHelper.getRoomAndTableIdsWithInProgressStatus();
         boolean isCurrentTableInProgress = false;
         boolean isCurrentTablePRF = false;
+        boolean isselectedaftermerged = false;
         for (String[] roomAndTableIds : inProgressRoomAndTableIds) {
             String inProgressRoomId = roomAndTableIds[0];
             String inProgressTableId = roomAndTableIds[1];
+            SharedPreferences preferences = mContext.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+            int roomid1 = preferences.getInt("roomnum", 0);
+            String tableid1 = preferences.getString("table_id", "0");
 
-            if (currentRoomId.equals(inProgressRoomId) && currentTableId.equals(inProgressTableId)) {
+
+
+            Log.d("prfRoomId", inProgressRoomId+ " " +inProgressTableId  );
+            Log.d("inProgressTableId", inProgressTableId  );
+            Log.d("tableid1", tableid1  );
+            Log.d("currentRoomId1", currentTableId1  );
+            Log.d("mergedtableId", mergedtableId );
+            if (currentRoomId.equals(inProgressRoomId) && tableid1.equals(currentTableId1)) {
+                // The current table is in progress
+                isselectedaftermerged = true;
+
+                break;
+            }
+
+            if (currentRoomId.equals(inProgressRoomId) && currentTableId1.equals(inProgressTableId)) {
                 // The current table is in progress
                 isCurrentTableInProgress = true;
+
                 break;
             }
         }
@@ -136,16 +165,20 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
             String prfRoomId = roomAndTableIds[0];
             String prfTableId = roomAndTableIds[1];
 
-            if (currentRoomId.equals(prfRoomId) && currentTableId.equals(prfTableId)) {
+            if (currentRoomId.equals(prfRoomId) && currentTableId1.equals(prfTableId)) {
                 // The current table has a status of "PRF"
                 isCurrentTablePRF = true;
                 break;
             }
         }
 
+
+
 // Check if this item's table ID matches the selected table ID
         // Check if this item's table ID matches the selected table ID
-        if (id.equals(selectedTableId)) {
+
+
+        if (id.equals(selectedTableId) || isselectedaftermerged ) {
             // This item is selected, set a different button color
             holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
         } else {
@@ -182,7 +215,8 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ItemViewHold
     }
 
     // New method to update the selected table ID
-    public void setSelectedTableId(String newTableId) {
+    public void setSelectedTableId(String newTableId,String tablename) {
         selectedTableId = newTableId;
+        selectedTableName = tablename;
     }
 }
