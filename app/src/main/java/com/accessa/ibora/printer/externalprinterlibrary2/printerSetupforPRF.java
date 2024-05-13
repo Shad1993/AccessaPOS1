@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -515,7 +516,19 @@ public class printerSetupforPRF extends AppCompatActivity {
                                     String Drawer = vatTypesBuilder.toString().trim();
 
 
+                                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+                                    SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                                    sharedPreferences.edit().putString("table_id", "0").apply();
+                                    sharedPreferences.edit().putString("table_num", "0").apply();
 
+                                    List<String> tableIds = extractTableIds(tableid);
+                                    for (String tableId : tableIds) {
+                                        Log.d("extractTableIds", "Table ID: " + tableId);
+
+                                        mDatabaseHelper.resetMergedStatusToDefault(db,roomid,tableId);
+
+
+                                    }
 
 
 
@@ -574,7 +587,20 @@ public class printerSetupforPRF extends AppCompatActivity {
                 }
             });
         }
+        private List<String> extractTableIds(String newTableId) {
+            List<String> tableIds = new ArrayList<>();
 
+            // Split the newTableId string by the "+" symbol
+            String[] tableNumbers = newTableId.split("\\+");
+
+            for (String tableNum : tableNumbers) {
+                // Trim and remove "T " prefix if it exists
+                String cleanedTableNum = tableNum.trim().replace("T ", "");
+                tableIds.add(cleanedTableNum);
+            }
+
+            return tableIds;
+        }
         @Override
         public void onDisconnected() {
             // Printer service is disconnected, you cannot print

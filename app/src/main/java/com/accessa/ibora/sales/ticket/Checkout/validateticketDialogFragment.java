@@ -49,6 +49,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -70,6 +71,7 @@ import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.R;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.Settings.Rooms.Rooms;
+import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -94,6 +96,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import pl.droidsonroids.gif.GifImageView;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class validateticketDialogFragment extends DialogFragment  {
@@ -102,6 +105,8 @@ public class validateticketDialogFragment extends DialogFragment  {
     }
     private QRFragment.DataPassListener dataPassListener;
     private String tableid;
+    private EditText clickedEditText;
+
     private String roomid;
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
@@ -135,7 +140,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String BuyerProfile="BuyerProfile";
     private static final String BuyerCompName="BuyerCompName";
     private static final String BuyerBusinessAddress="BuyerBusinessAdress";
-
+    EditText amountReceivedEditText;
     private static final String BuyerbRN="BuyerBRN";
 
     private View view; // Declare the view variable
@@ -225,11 +230,29 @@ public class validateticketDialogFragment extends DialogFragment  {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_validate_transaction, null);
-
+        // Add this code inside the onCreateDialog() method of validateticketDialogFragment
+         amountReceivedEditText = view.findViewById(R.id.editAbbrev);
         containerLayout = view.findViewById(R.id.container_layout); // Initialize the container layout
-        int numberOfColumns = 2;
+        int numberOfColumns = 1;
         mRecyclerView = view.findViewById(R.id.recycler_view1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
+        GridLayout gridLayout = view.findViewById(R.id.grid);
+        GifImageView gifImageView = view.findViewById(R.id.gif);
+        // Find the number buttons and set OnClickListener
+        Button button1 = view.findViewById(R.id.button1);
+        Button button2 = view.findViewById(R.id.button2);
+        Button button3 = view.findViewById(R.id.button3);
+        Button button4 = view.findViewById(R.id.button4);
+        Button button5 = view.findViewById(R.id.button5);
+        Button button6 = view.findViewById(R.id.button6);
+        Button button7 = view.findViewById(R.id.button7);
+        Button button8 = view.findViewById(R.id.button8);
+        Button button9 = view.findViewById(R.id.button9);
+        Button button0 = view.findViewById(R.id.button0);
+        Button buttonbackspace = view.findViewById(R.id.buttonbackspace);
+        Button buttonComma = view.findViewById(R.id.buttonComma);
+        Button buttonClear = view.findViewById(R.id.buttonClear);
+
 
         mDatabaseHelper = new DatabaseHelper(getContext());
         Cursor cursor3 = mDatabaseHelper.getAllPaymentMethod();
@@ -256,6 +279,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 if (!isPaymentSplitted()) {
                     // Full payment: Take the total amount as the value
+
+                    gifImageView.setVisibility(View.VISIBLE);
                     handleFullPayment(id);
                 }
                 else if (id !=null && (id.equals("1") && name.equals("POP")))
@@ -333,7 +358,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                     // Create layout parameters for centering the EditText
                     LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
-                            500,
+                            200,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                     );
                     editParams.gravity = Gravity.CENTER;
@@ -347,21 +372,148 @@ public class validateticketDialogFragment extends DialogFragment  {
                     editText.setTextColor(getResources().getColor(R.color.BleuAccessaText));
                     editText.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
 
-                    // Add a TextWatcher to the EditText
-                    editText.addTextChangedListener(new TextWatcher() {
-                        @Override
-                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        }
+                    editText.setInputType(InputType.TYPE_NULL);
+                    editText.setTextIsSelectable(true);
 
-                        @Override
-                        public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        }
+                    gridLayout.setVisibility(View.VISIBLE);
 
+                    gifImageView.setVisibility(View.GONE);
+
+                    editText.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void afterTextChanged(Editable s) {
-                            calculateTotalAmount();
+                        public void onClick(View v) {
+                            // Perform actions when EditText is clicked
+                            clickedEditText = editText;
+                            // Set focus on the clicked EditText
+                            clickedEditText.requestFocus();
+                            clickedEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                                @Override
+                                public void onFocusChange(View v, boolean hasFocus) {
+                                    if (hasFocus) {
+                                        // EditText has gained focus
+                                        // Perform actions when EditText gains focus
+                                    } else {
+                                        // EditText has lost focus
+                                        // Perform actions when EditText loses focus
+                                    }
+                                }
+                            });
+
+                            clickedEditText.addTextChangedListener(new TextWatcher() {
+                                @Override
+                                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                }
+
+                                @Override
+                                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                }
+
+                                @Override
+                                public void afterTextChanged(Editable s) {
+                                    // Perform actions after text in EditText has changed
+                                    // For example, you can validate the input or update other views
+                                    calculateTotalAmount(s);
+                                }
+                            });
+
                         }
                     });
+
+
+
+                    button1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "1");
+                        }
+                    });
+
+                    button2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "2");
+                        }
+                    });
+
+                    button3.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "3");
+                        }
+                    });
+
+                    button4.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "4");
+                        }
+                    });
+
+                    button5.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "5");
+                        }
+                    });
+
+                    button6.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "6");
+                        }
+                    });
+
+                    button7.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "7");
+                        }
+                    });
+
+                    button8.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "8");
+                        }
+                    });
+
+                    button9.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "9");
+                        }
+                    });
+
+                    button0.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, "0");
+                        }
+                    });
+
+
+
+                    buttonbackspace.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onBackspaceButtonClick(clickedEditText);
+                        }
+                    });
+
+                    buttonComma.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            oncommentButtonClick(clickedEditText, ".");
+                        }
+                    });
+
+                    buttonClear.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onClearButtonClick(clickedEditText);
+                        }        });
+
+
 
                     // Add the EditText to the container layout
                     containerLayout.addView(editText);
@@ -501,8 +653,8 @@ public class validateticketDialogFragment extends DialogFragment  {
             }
         }
 
-        // Add this code inside the onCreateDialog() method of validateticketDialogFragment
-        EditText amountReceivedEditText = view.findViewById(R.id.editAbbrev);
+
+
          validateButton = view.findViewById(R.id.buttonCash);
 
         amountReceivedEditText.addTextChangedListener(new TextWatcher() {
@@ -811,6 +963,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 // Update button colors
                 updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
+
             }
         });
 
@@ -819,6 +972,8 @@ public class validateticketDialogFragment extends DialogFragment  {
             public void onClick(View view) {
                 // Save the selected payment type to SharedPreferences
                 saveSelectedPaymentType("full");
+
+
 
                 // Update button colors
                 updateButtonColors("full", splitPaymentButton, fullPaymentButton);
@@ -877,7 +1032,72 @@ public class validateticketDialogFragment extends DialogFragment  {
         // Generate the transaction ID by combining the three letters and the counter
         return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
+    private void calculateTotalAmount(Editable s) {
+        String amountReceivedString = s.toString();
+        double amountReceived = 0.0;
 
+        if (!amountReceivedString.isEmpty()) {
+            try {
+                amountReceived = Double.parseDouble(amountReceivedString);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+        double totalAmountEntered = 0.0;
+
+        // Iterate over the container layout to calculate the total amount entered
+        for (int i = 0; i < containerLayout.getChildCount(); i++) {
+            View childView = containerLayout.getChildAt(i);
+
+            if (childView instanceof EditText) {
+                EditText editText = (EditText) childView;
+                String amountText = editText.getText().toString();
+                double enteredAmount = 0.0;
+                if (!amountText.isEmpty()) {
+                    enteredAmount = Double.parseDouble(amountText);
+                }
+                totalAmountEntered += enteredAmount;
+            }
+        }
+
+        double remainingAmount = totalAmount - totalAmountEntered;
+
+        TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
+        TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
+        TextView textViewCashReturn = view.findViewById(R.id.textViewCashReturn);
+
+        if (remainingAmount < 0) {
+            remainingAmount = 0;
+            remainingAmountTextView.setVisibility(View.GONE);
+            remainingTotalAmountTextView.setVisibility(View.GONE);
+            textViewCashReturn.setVisibility(View.VISIBLE);
+        } else {
+            remainingAmountTextView.setVisibility(View.VISIBLE);
+            remainingTotalAmountTextView.setVisibility(View.VISIBLE);
+            textViewCashReturn.setVisibility(View.GONE);
+        }
+
+
+
+        remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
+
+        TextView textViewCashReturnAmount = view.findViewById(R.id.textViewCashReturnAmount);
+        TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
+        if (totalAmountEntered >= totalAmount && isPaymentSplitted()) {
+            double cashReturn = totalAmountEntered - totalAmount;
+            cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
+
+            textViewCashReturnAmount.setVisibility(View.VISIBLE);
+            cashReturnTextView.setVisibility(View.VISIBLE);
+            validateButton.setVisibility(View.VISIBLE);
+        } else {
+            textViewCashReturnAmount.setVisibility(View.GONE);
+            cashReturnTextView.setVisibility(View.GONE);
+            validateButton.setVisibility(View.GONE);
+        }
+
+    }
     private void handleFullPayment(String id) {
 
         // Iterate over the container layout to get the settlement details
@@ -1498,59 +1718,36 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
         startActivity(home_intent1);
     }
 
-    private void calculateTotalAmount() {
-        double totalAmountEntered = 0.0;
 
-        // Iterate over the container layout to calculate the total amount entered
-        for (int i = 0; i < containerLayout.getChildCount(); i++) {
-            View childView = containerLayout.getChildAt(i);
 
-            if (childView instanceof EditText) {
-                EditText editText = (EditText) childView;
-                String amountText = editText.getText().toString();
-                double enteredAmount = 0.0;
-                if (!amountText.isEmpty()) {
-                    enteredAmount = Double.parseDouble(amountText);
-                }
-                totalAmountEntered += enteredAmount;
-            }
-        }
+    public void onClearButtonClick(EditText amountReceivedEditText) {
 
-        double remainingAmount = totalAmount - totalAmountEntered;
+        onclearButtonClick(amountReceivedEditText);
 
-        TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
-        TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
-        TextView textViewCashReturn = view.findViewById(R.id.textViewCashReturn);
 
-        if (remainingAmount < 0) {
-            remainingAmount = 0;
-            remainingAmountTextView.setVisibility(View.GONE);
-            remainingTotalAmountTextView.setVisibility(View.GONE);
-            textViewCashReturn.setVisibility(View.VISIBLE);
-        } else {
-            remainingAmountTextView.setVisibility(View.VISIBLE);
-            remainingTotalAmountTextView.setVisibility(View.VISIBLE);
-            textViewCashReturn.setVisibility(View.GONE);
-        }
-
-        remainingAmountTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", remainingAmount));
-
-        TextView textViewCashReturnAmount = view.findViewById(R.id.textViewCashReturnAmount);
-        TextView cashReturnTextView = view.findViewById(R.id.textViewCashReturnAmount);
-        if (totalAmountEntered >= totalAmount) {
-            double cashReturn = totalAmountEntered - totalAmount;
-            cashReturnTextView.setText(getString(R.string.currency_symbol) + " " + String.format(Locale.getDefault(), "%.2f", cashReturn));
-            textViewCashReturnAmount.setVisibility(View.VISIBLE);
-            cashReturnTextView.setVisibility(View.VISIBLE);
-            validateButton.setVisibility(View.VISIBLE);
-        } else {
-            textViewCashReturnAmount.setVisibility(View.GONE);
-            cashReturnTextView.setVisibility(View.GONE);
-            validateButton.setVisibility(View.GONE);
-        }
     }
 
+    private void onclearButtonClick(EditText amountReceivedEditText) {
+        amountReceivedEditText.setText(""); // Set the text of editTextOption1 to an empty string
+    }
+    public void oncommentButtonClick(EditText amountReceivedEditText , String letter) {
+        if (amountReceivedEditText != null) {
+            // Insert the letter into the EditText
+            amountReceivedEditText.append(letter);
+        }
+    }
+    private void onBackspaceButtonClick(EditText text ) {
+        // Get the current text from editTextOption1
+        Editable editable = text.getText();
 
+        // Get the length of the text
+        int length = editable.length();
+
+        // If there are characters in the text, remove the last character
+        if (length > 0) {
+            editable.delete(length - 1, length);
+        }
+    }
     private void showNumberOfPeopleDialog() {
         // Example: Show a dialog to get the number of people
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

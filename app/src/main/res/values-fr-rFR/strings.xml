@@ -518,6 +518,8 @@
     <string name="addsupplements">Add Supplement</string>
     <string name="noSupplementfound">No Supplements Found</string>
     <string name="supplements">Supplements</string>
+    <string name="ClearTransaction">Clear Transaction</string>
+    <string name="search_list">Search</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

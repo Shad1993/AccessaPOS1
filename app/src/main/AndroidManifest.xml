@@ -54,7 +54,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" />
+        <activity
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustNothing">
+        </activity>
         <activity android:name=".SelectLanguage" />
         <activity android:name=".company.InsertCompanyDataActivity" />
         <activity android:name=".login.login" />
@@ -137,14 +140,17 @@
         <activity android:name=".product.supplements.ModifySupplementsActivity"/>
         <activity android:name=".Sync.SyncService"/>
         <activity android:name=".printer.printerSetupForPickUp"/>
-
+        <activity android:name=".printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity"/>
 
         <activity android:name=".printer.printerSetup"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <!-- Other activity attributes -->
         </activity>
 
-
+        <activity
+            android:name=".sales.ticket.TicketFragment"
+            android:theme="@style/AppTheme">
+        </activity>
         <activity
             android:name="com.accessa.ibora.POP.CancelPaymentPOPDialogFragment"
             android:exported="false"

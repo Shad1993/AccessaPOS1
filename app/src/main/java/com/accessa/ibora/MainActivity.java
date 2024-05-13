@@ -54,8 +54,8 @@ import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.login.login;
+import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
@@ -177,6 +177,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
         TicketFragment ticketFragment1=new TicketFragment();
         ticketFragment1.setHasOptionsMenu(true);
         double cashReturn = getIntent().getDoubleExtra("cash_return_key", 0.0); // Replace 0.0 with a default value if needed
@@ -338,7 +340,7 @@ if (cashReturn != 0.0) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Intent intent = new Intent(MainActivity.this, SyncService.class);
+                    Intent intent = new Intent(MainActivity.this, SendNoteToKitchenActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
                     Intent intent = new Intent(MainActivity.this, AdminActivity.class);

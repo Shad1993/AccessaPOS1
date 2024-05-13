@@ -30,7 +30,7 @@ public class salestype extends AppCompatActivity {
 
         // Check and set the status based on the clicked button
         onSpotButton.setOnClickListener(v -> {
-            saveStatusAndNavigate("On Spot");
+            saveStatusAndNavigate("Dine In");
         });
 
         deliveryButton.setOnClickListener(v -> {

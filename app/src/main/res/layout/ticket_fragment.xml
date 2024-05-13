@@ -19,8 +19,8 @@
             app:title="@string/Tickets"
             android:background="@color/BleuAccessaText"
             app:titleTextColor="@color/white"
-             >
 
+            >
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
     <LinearLayout
@@ -220,24 +220,24 @@
                 android:id="@+id/saveTicket"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
+                android:text="@string/Save"
                 android:padding="16dp"
                 android:layout_centerInParent="true"/>
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/receiptwhite" />
+        <!-- <ImageView
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:layout_centerInParent="true"
+          android:src="@drawable/receiptwhite" />
+-->
+  </RelativeLayout>
 
-        </RelativeLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            >
-        <!-- Checkout Button -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="end"
+      >
+  <!-- Checkout Button -->
              <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -246,21 +246,23 @@
                     android:id="@+id/buttonCheckout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/Checkout"
 
                     android:padding="16dp"
                     android:layout_centerInParent="true"/>
 
-                <ImageView
-                    android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/cartwhite" />
+                 <!--  <ImageView
+                       android:layout_width="24dp"
+                   android:layout_height="24dp"
+                   android:layout_centerInParent="true"
+                   android:src="@drawable/cartwhite" />
+                   -->
 
-            </RelativeLayout>
+               </RelativeLayout>
 
-        </LinearLayout>
+           </LinearLayout>
 
-    </LinearLayout>
+       </LinearLayout>
 
 
-</LinearLayout>
+   </LinearLayout>

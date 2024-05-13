@@ -21,9 +21,11 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -55,6 +57,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -95,7 +98,8 @@ import java.util.Locale;
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
-
+    private StringBuilder enterednumber;
+    EditText numberOfPeopleEditText;
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
     private List<String> checkedItems;
@@ -146,6 +150,7 @@ private TextView textViewVATs,textViewTotals;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
 
@@ -434,6 +439,110 @@ private TextView textViewVATs,textViewTotals;
                 LayoutInflater inflater = requireActivity().getLayoutInflater();
                 View dialogView = inflater.inflate(R.layout.splitbill, null);
                 builder.setView(dialogView);
+                numberOfPeopleEditText = dialogView.findViewById(R.id.editTextNumberOfPeople);
+                numberOfPeopleEditText.setInputType(InputType.TYPE_NULL);
+                numberOfPeopleEditText.setTextIsSelectable(true);
+                enterednumber = new StringBuilder();
+                // Find the number buttons and set OnClickListener
+                Button button1 = dialogView.findViewById(R.id.button1);
+                Button button2 = dialogView.findViewById(R.id.button2);
+                Button button3 = dialogView.findViewById(R.id.button3);
+                Button button4 = dialogView.findViewById(R.id.button4);
+                Button button5 = dialogView.findViewById(R.id.button5);
+                Button button6 = dialogView.findViewById(R.id.button6);
+                Button button7 = dialogView.findViewById(R.id.button7);
+                Button button8 = dialogView.findViewById(R.id.button8);
+                Button button9 = dialogView.findViewById(R.id.button9);
+                Button button0 = dialogView.findViewById(R.id.button0);
+                Button buttonbackspace = dialogView.findViewById(R.id.buttonbackspace);
+                Button buttonClear = dialogView.findViewById(R.id.buttonClear);
+
+
+                button1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("1");
+                    }
+                });
+
+                button2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("2");
+                    }
+                });
+
+                button3.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("3");
+                    }
+                });
+
+                button4.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("4");
+                    }
+                });
+
+                button5.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("5");
+                    }
+                });
+
+                button6.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("6");
+                    }
+                });
+
+                button7.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("7");
+                    }
+                });
+
+                button8.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("8");
+                    }
+                });
+
+                button9.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("9");
+                    }
+                });
+
+                button0.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onNumberButtonClick("0");
+                    }
+                });
+
+                buttonbackspace.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onBackspaceButtonClick();
+                    }
+                });
+
+
+
+                buttonClear.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onClearButtonClick(v);
+                    }        });
+
 
                 // Set up the dialog's UI elements
                 EditText numberOfPeopleEditText = dialogView.findViewById(R.id.editTextNumberOfPeople);
@@ -623,7 +732,13 @@ private TextView textViewVATs,textViewTotals;
 
         // Find the toolbar view
         toolbar = view.findViewById(R.id.topAppBar);
+        Drawable yourDrawable = ContextCompat.getDrawable(getContext(), R.drawable.baseline_menu_book_24);
+
+// Set your custom drawable as the overflow icon
+        toolbar.setOverflowIcon(yourDrawable);
         toolbar.setOnMenuItemClickListener(this);
+
+
         Intent intent = new Intent();
         intent.setPackage("woyou.aidlservice.jiuiv5");
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
@@ -1160,7 +1275,7 @@ private TextView textViewVATs,textViewTotals;
     private void showSaveOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Save Transaction as");
-        String[] options = {"Addition", "Debit Note", "Credit Note"};
+        String[] options = {"Pro Format", "Debit Note", "Credit Note"};
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -1554,7 +1669,7 @@ if(Type.equals("DRN")) {
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
         tableid = preferences.getString("table_id", "");
-        mDatabaseHelper.deleteDataByInProgressStatus(String.valueOf(roomid),tableid);
+        mDatabaseHelper.updateStatusToVoid(String.valueOf(roomid),tableid);
 
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
@@ -1917,6 +2032,35 @@ Log.d("room and table", roomid+ " " +tableid);
         editor.clear();
         editor.apply();
     }
+    public void onClearButtonClick(View view) {
+
+        onclearButtonClick();
+
+
+    }
+    private void onclearButtonClick() {
+        // Clear the entered PIN and update the PIN EditText
+
+        numberOfPeopleEditText.setText("");
+        numberOfPeopleEditText.setText("");
+        numberOfPeopleEditText.requestFocus();
+
+    }
+    private void onBackspaceButtonClick() {
+        // Check if there are characters to remove
+        if (enterednumber.length() > 0) {
+            // Remove the last character from the entered barcode
+            enterednumber.deleteCharAt(enterednumber.length() - 1);
+            numberOfPeopleEditText.setText(enterednumber.toString());
+        }
+    }
+    public void onNumberButtonClick(String number) {
+        if (numberOfPeopleEditText != null) {
+            // Insert the letter into the EditText
+            numberOfPeopleEditText.append(number);
+        }
+    }
+
 
     private void playSoundEffect() {
         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);

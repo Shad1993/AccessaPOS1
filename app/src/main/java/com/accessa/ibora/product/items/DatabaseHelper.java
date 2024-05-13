@@ -731,7 +731,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_CLIENT_NIC + " TEXT, " +
             TRANSACTION_CLIENT_ADR1 + " TEXT, " +
             TRANSACTION_CLIENT_ADR2 + " TEXT, " +
-            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed','TRN')), " +
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed','TRN','Void')), " +
             TRANSACTION_CLIENT_VAT_REG_NO + " TEXT, " +
             TRANSACTION_CLIENT_BRN + " TEXT, " +
             TRANSACTION_CLIENT_TEL + " TEXT, " +
@@ -4755,6 +4755,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         cursor.close();
         return latestItemId;
+    }
+    public void updateStatusToVoid(String roomid, String tableid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Update the transaction status to "Void" for the specified room and table
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_STATUS, "Void");
+
+        // Update rows in TRANSACTION_HEADER_TABLE_NAME where TRANSACTION_STATUS is "InProgress" or "PRF" for the specified room and table
+        int rowsUpdated = db.update(TRANSACTION_HEADER_TABLE_NAME, values,
+                "(" + TRANSACTION_STATUS + " = ? OR " + TRANSACTION_STATUS + " = ?) AND " +
+                        ROOM_ID + " = ? AND " + TABLE_ID + " = ?",
+                new String[]{"InProgress", "PRF", roomid, tableid});
+
+        // Optionally, you can check if any rows were updated
+        if (rowsUpdated > 0) {
+            Log.d("DatabaseHelper", "Status updated to Void for " + rowsUpdated + " rows");
+        } else {
+            Log.d("DatabaseHelper", "No rows updated");
+        }
+
+        db.close();
     }
 
     public void deleteDataByInProgressStatus(String roomid, String tableid) {

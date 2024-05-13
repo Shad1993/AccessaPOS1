@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
-    android:screenOrientation="landscape"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -51,7 +50,7 @@
 
             <fragment
                 android:id="@+id/sales_fragment"
-                android:layout_width="match_parent"
+                android:layout_width="960dp"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 class="com.accessa.ibora.sales.Sales.SalesFragment" />
@@ -103,7 +102,7 @@
             <fragment
                 android:id="@+id/TableFragment"
                 class="com.accessa.ibora.sales.Tables.TablesFragment"
-                android:layout_width="800dp"
+                android:layout_width="762dp"
                 android:layout_height="50dp"
                 android:layout_weight="0.5" />
         </LinearLayout>
@@ -114,7 +113,7 @@
         android:id="@+id/right_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="1100dp">
+        android:layout_marginLeft="1060dp">
 
         <fragment
             android:id="@+id/TicketFragment"

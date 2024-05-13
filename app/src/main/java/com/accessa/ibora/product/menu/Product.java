@@ -144,6 +144,16 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                 drawerLayout.closeDrawer(GravityCompat.START);
 
                 if (id == R.id.Sales) {
+                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+
+                    // Set "roomnum" to 1
+                    editor.putInt("roomnum", 1);
+                    editor.putInt("room_id", 1);
+                    editor.putString("table_id", "0");
+                    editor.putString("table_num", "0");
+                    // Commit the changes
+                    editor.apply();
                     Intent intent = new Intent(Product.this, MainActivity.class);
                     startActivity(intent);
                 } else if (id == R.id.Receipts) {

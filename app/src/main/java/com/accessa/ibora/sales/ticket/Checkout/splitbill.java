@@ -22,11 +22,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.cardview.widget.CardView;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.PrintSplit;
@@ -41,7 +44,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class splitbill extends Dialog {
-
+    private StringBuilder enterednumber;
+    EditText numberOfPeopleEditText;
     private SharedPreferences sharedPreferences;
     private double splitAmount = 0.0,SpliVat=0.0;
     private static final String POSNumber="posNumber";
@@ -65,10 +69,122 @@ public class splitbill extends Dialog {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.splitbill, null);
         setContentView(view);
         mDatabaseHelper = new DatabaseHelper(getContext());
+        numberOfPeopleEditText = view.findViewById(R.id.editTextNumberOfPeople);
+        numberOfPeopleEditText.setInputType(InputType.TYPE_NULL);
+        numberOfPeopleEditText.setTextIsSelectable(true);
+        enterednumber = new StringBuilder();
+        // Find the number buttons and set OnClickListener
+        Button button1 = view.findViewById(R.id.button1);
+        Button button2 = view.findViewById(R.id.button2);
+        Button button3 = view.findViewById(R.id.button3);
+        Button button4 = view.findViewById(R.id.button4);
+        Button button5 = view.findViewById(R.id.button5);
+        Button button6 = view.findViewById(R.id.button6);
+        Button button7 = view.findViewById(R.id.button7);
+        Button button8 = view.findViewById(R.id.button8);
+        Button button9 = view.findViewById(R.id.button9);
+        Button button0 = view.findViewById(R.id.button0);
+        Button buttonbackspace = view.findViewById(R.id.buttonbackspace);
+        Button buttonComma = view.findViewById(R.id.buttonComma);
+        Button buttonClear = view.findViewById(R.id.buttonClear);
+
+
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("1");
+            }
+        });
+
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("2");
+            }
+        });
+
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("3");
+            }
+        });
+
+        button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("4");
+            }
+        });
+
+        button5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("5");
+            }
+        });
+
+        button6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("6");
+            }
+        });
+
+        button7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("7");
+            }
+        });
+
+        button8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("8");
+            }
+        });
+
+        button9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("9");
+            }
+        });
+
+        button0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick("0");
+            }
+        });
+
+        buttonbackspace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackspaceButtonClick();
+            }
+        });
+
+        buttonComma.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNumberButtonClick(",");
+            }
+        });
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClearButtonClick(v);
+            }        });
+
+
+
 
         EditText splitAmountEditText = view.findViewById(R.id.editTextSplitAmount);
         EditText splitTaxtotalAmount = view.findViewById(R.id.editTextSplitVat);
-        EditText numberOfPeopleEditText = view.findViewById(R.id.editTextNumberOfPeople);
+
         TextView resultTextView = view.findViewById(R.id.resultTextView);
 
         splitAmountEditText.setText(String.valueOf(amountTextView));
@@ -196,7 +312,35 @@ public class splitbill extends Dialog {
 
 
     }
+    public void onClearButtonClick(View view) {
 
+        onclearButtonClick();
+
+
+    }
+    private void onclearButtonClick() {
+        // Clear the entered PIN and update the PIN EditText
+        enterednumber.setLength(0);
+        numberOfPeopleEditText.setText("");
+        numberOfPeopleEditText.setText("");
+        numberOfPeopleEditText.requestFocus();
+
+    }
+    private void onBackspaceButtonClick() {
+        // Check if there are characters to remove
+        if (enterednumber.length() > 0) {
+            // Remove the last character from the entered barcode
+            enterednumber.deleteCharAt(enterednumber.length() - 1);
+            numberOfPeopleEditText.setText(enterednumber.toString());
+        }
+    }
+    public void onNumberButtonClick(String number) {
+        // Append the pressed number to the entered PIN
+        enterednumber.append(number);
+
+        // Update the PIN EditText with the entered numbers
+        numberOfPeopleEditText.setText(enterednumber.toString());
+    }
     // Add this method to get the split amount
     public double getSplitAmount() {
         return splitAmount;

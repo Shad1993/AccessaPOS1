@@ -779,7 +779,7 @@ if(SelectedBuyerProfile==null) {
 
         SharedPreferences    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         sharedPreferences.edit().putString("table_id", "0").apply();
-        sharedPreferences.edit().putInt("roomnum", 0).apply();
+        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomid)).apply();
 
 
     }

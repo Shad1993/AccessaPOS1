@@ -5,6 +5,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.hardware.display.DisplayManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -19,8 +21,12 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.accessa.ibora.Admin.RegistorCashor;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
+import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DatabaseHelper;
+
+import java.util.Locale;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
@@ -163,12 +169,81 @@ public class SplashActivity extends Activity {
         return null;
     }
     private void navigateToNextScreen() {
+        // Store "sunmit2" as the device type in shared preferences
+        storeDeviceType("sunmit2");
         // Start the next activity (e.g., main activity)
-        Intent intent = new Intent(this, SelectDevice.class);
-        startActivity(intent);
-        finish();
+        //Intent intent = new Intent(this, SelectDevice.class);
+     //   Intent intent = new Intent(this, login.class);
+     //   startActivity(intent);
+     //   finish();
     }
 
+
+    private void storeDeviceType(String deviceType) {
+        // Define a custom name for your SharedPreferences
+        String customSharedPreferencesName = "device";
+
+// Create the SharedPreferences instance with the custom name
+        SharedPreferences sharedPreferences = getSharedPreferences(customSharedPreferencesName, Context.MODE_PRIVATE);
+
+// Now, you can edit and use this sharedPreferences as needed
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("device_type", deviceType);
+        editor.apply();
+
+// Start the SelectLanguage activity
+        Intent intent = new Intent(this, SelectLanguage.class);
+        startActivity(intent);
+       openNewActivity(Locale.ENGLISH);
+    }
+
+    public void openNewActivity(Locale locale) {
+        // Set the app's locale to the selected language
+        Locale.setDefault(locale);
+
+        // Update the configuration to reflect the new locale
+        Configuration configuration = getResources().getConfiguration();
+        configuration.setLocale(locale);
+        getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
+
+
+        CheckTableUser();
+        CheckTableCompany();
+    }
+
+    public void CheckTableUser(){
+        // Check if "Users" table is not empty
+        boolean isUserTableEmpty = mDatabaseHelper.isUserTableEmpty();
+
+        if (!isUserTableEmpty) {
+            // "Users" table is not empty, redirect to the login activity
+            Intent intent = new Intent(this, login.class);
+            startActivity(intent);
+            finish(); // Optional: Finish the current activity to prevent going back to it
+        } else {
+            // "Users" table is empty, proceed with the current flow
+            // Start the SelectProfile activity
+            Intent intent = new Intent(this, RegistorCashor.class);
+            startActivity(intent);
+        }
+    }
+
+    public void CheckTableCompany(){
+        // Check if "Company" table is not empty
+        boolean isUserTableEmpty = mDatabaseHelper.isCompanyTableEmpty();
+
+        if (!isUserTableEmpty) {
+            // "Company" table is not empty, redirect to the login activity
+            Intent intent = new Intent(this, login.class);
+            startActivity(intent);
+            finish(); // Optional: Finish the current activity to prevent going back to it
+        } else {
+            // "Company" table is empty, proceed with the current flow
+            // Start the SelectProfile activity
+            Intent intent = new Intent(this, welcome.class);
+            startActivity(intent);
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

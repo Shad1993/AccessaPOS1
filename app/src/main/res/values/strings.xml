@@ -309,7 +309,7 @@
     <string name="noticket">No Ticket Yet</string>
     <string name="tax">Tax</string>
     <string name="Save">Save</string>
-    <string name="modItem">Modify Item</string>
+    <string name="modItem">Modify/Void Item</string>
     <string name="delete_confirmation">Do you confirm you want to delete the item?</string>
     <string name="delete_confirmation_message">Confirm deletion</string>
     <string name="yes">Yes</string>
@@ -523,6 +523,8 @@
     <string name="addsupplements">Add Supplement</string>
     <string name="noSupplementfound">No Supplements Found</string>
     <string name="supplements">Supplements</string>
+    <string name="ClearTransaction">Clear Transaction</string>
+    <string name="search_list">Search</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

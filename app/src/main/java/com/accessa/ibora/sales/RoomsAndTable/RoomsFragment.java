@@ -49,6 +49,7 @@ public class RoomsFragment extends Fragment {
     private static final String PREF_ROOM_ID = "room_id";
     private static final String PREF_TABLE_ID = "table_id";
     public int roomid;
+    public int roomNum;
     private PopupWindow popupWindow;
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
@@ -83,7 +84,7 @@ public class RoomsFragment extends Fragment {
         sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         // Use the modified getAllRooms() method to fetch rooms
         roomid = sharedPreferences.getInt("room_id", 0);
-
+        roomNum=sharedPreferences.getInt("roomnum",0);
 
         // Set default value for current ID if not set
         if (!sharedPreferences.contains(PREF_CURRENT_ID)) {
@@ -203,7 +204,6 @@ public class RoomsFragment extends Fragment {
         // Assuming mDatabaseHelper is your DatabaseHelper instance
         Cursor roomCursor = mDatabaseHelper.getRoomsForId(roomid);
 
-        String roomName = mDatabaseHelper.getRoomNameForId(String.valueOf(roomid));
 
         mAdapter = new RoomAdapter(getActivity(), roomCursor,String.valueOf(roomid));
         mRecyclerView.setAdapter(mAdapter);
@@ -274,10 +274,20 @@ public class RoomsFragment extends Fragment {
 
                         Log.d("id", id);
                         Log.d("title", title);
+                        int maxRoomId = mDatabaseHelper.getMaxRoomId();
+                        Log.d("maxRoomId", String.valueOf(maxRoomId));
 
+                        if(roomid == roomNum) {
+                            roomid++; // Increment roomid by 1
 
+                            if (roomid > maxRoomId) {
+                                roomid = 1; // If roomid exceeds maxRoomId, set it to 1
+                            }
 
-                        // Here, you can dynamically update your UI based on the clicked item
+                            sharedPreferences.edit().putInt("room_id", roomid).apply();
+                        }
+
+// Here, you can dynamically update your UI based on the clicked item
                         updateUIForClickedItem(id);
                     }
 
@@ -361,7 +371,7 @@ public class RoomsFragment extends Fragment {
         int actualroom=currentRoomId;
         // Increment the current room ID and save it to SharedPreferences
         currentRoomId = (currentRoomId % maxRoomId) + 1;
-        sharedPreferences.edit().putInt(PREF_ROOM_ID, actualroom).apply();
+        sharedPreferences.edit().putInt(PREF_ROOM_ID, currentRoomId).apply();
 
         // Now, handle the table ID (assuming you want to set it to 1)
         int defaultTableId = 0;

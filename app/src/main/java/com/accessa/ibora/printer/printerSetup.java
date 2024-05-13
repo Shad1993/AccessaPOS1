@@ -632,7 +632,7 @@ public class printerSetup extends AppCompatActivity {
                                     sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
                                     sharedPreferences.edit().putString("table_id", "0").apply();
                                     sharedPreferences.edit().putString("table_num", "0").apply();
-                                    sharedPreferences.edit().putInt("roomnum", 0).apply();
+
                                     List<String> tableIds = extractTableIds(tableid);
                                     for (String tableId : tableIds) {
                                         Log.d("extractTableIds", "Table ID: " + tableId);

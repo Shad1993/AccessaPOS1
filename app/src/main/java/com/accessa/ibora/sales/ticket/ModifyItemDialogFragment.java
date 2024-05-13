@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +24,7 @@ import androidx.fragment.app.DialogFragment;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
@@ -35,6 +39,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private ItemClearedListener itemclearedListener;
     private String tableid;
     private int roomid;
+    private EditText editTextOption1;
     private static final String ARG_QUANTITY = "quantity";
     private static final String ARG_PRICE = "price";
     private static final String ARG_LONG_DESC = "long_desc";
@@ -61,6 +66,309 @@ public class ModifyItemDialogFragment extends DialogFragment {
         EditText quantityEditText = view.findViewById(R.id.quantity_edit_text);
         EditText priceEditText = view.findViewById(R.id.price_edit_text);
         EditText longDescEditText = view.findViewById(R.id.long_desc_edit_text);
+
+
+        // Find the EditText field in the custom layout
+        editTextOption1 = view.findViewById(R.id.editTextOption1);
+        editTextOption1.setInputType(InputType.TYPE_NULL);
+        editTextOption1.setTextIsSelectable(true);
+        // Find the number buttons and set OnClickListener
+        Button button1 = view.findViewById(R.id.button1);
+        Button button2 = view.findViewById(R.id.button2);
+        Button button3 = view.findViewById(R.id.button3);
+        Button button4 = view.findViewById(R.id.button4);
+        Button button5 = view.findViewById(R.id.button5);
+        Button button6 = view.findViewById(R.id.button6);
+        Button button7 = view.findViewById(R.id.button7);
+        Button button8 = view.findViewById(R.id.button8);
+        Button button9 = view.findViewById(R.id.button9);
+        Button button0 = view.findViewById(R.id.button0);
+        Button buttonbackspace = view.findViewById(R.id.buttonbackspace);
+        Button buttonComma = view.findViewById(R.id.buttonComma);
+        Button buttonClear = view.findViewById(R.id.buttonClear);
+        Button buttonA = view.findViewById(R.id.buttonInsertA);
+        Button buttonB = view.findViewById(R.id.buttonInsertB);
+        Button buttonC = view.findViewById(R.id.buttonInsertC);
+        Button buttonD = view.findViewById(R.id.buttonInsertD);
+        Button buttonE = view.findViewById(R.id.buttonInsertE);
+        Button buttonF = view.findViewById(R.id.buttonInsertF);
+        Button buttonG = view.findViewById(R.id.buttonInsertG);
+        Button buttonH = view.findViewById(R.id.buttonInsertH);
+        Button buttonI = view.findViewById(R.id.buttonInsertI);
+        Button buttonJ = view.findViewById(R.id.buttonInsertJ);
+        Button buttonK = view.findViewById(R.id.buttonInsertK);
+        Button buttonL = view.findViewById(R.id.buttonInsertL);
+        Button buttonM = view.findViewById(R.id.buttonInsertM);
+        Button buttonN = view.findViewById(R.id.buttonInsertN);
+        Button buttonO = view.findViewById(R.id.buttonInsertO);
+        Button buttonP = view.findViewById(R.id.buttonInsertP);
+        Button buttonQ = view.findViewById(R.id.buttonInsertQ);
+        Button buttonR = view.findViewById(R.id.buttonInsertR);
+        Button buttonS = view.findViewById(R.id.buttonInsertS);
+        Button buttonT = view.findViewById(R.id.buttonInsertT);
+        Button buttonU = view.findViewById(R.id.buttonInsertU);
+        Button buttonV = view.findViewById(R.id.buttonInsertV);
+        Button buttonW = view.findViewById(R.id.buttonInsertW);
+        Button buttonX = view.findViewById(R.id.buttonInsertX);
+        Button buttonY = view.findViewById(R.id.buttonInsertY);
+        Button buttonZ = view.findViewById(R.id.buttonInsertZ);
+        Button buttonSpace = view.findViewById(R.id.buttonInsertspace);
+        // Set OnClickListener for number buttons
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "1");
+            }
+        });
+
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "2");
+            }
+        });
+
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "3");
+            }
+        });
+
+        button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "4");
+            }
+        });
+
+        button5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "5");
+            }
+        });
+
+        button6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "6");
+            }
+        });
+
+        button7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "7");
+            }
+        });
+
+        button8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "8");
+            }
+        });
+
+        button9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "9");
+            }
+        });
+
+        button0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "0");
+            }
+        });
+
+
+
+        buttonbackspace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackspaceButtonClick();
+            }
+        });
+
+        buttonComma.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, ",");
+            }
+        });
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClearButtonClick(v);
+            }        });
+
+
+        buttonSpace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, " ");
+            }
+        });
+        buttonA.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "A");
+            }
+        });
+        buttonB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "B");
+            }
+        });
+        buttonC.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "C");
+            }
+        });
+        buttonD.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "D");
+            }
+        });
+        buttonE.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "E");
+            }
+        });
+        buttonF.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "F");
+            }
+        });
+        buttonG.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "G");
+            }
+        });
+        buttonH.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "H");
+            }
+        });
+        buttonI.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "I");
+            }
+        });
+        buttonJ.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "J");
+            }
+        });
+        buttonK.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "K");
+            }
+        });
+        buttonL.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "L");
+            }
+        });
+        buttonM.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "M");
+            }
+        });
+        buttonN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "N");
+            }
+        });
+        buttonO.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "O");
+            }
+        });
+        buttonP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "P");
+            }
+        });
+        buttonQ.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "Q");
+            }
+        });
+        buttonR.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "R");
+            }
+        });
+        buttonS.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "S");
+            }
+        });
+        buttonT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "T");
+            }
+        });
+        buttonU.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "U");
+            }
+        });
+        buttonV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "V");
+            }
+        });
+        buttonW.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "W");
+            }
+        });
+        buttonX.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "X");
+            }
+        });
+        buttonY.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "Y");
+            }
+        });
+        buttonZ.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oncommentButtonClick(editTextOption1, "Z");
+            }
+        });
 
         // Initialize SharedPreferences
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
@@ -154,12 +462,32 @@ public class ModifyItemDialogFragment extends DialogFragment {
                         if (itemclearedListener != null) {
                             itemclearedListener.onAmountModified();
                         }
+                        String option1Text = editTextOption1.getText().toString();
+
+                        updateCommentForTransaction(mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid),option1Text,id );
+                        // Check if the EditText is not null and not empty
+                        if (!TextUtils.isEmpty(option1Text)) {
+                            // Create an Intent to launch SendNoteToKitchenActivity
+                            Intent intent = new Intent(getContext(), SendNoteToKitchenActivity.class);
+                            // Put the text as an extra in the Intent
+                            intent.putExtra("note_text", option1Text);
+                            // Start the activity
+                            startActivity(intent);
+                        } else {
+                            // Show a toast or alert indicating that the EditText is empty
+                            Toast.makeText(getContext(), "Please enter a note", Toast.LENGTH_SHORT).show();
+                        }
                         returnHome();
 
                     }
                 })
                 .setNegativeButton(getString(R.string.cancel), null)
                 .create();
+    }
+
+    public void updateCommentForTransaction(String transactionId, String comment,String itemid) {
+        // Call your database helper method to update the comment for the given transaction ID
+        mDatabaseHelper.updateTransactionComment(transactionId, comment);
     }
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -247,6 +575,35 @@ public class ModifyItemDialogFragment extends DialogFragment {
     }
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);
+    }
+    private void onBackspaceButtonClick() {
+        // Get the current text from editTextOption1
+        Editable editable = editTextOption1.getText();
+
+        // Get the length of the text
+        int length = editable.length();
+
+        // If there are characters in the text, remove the last character
+        if (length > 0) {
+            editable.delete(length - 1, length);
+        }
+    }
+    public void onClearButtonClick(View view) {
+
+        onclearButtonClick();
+
+
+    }
+
+    private void onclearButtonClick() {
+        editTextOption1.setText(""); // Set the text of editTextOption1 to an empty string
+    }
+
+    public void oncommentButtonClick(View view, String letter) {
+        if (editTextOption1 != null) {
+            // Insert the letter into the EditText
+            editTextOption1.append(letter);
+        }
     }
     @Override
     public void onAttach(@NonNull Context context) {

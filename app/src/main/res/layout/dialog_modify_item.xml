@@ -36,7 +36,373 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <!-- Add EditText for Comments -->
+    <TextView
+        android:id="@+id/CommentstextView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:textSize="18sp"
+        android:text="Comments" />
+    <EditText
+        android:id="@+id/editTextOption1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Comment"
+        android:inputType="none" />
+    <LinearLayout
+        android:layout_width="650dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
 
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button1"
+            android:text="1"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick"
+            android:tag="1"/>
+
+
+
+        <Button
+            android:id="@+id/button2"
+            android:text="2"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button3"
+            android:text="3"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button4"
+            android:text="4"
+            android:textSize="24sp" android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button5"
+            android:text="5"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button6"
+            android:text="6"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button7"
+            android:text="7"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button8"
+            android:text="8"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button9"
+            android:text="9"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button0"
+            android:text="0"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="650dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/buttonInsertQ"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="Q"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertW"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="W"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertE"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="E"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertR"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="R"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertT"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="T"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertY"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="Y"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertU"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="U"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertI"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="I"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertO"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="O"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertP"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="P"
+            android:onClick="oncommentButtonClick"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="590dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/buttonInsertA"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="A"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertS"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="S"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertD"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="D"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertF"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="F"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertG"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="G"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertH"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="H"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertJ"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="J"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertK"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="K"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertL"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="L"
+            android:onClick="oncommentButtonClick"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="460dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/buttonInsertZ"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="Z"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertX"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="X"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertC"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="C"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertV"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="V"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertB"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="B"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertN"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="N"
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonInsertM"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:text="M"
+            android:onClick="oncommentButtonClick"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="440dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/buttonComma"
+            android:text="@string/point"
+            android:textSize="24sp"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+        <Button
+            android:id="@+id/buttonInsertspace"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text=" "
+            android:onClick="oncommentButtonClick"/>
+
+        <Button
+            android:id="@+id/buttonbackspace"
+            android:text="BS"
+            android:textSize="10sp"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+        <Button
+            android:id="@+id/buttonClear"
+            android:text="@string/CL"
+            android:textSize="10sp"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -49,7 +415,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/BleuAccessaText"
-            android:text="Delete"
+            android:text="Void"
             android:drawableEnd="@drawable/bin"/>
 
 
