@@ -406,6 +406,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String ROOM_NAME = "room_name";
     public static final String TABLE_COUNT = "table_count";
     public static final String TRANSACTION_COMMENT = "Comment";
+    public static String TRANSACTION_SentToKitchen="SentToKitchen";
+
     public static final String TABLE_ID = "id";
     public static final String MERGED = "Merged";
     public static final String ROOM_ID = "room_id";
@@ -639,7 +641,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
-
     // Creating Transaction table query
     private static final String CREATE_TRANSACTION_TABLE = "CREATE TABLE " + TRANSACTION_TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -688,6 +689,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_ID_SALES_D + " TEXT, " +
             TRANSACTION_TOTALIZER + " TEXT, " +
             TRANSACTION_COMMENT + " TEXT, " +
+            TRANSACTION_SentToKitchen + " INTEGER DEFAULT 0, " + // 0 for not selected, 1 for selected
             "FOREIGN KEY (" + ROOM_ID + ") REFERENCES " + ROOMS + "(" + ID + ")," +
 
             "FOREIGN KEY (" + TABLE_ID + ") REFERENCES " + TABLES + "(" + TABLE_ID + ") , " +
@@ -2801,12 +2803,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return newRowId; // Return the newly inserted row ID or -1 if an error occurred
     }
-
-    public void updateTransactionComment(String transactionId, String comment) {
+    public void setTransactionSentToKitchen(String transactionId) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TRANSACTION_COMMENT, comment); // Assuming TRANSACTION_COMMENT is the column name for the comment
+        values.put(TRANSACTION_SentToKitchen, 1); // Set SentToKitchen as 1
 
         // Define the WHERE clause to update the row for the given transaction ID
         String whereClause = TRANSACTION_ID + " = ?";
@@ -2817,12 +2818,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (rowsUpdated > 0) {
             // Log success message
-            Log.d("UpdateTransaction", "Transaction comment updated successfully" );
+            Log.d("UpdateTransaction", "Transaction SentToKitchen updated successfully for transaction ID: " + transactionId);
         } else {
             // Log error message
-            Log.e("UpdateTransactionfailed", transactionId + "-Failed to update transaction comment. No rows updated.");
+            Log.e("UpdateTransactionFailed", "Failed to update transaction SentToKitchen for transaction ID: " + transactionId + ". No rows updated.");
         }
     }
+
+    public void updateTransactionComment(String transactionId,  String comment,String itemId) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_COMMENT, comment); // Assuming TRANSACTION_COMMENT is the column name for the comment
+
+        // Define the WHERE clause to update the row for the given transaction ID and item ID
+        String whereClause = TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ?";
+        String[] whereArgs = { transactionId, itemId };
+
+        // Perform the update operation
+        int rowsUpdated = db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
+
+        if (rowsUpdated > 0) {
+            // Log success message
+            Log.d("UpdateTransaction", "Transaction comment updated successfully for transaction ID: " + transactionId + " and item ID: " + itemId);
+        } else {
+            // Log error message
+            Log.e("UpdateTransactionFailed", "Failed to update transaction comment for transaction ID: " + transactionId + " and item ID: " + itemId + ". No rows updated.");
+        }
+    }
+
 
 
 
@@ -5698,7 +5722,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
     }
-    public void insertItemsDatas(String itemname,String RelatedSupplements,String Comment, String desc, String price,String price2,String price3, String ratediscount,String amountdiscount,String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified,String Hasoptions, String nature, String currency, String itemCode, String taxCode, String totalDiscount,String totalDiscount2,String totalDiscount3, double priceAfterDiscount,double priceAfterDiscount2,double priceAfterDiscount3,String Related_item,String Related_item2,String Related_item3,String Related_item4,String Related_item5,String HasSupplements, String syncStatus) {
+    public void insertItemsDatas(String id,String itemname,String RelatedSupplements,String Comment, String desc, String price,String price2,String price3, String ratediscount,String amountdiscount,String category, String barcode, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified,String Hasoptions, String nature, String currency, String itemCode, String taxCode, String totalDiscount,String totalDiscount2,String totalDiscount3, double priceAfterDiscount,double priceAfterDiscount2,double priceAfterDiscount3,String Related_item,String Related_item2,String Related_item3,String Related_item4,String Related_item5,String HasSupplements, String syncStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues costContentValue = new ContentValues();
 
@@ -5709,6 +5733,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         costContentValue.put(DatabaseHelper.Cost, cost);
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper._ID, id);
         contentValue.put(DatabaseHelper.Name, itemname);
         contentValue.put(DatabaseHelper.comment, Comment);
         contentValue.put(DatabaseHelper.relatedSupplements, RelatedSupplements);

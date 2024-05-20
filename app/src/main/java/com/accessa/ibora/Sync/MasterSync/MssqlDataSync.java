@@ -74,13 +74,18 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.StrictMode;
 import android.util.Log;
 
 import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -108,9 +113,8 @@ public class MssqlDataSync {
         String ConnURL = null;
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
-            ConnURL = "jdbc:jtds:sqlserver://" + _server + ";"
-                    + "databaseName=" + _DB + ";user=" + _user + ";password="
-                    + _pass + ";";
+             ConnURL = "jdbc:jtds:sqlserver://" + _server + ";"
+                    + "databaseName=" + _DB + ";user=" + _user + ";password=" + _pass + ";";
             conn = DriverManager.getConnection(ConnURL);
 
             // If the connection is successful, show a "Connection successful" toast
@@ -161,9 +165,9 @@ public class MssqlDataSync {
                     String taxCode = cursor.getString(cursor.getColumnIndex("TaxCode"));
                     String currency = cursor.getString(cursor.getColumnIndex("Currency"));
                     String itemCode = cursor.getString(cursor.getColumnIndex("ItemCode"));
-                    String shopNo = cursor.getString(cursor.getColumnIndex("ShopNo"));
+                    int shopNo = cursor.getInt(cursor.getColumnIndex("ShopNo"));
                     double totaldisc = cursor.getDouble(cursor.getColumnIndex("TotalDisc"));
-                    String terminalNo = cursor.getString(cursor.getColumnIndex("TerminalNo"));
+                    int terminalNo = cursor.getInt(cursor.getColumnIndex("TerminalNo"));
                     String datecreated = cursor.getString(cursor.getColumnIndex("DateCreated"));
                     String dateModified = cursor.getString(cursor.getColumnIndex("DateModified"));
                     String timeCreated = cursor.getString(cursor.getColumnIndex("TimeCreated"));
@@ -180,7 +184,7 @@ public class MssqlDataSync {
                     String dateTransaction = cursor.getString(cursor.getColumnIndex("DateTransaction"));
                     String timeTransaction = cursor.getString(cursor.getColumnIndex("TimeTransaction"));
                     String barcode = cursor.getString(cursor.getColumnIndex("Barcode"));
-                    String weights = cursor.getString(cursor.getColumnIndex("Weights"));
+                    double weights = cursor.getDouble(cursor.getColumnIndex("Weights"));
                     double totalHT_B = cursor.getDouble(cursor.getColumnIndex("TotalHT_B"));
                     String typeTax = cursor.getString(cursor.getColumnIndex("TYPETAX"));
                     String rayon = cursor.getString(cursor.getColumnIndex("Rayon"));
@@ -205,69 +209,74 @@ public class MssqlDataSync {
             Log.e("SYNC_ERROR_Transactions", e.getMessage());
         }
     }
-    public void insertTransactionIntoMSSQL(Connection conn, long _id, long tableid, long Room_id, long PaidStatus, String TranscationId, long ItemId, String TransactionDate, long Quantity, double TotalPrice, double VAT, String VatType, String LongDescription, String Nature, String TaxCode, String Currency, String ItemCode, double TotalDisc, String ShopNo, String TerminalNo, String DateCreated, String DateModified, String TimeCreated, String TimeModified, String Code, double UnitPrice, long Qte, double Discount, double VAT_Before_Disc, double VAT_After_Disc, double TOTALHT_A, double TotalTTC, int IsTaxable, String DateTransaction, String TimeTransaction, String Barcode, String Weights, double TotalHT_B, String TypeTax, String Rayon, double CurrentPrice, String Famille, String IDSalesD, String Totalizer, String Comment) {
+    public void insertTransactionIntoMSSQL(Connection conn, int _id, int tableid, int Room_id, int PaidStatus, String TranscationId, int ItemId, String TransactionDate, int Quantity, double TotalPrice, double VAT, String VatType, String LongDescription, String Nature, String TaxCode, String Currency, String ItemCode, double TotalDisc, int ShopNo, int TerminalNo, String DateCreated, String DateModified, String TimeCreated, String TimeModified, String Code, double UnitPrice, long Qte, double Discount, double VAT_Before_Disc, double VAT_After_Disc, double TOTALHT_A, double TotalTTC, int IsTaxable, String DateTransaction, String TimeTransaction, String Barcode, double Weights, double TotalHT_B, String TypeTax, String Rayon, double CurrentPrice, String Famille, String IDSalesD, String Totalizer, String Comment) {
         try {
             // Start a transaction
             conn.setAutoCommit(false);
             // Check if the record with the same _id already exists
-            String checkExistenceQuery = "SELECT TranscationId FROM Transactions WHERE TranscationId = ? AND CAST(LongDescription AS varchar(max)) != 'Menu Repas' AND TotalPrice = ?";
+            String checkExistenceQuery = "SELECT TranscationHeader_Ref FROM Transactions WHERE TranscationHeader_Ref = ? AND Barcode = ? ";
+
             PreparedStatement checkExistenceStatement = conn.prepareStatement(checkExistenceQuery);
-            checkExistenceStatement.setString(1, TranscationId);
-            checkExistenceStatement.setDouble(2, TotalPrice);  // Set the provided TotalPrice
+            checkExistenceStatement.setString(1, TranscationId); // Set TranscationId
+            checkExistenceStatement.setString(2, Barcode); // Set Barcode
+
             ResultSet resultSet = checkExistenceStatement.executeQuery();
 
 
             if (resultSet.next()) {
                 // If the record exists, perform an update
-                String updateSql = "UPDATE Transactions SET  local_id = ?, room_id = ?, ItemId = ?, TransactionDate = ?, Quantity = ?, TotalPrice = ?, VAT = ?, VatType = ?, LongDescription = ?, Nature = ?, TaxCode = ?, Currency = ?, ItemCode = ?, TotalDisc = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?, Code = ?, UnitPrice = ?, Qte = ?, Discount = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, TOTALHT_A = ?, TotalTTC = ?, IsTaxable = ?, DateTransaction = ?, TimeTransaction = ?, Barcode = ?, Weights = ?, TotalHT_B = ?, TypeTax = ?, Rayon = ?, CurrentPrice = ?, Famille = ?, IDSalesD = ?, Totalizer = ?, Comment = ?,table_id=?,Paidstatus=? WHERE TranscationId = ?";
+                String updateSql = "UPDATE Transactions SET   ItemId = ?, TransactionDate = ?,  TotalPrice = ?, VAT = ?, VatType = ?, LongDescription = ?, Nature = ?, TaxCode = ?, Currency = ?, ItemCode = ?, TotalDisc = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?,  UnitPrice = ?,  Discount = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, TOTALHT_A = ?, TotalTTC = ?, IsTaxable = ?, DateTransaction = ?, TimeTransaction = ?,  Weights = ?, TotalHT_B = ?, TypeTax = ?, Rayon = ?, CurrentPrice = ?, Famille = ?,  Totalizer = ?, Comment = ?,Paidstatus=?,Quantity=? WHERE TranscationHeader_Ref = ? AND Barcode = ?";
                 PreparedStatement updateStatement = conn.prepareStatement(updateSql);
-                updateStatement.setLong(1, _id);
-                updateStatement.setLong(2, Room_id);
-                updateStatement.setLong(3, ItemId);
-                updateStatement.setString(4, TransactionDate);
-                updateStatement.setLong(5, Quantity);
-                updateStatement.setDouble(6, TotalPrice);
-                updateStatement.setDouble(7, VAT);
-                updateStatement.setString(8, VatType);
-                updateStatement.setString(9, LongDescription);
-                updateStatement.setString(10, Nature);
-                updateStatement.setString(11, TaxCode);
-                updateStatement.setString(12, Currency);
-                updateStatement.setString(13, ItemCode);
-                updateStatement.setDouble(14, TotalDisc);
-                updateStatement.setString(15, ShopNo);
-                updateStatement.setString(16, TerminalNo);
-                updateStatement.setString(17, DateCreated);
-                updateStatement.setString(18, DateModified);
-                updateStatement.setString(19, TimeCreated);
-                updateStatement.setString(20, TimeModified);
-                updateStatement.setString(21, Code);
-                updateStatement.setDouble(22, UnitPrice);
-                updateStatement.setLong(23, Qte);
-                updateStatement.setDouble(24, Discount);
-                updateStatement.setDouble(25, VAT_Before_Disc);
-                updateStatement.setDouble(26, VAT_After_Disc);
-                updateStatement.setDouble(27, TOTALHT_A);
-                updateStatement.setDouble(28, TotalTTC);
-                updateStatement.setInt(29, IsTaxable);
-                updateStatement.setString(30, DateTransaction);
-                updateStatement.setString(31, TimeTransaction);
-                updateStatement.setString(32, Barcode);
-                updateStatement.setString(33, Weights);
-                updateStatement.setDouble(34, TotalHT_B);
-                updateStatement.setString(35, TypeTax);
-                updateStatement.setString(36, Rayon);
-                updateStatement.setDouble(37, CurrentPrice);
-                updateStatement.setString(38, Famille);
-                updateStatement.setString(39, IDSalesD);
-                updateStatement.setString(40, Totalizer);
-                updateStatement.setString(41, Comment);
-                updateStatement.setDouble(42, tableid);
-                updateStatement.setDouble(43, PaidStatus);
-                updateStatement.setString(44, TranscationId);
 
-                updateStatement.executeUpdate();
+                updateStatement.setInt(1, ItemId);
+                updateStatement.setString(2, TransactionDate);
+                updateStatement.setDouble(3, TotalPrice);
+                updateStatement.setDouble(4, VAT);
+                updateStatement.setString(5, VatType);
+                updateStatement.setString(6, LongDescription);
+                updateStatement.setString(7, Nature);
+                updateStatement.setString(8, TaxCode);
+                updateStatement.setString(9, Currency);
+                updateStatement.setString(10, ItemCode);
+                updateStatement.setDouble(11, TotalDisc);
+                updateStatement.setInt(12, ShopNo);
+                updateStatement.setInt(13, TerminalNo);
+                updateStatement.setString(14, DateCreated);
+                updateStatement.setString(15, DateModified);
+                updateStatement.setString(16, TimeCreated);
+                updateStatement.setString(17, TimeModified);
+                updateStatement.setDouble(18, UnitPrice);
+                updateStatement.setDouble(19, Discount);
+                updateStatement.setDouble(20, VAT_Before_Disc);
+                updateStatement.setDouble(21, VAT_After_Disc);
+                updateStatement.setDouble(22, TOTALHT_A);
+                updateStatement.setDouble(23, TotalTTC);
+                updateStatement.setInt(24, IsTaxable);
+                updateStatement.setString(25, DateTransaction);
+                updateStatement.setString(26, TimeTransaction);
+                updateStatement.setDouble(27, Weights);
+                updateStatement.setDouble(28, TotalHT_B);
+                updateStatement.setString(29, TypeTax);
+                updateStatement.setString(30, Rayon);
+                updateStatement.setDouble(31, CurrentPrice);
+                updateStatement.setString(32, Famille);
+                updateStatement.setString(33, Totalizer);
+                updateStatement.setString(34, Comment);
+                updateStatement.setInt(35, PaidStatus);
+                updateStatement.setInt(36, Quantity);
+                updateStatement.setString(37, TranscationId);
+                updateStatement.setString(38, Barcode); // Assuming 'barcode' is your variable holding the barcode value
+
+
+
+                int rowsUpdated = updateStatement.executeUpdate();
                 updateStatement.close();
+
+                if (rowsUpdated > 0) {
+                    Log.i("updateTrans_Success", "Record updated successfully");
+                } else {
+                    Log.i("updateTrans_Failure", "No records updated");
+                }
             } else {
                 // Enable IDENTITY_INSERT for the Transactions table
                 String enableIdentityInsert = "SET IDENTITY_INSERT Transactions ON";
@@ -275,56 +284,57 @@ public class MssqlDataSync {
                 enableIdentityStatement.executeUpdate();
                 enableIdentityStatement.close();
                 // If the record doesn't exist, perform an insert
-                String insertSql = "INSERT INTO Transactions (local_id, room_id, TranscationId, ItemId, TransactionDate, Quantity, TotalPrice, VAT, VatType, LongDescription, Nature, TaxCode, Currency, ItemCode, TotalDisc, ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified, Code, UnitPrice, Qte, Discount, VAT_Before_Disc, VAT_After_Disc, TOTALHT_A, TotalTTC, IsTaxable, DateTransaction, TimeTransaction, Barcode, Weights, TotalHT_B, TypeTax, Rayon, CurrentPrice, Famille, IDSalesD, Totalizer, table_id,Comment,Paidstatus ) VALUES (?,?, ?,?,?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                String insertSql = "INSERT INTO Transactions (TranscationHeader_Ref, ItemId, TransactionDate, TotalPrice, VAT, VatType, LongDescription, Nature, TaxCode, Currency, ItemCode, TotalDisc, ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified,  UnitPrice,  Discount, VAT_Before_Disc, VAT_After_Disc, TOTALHT_A, TotalTTC, IsTaxable, DateTransaction, TimeTransaction, Barcode, Weights, TotalHT_B, TypeTax, Rayon, CurrentPrice, Famille, Totalizer, Comment, Paidstatus,Quantity) VALUES ( ?,?,  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
                 PreparedStatement insertStatement = conn.prepareStatement(insertSql);
-                insertStatement.setLong(1, _id);
-                insertStatement.setLong(2, Room_id);
-                insertStatement.setString(3, TranscationId);
-                insertStatement.setLong(4, ItemId);
-                insertStatement.setString(5, TransactionDate);
-                insertStatement.setLong(6, Quantity);
-                insertStatement.setDouble(7, TotalPrice);
-                insertStatement.setDouble(8, VAT);
-                insertStatement.setString(9, VatType);
-                insertStatement.setString(10, LongDescription);
-                insertStatement.setString(11, Nature);
-                insertStatement.setString(12, TaxCode);
-                insertStatement.setString(13, Currency);
-                insertStatement.setString(14, ItemCode);
-                insertStatement.setDouble(15, TotalDisc);
-                insertStatement.setString(16, ShopNo);
-                insertStatement.setString(17, TerminalNo);
-                insertStatement.setString(18, DateCreated);
-                insertStatement.setString(19, DateModified);
-                insertStatement.setString(20, TimeCreated);
-                insertStatement.setString(21, TimeModified);
-                insertStatement.setString(22, Code);
-                insertStatement.setDouble(23, UnitPrice);
-                insertStatement.setLong(24, Qte);
-                insertStatement.setDouble(25, Discount);
-                insertStatement.setDouble(26, VAT_Before_Disc);
-                insertStatement.setDouble(27, VAT_After_Disc);
-                insertStatement.setDouble(28, TOTALHT_A);
-                insertStatement.setDouble(29, TotalTTC);
-                insertStatement.setInt(30, IsTaxable);
-                insertStatement.setString(31, DateTransaction);
-                insertStatement.setString(32, TimeTransaction);
-                insertStatement.setString(33, Barcode);
-                insertStatement.setString(34, Weights);
-                insertStatement.setDouble(35, TotalHT_B);
-                insertStatement.setString(36, TypeTax);
-                insertStatement.setString(37, Rayon);
-                insertStatement.setDouble(38, CurrentPrice);
-                insertStatement.setString(39, Famille);
-                insertStatement.setString(40, IDSalesD);
-                insertStatement.setString(41, Totalizer);
-                insertStatement.setLong(42, tableid);
-                insertStatement.setString(43, Comment);
-                insertStatement.setLong(44, PaidStatus);
+
+                insertStatement.setString(1, TranscationId);
+                insertStatement.setInt(2, ItemId);
+                insertStatement.setString(3, TransactionDate);
+                insertStatement.setDouble(4, TotalPrice);
+                insertStatement.setDouble(5, VAT);
+                insertStatement.setString(6, VatType);
+                insertStatement.setString(7, LongDescription);
+                insertStatement.setString(8, Nature);
+                insertStatement.setString(9, TaxCode);
+                insertStatement.setString(10, Currency);
+                insertStatement.setString(11, ItemCode);
+                insertStatement.setDouble(12, TotalDisc);
+                insertStatement.setInt(13, ShopNo);
+                insertStatement.setInt(14, TerminalNo);
+                insertStatement.setString(15, DateCreated);
+                insertStatement.setString(16, DateModified);
+                insertStatement.setString(17, TimeCreated);
+                insertStatement.setString(18, TimeModified);
+                insertStatement.setDouble(19, UnitPrice);
+                insertStatement.setDouble(20, Discount);
+                insertStatement.setDouble(21, VAT_Before_Disc);
+                insertStatement.setDouble(22, VAT_After_Disc);
+                insertStatement.setDouble(23, TOTALHT_A);
+                insertStatement.setDouble(24, TotalTTC);
+                insertStatement.setInt(25, IsTaxable);
+                insertStatement.setString(26, DateTransaction);
+                insertStatement.setString(27, TimeTransaction);
+                insertStatement.setString(28, Barcode);
+                insertStatement.setDouble(29, Weights);
+                insertStatement.setDouble(30, TotalHT_B);
+                insertStatement.setString(31, TypeTax);
+                insertStatement.setString(32, Rayon);
+                insertStatement.setDouble(33, CurrentPrice);
+                insertStatement.setString(34, Famille);
+                insertStatement.setString(35, Totalizer);
+                insertStatement.setString(36, Comment);
+                insertStatement.setInt(37, PaidStatus);
+                insertStatement.setInt(38, Quantity);
 
 
-                insertStatement.executeUpdate();
+                int rowsUpdated = insertStatement.executeUpdate();
                 insertStatement.close();
+
+                if (rowsUpdated > 0) {
+                    Log.i("insertEtrans_Success", "Record inserted successfully");
+                } else {
+                    Log.i("inserttrans_Failure", "No records inserted");
+                }
             }
 
             // Commit the transaction
@@ -371,7 +381,7 @@ public class MssqlDataSync {
                     String splitType = cursor.getString(cursor.getColumnIndex("SplitType"));
                     String transactionId = cursor.getString(cursor.getColumnIndex("TranscationId"));
                     String shopNo = cursor.getString(cursor.getColumnIndex("ShopNo"));
-                    String terminalNo = cursor.getString(cursor.getColumnIndex("TerminalNo"));
+                    int terminalNo = cursor.getInt(cursor.getColumnIndex("TerminalNo"));
                     String dateCreated = cursor.getString(cursor.getColumnIndex("DateCreated"));
                     String dateModified = cursor.getString(cursor.getColumnIndex("DateModified"));
                     String timeCreated = cursor.getString(cursor.getColumnIndex("TimeCreated")); // Added field
@@ -392,7 +402,7 @@ public class MssqlDataSync {
                     double total_Tx_2 = cursor.getDouble(cursor.getColumnIndex("Total_Tx_2")); // Added field
                     double total_Tx_3 = cursor.getDouble(cursor.getColumnIndex("Total_Tx_3")); // Added field
                     double totalDisc = cursor.getDouble(cursor.getColumnIndex("TotalDisc")); // Added field
-                    long qtyItem = cursor.getLong(cursor.getColumnIndex("QtyItem")); // Added field
+                    int qtyItem = cursor.getInt(cursor.getColumnIndex("QtyItem")); // Added field
                     double totalHT_B = cursor.getDouble(cursor.getColumnIndex("TotalHT_B")); // Added field
                     String clientName = cursor.getString(cursor.getColumnIndex("ClientName")); // Added field
                     String clientOtherName = cursor.getString(cursor.getColumnIndex("ClientOtherName")); // Added field
@@ -410,7 +420,7 @@ public class MssqlDataSync {
                     String loyalty = cursor.getString(cursor.getColumnIndex("Loyalty")); // Added field
                     String MRA_Response = cursor.getString(cursor.getColumnIndex("MRA_Response")); // Added field
                     String MRA_IRN = cursor.getString(cursor.getColumnIndex("MRA_IRN")); // Added field
-                    String invoiceCounter = cursor.getString(cursor.getColumnIndex("Invoice_counter")); // Added field
+                    int invoiceCounter = cursor.getInt(cursor.getColumnIndex("Invoice_counter")); // Added field
                     String MRA_Method = cursor.getString(cursor.getColumnIndex("MRA_Method")); // Added field
 
                     // Pass all retrieved data to the insertOrUpdateTransactionHeaderIntoMSSQL method
@@ -440,66 +450,64 @@ public class MssqlDataSync {
     }
 
 
-    public void insertOrUpdateTransactionHeaderIntoMSSQL(Connection conn, long _id, long roomId, long id, String splitType, String transactionId, String shopNo, String terminalNo, String dateCreated, String dateModified, String timeCreated, String timeModified, String previousHash, String memberCard, double subTotal, String cashierCode, String dateTransaction, String timeTransaction, double totalHT_A, double totalTTC, double tenderAmount, double cashReturn, double vatBeforeDisc, double vatAfterDisc, double total_Tx_1, double total_Tx_2, double total_Tx_3, double totalDisc, long qtyItem, double totalHT_B, String clientName, String clientOtherName, String clientNIC, String clientAdr1, String clientAdr2, String transactionStatus, String clientVATRegNo, String clientBRN, String clientTel, String invoiceRef, String isCashCredit, String idSalesH, String clientCode, String loyalty, String MRA_Response, String MRA_IRN, String invoiceCounter, String MRA_Method) {
+    public void insertOrUpdateTransactionHeaderIntoMSSQL(Connection conn, long _id, long roomId, long id, String splitType, String transactionId, String shopNo, int terminalNo, String dateCreated, String dateModified, String timeCreated, String timeModified, String previousHash, String memberCard, double subTotal, String cashierCode, String dateTransaction, String timeTransaction, double totalHT_A, double totalTTC, double tenderAmount, double cashReturn, double vatBeforeDisc, double vatAfterDisc, double total_Tx_1, double total_Tx_2, double total_Tx_3, double totalDisc, int qtyItem, double totalHT_B, String clientName, String clientOtherName, String clientNIC, String clientAdr1, String clientAdr2, String transactionStatus, String clientVATRegNo, String clientBRN, String clientTel, String invoiceRef, String isCashCredit, String idSalesH, String clientCode, String loyalty, String MRA_Response, String MRA_IRN, int invoiceCounter, String MRA_Method) {
         try {
             // Check if the record with the same _id already exists
-            String checkExistenceQuery = "SELECT TransactionId FROM TransactionHeader WHERE TransactionId = ?";
+            String checkExistenceQuery = "SELECT TransactionRef  FROM TransactionHeader WHERE TransactionRef  = ?";
             PreparedStatement checkExistenceStatement = conn.prepareStatement(checkExistenceQuery);
             checkExistenceStatement.setString(1, transactionId);
             ResultSet resultSet = checkExistenceStatement.executeQuery();
 
             if (resultSet.next()) {
                 // If the record exists, perform an update
-                String updateSql = "UPDATE TransactionHeader SET room_id = ?, table_id = ?, SplitType = ?, local_id = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?, PreviousHash = ?, MemberCard = ?, SubTotal = ?, CashierCode = ?, DateTransaction = ?, TimeTransaction = ?, TOTALHT_A = ?, TotalTTC = ?, TenderAmount = ?, CashReturn = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, Total_Tx_1 = ?, Total_Tx_2 = ?, Total_Tx_3 = ?, TotalDisc = ?, QtyItem = ?, TotalHT_B = ?, ClientName = ?, ClientOtherName = ?, ClientNIC = ?, ClientAdr1 = ?, ClientAdr2 = ?, TransactionStatus = ?, ClientVATRegNo = ?, ClientBRN = ?, ClientTel = ?, InvoiceRef = ?, IsCash_Credit = ?, IDSalesH = ?, ClientCode = ?, Loyalty = ?, MRA_Response = ?, MRA_IRN = ?, Invoice_counter = ?, MRA_Method = ? WHERE TransactionId = ?";
+                String updateSql = "UPDATE TransactionHeader SET room_id = ?, table_id = ?, SplitType = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?, PreviousHash = ?, MemberCard = ?, SubTotal = ?, CashierCode = ?, DateTransaction = ?, TimeTransaction = ?, TOTALHT_A = ?, TotalTTC = ?, TenderAmount = ?, CashReturn = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, Total_Tx_1 = ?, Total_Tx_2 = ?, Total_Tx_3 = ?, TotalDisc = ?, QtyItem = ?, TotalHT_B = ?, ClientName = ?, ClientOtherName = ?, ClientNIC = ?, ClientAdr1 = ?, ClientAdr2 = ?, TransactionStatus = ?, ClientVATRegNo = ?, ClientBRN = ?, ClientTel = ?, InvoiceRef = ?, IsCash_Credit = ?, IDSalesH = ?, ClientCode = ?, Loyalty = ?, MRA_Response = ?, MRA_IRN = ?, Invoice_counter = ?, MRA_Method = ? WHERE TransactionRef  = ?";
                 PreparedStatement updateStatement = conn.prepareStatement(updateSql);
                 updateStatement.setLong(1, roomId);
                 updateStatement.setLong(2, id);
                 updateStatement.setString(3, splitType);
-                updateStatement.setLong(4, _id);
-                updateStatement.setString(5, shopNo);
-                updateStatement.setString(6, terminalNo);
-                updateStatement.setString(7, dateCreated);
-                updateStatement.setString(8, dateModified);
-                updateStatement.setString(9, timeCreated);
-                updateStatement.setString(10, timeModified);
-                updateStatement.setString(11, previousHash);
-                updateStatement.setString(12, memberCard);
-                updateStatement.setDouble(13, subTotal);
-                updateStatement.setString(14, cashierCode);
-                updateStatement.setString(15, dateTransaction);
-                updateStatement.setString(16, timeTransaction);
-                updateStatement.setDouble(17, totalHT_A);
-                updateStatement.setDouble(18, totalTTC);
-                updateStatement.setDouble(19, tenderAmount);
-                updateStatement.setDouble(20, cashReturn);
-                updateStatement.setDouble(21, vatBeforeDisc);
-                updateStatement.setDouble(22, vatAfterDisc);
-                updateStatement.setDouble(23, total_Tx_1);
-                updateStatement.setDouble(24, total_Tx_2);
-                updateStatement.setDouble(25, total_Tx_3);
-                updateStatement.setDouble(26, totalDisc);
-                updateStatement.setLong(27, qtyItem);
-                updateStatement.setDouble(28, totalHT_B);
-                updateStatement.setString(29, clientName);
-                updateStatement.setString(30, clientOtherName);
-                updateStatement.setString(31, clientNIC);
-                updateStatement.setString(32, clientAdr1);
-                updateStatement.setString(33, clientAdr2);
-                updateStatement.setString(34, transactionStatus);
-                updateStatement.setString(35, clientVATRegNo);
-                updateStatement.setString(36, clientBRN);
-                updateStatement.setString(37, clientTel);
-                updateStatement.setString(38, invoiceRef);
-                updateStatement.setString(39, isCashCredit);
-                updateStatement.setString(40, idSalesH);
-                updateStatement.setString(41, clientCode);
-                updateStatement.setString(42, loyalty);
-                updateStatement.setString(43, MRA_Response);
-                updateStatement.setString(44, MRA_IRN);
-                updateStatement.setString(45, invoiceCounter);
-                updateStatement.setString(46, MRA_Method);
-
-                updateStatement.setString(47, transactionId);
+                updateStatement.setString(4, shopNo);
+                updateStatement.setInt(5, terminalNo);
+                updateStatement.setString(6, dateCreated);
+                updateStatement.setString(7, dateModified);
+                updateStatement.setString(8, timeCreated);
+                updateStatement.setString(9, timeModified);
+                updateStatement.setString(10, previousHash);
+                updateStatement.setString(11, memberCard);
+                updateStatement.setDouble(12, subTotal);
+                updateStatement.setString(13, cashierCode);
+                updateStatement.setString(14, dateTransaction);
+                updateStatement.setString(15, timeTransaction);
+                updateStatement.setDouble(16, totalHT_A);
+                updateStatement.setDouble(17, totalTTC);
+                updateStatement.setDouble(18, tenderAmount);
+                updateStatement.setDouble(19, cashReturn);
+                updateStatement.setDouble(20, vatBeforeDisc);
+                updateStatement.setDouble(21, vatAfterDisc);
+                updateStatement.setDouble(22, total_Tx_1);
+                updateStatement.setDouble(23, total_Tx_2);
+                updateStatement.setDouble(24, total_Tx_3);
+                updateStatement.setDouble(25, totalDisc);
+                updateStatement.setInt(26, qtyItem);
+                updateStatement.setDouble(27, totalHT_B);
+                updateStatement.setString(28, clientName);
+                updateStatement.setString(29, clientOtherName);
+                updateStatement.setString(30, clientNIC);
+                updateStatement.setString(31, clientAdr1);
+                updateStatement.setString(32, clientAdr2);
+                updateStatement.setString(33, transactionStatus);
+                updateStatement.setString(34, clientVATRegNo);
+                updateStatement.setString(35, clientBRN);
+                updateStatement.setString(36, clientTel);
+                updateStatement.setString(37, invoiceRef);
+                updateStatement.setString(38, isCashCredit);
+                updateStatement.setString(39, idSalesH);
+                updateStatement.setString(40, clientCode);
+                updateStatement.setString(41, loyalty);
+                updateStatement.setString(42, MRA_Response);
+                updateStatement.setString(43, MRA_IRN);
+                updateStatement.setInt(44, invoiceCounter);
+                updateStatement.setString(45, MRA_Method);
+                updateStatement.setString(46, transactionId);
 
 
 
@@ -513,56 +521,56 @@ public class MssqlDataSync {
                 }
             } else {
                 // If the record doesn't exist, perform an insert
-                String insertSql = "INSERT INTO TransactionHeader (local_id, room_id, table_id, SplitType, TransactionId, ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified, PreviousHash, MemberCard, SubTotal, CashierCode, DateTransaction, TimeTransaction, TOTALHT_A, TotalTTC, TenderAmount, CashReturn, VAT_Before_Disc, VAT_After_Disc, Total_Tx_1, Total_Tx_2, Total_Tx_3, TotalDisc, QtyItem, TotalHT_B, ClientName, ClientOtherName, ClientNIC, ClientAdr1, ClientAdr2, TransactionStatus, ClientVATRegNo, ClientBRN, ClientTel, InvoiceRef, IsCash_Credit, IDSalesH, ClientCode, Loyalty, MRA_Response, MRA_IRN, Invoice_counter, MRA_Method) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String insertSql = "INSERT INTO TransactionHeader ( room_id, table_id, SplitType, TransactionRef , ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified, PreviousHash, MemberCard, SubTotal, CashierCode, DateTransaction, TimeTransaction, TOTALHT_A, TotalTTC, TenderAmount, CashReturn, VAT_Before_Disc, VAT_After_Disc, Total_Tx_1, Total_Tx_2, Total_Tx_3, TotalDisc, QtyItem, TotalHT_B, ClientName, ClientOtherName, ClientNIC, ClientAdr1, ClientAdr2, TransactionStatus, ClientVATRegNo, ClientBRN, ClientTel, InvoiceRef, IsCash_Credit, IDSalesH, ClientCode, Loyalty, MRA_Response, MRA_IRN, Invoice_counter, MRA_Method) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
                 PreparedStatement insertStatement = conn.prepareStatement(insertSql);
-                insertStatement.setLong(1, _id);
-                insertStatement.setLong(2, roomId);
-                insertStatement.setLong(3, id);
-                insertStatement.setString(4, splitType);
-                insertStatement.setString(5, transactionId);
-                insertStatement.setString(6, shopNo);
-                insertStatement.setString(7, terminalNo);
-                insertStatement.setString(8, dateCreated);
-                insertStatement.setString(9, dateModified);
-                insertStatement.setString(10, timeCreated);
-                insertStatement.setString(11, timeModified);
-                insertStatement.setString(12, previousHash);
-                insertStatement.setString(13, memberCard);
-                insertStatement.setDouble(14, subTotal);
-                insertStatement.setString(15, cashierCode);
-                insertStatement.setString(16, dateTransaction);
-                insertStatement.setString(17, timeTransaction);
-                insertStatement.setDouble(18, totalHT_A);
-                insertStatement.setDouble(19, totalTTC);
-                insertStatement.setDouble(20, tenderAmount);
-                insertStatement.setDouble(21, cashReturn);
-                insertStatement.setDouble(22, vatBeforeDisc);
-                insertStatement.setDouble(23, vatAfterDisc);
-                insertStatement.setDouble(24, total_Tx_1);
-                insertStatement.setDouble(25, total_Tx_2);
-                insertStatement.setDouble(26, total_Tx_3);
-                insertStatement.setDouble(27, totalDisc);
-                insertStatement.setLong(28, qtyItem);
-                insertStatement.setDouble(29, totalHT_B);
-                insertStatement.setString(30, clientName);
-                insertStatement.setString(31, clientOtherName);
-                insertStatement.setString(32, clientNIC);
-                insertStatement.setString(33, clientAdr1);
-                insertStatement.setString(34, clientAdr2);
-                insertStatement.setString(35, transactionStatus);
-                insertStatement.setString(36, clientVATRegNo);
-                insertStatement.setString(37, clientBRN);
-                insertStatement.setString(38, clientTel);
-                insertStatement.setString(39, invoiceRef);
-                insertStatement.setString(40, isCashCredit);
-                insertStatement.setString(41, idSalesH);
-                insertStatement.setString(42, clientCode);
-                insertStatement.setString(43, loyalty);
-                insertStatement.setString(44, MRA_Response);
-                insertStatement.setString(45, MRA_IRN);
-                insertStatement.setString(46, invoiceCounter);
-                insertStatement.setString(47, MRA_Method);
+
+                insertStatement.setLong(1, roomId);
+                insertStatement.setLong(2, id);
+                insertStatement.setString(3, splitType);
+                insertStatement.setString(4, transactionId);
+                insertStatement.setString(5, shopNo);
+                insertStatement.setInt(6, terminalNo);
+                insertStatement.setString(7, dateCreated);
+                insertStatement.setString(8, dateModified);
+                insertStatement.setString(9, timeCreated);
+                insertStatement.setString(10, timeModified);
+                insertStatement.setString(11, previousHash);
+                insertStatement.setString(12, memberCard);
+                insertStatement.setDouble(13, subTotal);
+                insertStatement.setString(14, cashierCode);
+                insertStatement.setString(15, dateTransaction);
+                insertStatement.setString(16, timeTransaction);
+                insertStatement.setDouble(17, totalHT_A);
+                insertStatement.setDouble(18, totalTTC);
+                insertStatement.setDouble(19, tenderAmount);
+                insertStatement.setDouble(20, cashReturn);
+                insertStatement.setDouble(21, vatBeforeDisc);
+                insertStatement.setDouble(22, vatAfterDisc);
+                insertStatement.setDouble(23, total_Tx_1);
+                insertStatement.setDouble(24, total_Tx_2);
+                insertStatement.setDouble(25, total_Tx_3);
+                insertStatement.setDouble(26, totalDisc);
+                insertStatement.setInt(27, qtyItem);
+                insertStatement.setDouble(28, totalHT_B);
+                insertStatement.setString(29, clientName);
+                insertStatement.setString(30, clientOtherName);
+                insertStatement.setString(31, clientNIC);
+                insertStatement.setString(32, clientAdr1);
+                insertStatement.setString(33, clientAdr2);
+                insertStatement.setString(34, transactionStatus);
+                insertStatement.setString(35, clientVATRegNo);
+                insertStatement.setString(36, clientBRN);
+                insertStatement.setString(37, clientTel);
+                insertStatement.setString(38, invoiceRef);
+                insertStatement.setString(39, isCashCredit);
+                insertStatement.setString(40, idSalesH);
+                insertStatement.setString(41, clientCode);
+                insertStatement.setString(42, loyalty);
+                insertStatement.setString(43, MRA_Response);
+                insertStatement.setString(44, MRA_IRN);
+                insertStatement.setInt(45, invoiceCounter);
+                insertStatement.setString(46, MRA_Method);
 
 
                 int rowsInserted = insertStatement.executeUpdate();
@@ -604,8 +612,8 @@ public class MssqlDataSync {
                     int roomid = cursor.getInt(cursor.getColumnIndex("room_id"));
                     int tableid = cursor.getInt(cursor.getColumnIndex("id"));
                    // int transcationId = cursor.getInt(cursor.getColumnIndex("TranscationId"));
-                    String shopNo = cursor.getString(cursor.getColumnIndex("ShopNo"));
-                    String terminalNo = cursor.getString(cursor.getColumnIndex("TerminalNo"));
+                    int shopNo = cursor.getInt(cursor.getColumnIndex("ShopNo"));
+                    int terminalNo = cursor.getInt(cursor.getColumnIndex("TerminalNo"));
                     String transactionDate = cursor.getString(cursor.getColumnIndex("DateTransaction"));
                     int CodePaiement = cursor.getInt(cursor.getColumnIndex("CodeModeDePaiement"));
                     double amount = cursor.getDouble(cursor.getColumnIndex("Amount"));
@@ -618,7 +626,7 @@ public class MssqlDataSync {
                     long chequeNo = cursor.getLong(cursor.getColumnIndex("ChequeNo"));
 
 // Insert data into MSSQL
-                    insertOrUpdateSettlementIntoMSSQL(conn, settlementId, roomid, tableid, shopNo, terminalNo, transactionDate, CodePaiement, amount, totalAmount, giftVoucherNo, IdInvoiceSett, remarks, datecreated, paymentName, chequeNo);
+                    insertOrUpdateSettlementIntoMSSQLAndSaveToCSV(conn, settlementId, roomid, tableid, shopNo, terminalNo, transactionDate, CodePaiement, amount, totalAmount, giftVoucherNo, IdInvoiceSett, remarks, datecreated, paymentName, chequeNo);
 
                 } while (cursor.moveToNext());
             }
@@ -633,7 +641,11 @@ public class MssqlDataSync {
         }
     }
 
-    public void insertOrUpdateSettlementIntoMSSQL(Connection conn, long settlementId, long roomId, long id, String shopNo, String terminalNo, String dateTransaction, long codeModeDePaiement, double amount, double totalAmount, long giftVoucherNo, String idInvoiceSettlement, String remark, String dateCreated, String paymentName, long chequeNo) {
+
+
+
+
+    public void insertOrUpdateSettlementIntoMSSQLAndSaveToCSV(Connection conn, int settlementId, int roomId, int id, int shopNo, int terminalNo, String dateTransaction, int codeModeDePaiement, double amount, double totalAmount, long giftVoucherNo, String idInvoiceSettlement, String remark, String dateCreated, String paymentName, long chequeNo) {
         try {
             // Check if the record with the same idInvoiceSettlement already exists
             String checkExistenceQuery = "SELECT IDInvoiceSettlement FROM InvoiceSettlement WHERE IDInvoiceSettlement = ?";
@@ -643,12 +655,12 @@ public class MssqlDataSync {
 
             if (resultSet.next()) {
                 // If the record exists, perform an update
-                String updateSql = "UPDATE InvoiceSettlement SET room_id = ?, table_id = ?, ShopNo = ?, TerminalNo = ?, DateTransaction = ?, CodeModeDePaiement = ?, Amount = ?, TotalAmount = ?, GiftVoucherNo = ?, Remark = ?, DateCreated = ?, PaymentName = ?, ChequeNo = ?,SettlementId = ? WHERE IDInvoiceSettlement = ?";
+                String updateSql = "UPDATE InvoiceSettlement SET room_id = ?, table_id = ?, ShopNo = ?, TerminalNo = ?, DateTransaction = ?, CodeModeDePaiement = ?, Amount = ?, TotalAmount = ?, GiftVoucherNo = ?, Remark = ?, DateCreated = ?, PaymentName = ?, ChequeNo = ?, SettlementId = ? WHERE IDInvoiceSettlement = ?";
                 PreparedStatement updateStatement = conn.prepareStatement(updateSql);
-                updateStatement.setLong(1, roomId);
-                updateStatement.setLong(2, id);
-                updateStatement.setString(3, shopNo);
-                updateStatement.setString(4, terminalNo);
+                updateStatement.setInt(1, roomId);
+                updateStatement.setInt(2, id);
+                updateStatement.setInt(3, shopNo);
+                updateStatement.setInt(4, terminalNo);
                 updateStatement.setString(5, dateTransaction);
                 updateStatement.setLong(6, codeModeDePaiement);
                 updateStatement.setDouble(7, amount);
@@ -658,20 +670,22 @@ public class MssqlDataSync {
                 updateStatement.setString(11, dateCreated);
                 updateStatement.setString(12, paymentName);
                 updateStatement.setLong(13, chequeNo);
-                updateStatement.setLong(14, settlementId);
+                updateStatement.setInt(14, settlementId);
                 updateStatement.setString(15, idInvoiceSettlement);
 
                 updateStatement.executeUpdate();
                 updateStatement.close();
             } else {
+
+
                 // If the record doesn't exist, perform an insert
                 String insertSql = "INSERT INTO InvoiceSettlement (SettlementId, room_id, table_id, ShopNo, TerminalNo, DateTransaction, CodeModeDePaiement, Amount, TotalAmount, GiftVoucherNo, IDInvoiceSettlement, Remark, DateCreated, PaymentName, ChequeNo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement insertStatement = conn.prepareStatement(insertSql);
-                insertStatement.setLong(1, settlementId);
-                insertStatement.setLong(2, roomId);
-                insertStatement.setLong(3, id);
-                insertStatement.setString(4, shopNo);
-                insertStatement.setString(5, terminalNo);
+                insertStatement.setInt(1, settlementId);
+                insertStatement.setInt(2, roomId);
+                insertStatement.setInt(3, id);
+                insertStatement.setInt(4, shopNo);
+                insertStatement.setInt(5, terminalNo);
                 insertStatement.setString(6, dateTransaction);
                 insertStatement.setLong(7, codeModeDePaiement);
                 insertStatement.setDouble(8, amount);
@@ -689,10 +703,18 @@ public class MssqlDataSync {
 
             resultSet.close();
             checkExistenceStatement.close();
-        } catch (SQLException e) {
+
+
+
+
+
+
+
+        } catch (SQLException  e) {
             Log.e("INSERT_UPDATE_ERROR_InvoiceSettlement", e.getMessage());
         }
     }
+
 
     // Method to synchronize all data from SQLite to MSSQL
     public  void syncAllDataFromSQLiteToMSSQL(Context context) {

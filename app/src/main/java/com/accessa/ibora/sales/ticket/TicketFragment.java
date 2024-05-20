@@ -26,6 +26,7 @@ import android.hardware.display.DisplayManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -80,6 +81,7 @@ import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 
 import com.accessa.ibora.SplashFlashActivity;
+import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -1275,7 +1277,7 @@ private TextView textViewVATs,textViewTotals;
     private void showSaveOptionsDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
         builder.setTitle("Save Transaction as");
-        String[] options = {"Pro Format", "Debit Note", "Credit Note"};
+        String[] options = {"Pro Format", "Debit Note", "Credit Note","Send To Kitchen"};
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -1301,6 +1303,17 @@ private TextView textViewVATs,textViewTotals;
                     double TaxtotalAmount = calculateTotalTax();
                     SaveTransaction(Type,totalAmount,TaxtotalAmount);
                     clearBuyerInfoFromPrefs();
+                }
+                else if (which == 3) {
+
+
+                        // Create an Intent to launch SendNoteToKitchenActivity
+                        Intent intent = new Intent(getContext(), SendNoteToKitchenActivity.class);
+                        // Put the text as an extra in the Intent
+
+                        // Start the activity
+                        startActivity(intent);
+
                 }
             }
         });
@@ -1785,7 +1798,7 @@ if(Type.equals("DRN")) {
         double totalTTC = totalAmount;
         double totaltax = TaxtotalAmount;
         double totalHT_A = totalTTC - totaltax;
-        Toast.makeText(getContext(), "Room:" + roomid + " - Table" + tableid, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Rooms:" + roomid + " - Table" + tableid, Toast.LENGTH_SHORT).show();
 
 
         // Get the total quantity of items in the transaction

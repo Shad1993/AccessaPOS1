@@ -261,7 +261,12 @@ public class validateticketDialogFragment extends DialogFragment  {
         mRecyclerView.setAdapter(mAdapter);
 
 
+        if (!isPaymentSplitted()) {
+            // Full payment: Take the total amount as the value
+            gridLayout.setVisibility(View.GONE);
+            gifImageView.setVisibility(View.VISIBLE);
 
+        }
 
 
 
@@ -279,7 +284,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 if (!isPaymentSplitted()) {
                     // Full payment: Take the total amount as the value
-
+                    gridLayout.setVisibility(View.GONE);
                     gifImageView.setVisibility(View.VISIBLE);
                     handleFullPayment(id);
                 }
@@ -960,7 +965,8 @@ public class validateticketDialogFragment extends DialogFragment  {
             public void onClick(View view) {
                 // Save the selected payment type to SharedPreferences
                 saveSelectedPaymentType("splitted");
-
+                gifImageView.setVisibility(view.GONE);
+                gridLayout.setVisibility(view.VISIBLE);
                 // Update button colors
                 updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
 
@@ -973,7 +979,9 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Save the selected payment type to SharedPreferences
                 saveSelectedPaymentType("full");
 
-
+                // Full payment: Take the total amount as the value
+                gridLayout.setVisibility(view.GONE);
+                gifImageView.setVisibility(view.VISIBLE);
 
                 // Update button colors
                 updateButtonColors("full", splitPaymentButton, fullPaymentButton);

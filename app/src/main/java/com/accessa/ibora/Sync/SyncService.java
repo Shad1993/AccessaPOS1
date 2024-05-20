@@ -16,6 +16,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.DESC;
 import static com.accessa.ibora.product.items.DatabaseHelper.DateCreated;
 import static com.accessa.ibora.product.items.DatabaseHelper.Department;
 import static com.accessa.ibora.product.items.DatabaseHelper.ExpiryDate;
+import static com.accessa.ibora.product.items.DatabaseHelper.ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.Image;
 import static com.accessa.ibora.product.items.DatabaseHelper.ItemCode;
 import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
@@ -178,6 +179,7 @@ public class SyncService extends IntentService {
                     Log.d("items", query);
                     while (resultSets.next()) {
                         // Process each row of data here
+                        String _id= resultSets.getString(_ID);
                         String barcode = resultSets.getString(Barcode);
                         String itemname = resultSets.getString(Name);
                         String desc = resultSets.getString(DESC);
@@ -240,7 +242,7 @@ public class SyncService extends IntentService {
                         Log.e("Hasoptions",Hasoptions);
                         Log.e("Related_item",Related_item);
 
-                        databaseHelper.insertItemsDatas(itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
+                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
                         subDepartment, longDescription, quantity, expiryDate, vAT,
                               availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);

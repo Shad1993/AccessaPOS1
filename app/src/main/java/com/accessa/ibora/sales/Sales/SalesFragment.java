@@ -67,7 +67,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private double totalAmount,TaxtotalAmount;
     private DBManager dbManager;
     private static final String PREF_TABLE_ID = "table_id";
-    private  String existingTransactionId;
+    private  String existingTransactionId,sentToKitchen;
     private double UnitPrice,priceAfterDiscount,TotalDiscount;
     private int transactionCounter = 1;
     private String VatVall,Barcode;
@@ -337,8 +337,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     // Retrieve the existing transaction ID for the item
                     existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
 
+                         sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
+                        Log.d("sentToKitchen", sentToKitchen);
                     // Check if the existing transaction ID matches the current transaction ID
-                    if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+                    if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                         // Item already selected, update the quantity and total price
                         int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -358,7 +360,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
                         refreshTicketFragment();
                         refreshTotal();
-                    } else {
+                    }else {
                         if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
                             // Item is paid, insert a new transaction with IS_PAID as 0
                             item = dbManager.getItemById(String.valueOf(itemId));
@@ -1352,9 +1354,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         (cursor != null && cursor.moveToFirst()) {
             // Retrieve the existing transaction ID for the item
             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
-
+            sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
+            Log.d("sentToKitchen", sentToKitchen);
             // Check if the existing transaction ID matches the current transaction ID
-            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                 // Item already selected, update the quantity and total price
                 int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -1532,9 +1535,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     if (cursor != null && cursor.moveToFirst()) {
                         // Retrieve the existing transaction ID for the item
                         existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
-
+                        sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
+                        Log.d("sentToKitchen", sentToKitchen);
                         // Check if the existing transaction ID matches the current transaction ID
-                        if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+                        if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                             // Item already selected, update the quantity and total price
                             int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -1780,11 +1784,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         // Check if the item with the same ID is already selected
                         Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId, String.valueOf(roomid),tableid);
                         if (cursor != null && cursor.moveToFirst()) {
-                            // Retrieve the existing transaction ID for the item
                             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
-
+                            sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
+                            Log.d("sentToKitchen", sentToKitchen);
                             // Check if the existing transaction ID matches the current transaction ID
-                            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress)) {
+                            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                                 // Item already selected, update the quantity and total price
                                 int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 

@@ -9,6 +9,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
@@ -49,7 +50,6 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
-
                 Transaction item = new Transaction(itemName, itemPrice, itemQuantity, unitPrice);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
@@ -113,6 +113,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+        String comment=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_COMMENT));
+        String senttoKitchen=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
 
         // Limit the description length to a certain number of characters
         int maxDescriptionLength = 20; // Change this value to your desired length
@@ -150,6 +152,13 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
                 }
             }
         });
+
+        // Change the background color if the comment is not null
+        if (senttoKitchen != null && !senttoKitchen.isEmpty() && senttoKitchen.equals("1")) {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.yellow)); // Replace with your desired color
+        } else {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.textviewextColor)); // Default color
+        }
     }
 
 

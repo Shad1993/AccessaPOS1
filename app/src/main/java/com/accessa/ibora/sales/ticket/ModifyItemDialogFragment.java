@@ -487,7 +487,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
 
     public void updateCommentForTransaction(String transactionId, String comment,String itemid) {
         // Call your database helper method to update the comment for the given transaction ID
-        mDatabaseHelper.updateTransactionComment(transactionId, comment);
+        mDatabaseHelper.updateTransactionComment(transactionId, comment,itemid);
     }
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
