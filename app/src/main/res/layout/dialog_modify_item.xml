@@ -10,8 +10,8 @@
 
     <EditText
         android:id="@+id/long_desc_edit_text"
-        android:inputType="text"
         android:enabled="false"
+        android:inputType="none"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <TextView
@@ -19,8 +19,8 @@
         android:layout_height="wrap_content"
         android:text="@string/quantity" />
 
-    <EditText
-        android:id="@+id/quantity_edit_text"
+    <Spinner
+        android:id="@+id/quantity_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -31,8 +31,7 @@
 
     <EditText
         android:id="@+id/price_edit_text"
-        android:inputType="text"
-        android:enabled="false"
+        android:inputType="none"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -43,6 +42,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:textSize="18sp"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         android:text="Comments" />
     <EditText
         android:id="@+id/editTextOption1"

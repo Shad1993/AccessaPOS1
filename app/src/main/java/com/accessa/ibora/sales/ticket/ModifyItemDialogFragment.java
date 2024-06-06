@@ -12,9 +12,12 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,7 +34,9 @@ import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class ModifyItemDialogFragment extends DialogFragment {
@@ -39,7 +44,8 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private ItemClearedListener itemclearedListener;
     private String tableid;
     private int roomid;
-    private EditText editTextOption1;
+    private EditText editTextOption1,quantityEditText,priceEditText,longDescEditText;
+
     private static final String ARG_QUANTITY = "quantity";
     private static final String ARG_PRICE = "price";
     private static final String ARG_LONG_DESC = "long_desc";
@@ -63,15 +69,44 @@ public class ModifyItemDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_modify_item, null);
-        EditText quantityEditText = view.findViewById(R.id.quantity_edit_text);
-        EditText priceEditText = view.findViewById(R.id.price_edit_text);
-        EditText longDescEditText = view.findViewById(R.id.long_desc_edit_text);
+
+
 
 
         // Find the EditText field in the custom layout
         editTextOption1 = view.findViewById(R.id.editTextOption1);
         editTextOption1.setInputType(InputType.TYPE_NULL);
         editTextOption1.setTextIsSelectable(true);
+
+        // Find the EditText field in the custom layout
+        final Spinner quantitySpinner = view.findViewById(R.id.quantity_spinner);
+        // Populate the Spinner with numbers
+        List<Integer> numbers = new ArrayList<>();
+        for (int i = 1; i <= 100; i++) { // You can customize the range as needed
+            numbers.add(i);
+        }
+        ArrayAdapter<Integer> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, numbers);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        quantitySpinner.setAdapter(adapter);
+
+        editTextOption1.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.setFocusable(true);
+                v.setFocusableInTouchMode(true);
+                return false;
+            }
+        });
+
+        // Find the EditText field in the custom layout
+        priceEditText = view.findViewById(R.id.price_edit_text);
+        priceEditText.setInputType(InputType.TYPE_NULL);
+        priceEditText.setTextIsSelectable(true);
+
+        // Find the EditText field in the custom layout
+        longDescEditText = view.findViewById(R.id.long_desc_edit_text);
+        longDescEditText.setInputType(InputType.TYPE_NULL);
+        longDescEditText.setTextIsSelectable(true);
         // Find the number buttons and set OnClickListener
         Button button1 = view.findViewById(R.id.button1);
         Button button2 = view.findViewById(R.id.button2);
@@ -404,7 +439,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
 
 
             // Set the values in the edit texts
-            quantityEditText.setText(quantity);
+
             priceEditText.setText(price);
             longDescEditText.setText(longDesc);
         }
@@ -442,7 +477,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
                         // Get the current date and time for the transaction
                         String lastmodified = getCurrentDateTime();
                         String id= ITEM_ID;
-                        String quantity = quantityEditText.getText().toString();
+                        String quantity = quantitySpinner.getSelectedItem().toString();
                         String price = priceEditText.getText().toString();
                         String longDesc = longDescEditText.getText().toString();
                         if (quantity.isEmpty() ) {

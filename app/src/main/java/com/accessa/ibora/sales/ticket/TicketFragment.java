@@ -20,6 +20,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.hardware.display.DisplayManager;
@@ -81,6 +82,8 @@ import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
 
 import com.accessa.ibora.SplashFlashActivity;
+import com.accessa.ibora.printer.PrintDailyReport;
+import com.accessa.ibora.printer.PrintReport;
 import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
@@ -373,44 +376,47 @@ private TextView textViewVATs,textViewTotals;
 
                 // Set up RecyclerViews and their adapters
                 setUpRecyclerViews(dialogView);
+                // Variable to hold the selected report type
+                // Variable to hold the selected report type
+                // Variables to hold the selected report type, formatted total tax, and formatted total amount
+                final String[] selectedReportType = new String[1];
+                final String[] formattedTotalTax = new String[1];
+                final String[] formattedTotalAmount = new String[1];
 
                 // Set the spinner's item selected listener
                 spinnerReportType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                         // Fetch data based on the selected report type and update the adapter
-                        String selectedReportType = spinnerReportType.getSelectedItem().toString();
+                        selectedReportType[0] = spinnerReportType.getSelectedItem().toString();
 
                         // Log the selected report type for debugging
-                        Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType);
+                        Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType[0]);
 
                         // Fetch data based on the selected report type
-                        List<DataModel> newDataList = fetchDataBasedOnReportType(selectedReportType);
-                        List<PaymentMethodDataModel> newDataLists = fetchPaymentMethodDataBasedOnReportType(selectedReportType);
+                        List<DataModel> newDataList = fetchDataBasedOnReportType(selectedReportType[0]);
+                        List<PaymentMethodDataModel> newDataLists = fetchPaymentMethodDataBasedOnReportType(selectedReportType[0]);
                         // Log the fetched data for debugging
                         Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
 
                         // Update the adapter with the new data
                         reportAdapter.updateData(newDataList);
                         paymentMethodAdapter.updateData(newDataLists);
-                        // Update total tax and total amount TextViews
 
-                            // Assuming you have a method to fetch total tax and total amount based on report type
-                            double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportType(selectedReportType);
-                            double totalAmount = mDatabaseHelper.getTotalAmountBasedOnReportType(selectedReportType);
+                        // Assuming you have a method to fetch total tax and total amount based on report type
+                        double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportType(selectedReportType[0]);
+                        double totalAmount = mDatabaseHelper.getTotalAmountBasedOnReportType(selectedReportType[0]);
 
                         // Update TextViews
                         TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
                         TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
 
                         // Format totalTax and totalAmount to display only two decimal places
-                        String formattedTotalTax = String.format(Locale.getDefault(), "%.2f", totalTax);
-                        String formattedTotalAmount = String.format(Locale.getDefault(), "%.2f", totalAmount);
+                        formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
+                        formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
 
-                        textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax);
-                        textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount);
-
-
+                        textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax[0]);
+                        textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount[0]);
                     }
 
                     @Override
@@ -425,6 +431,20 @@ private TextView textViewVATs,textViewTotals;
                         })
                         .setNegativeButton("Cancel", null) // Optional: Add a cancel button
                         .show();
+
+                Button extraButton = dialogView.findViewById(R.id.extraButton);
+                extraButton.setOnClickListener(v -> {
+                    Configuration configuration = getResources().getConfiguration();
+                    Locale currentLocale = configuration.locale;
+
+                    // Start the PrintDailyReport activity
+                    Intent intent = new Intent(getContext(), PrintDailyReport.class);
+                    intent.putExtra("locale", currentLocale.toString());
+                    intent.putExtra("reportType", selectedReportType[0]);
+                    intent.putExtra("totalTax", formattedTotalTax[0]);
+                    intent.putExtra("totalAmount", formattedTotalAmount[0]);
+                    startActivity(intent);
+                });
                 //ReportPopupDialog reportPopupDialog = new ReportPopupDialog();
                 //reportPopupDialog.show(getChildFragmentManager(), "ReportPopupDialog");
             } else {

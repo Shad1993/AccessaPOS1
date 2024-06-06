@@ -172,7 +172,7 @@ public class MRADBN extends AppCompatActivity {
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
-                        double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
+                        double TotalHT = cursor.getDouble(columnIndexTotalHT);
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                         double Totalinvoice= totalAmount + totaldiscount;
                         // Step 2: Increment the counter value

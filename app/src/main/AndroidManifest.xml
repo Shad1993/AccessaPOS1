@@ -141,7 +141,7 @@
         <activity android:name=".Sync.SyncService"/>
         <activity android:name=".printer.printerSetupForPickUp"/>
         <activity android:name=".printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity"/>
-
+        <activity android:name=".printer.PrintDailyReport"/>
         <activity android:name=".printer.printerSetup"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <!-- Other activity attributes -->

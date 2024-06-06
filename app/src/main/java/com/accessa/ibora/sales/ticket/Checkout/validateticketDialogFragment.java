@@ -1121,7 +1121,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Use a specific Locale for date formatting
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 String currentDate = dateFormat.format(new Date());
-                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,currentDate, String.valueOf(roomid),tableid);
+                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, Transaction_Id, PosNum,currentDate, String.valueOf(roomid),tableid);
 
                 settlementItems.add(new SettlementItem(paymentName, settlementAmount));
             }
@@ -1136,8 +1136,8 @@ public class validateticketDialogFragment extends DialogFragment  {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             String currentDate = dateFormat.format(new Date());
             settlementItems.add(new SettlementItem(paymentName, settlementAmount));
-            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,currentDate, String.valueOf(roomid),tableid);
-            Log.d("PaymentDetails", "Name: " + paymentName + ", Amount: " + settlementAmount);
+            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, Transaction_Id, PosNum,currentDate, String.valueOf(roomid),tableid);
+            Log.d("PaymentDetails2", "Name: " + paymentName + ", Amount: " + settlementAmount+ " " + transactionIdInProgress);
 
             Log.d("settlementItems", String.valueOf(settlementItems));
         }

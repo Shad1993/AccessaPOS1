@@ -184,7 +184,7 @@ public class Mra extends AppCompatActivity {
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
-                        double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
+                        double TotalHT = cursor.getDouble(columnIndexTotalHT);
                         String transactionid= cursor.getString(transid);
                         double Totalinvoice= totalAmount + totaldiscount;
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);

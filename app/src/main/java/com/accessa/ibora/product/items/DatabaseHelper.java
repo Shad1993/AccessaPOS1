@@ -509,7 +509,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + AvailableForSale + " BOOLEAN NOT NULL DEFAULT 1, "
             + SoldBy + " TEXT NOT NULL CHECK(SoldBy IN ('Each', 'Volume')), "
             + Image + " TEXT, "
-            + SKU + " TEXT NOT NULL, "
+            + SKU + " TEXT  , "
             + Variant + " TEXT NOT NULL, "
             + Cost + " DECIMAL(10, 2) NOT NULL, "
             + Weight + " DECIMAL(10, 2), "
