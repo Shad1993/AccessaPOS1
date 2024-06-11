@@ -57,7 +57,7 @@ import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
     private EditText editTextOption1;
     private StringBuilder enteredcomment;
-        private  String NewBarcode;
+    private  String NewBarcode;
     private static final String PREF_ROOM_ID = "room_id";
     public static RecyclerView mRecyclerView;
     private ItemGridAdapter mAdapter;
@@ -136,7 +136,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
         tableid = preferences.getString("table_id", "0");
-     roomid = preferences.getInt("roomnum", 0); // -1 is a default value in case the key is not found
+        roomid = preferences.getInt("roomnum", 0); // -1 is a default value in case the key is not found
 
 
         int numberOfColumns = 12;
@@ -188,7 +188,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         dbManager = new DBManager(getContext());
         dbManager.open();
 
-         sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
         String ShopName = sharedPreference.getString("ShopName", null);
 
@@ -230,90 +230,90 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 } else {
 
                     TextView idTextView = view.findViewById(R.id.id_text_view);
-                TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                TextView priceTextView = view.findViewById(R.id.priceNoRs_text_view);
+                    TextView subjectEditText = view.findViewById(R.id.name_text_view);
+                    TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
+                    TextView priceTextView = view.findViewById(R.id.priceNoRs_text_view);
                     TextView initialpriceTextView = view.findViewById(R.id.initialprice_text_view);
-                String id = idTextView.getText().toString();
-                String title = subjectEditText.getText().toString();
-                String longDescription = longDescriptionEditText.getText().toString();
-                price = priceTextView.getText().toString();
-                initialprice=initialpriceTextView.getText().toString();
-                String transactionId;
+                    String id = idTextView.getText().toString();
+                    String title = subjectEditText.getText().toString();
+                    String longDescription = longDescriptionEditText.getText().toString();
+                    price = priceTextView.getText().toString();
+                    initialprice=initialpriceTextView.getText().toString();
+                    String transactionId;
 
-                Item item = dbManager.getItemById(id);
-                if (item != null) {
-                    VatVall = item.getVAT();
-                    VatType = item.getVAT();
-                    priceAfterDiscount = item.getPriceAfterDiscount();
-                    TotalDiscount = item.getTotalDiscount();
-                    Nature = item.getNature();
-                    TaxCode = item.getTaxCode();
-                    Currency = item.getCurrency();
-                    ItemCode = item.getItemCode();
-                    HasOptions=item.gethasoptions();
-                    Hascomment=item.gethascomment();
-                    RelatedItem=item.getRelateditem();
-                    RelatedItem2=item.getRelateditem2();
-                    RelatedItem3=item.getRelateditem3();
-                    RelatedItem4=item.getRelateditem4();
-                    RelatedItem5=item.getRelateditem5();
-                    SupplementsItem=item.getRelateditem();
-                    Barcode= item.getBarcode();
-                    catname=item.getCategory();
+                    Item item = dbManager.getItemById(id);
+                    if (item != null) {
+                        VatVall = item.getVAT();
+                        VatType = item.getVAT();
+                        priceAfterDiscount = item.getPriceAfterDiscount();
+                        TotalDiscount = item.getTotalDiscount();
+                        Nature = item.getNature();
+                        TaxCode = item.getTaxCode();
+                        Currency = item.getCurrency();
+                        ItemCode = item.getItemCode();
+                        HasOptions=item.gethasoptions();
+                        Hascomment=item.gethascomment();
+                        RelatedItem=item.getRelateditem();
+                        RelatedItem2=item.getRelateditem2();
+                        RelatedItem3=item.getRelateditem3();
+                        RelatedItem4=item.getRelateditem4();
+                        RelatedItem5=item.getRelateditem5();
+                        SupplementsItem=item.getRelateditem();
+                        Barcode= item.getBarcode();
+                        catname=item.getCategory();
 
-
-                }
-
-
-                String transactionStatus = "InProgress";
-                String transactionSaved = "PRF";
-                String transactionCDN = "CRN";
-                String transactionDBN = "DRN";
-
-
-                if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF") || transactionSaved.equals("PRF") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")) {
-                    if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
-                        transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
-                        // Store the transaction ID in SharedPreferences
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
-                        editor.apply();
-                        refreshTicketFragment();
-                        refreshTotal();
 
                     }
-                    transactionId = transactionIdInProgress;
 
 
-                } else {
-                    transactionId = generateNewTransactionId(); // Generate a new transaction ID
-                    refreshTicketFragment();
-                    refreshTotal();
-                }
+                    String transactionStatus = "InProgress";
+                    String transactionSaved = "PRF";
+                    String transactionCDN = "CRN";
+                    String transactionDBN = "DRN";
 
-                // Get the current date and time for the transaction
-                String transactionDate = getCurrentDateTime();
 
-                // Insert/update the transaction into the Transaction table
-                int itemId = Integer.parseInt(id);
-                double totalPrice = Double.parseDouble(price);
+                    if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF") || transactionSaved.equals("PRF") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")) {
+                        if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
+                            transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
+                            // Store the transaction ID in SharedPreferences
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(TRANSACTION_ID_KEY, transactionIdInProgress);
+                            editor.apply();
+                            refreshTicketFragment();
+                            refreshTotal();
 
-                String vat = String.valueOf(calculateTax());
-                String priceWithoutVat = String.valueOf(calculatePricewithoutTax());
+                        }
+                        transactionId = transactionIdInProgress;
+
+
+                    } else {
+                        transactionId = generateNewTransactionId(); // Generate a new transaction ID
+                        refreshTicketFragment();
+                        refreshTotal();
+                    }
+
+                    // Get the current date and time for the transaction
+                    String transactionDate = getCurrentDateTime();
+
+                    // Insert/update the transaction into the Transaction table
+                    int itemId = Integer.parseInt(id);
+                    double totalPrice = Double.parseDouble(price);
+
+                    String vat = String.valueOf(calculateTax());
+                    String priceWithoutVat = String.valueOf(calculatePricewithoutTax());
                     double unitprice = item.getPrice();
                     double currentpriceWithoutVat  = calculatecurrentPricewithoutTax(unitprice);
-                refreshTicketFragment();
-                refreshTotal();
-// Update the transaction ID for all items in progress
-                if (transactionStatus.equals("InProgress") ||(transactionStatus.equals("PRF"))) {
-                    mDatabaseHelper.updateTransactionIds(transactionIdInProgress, String.valueOf(roomid),tableid);
                     refreshTicketFragment();
                     refreshTotal();
-                }
+// Update the transaction ID for all items in progress
+                    if (transactionStatus.equals("InProgress") ||(transactionStatus.equals("PRF"))) {
+                        mDatabaseHelper.updateTransactionIds(transactionIdInProgress, String.valueOf(roomid),tableid);
+                        refreshTicketFragment();
+                        refreshTotal();
+                    }
 
 // Check if the item with the same ID is already selected
-                Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId, String.valueOf(roomid),tableid);
+                    Cursor cursor = mDatabaseHelper.getTransactionByItemId(itemId, String.valueOf(roomid),tableid);
                     HasOptions=item.gethasoptions();
                     Hascomment=item.gethascomment();
                     RelatedItem=item.getRelateditem();
@@ -334,134 +334,205 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                     } else if
                     (cursor != null && cursor.moveToFirst()) {
-                    // Retrieve the existing transaction ID for the item
-                    existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
+                        // Retrieve the existing transaction ID for the item
+                        existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
 
-                         sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-                        Log.d("sentToKitchen", sentToKitchen);
-                    // Check if the existing transaction ID matches the current transaction ID
-                    if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
-                        // Item already selected, update the quantity and total price
-                        int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                        sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(Barcode,existingTransactionId));
+                        Log.d("sentToKitchen1", sentToKitchen);
 
-                        UnitPrice = Double.parseDouble(price);
+                        if (sentToKitchen.equals("1")) {
+                            boolean existingitems=mDatabaseHelper.checkItemExists(transactionIdInProgress,tableid, String.valueOf(roomid));
+                            int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                            if(existingitems )
+                            {
 
-                        double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
 
-                        int newQuantity = currentQuantity + 1;
-                        double pricewithoutVat= Double.parseDouble(priceWithoutVat);
-                        double newpriceWithoutVat= pricewithoutVat * newQuantity;
-                        double totaltaxbeforediscount= taxbeforediscount * newQuantity;
-                        double newTotalDiscount= newQuantity * TotalDiscount;
-                        double taxafterdiscount= calculateTax();
-                        double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                        double newTotalPrice = UnitPrice * newQuantity;
-                        double newVat = newQuantity * calculateTax();
-                        mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
-                        refreshTicketFragment();
-                        refreshTotal();
-                    }else {
-                        if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
-                            // Item is paid, insert a new transaction with IS_PAID as 0
-                            item = dbManager.getItemById(String.valueOf(itemId));
-                            if (item != null) {
-                                // Other item details extraction code...
-                                String CompanyShopNumber;
-                                 unitprice = item.getPrice();
-                                double UnitPrice = Double.parseDouble(price);
-                                double newTotalPrice = UnitPrice * 1;
-                                double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+                                    // Item is paid, insert a new transaction with IS_PAID as 0
+                                    item = dbManager.getItemById(String.valueOf(itemId));
+                                    if (item != null) {
+                                        // Other item details extraction code...
+                                        String CompanyShopNumber;
+                                        unitprice = item.getPrice();
+                                        double UnitPrice = Double.parseDouble(price);
+                                        double newTotalPrice = UnitPrice * 1;
+                                        double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
 
-                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
-                                cashierId = sharedPreference.getString("cashorId", null);
+                                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                        cashierId = sharedPreference.getString("cashorId", null);
 
-                                String ShopName = sharedPreference.getString("ShopName", null);
+                                        String ShopName = sharedPreference.getString("ShopName", null);
 
-                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
 
-                                    String MRAMETHOD = "Single";
-                                    CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
-                                    String Catnum= String.valueOf(catId);
-                                    Log.d("roomtable", roomid + " " + tableid);
-                                    // Insert a new transaction with IS_PAID as 0
-                                    mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                                            String MRAMETHOD = "Single";
+                                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                            String Catnum = String.valueOf(catId);
+                                            Log.d("roomtable", roomid + " " + tableid);
+                                            // Insert a new transaction with IS_PAID as 0
+                                            mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                        }
+                                        refreshTicketFragment();
+                                        refreshTotal();
+
+                                }else {
+                                        Log.d("sentToKitchentest1", sentToKitchen);
+                                    // Item already selected, update the quantity and total price
+                                     currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
+
+                                    UnitPrice = Double.parseDouble(price);
+
+                                    double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+
+                                    int newQuantity = currentQuantity + 1;
+                                    double pricewithoutVat= Double.parseDouble(priceWithoutVat);
+                                    double newpriceWithoutVat= pricewithoutVat * newQuantity;
+                                    double totaltaxbeforediscount= taxbeforediscount * newQuantity;
+                                    double newTotalDiscount= newQuantity * TotalDiscount;
+                                    double taxafterdiscount= calculateTax();
+                                    double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
+                                    double newTotalPrice = UnitPrice * newQuantity;
+                                    double newVat = newQuantity * calculateTax();
+                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                                    refreshTicketFragment();
+                                    refreshTotal();
                                 }
-                                refreshTicketFragment();
-                                refreshTotal();
                             }
+
+                            }
+
+                        // Check if the existing transaction ID matches the current transaction ID
+                        else if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
+                            Log.d("sentToKitchentestupdate2", sentToKitchen);
+                            // Item already selected, update the quantity and total price
+                            int currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
+
+                            UnitPrice = Double.parseDouble(price);
+
+                            double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+
+                            int newQuantity = currentQuantity + 1;
+                            double pricewithoutVat= Double.parseDouble(priceWithoutVat);
+                            double newpriceWithoutVat= pricewithoutVat * newQuantity;
+                            double totaltaxbeforediscount= taxbeforediscount * newQuantity;
+                            double newTotalDiscount= newQuantity * TotalDiscount;
+                            double taxafterdiscount= calculateTax();
+                            double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
+                            double newTotalPrice = UnitPrice * newQuantity;
+                            double newVat = newQuantity * calculateTax();
+                            mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                            refreshTicketFragment();
+                            refreshTotal();
+                        }else {
+
+                            Log.d("sentToKitchentest1", sentToKitchen);
+                                    // Item is paid, insert a new transaction with IS_PAID as 0
+                                    item = dbManager.getItemById(String.valueOf(itemId));
+                                    if (item != null) {
+                                        // Other item details extraction code...
+                                        String CompanyShopNumber;
+                                        unitprice = item.getPrice();
+                                        double UnitPrice = Double.parseDouble(price);
+                                        double newTotalPrice = UnitPrice * 1;
+                                        double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
+
+                                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                        cashierId = sharedPreference.getString("cashorId", null);
+
+                                        String ShopName = sharedPreference.getString("ShopName", null);
+
+                                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                            String MRAMETHOD = "Single";
+                                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                            String Catnum = String.valueOf(catId);
+                                            Log.d("roomtable", roomid + " " + tableid);
+                                            // Insert a new transaction with IS_PAID as 0
+                                            mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                        }
+                                        refreshTicketFragment();
+                                        refreshTotal();
+                                    }
+                                }
+
+
+                    } else {
+                        item = dbManager.getItemById(String.valueOf(itemId));
+                        if (item != null) {
+                            VatVall = item.getVAT();
+                            unitprice = item.getPrice();
+                            priceAfterDiscount = item.getPriceAfterDiscount();
+                            VatType = item.getVAT();
+                            TotalDiscount = item.getTotalDiscount();
+                            TaxCode = item.getTaxCode();
+                            Nature = item.getNature();
+                            Currency = item.getCurrency();
+                            ItemCode = item.getItemCode();
+                            double UnitPrice = Double.parseDouble(price);
+                            double newTotalPrice = UnitPrice * 1;
+                            double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+
+                            Barcode=item.getBarcode();
+                            Weight=item.getWeight();
+                            catname=item.getCategory();
+                            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                            cashierId = sharedPreference.getString("cashorId", null);
+                            String CompanyShopNumber;
+                            String ShopName = sharedPreference.getString("ShopName", null);
+
+                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                                ;
+                                String MRAMETHOD = "Single";
+                                CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                String Catnum= String.valueOf(catId);
+                                Log.d("roomtable", roomid + " " + tableid);
+                                // Item not selected, insert a new transaction with quantity 1 and total price
+                                mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+                            }  refreshTicketFragment();
+                            refreshTotal();
                         }
                     }
-                } else {
-                    item = dbManager.getItemById(String.valueOf(itemId));
+
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                    item = dbManager.getItemById(id);
                     if (item != null) {
                         VatVall = item.getVAT();
-                         unitprice = item.getPrice();
                         priceAfterDiscount = item.getPriceAfterDiscount();
-                        VatType = item.getVAT();
+                        unitprice = item.getPrice();
                         TotalDiscount = item.getTotalDiscount();
+                        VatType = item.getVAT();
                         TaxCode = item.getTaxCode();
                         Nature = item.getNature();
                         Currency = item.getCurrency();
                         ItemCode = item.getItemCode();
-                        double UnitPrice = Double.parseDouble(price);
-                        double newTotalPrice = UnitPrice * 1;
-                        double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
-
                         Barcode=item.getBarcode();
                         Weight=item.getWeight();
                         catname=item.getCategory();
-                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
-                        cashierId = sharedPreference.getString("cashorId", null);
-                        String CompanyShopNumber;
-                        String ShopName = sharedPreference.getString("ShopName", null);
-
-                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-                            ;
-                            String MRAMETHOD = "Single";
-                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-                            int catId = mDatabaseHelper.getCatIdFromName(catname);
-                            String Catnum= String.valueOf(catId);
-                            Log.d("roomtable", roomid + " " + tableid);
-                            // Item not selected, insert a new transaction with quantity 1 and total price
-                            mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
-
-                        }  refreshTicketFragment();
-                        refreshTotal();
+                        SendToHeader(unitprice, calculateTax());
                     }
-                }
-
-                if (cursor != null) {
-                    cursor.close();
-                }
-                item = dbManager.getItemById(id);
-                if (item != null) {
-                    VatVall = item.getVAT();
-                    priceAfterDiscount = item.getPriceAfterDiscount();
-                     unitprice = item.getPrice();
-                    TotalDiscount = item.getTotalDiscount();
-                    VatType = item.getVAT();
-                    TaxCode = item.getTaxCode();
-                    Nature = item.getNature();
-                    Currency = item.getCurrency();
-                    ItemCode = item.getItemCode();
-                    Barcode=item.getBarcode();
-                    Weight=item.getWeight();
-                    catname=item.getCategory();
-                    SendToHeader(unitprice, calculateTax());
-                }
-                // Notify the listener that an item is added
-                if (itemAddedListener != null) {
-                    itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
-                }
+                    // Notify the listener that an item is added
+                    if (itemAddedListener != null) {
+                        itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+                    }
 
 
+                }
             }
-        }
             @Override
             public void onLongItemClick(View view, int position) {
                 // Handle long item click
@@ -493,7 +564,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         List<Variant> supplementList = dbManager.getSupplementListById(relatensupplement);
 
         // Find the EditText field in the custom layout
-         editTextOption1 = dialogView.findViewById(R.id.editTextOption1);
+        editTextOption1 = dialogView.findViewById(R.id.editTextOption1);
         editTextOption1.setInputType(InputType.TYPE_NULL);
         editTextOption1.setTextIsSelectable(true);
         // Find the number buttons and set OnClickListener
@@ -883,7 +954,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         if (variantList2 != null && !variantList2.isEmpty()) {
             for (Variant variant : variantList2) {
-               LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
+                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
 
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
@@ -1347,19 +1418,86 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     public void insertdata(String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String NewBarcode, String newdesc,double newprice,String newitemid) {
         Item item = dbManager.getItemById(id);
         Log.d("newbarcode", NewBarcode);
+        Log.d("newitemid", newitemid);
         Cursor cursor = mDatabaseHelper.getTransactionByItemId(Integer.parseInt(newitemid), String.valueOf(roomid), tableid);
-            longDescription= longDescription+"-"+newdesc;
+        longDescription= longDescription+"-"+newdesc;
 
         if
         (cursor != null && cursor.moveToFirst()) {
             // Retrieve the existing transaction ID for the item
             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
-            sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-            Log.d("sentToKitchen", sentToKitchen);
+            sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(NewBarcode,existingTransactionId));
+            Log.d("sentToKitchen4", sentToKitchen);
             // Check if the existing transaction ID matches the current transaction ID
-            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
+            if (sentToKitchen.equals("1")) {
+                Log.d("sentToKitchentest2", sentToKitchen);
+                boolean existingitems=mDatabaseHelper.checkItemExists(transactionIdInProgress,tableid, String.valueOf(roomid));
+                if(existingitems )
+                {
+
+
+                    // Item is paid, insert a new transaction with IS_PAID as 0
+                    item = dbManager.getItemById(String.valueOf(itemId));
+                    if (item != null) {
+                        // Other item details extraction code...
+                        String CompanyShopNumber;
+                       double unitprice = item.getPrice();
+                        double UnitPrice = Double.parseDouble(price);
+                        double newTotalPrice = UnitPrice * 1;
+                        double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
+
+                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                        cashierId = sharedPreference.getString("cashorId", null);
+
+                        String ShopName = sharedPreference.getString("ShopName", null);
+
+                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                            double currentpriceWithoutVat = calculatecurrentPricewithoutTax(unitprice);
+                            String MRAMETHOD = "Single";
+                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                            String Catnum = String.valueOf(catId);
+                            Log.d("roomtable", roomid + " " + tableid);
+                            // Insert a new transaction with IS_PAID as 0
+                            mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                        }
+                        refreshTicketFragment();
+                        refreshTotal();
+
+                    }else {
+                        Log.d("sentToKitchentest", sentToKitchen);
+                        // Item already selected, update the quantity and total price
+                        int currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
+                        double unitprice = item.getPrice();
+                        UnitPrice = Double.parseDouble(price);
+
+                        double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+
+                        int newQuantity = currentQuantity + 1;
+                        double pricewithoutVat= Double.parseDouble(String.valueOf(priceWithoutVat));
+                        double newpriceWithoutVat= pricewithoutVat * newQuantity;
+                        double totaltaxbeforediscount= taxbeforediscount * newQuantity;
+                        double newTotalDiscount= newQuantity * TotalDiscount;
+                        double taxafterdiscount= calculateTax();
+                        double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
+                        double newTotalPrice = UnitPrice * newQuantity;
+                        double newVat = newQuantity * calculateTax();
+                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                        refreshTicketFragment();
+                        refreshTotal();
+                    }
+                }
+
+            }
+
+            // Check if the existing transaction ID matches the current transaction ID
+            else if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                 // Item already selected, update the quantity and total price
-                int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                int currentQuantity = mDatabaseHelper.getQuantity(transactionId,NewBarcode);
 
                 UnitPrice = newprice;
                 double unitprice = item.getPrice();
@@ -1380,36 +1518,39 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 refreshTotal();
             } else {
                 if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
-                    // Item is paid, insert a new transaction with IS_PAID as 0
-                    item = dbManager.getItemById(String.valueOf(itemId));
-                    if (item != null) {
-                        // Other item details extraction code...
-                        double unitprice = item.getPrice();
+                    if (sentToKitchen.equals("1")) {
 
-                        double UnitPrice = newprice;
-                        double newTotalPrice = UnitPrice * 1;
-                        double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+                        // Item is paid, insert a new transaction with IS_PAID as 0
+                        item = dbManager.getItemById(String.valueOf(itemId));
+                        if (item != null) {
+                            // Other item details extraction code...
+                            double unitprice = item.getPrice();
 
-                        String CompanyShopNumber;
-                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                            double UnitPrice = newprice;
+                            double newTotalPrice = UnitPrice * 1;
+                            double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
 
-                        String ShopName = sharedPreference.getString("ShopName", null);
+                            String CompanyShopNumber;
+                            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-                            double currentpriceWithoutVat  = calculatecurrentPricewithoutTax(unitprice);
+                            String ShopName = sharedPreference.getString("ShopName", null);
 
-                            String MRAMETHOD = "Single";
-                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-                            int catId = mDatabaseHelper.getCatIdFromName(catname);
-                            String Catnum= String.valueOf(catId);
-                            Log.d("roomtable", roomid + " " + tableid);
-                            // Insert a new transaction with IS_PAID as 0
-                            mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                                double currentpriceWithoutVat = calculatecurrentPricewithoutTax(unitprice);
+
+                                String MRAMETHOD = "Single";
+                                CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                String Catnum = String.valueOf(catId);
+                                Log.d("roomtable", roomid + " " + tableid);
+                                // Insert a new transaction with IS_PAID as 0
+                                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                            }
+                            refreshTicketFragment();
+                            refreshTotal();
                         }
-                        refreshTicketFragment();
-                        refreshTotal();
                     }
                 }
             }
@@ -1424,7 +1565,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
             String ShopName = sharedPreference.getString("ShopName", null);
-                String CompanyShopNumber;
+            String CompanyShopNumber;
             Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
             if (cursorCompany != null && cursorCompany.moveToFirst()) {
                 int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
@@ -1436,7 +1577,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String Catnum= String.valueOf(catId);
                 Log.d("INSERT_Transaction", "4");
                 // Item not selected, insert a new transaction with quantity 1 and total price
-                mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
             } refreshTicketFragment();
             refreshTotal();
 
@@ -1536,7 +1677,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         // Retrieve the existing transaction ID for the item
                         existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
                         sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-                        Log.d("sentToKitchen", sentToKitchen);
+                        Log.d("sentToKitchen2", sentToKitchen);
                         // Check if the existing transaction ID matches the current transaction ID
                         if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                             // Item already selected, update the quantity and total price
@@ -1559,47 +1700,48 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             refreshTicketFragment();
                             refreshTotal();
                         } else {
+                            if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
+                                if (sentToKitchen.equals("1")) {
+                                    item = dbManager.getItemById(String.valueOf(itemId));
+                                    if (item != null) {
+                                        VatVall = item.getVAT();
+                                        double unitprice = item.getPrice();
+                                        priceAfterDiscount = item.getPriceAfterDiscount();
+                                        TotalDiscount = item.getTotalDiscount();
+                                        VatType = item.getVAT();
+                                        TaxCode = item.getTaxCode();
+                                        Nature = item.getNature();
+                                        Currency = item.getCurrency();
+                                        ItemCode = item.getItemCode();
+                                        Barcode = item.getBarcode();
+                                        catname = item.getCategory();
+                                        double UnitPrice = Double.parseDouble(price);
+                                        double newTotalPrice = UnitPrice * 1;
+                                        Weight = item.getWeight();
+                                        double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
 
-                                item = dbManager.getItemById(String.valueOf(itemId));
-                                if (item != null) {
-                                    VatVall = item.getVAT();
-                                    double unitprice = item.getPrice();
-                                    priceAfterDiscount=item.getPriceAfterDiscount();
-                                    TotalDiscount=item.getTotalDiscount();
-                                    VatType = item.getVAT();
-                                    TaxCode=item.getTaxCode();
-                                    Nature = item.getNature();
-                                    Currency = item.getCurrency();
-                                    ItemCode = item.getItemCode();
-                                    Barcode=item.getBarcode();
-                                    catname=item.getCategory();
-                                    double UnitPrice = Double.parseDouble(price);
-                                    double newTotalPrice = UnitPrice * 1;
-                                    Weight=item.getWeight();
-                                    double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+                                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                        String ShopName = sharedPreference.getString("ShopName", null);
+                                        String CompanyShopNumber;
+                                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                                            double currentpriceWithoutVat = calculatecurrentPricewithoutTax(unitprice);
 
-                                    String ShopName = sharedPreference.getString("ShopName", null);
-                                    String CompanyShopNumber;
-                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-                                        double currentpriceWithoutVat  = calculatecurrentPricewithoutTax(unitprice);
+                                            String MRAMETHOD = "Single";
+                                            CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                            String Catnum = String.valueOf(catId);
+                                            Log.d("INSERT_Transaction", "5");
+                                            // Item has a different transaction ID, insert a new transaction
+                                            mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                                        }
+                                        refreshTicketFragment();
+                                        refreshTotal();
 
-                                        String MRAMETHOD = "Single";
-                                        CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
-                                        String Catnum= String.valueOf(catId);
-                                        Log.d("INSERT_Transaction", "5");
-                                        // Item has a different transaction ID, insert a new transaction
-                                        mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     }
-                                    refreshTicketFragment();
-                                    refreshTotal();
-
-                            }
-
+                                }}
                         }
                     } else {
                         item = dbManager.getItemById(String.valueOf(itemId));
@@ -1786,7 +1928,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         if (cursor != null && cursor.moveToFirst()) {
                             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
                             sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-                            Log.d("sentToKitchen", sentToKitchen);
+                            Log.d("sentToKitchen3", sentToKitchen);
                             // Check if the existing transaction ID matches the current transaction ID
                             if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
                                 // Item already selected, update the quantity and total price
@@ -1812,43 +1954,46 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 refreshTicketFragment();
                                 refreshTotal();
                             } else {
-                                item = dbManager.getItemById(String.valueOf(itemId));
-                                if (item != null) {
-                                    VatVall = item.getVAT();
-                                    priceAfterDiscount=item.getPriceAfterDiscount();
-                                    double unitprice = item.getPrice();
-                                    VatType = item.getVAT();
-                                    TotalDiscount=item.getTotalDiscount();
-                                    TaxCode=item.getTaxCode();
-                                    Nature = item.getNature();
-                                    Currency = item.getCurrency();
-                                    ItemCode = item.getItemCode();
-                                    double UnitPrice = Double.parseDouble(price);
-                                    double newTotalPrice = UnitPrice * 1;
-                                    Barcode=item.getBarcode();
-                                    Weight=item.getWeight();
-                                    double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+                                if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
+                                    if (sentToKitchen.equals("1")) {
+                                        item = dbManager.getItemById(String.valueOf(itemId));
+                                        if (item != null) {
+                                            VatVall = item.getVAT();
+                                            priceAfterDiscount = item.getPriceAfterDiscount();
+                                            double unitprice = item.getPrice();
+                                            VatType = item.getVAT();
+                                            TotalDiscount = item.getTotalDiscount();
+                                            TaxCode = item.getTaxCode();
+                                            Nature = item.getNature();
+                                            Currency = item.getCurrency();
+                                            ItemCode = item.getItemCode();
+                                            double UnitPrice = Double.parseDouble(price);
+                                            double newTotalPrice = UnitPrice * 1;
+                                            Barcode = item.getBarcode();
+                                            Weight = item.getWeight();
+                                            double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
 
-                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-                                    String ShopName = sharedPreference.getString("ShopName", null);
-                                    String CompanyShopNumber;
-                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-                                        double currentpriceWithoutVat  = calculatecurrentPricewithoutTax(unitprice);
+                                            String ShopName = sharedPreference.getString("ShopName", null);
+                                            String CompanyShopNumber;
+                                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+                                                double currentpriceWithoutVat = calculatecurrentPricewithoutTax(unitprice);
 
-                                        String MRAMETHOD = "Single";
-                                        CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
-                                        String Catnum= String.valueOf(catId);
-                                        Log.d("INSERT_Transaction", "7 ");
-                                        // Item has a different transaction ID, insert a new transaction
-                                        mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
-                                    }
-                                    refreshTicketFragment();
-                                    refreshTotal();
-                                }
+                                                String MRAMETHOD = "Single";
+                                                CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                                String Catnum = String.valueOf(catId);
+                                                Log.d("INSERT_Transaction", "7 ");
+                                                // Item has a different transaction ID, insert a new transaction
+                                                mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                                            }
+                                            refreshTicketFragment();
+                                            refreshTotal();
+                                        }
+                                    }}
                             }
                         } else {
                             item = dbManager.getItemById(String.valueOf(itemId));
@@ -2058,7 +2203,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             double TaxAmount=taxtotalAmount;
             String transactionStatus = "InProgress";
             // Get the total quantity of items in the transaction
-           int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
+            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
             cashierId = sharedPreference.getString("cashorId", null);
 
@@ -2072,7 +2217,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
 
                 // Save the transaction details in the TRANSACTION_HEADER table
-                 mDatabaseHelper.saveTransactionHeader(
+                mDatabaseHelper.saveTransactionHeader(
                         CompanyShopNumber,
                         transactionIdInProgress,
                         totalAmount,
@@ -2085,11 +2230,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         cashierId,
                         transactionStatus,
                         PosNum,
-                         MRAMETHOD,
-                         String.valueOf(roomid),
-                         tableid,
-                         sumBeforeDisc,
-                         sumAfterDisc
+                        MRAMETHOD,
+                        String.valueOf(roomid),
+                        tableid,
+                        sumBeforeDisc,
+                        sumAfterDisc
 
                 );
 
@@ -2120,7 +2265,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         if (cursorCompany != null && cursorCompany.moveToFirst()) {
             int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
             PosNum= cursorCompany.getString(columnCompanyNameIndex);
-             posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
+            posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
 
         }
         // Generate the transaction ID by combining the three letters and the counter

@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.externalprinterlibrary2.PrinterListAdapter;
 import com.accessa.ibora.printer.printerSetup;
@@ -56,13 +57,14 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
     int roomid;
     private DatabaseHelper mDatabaseHelper;
     String tableid;
-        private  String noteText;
+        private  String noteText,Barcode;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
         // Retrieve the text from the Intent
          noteText = getIntent().getStringExtra("note_text");
+        Barcode = getIntent().getStringExtra("barcode");
         SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
         tableid = String.valueOf(preferences.getString("table_id", "0"));
@@ -185,8 +187,9 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
                 String price = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 String comment = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_COMMENT));
                 String transactionIdInProgress = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
+
                 Log.d("transactionIdInProgress", transactionIdInProgress);
-                mDatabaseHelper.setTransactionSentToKitchen(transactionIdInProgress);
+                mDatabaseHelper.setTransactionSentToKitchen(transactionIdInProgress,Barcode);
 
                 String sentToKitchen = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
 
@@ -214,6 +217,8 @@ if(sentToKitchen.equals("0")) {
                 Toast.makeText(SendNoteToKitchenActivity.this, R.string.toast_print_ok, Toast.LENGTH_LONG).show();
                 // Disconnect after printing
                 cloudPrinter.release(SendNoteToKitchenActivity.this);
+
+                returnHome();
                 // Close the activity and return to the previous one
                 finish();
             }
@@ -230,11 +235,19 @@ if(sentToKitchen.equals("0")) {
 
                 // Disconnect after printing (in case of failure)
                 cloudPrinter.release(SendNoteToKitchenActivity.this);
+                returnHome();
                 // Close the activity and return to the previous one
                 finish();
             }
         });
 
+    }
+
+    public void returnHome() {
+        Intent home_intent1 = new Intent(this, MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        home_intent1.putExtra("fragment", "Ticket_fragment");
+        startActivity(home_intent1);
     }
     @Override
     public void onFound(CloudPrinter cloudPrinter) {

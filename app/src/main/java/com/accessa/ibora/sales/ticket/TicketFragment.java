@@ -1,6 +1,7 @@
 package com.accessa.ibora.sales.ticket;
 
 
+import static com.accessa.ibora.product.items.DatabaseHelper.Barcode;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
@@ -798,6 +799,8 @@ private TextView textViewVATs,textViewTotals;
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
+        SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
 
         Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
         actualdate = mDatabaseHelper.getCurrentDate();
@@ -816,7 +819,7 @@ private TextView textViewVATs,textViewTotals;
         mAddItem = view.findViewById(R.id.fab);
 
 
-        SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+         sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
         cashierLevel = sharedPreference.getString("cashorlevel", null);
         shopname = sharedPreference.getString("ShopName", null);
@@ -834,13 +837,13 @@ private TextView textViewVATs,textViewTotals;
 
         // Retrieve the total amount and total tax amount from the transactionheader table
 
-        double totalPriceSum = mDatabaseHelper.calculateTotalPriceForUnpaidTransactions(String.valueOf(roomid), tableid);
-        double totalVATSum = mDatabaseHelper.calculateTotalVATForUnpaidTransactions(String.valueOf(roomid), tableid);
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
 
         TextView totalAmountTextView = view.findViewById(R.id.textViewTotal);
         String formattedTotalAmount = String.format("%.2f", totalPriceSum);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-
+        Log.d("formattedTotalAmount", "formattedTotalAmount: " + formattedTotalAmount);
         // Update the tax and total amount TextViews
         TextView taxTextView = view.findViewById(R.id.textViewVAT);
         String formattedTaxAmount = String.format("%.2f", totalVATSum);
@@ -1161,14 +1164,27 @@ private TextView textViewVATs,textViewTotals;
                         String Quantity = QuantityEditText.getText().toString();
                         String Price = PriceEditText.getText().toString();
                         ItemId = itemIdEditText.getText().toString();
+                       String newbc = mDatabaseHelper.getBarcodeByItemId(ItemId);
 
+
+
+                        if (newbc != null) {
+                            // Barcode was successfully retrieved
+                            Log.d("ActivityName", "Retrieved barcode: " + newbc);
+
+                        } else {
+                            // Handle the case where no barcode was found
+                            Log.d("ActivityName", "No barcode found for item ID: " + ItemId);
+                            newbc = mDatabaseHelper.getOptionsBarcodeByItemId(ItemId);
+                            Log.d("ActivityName1", "Retrieved barcode: " + newbc);
+                        }
                         // Update CheckBox visibility on item click
                         CheckBox checkBox = view.findViewById(R.id.checkbox);
                         boolean isCheckBoxVisible = checkBox.getVisibility() == View.VISIBLE;
 
                         // Create and show the dialog fragment with the data only if the CheckBox is not visible
                         if (!isCheckBoxVisible) {
-                            ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quantity, Price, LongDesc, ItemId);
+                            ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quantity, Price, LongDesc, ItemId,newbc);
                             dialogFragment.setTargetFragment(TicketFragment.this, 0);
                             dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
                         } else {
@@ -1460,7 +1476,7 @@ if(Type.equals("DRN")) {
                     // Generate the transaction ID with the format "MEMO-integer"
                     String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
                     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-                    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+                    mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,2);
                     // Update the transaction ID in the header table for transactions with status "InProgress"
                     mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
@@ -1470,7 +1486,7 @@ if(Type.equals("DRN")) {
                     editor.apply();
                     String MRAMETHOD="Single";
                     // Update the transaction status for all in-progress transactions to "saved"
-                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
+                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
                     updateTransactionStatus();
 
 
@@ -1520,7 +1536,7 @@ if(Type.equals("DRN")) {
     // Generate the transaction ID with the format "MEMO-integer"
     String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionProformaCounter;
     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+    mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,0);
     // Update the transaction ID in the header table for transactions with status "InProgress"
     mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
@@ -1579,7 +1595,7 @@ if(Type.equals("DRN")) {
             // Generate the transaction ID with the format "MEMO-integer"
             String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
             // Update the transaction ID in the transaction table for transactions with status "InProgress"
-            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,3);
             // Update the transaction ID in the header table for transactions with status "InProgress"
             mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
@@ -1589,7 +1605,7 @@ if(Type.equals("DRN")) {
             editor.apply();
             String MRAMETHOD="Single";
             // Update the transaction status for all in-progress transactions to "saved"
-            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
+            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
             updateTransactionStatus();
 
             // Start the activity with the selected receipt data
@@ -1642,7 +1658,7 @@ if(Type.equals("DRN")) {
     // Generate the transaction ID with the format "MEMO-integer"
     String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
     // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+    mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,4);
     // Update the transaction ID in the header table for transactions with status "InProgress"
     mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
 
@@ -1652,7 +1668,7 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data

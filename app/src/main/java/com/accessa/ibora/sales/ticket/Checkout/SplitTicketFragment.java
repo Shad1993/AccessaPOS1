@@ -1,5 +1,6 @@
 package com.accessa.ibora.sales.ticket.Checkout;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.Barcode;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
 
 import android.app.Dialog;
@@ -300,7 +301,7 @@ private TextView textViewVATs,textViewTotals;
 
 
                         // Create and show the dialog fragment with the data
-                        ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quatity, Price, LongDesc,ItemId);
+                        ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quatity, Price, LongDesc,ItemId,Barcode);
                         dialogFragment.setTargetFragment(SplitTicketFragment.this, 0);
                         dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
 
@@ -546,7 +547,7 @@ if(Type.equals("DRN")) {
                     editor.apply();
                     String MRAMETHOD="Single";
                     // Update the transaction status for all in-progress transactions to "saved"
-                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
+                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
                     updateTransactionStatus();
 
 
@@ -605,7 +606,7 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
   //  updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
@@ -664,7 +665,7 @@ if(Type.equals("DRN")) {
             editor.apply();
             String MRAMETHOD="Single";
             // Update the transaction status for all in-progress transactions to "saved"
-            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null);
+            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
             updateTransactionStatus();
 
             // Start the activity with the selected receipt data
@@ -727,7 +728,7 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name);
+    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
     updateTransactionStatus();
 
                     // Start the activity with the selected receipt data

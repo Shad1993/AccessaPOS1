@@ -350,6 +350,7 @@ if (cashReturn != 0.0) {
                 return true;
             }
         });
+
     }
 
     private void showSecondaryScreen() {

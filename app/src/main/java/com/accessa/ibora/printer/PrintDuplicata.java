@@ -437,8 +437,9 @@ public class PrintDuplicata extends AppCompatActivity {
 
                                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                                     String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
-
-                                    boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate, String.valueOf(roomid),tableid);
+                                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                                    String currentTime = timeFormat.format(new Date());
+                                    boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate,currentTime, String.valueOf(roomid),tableid);
 
 
                                     if (updated) {

@@ -97,6 +97,7 @@ public class PrintReport extends AppCompatActivity {
         protected void onConnected(SunmiPrinterService service) {
 
             int lineWidth = 48; // Adjust this value according to the width of your paper
+            int lineWidths= 38;
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -229,7 +230,7 @@ public class PrintReport extends AppCompatActivity {
                         String TotalDaily= "Total Amount Today "  ;
 
 
-                        int TenderTypesDaily = lineWidth - formattedDaily.length() - TotalDaily.length();
+                        int TenderTypesDaily = lineWidths- formattedDaily.length() - TotalDaily.length();
                         String DailyLine = TotalDaily + " ".repeat(Math.max(0, TenderTypesDaily)) + formattedDaily;
                         // Enable bold text
                         byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -255,13 +256,20 @@ public class PrintReport extends AppCompatActivity {
                             String formattedPaymentInfo = "Payment Method: " + paymentName ;
                             String formattedam=" Rs " + formattedTotalAmount;
 
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+                            int remainingSpace = lineWidth - formattedPaymentInfo.length()- formattedam.length();
 
                             String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
+                       double cashreturn= mDatabaseHelper.getSumOfCashReturnForCurrentDate();
+                        String formattedTcashreturn = String.format("%.2f", cashreturn);
+                        String cashret=" -Rs " + formattedTcashreturn;
+                        String formattedcashreturnInfo = "Cash Return: " ;
+                        int cashreturnPadding = lineWidth - cashret.length() - formattedcashreturnInfo.length();
+                        String CashreturnLine = formattedcashreturnInfo + " ".repeat(Math.max(0, cashreturnPadding)) + cashret;
+                        service.printText(CashreturnLine + "\n", null);
                         service.printText(lineSeparator + "\n", null);
                         // Retrieve the total amount and total tax amount from the transactionheader table
 
@@ -270,7 +278,7 @@ public class PrintReport extends AppCompatActivity {
                         String formattedTotalWeekly = String.format("%.2f", weeklyAmount);
                         String TotalWeekly = "Total Amount This Week "  ;
                         String formattedWeekly="Rs " + formattedTotalWeekly;
-
+                        lineWidths= 38;
                         int TenderTypesWeekly = lineWidths - formattedWeekly.length() - TotalWeekly.length();
                          String weeklyLine = TotalWeekly + " ".repeat(Math.max(0, TenderTypesWeekly)) + formattedWeekly;
                         // Enable bold text
@@ -296,23 +304,30 @@ public class PrintReport extends AppCompatActivity {
                             String formattedPaymentInfo = "Payment Method: " + paymentName ;
                             String formattedam=" Rs " + formattedTotalAmount;
 
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+                            int remainingSpace = lineWidth - formattedPaymentInfo.length()- formattedam.length();
 
                             String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
+                         cashreturn= mDatabaseHelper.getSumOfCashReturnForCurrentWeek();
+                         formattedTcashreturn = String.format("%.2f", cashreturn);
+                         cashret=" -Rs " + formattedTcashreturn;
+                         formattedcashreturnInfo = "Cash Return: " ;
+                         cashreturnPadding = lineWidth - cashret.length() - formattedcashreturnInfo.length();
+                         CashreturnLine = formattedcashreturnInfo + " ".repeat(Math.max(0, cashreturnPadding)) + cashret;
+                        service.printText(CashreturnLine + "\n", null);
                         service.printText(lineSeparator + "\n", null);
 
                         currentDate = new Date();
 
-
+                        lineWidths= 38;
                         double monthlyAmount = getMonthlyAmount(currentDate);
                         String formattedmonthlyAmountT = String.format("%.2f", monthlyAmount);
                         String formattedMonthly="Rs " + formattedmonthlyAmountT;
                         String TotalMontly = "Total Amount This Month "  ;
-                        int ReturnTypesPadding = lineWidth - formattedMonthly.length() - TotalMontly.length();
+                        int ReturnTypesPadding = lineWidths - formattedMonthly.length() - TotalMontly.length();
                         String MonthlyLine = TotalMontly + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedMonthly;
                         // Enable bold text
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -337,13 +352,68 @@ public class PrintReport extends AppCompatActivity {
                             String formattedPaymentInfo = "Payment Method: " + paymentName ;
                             String formattedam=" Rs " + formattedTotalAmount;
 
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+                            int remainingSpace = lineWidth - formattedPaymentInfo.length()- formattedam.length();
 
                             String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
+                        cashreturn= mDatabaseHelper.getSumOfCashReturnForCurrentMonth();
+                        formattedTcashreturn = String.format("%.2f", cashreturn);
+                        cashret=" -Rs " + formattedTcashreturn;
+                        formattedcashreturnInfo = "Cash Return: " ;
+                        cashreturnPadding = lineWidth - cashret.length() - formattedcashreturnInfo.length();
+                        CashreturnLine = formattedcashreturnInfo + " ".repeat(Math.max(0, cashreturnPadding)) + cashret;
+                        service.printText(CashreturnLine + "\n", null);
+                        service.printText(lineSeparator + "\n", null);
+
+                        currentDate = new Date();
+
+
+                        double yearlyAmount = getYearlyAmount(currentDate);
+                        String formattedyearlyAmountT = String.format("%.2f", yearlyAmount);
+                        String formattedYearly="Rs " + formattedyearlyAmountT;
+                        String TotalYearly = "Total Amount This Year "  ;
+                         ReturnTypesPadding = lineWidths - formattedYearly.length() - TotalYearly.length();
+                        String YearlyLine = TotalYearly + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedYearly;
+                        // Enable bold text
+                        boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
+                        service.sendRAWData(boldOnBytes, null);
+                        service.setFontSize(30, null);
+                        service.printText(YearlyLine + "\n", null);
+
+                        // Disable bold text
+                        boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                        service.sendRAWData(boldOffBytes, null);
+                        service.setFontSize(24, null);
+                        service.setAlignment(1, null); // Align center
+                        paymentItems = getPaymentItemsForThisYear();
+                        // Initialize the paymentAdapter
+                        paymentAdapter = new PaymentAdapter(paymentItems, getApplicationContext());
+
+                        for (PaymentItem item : paymentItems) {
+                            String paymentName = item.getPaymentName();
+                            double totalAmount = item.getAmountPaid();
+
+                            String formattedTotalAmount = String.format("%.2f", totalAmount);
+                            String formattedPaymentInfo = "Payment Method: " + paymentName ;
+                            String formattedam=" Rs " + formattedTotalAmount;
+
+                            int remainingSpace = lineWidth - formattedPaymentInfo.length()- formattedam.length();
+
+                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                            // Print the payment information for the current item
+                            service.printText(paddedPaymentInfo + "\n", null);
+                        }
+                        cashreturn= mDatabaseHelper.getSumOfCashReturnForCurrentYear();
+                        formattedTcashreturn = String.format("%.2f", cashreturn);
+                        cashret=" -Rs " + formattedTcashreturn;
+                        formattedcashreturnInfo = "Cash Return: " ;
+                        cashreturnPadding = lineWidth - cashret.length() - formattedcashreturnInfo.length();
+                        CashreturnLine = formattedcashreturnInfo + " ".repeat(Math.max(0, cashreturnPadding)) + cashret;
+                        service.printText(CashreturnLine + "\n", null);
                         service.printText(lineSeparator + "\n", null);
                         // Footer Text
                         String FooterText = getString(R.string.Footer_See_You);
@@ -490,6 +560,81 @@ public class PrintReport extends AppCompatActivity {
         };
 
         // Define the query parameters to filter by the current month's date range
+        String selection = SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?";
+        String[] selectionArgs = { startDateString, endDateString };
+        String groupBy = SETTLEMENT_PAYMENT_NAME;
+
+        // Execute the query
+        Cursor cursor = db.query(
+                INVOICE_SETTLEMENT_TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                groupBy,
+                null,
+                null
+        );
+
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    String paymentName = cursor.getString(cursor.getColumnIndex(SETTLEMENT_PAYMENT_NAME));
+                    double totalAmount = cursor.getDouble(cursor.getColumnIndex(SETTLEMENT_AMOUNT));
+                    String transactionDateString = cursor.getString(cursor.getColumnIndex(SETTLEMENT_DATE_TRANSACTION));
+                    Date transactionDate = parseDate(transactionDateString); // Parse the date string to a Date object
+
+                    PaymentItem item = new PaymentItem(paymentName, totalAmount, transactionDate);
+                    paymentItems.add(item);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Handle any exceptions here (e.g., logging, error handling)
+        } finally {
+            // Close the Cursor and the database
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+
+        return paymentItems;
+    }
+    private List<PaymentItem> getPaymentItemsForThisYear() {
+        List<PaymentItem> paymentItems = new ArrayList<>();
+
+        // Get today's date
+        Date currentDate = new Date();
+
+        // Calculate the start and end date of the current year
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(currentDate);
+        calendar.set(Calendar.DAY_OF_YEAR, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.YEAR, 1);
+        Date endDate = calendar.getTime();
+
+        // Format the start and end dates as 'yyyy-MM-dd' (assuming your date column is in this format)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the desired timezone
+        String startDateString = dateFormat.format(startDate);
+        String endDateString = dateFormat.format(endDate);
+
+        // Retrieve the data from the database for the current year
+        SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+
+        // Define the columns you want to retrieve
+        String[] projection = {
+                SETTLEMENT_PAYMENT_NAME,
+                "SUM(" + SETTLEMENT_AMOUNT + ") AS " + SETTLEMENT_AMOUNT, // Calculate the sum of SETTLEMENT_AMOUNT
+                SETTLEMENT_DATE_TRANSACTION
+        };
+
+        // Define the query parameters to filter by the current year's date range
         String selection = SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?";
         String[] selectionArgs = { startDateString, endDateString };
         String groupBy = SETTLEMENT_PAYMENT_NAME;
@@ -858,6 +1003,41 @@ public class PrintReport extends AppCompatActivity {
         return amount;
 
 
+    }
+    private double getYearlyAmount(Date date) {
+        // Calculate the start and end date of the given year
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_YEAR, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.YEAR, 1);
+        Date endDate = calendar.getTime();
+
+        // Format startDate and endDate to 'yyyy-MM-dd' format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String formattedStartDate = dateFormat.format(startDate);
+        String formattedEndDate = dateFormat.format(endDate);
+
+        // Query the database to get the yearly amount
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
+
+        double amount = 0.0;
+
+        if (cursor.moveToFirst()) {
+            amount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+
+        return amount;
     }
 
     private double getMonthlyAmount(Date date) {

@@ -5,8 +5,10 @@ import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_DATETIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_PAYMENT;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_POSNUM;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_SHOP_NUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTAL;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTALIZER;
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TRANSACTION_CODE;
@@ -43,6 +45,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -120,7 +123,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String ARG_Transaction_id = "transactionId";
     private static final String POSNumber="posNumber";
     private String qrMra,Transaction_Id,PosNum,amountpaid,pop,mrairn,Buyname,BuyBRN,BuyTAN,BuyAdd,BuyComp,BuyNIC,BuyProfile,BuyType;
-    private String cashierId,cashierName,cashorlevel,CompanyName,posNum;
+    private String cashierId,cashierName,cashorlevel,CompanyName,posNum,ShopNumber;
 
     TextView totalAmountTextView;
     private double cashReturn;
@@ -194,6 +197,7 @@ public class validateticketDialogFragment extends DialogFragment  {
         cashierName = sharedPreference.getString("cashorName", null);
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
+        ShopNumber=sharedPreference.getString("ShopId",null);
         SharedPreferences sharedPreferencepos = requireContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         posNum = sharedPreferencepos.getString("posNumber", null);
 
@@ -277,6 +281,11 @@ public class validateticketDialogFragment extends DialogFragment  {
                 TextView idTextView = view.findViewById(R.id.id_text_view);
                 TextView nameTextView = view.findViewById(R.id.name_text_view);
                 TextView qrTextView = view.findViewById(R.id.icon);
+
+
+                // Set the visibility of the GridLayout to VISIBLE
+                gridLayout.setVisibility(View.VISIBLE);
+
 
                 String id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
@@ -369,16 +378,42 @@ public class validateticketDialogFragment extends DialogFragment  {
                     editParams.gravity = Gravity.CENTER;
 
                     // Apply the layout parameters to the EditText
-                    editText.setLayoutParams(editParams);
+                    if (editText != null) {
 
-                    // Set other properties of the EditText
-                    Drawable drawable = getResources().getDrawable(R.drawable.edittext1_rounded_bg);
-                    editText.setBackground(drawable);
-                    editText.setTextColor(getResources().getColor(R.color.BleuAccessaText));
-                    editText.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+                        // Set the visibility of the GridLayout to VISIBLE
+                        gridLayout.setVisibility(View.VISIBLE);
+                        editText.setLayoutParams(editParams);
 
-                    editText.setInputType(InputType.TYPE_NULL);
-                    editText.setTextIsSelectable(true);
+                        // Set other properties of the EditText
+                        Drawable drawable = getResources().getDrawable(R.drawable.edittext1_rounded_bg);
+                        editText.setBackground(drawable);
+                        editText.setTextColor(getResources().getColor(R.color.BleuAccessaText));
+                        editText.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+
+                        // Make sure the EditText is focusable, clickable, and the cursor is visible
+                        editText.setFocusable(true);
+                        editText.setFocusableInTouchMode(true);
+                        editText.setClickable(true);
+                        editText.setCursorVisible(true);
+
+                        // Disable the on-screen keyboard
+                        editText.setShowSoftInputOnFocus(false);  // This requires API level 21 (Lollipop)
+
+                        // For backward compatibility, add this listener to prevent keyboard from showing up
+                        editText.setOnTouchListener(new View.OnTouchListener() {
+                            @Override
+                            public boolean onTouch(View v, MotionEvent event) {
+                                int inType = editText.getInputType(); // Backup the input type
+                                editText.setInputType(InputType.TYPE_NULL); // Disable standard keyboard
+                                editText.onTouchEvent(event); // Call native handler
+                                editText.setInputType(inType); // Restore input type
+                                editText.requestFocus(); // Request focus
+                                return true; // Consume touch event
+                            }
+                        });
+                    }
+
+
 
                     gridLayout.setVisibility(View.VISIBLE);
 
@@ -429,9 +464,16 @@ public class validateticketDialogFragment extends DialogFragment  {
                     button1.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            oncommentButtonClick(clickedEditText, "1");
+                            if (clickedEditText != null) {
+                                oncommentButtonClick(clickedEditText, "1");
+                            } else {
+                                // Handle the case where clickedEditText is null
+                                Toast.makeText(getContext(), "No EditText selected", Toast.LENGTH_SHORT).show();
+                                // Alternatively, perform another action to handle this case
+                            }
                         }
                     });
+
 
                     button2.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -788,8 +830,11 @@ public class validateticketDialogFragment extends DialogFragment  {
                     // Use a specific Locale for date formatting
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                     String currentDate = dateFormat.format(new Date());
+                    Log.d("insertsettlementtest1", settlementItem.getPaymentName() );
 
-                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate, String.valueOf(roomid),tableid);
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                    String currentTime = timeFormat.format(new Date());
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate,currentTime, String.valueOf(roomid),tableid);
 
                     SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
                     ContentValues values = new ContentValues();
@@ -966,7 +1011,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Save the selected payment type to SharedPreferences
                 saveSelectedPaymentType("splitted");
                 gifImageView.setVisibility(view.GONE);
-                gridLayout.setVisibility(view.VISIBLE);
+                gridLayout.setVisibility(view.GONE);
                 // Update button colors
                 updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
 
@@ -1121,7 +1166,10 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Use a specific Locale for date formatting
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 String currentDate = dateFormat.format(new Date());
-                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, Transaction_Id, PosNum,currentDate, String.valueOf(roomid),tableid);
+                Log.d("insertsettlementtest2", paymentName );
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                String currentTime = timeFormat.format(new Date());
+                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, Transaction_Id, PosNum,currentDate,currentTime, String.valueOf(roomid),tableid);
 
                 settlementItems.add(new SettlementItem(paymentName, settlementAmount));
             }
@@ -1135,8 +1183,12 @@ public class validateticketDialogFragment extends DialogFragment  {
             double settlementAmount = totalAmount;
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             String currentDate = dateFormat.format(new Date());
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+            String currentTime = timeFormat.format(new Date());
             settlementItems.add(new SettlementItem(paymentName, settlementAmount));
-            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, Transaction_Id, PosNum,currentDate, String.valueOf(roomid),tableid);
+            Log.d("insertsettlementtest3", paymentName );
+
+            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,currentDate,currentTime, String.valueOf(roomid),tableid);
             Log.d("PaymentDetails2", "Name: " + paymentName + ", Amount: " + settlementAmount+ " " + transactionIdInProgress);
 
             Log.d("settlementItems", String.valueOf(settlementItems));
@@ -1170,8 +1222,6 @@ public class validateticketDialogFragment extends DialogFragment  {
             // Use a specific Locale for date formatting
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             String currentDate = dateFormat.format(new Date());
-
-            boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate, String.valueOf(roomid),tableid);
 
             SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
@@ -1213,7 +1263,8 @@ public class validateticketDialogFragment extends DialogFragment  {
                 values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
                 values.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Initialize total
                 values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getSettlementAmount()); // Initialize totalizer
-
+                values.put(FINANCIAL_COLUMN_SHOP_NUMBER,ShopNumber);
+                values.put(FINANCIAL_COLUMN_PAYMENT,settlementItem.getPaymentName());
                 db.insert(FINANCIAL_TABLE_NAME, null, values);
             }
             if ("Cash".equals(settlementItem.getPaymentName()) ) {
@@ -1226,11 +1277,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
             }
-            if (updated) {
-                Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
-            }
+
 
         }
 
@@ -1742,6 +1789,9 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
         if (amountReceivedEditText != null) {
             // Insert the letter into the EditText
             amountReceivedEditText.append(letter);
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
         }
     }
     private void onBackspaceButtonClick(EditText text ) {

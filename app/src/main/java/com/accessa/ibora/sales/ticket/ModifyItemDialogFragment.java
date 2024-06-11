@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.google.android.gms.vision.barcode.Barcode;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,17 +52,19 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private static final String ARG_PRICE = "price";
     private static final String ARG_LONG_DESC = "long_desc";
     private static final String ARG_Item_id = "Item_Id";
-    private   String ITEM_ID;
+    private static final String ARG_Barcode = "Barcode";
+    private   String ITEM_ID,Barcode;
 
     private static DatabaseHelper mDatabaseHelper;
 
-    public static ModifyItemDialogFragment newInstance(String quantity, String price, String longDesc, String itemId) {
+    public static ModifyItemDialogFragment newInstance(String quantity, String price, String longDesc, String itemId,String Barcode) {
         ModifyItemDialogFragment fragment = new ModifyItemDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARG_QUANTITY, quantity);
         args.putString(ARG_PRICE, price);
         args.putString(ARG_LONG_DESC, longDesc);
         args.putString(ARG_Item_id, itemId);
+        args.putString(ARG_Barcode, Barcode);
         fragment.setArguments(args);
         return fragment;
     }
@@ -423,7 +427,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
             String price = args.getString(ARG_PRICE);
             String longDesc = args.getString(ARG_LONG_DESC);
              ITEM_ID = args.getString(ARG_Item_id);
-
+            Barcode= args.getString(ARG_Barcode);
 
 
         // Remove the "x " prefix from the quantity
@@ -477,6 +481,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
                         // Get the current date and time for the transaction
                         String lastmodified = getCurrentDateTime();
                         String id= ITEM_ID;
+                        String Barcodes= Barcode;
                         String quantity = quantitySpinner.getSelectedItem().toString();
                         String price = priceEditText.getText().toString();
                         String longDesc = longDescEditText.getText().toString();
@@ -498,21 +503,28 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             itemclearedListener.onAmountModified();
                         }
                         String option1Text = editTextOption1.getText().toString();
-
+                        Log.d("DialogFragment", "Option1 Text: " + option1Text);
                         updateCommentForTransaction(mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid),option1Text,id );
-                        // Check if the EditText is not null and not empty
                         if (!TextUtils.isEmpty(option1Text)) {
+                            Log.d("DialogFragment", "Starting SendNoteToKitchenActivity");
+
                             // Create an Intent to launch SendNoteToKitchenActivity
-                            Intent intent = new Intent(getContext(), SendNoteToKitchenActivity.class);
+                            Intent intent = new Intent(getActivity(), SendNoteToKitchenActivity.class);
                             // Put the text as an extra in the Intent
                             intent.putExtra("note_text", option1Text);
+                            intent.putExtra("barcode", Barcodes);
+                            Log.d("barcode", Barcodes);
                             // Start the activity
                             startActivity(intent);
                         } else {
                             // Show a toast or alert indicating that the EditText is empty
                             Toast.makeText(getContext(), "Please enter a note", Toast.LENGTH_SHORT).show();
+                            returnHome();
                         }
-                        returnHome();
+
+                        // Check if the EditText is not null and not empty
+
+                       //
 
                     }
                 })

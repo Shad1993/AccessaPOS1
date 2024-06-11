@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.ItemsReport.CatDataModel;
 import com.accessa.ibora.ItemsReport.DataModel;
 import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
 import com.accessa.ibora.MainActivity;
@@ -62,6 +63,8 @@ public class PrintDailyReport extends AppCompatActivity {
     private String Shopname;
 
     private List<DataModel> newDataList;
+
+    private List<CatDataModel> CatDataList;
     private PaymentMethodAdapter paymentAdapter;
     private SQLiteDatabase database;
     private String cashorId;
@@ -82,7 +85,7 @@ public class PrintDailyReport extends AppCompatActivity {
    private String localeString ;
     private String reportType ;
     private String totalTax ;
-    private String totalAmounts;
+    private String totalAmountWOVat;
     private   String      TelNum,compTelNum,compFaxNum,TransactionTypename;
     private  String  FaxNum;
     private String paymentName,PosNum ;
@@ -101,15 +104,7 @@ public class PrintDailyReport extends AppCompatActivity {
                 @Override
                 public void run() {
 
-
-
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
-
-
-
-
-
-
 
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -215,14 +210,10 @@ public class PrintDailyReport extends AppCompatActivity {
                         }
 
 
-
                             // Print a line separator
                             String lineSeparator = "=".repeat(lineWidth);
 
                             service.printText(lineSeparator + "\n", null);
-
-
-
 
 
                         String frequencytoday="";
@@ -257,7 +248,7 @@ public class PrintDailyReport extends AppCompatActivity {
                         newDataList = fetchDataBasedOnReportType(reportType);
                         // Initialize the paymentAdapter
 
-                        int lineWidths= 41;
+                        int lineWidths= 48;
                         for (DataModel item : newDataList) {
                             String paymentName = item.getLongDescription();
                             double totalAmount = item.getTotalPrice();
@@ -276,19 +267,73 @@ public class PrintDailyReport extends AppCompatActivity {
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
                         service.printText(lineSeparator + "\n", null);
+
+
+                        String TotalCatDaily= "All Categories sold " + frequencytoday ;
+
+                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
+                        service.sendRAWData(boldOnBytes, null);
+                        service.setFontSize(30, null);
+
+                        service.printText(TotalCatDaily + "\n", null);
+
+                        // Disable bold text
+                         boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                        service.sendRAWData(boldOffBytes, null);
+                        service.setFontSize(24, null);
+                        // Initialize the paymentItems list (e.g., retrieve data from the database)
+                        newDataList = fetchDataBasedOnReportType(reportType);
+                        // Initialize the paymentAdapter
+                        // Initialize the paymentItems list (e.g., retrieve data from the database)
+                        CatDataList = fetchCatDataBasedOnReportType(reportType);
+                        // Initialize the paymentAdapter
+
+                         lineWidths= 48;
+                        for (CatDataModel item : CatDataList) {
+                            String categorycode = item.getCategorycode();
+                            double totalAmount = item.getTotalPrice();
+                            int quantity= item.getQuantity();
+
+                            String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
+                            String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+
+                            String formattedPaymentInfo =  CategoryName + " X " + quantity ;
+                            String formattedam=" Rs " + formattedTotalAmount;
+
+                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+
+                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                            // Print the payment information for the current item
+                            service.printText(paddedPaymentInfo + "\n", null);
+                        }
+                        service.printText(lineSeparator + "\n", null);
+
+
+
+
+
                         // Retrieve the total amount and total tax amount from the transactionheader table
 
-                        String Total= getString(R.string.Total);
+                        String Total= "SubTotal";
                         String TVA= getString(R.string.Vat);
-
-                        String TotalValue= "Rs " + totalAmounts;
+                        String amountWoVat= "Amount W/0 VAT";
+                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
                         String TotalVAT= "Rs " + totalTax;
                          lineWidths= 38;
+                        int lineWidth = 48;
                         // Calculate the padding for the item name
-                        int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
-                        int TaxValuePadding = lineWidths - TotalVAT.length() - TVA.length();
+                        double tax = Double.parseDouble(totalTax);
+                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
+                        double grandTotal = tax + amountWOVat;
+                        String formattedTotalAmount = String.format("%.2f", grandTotal);
 
+                        String TotalValue= "Rs " + formattedTotalAmount;
 
+                        int TotalValuePadding = lineWidth - TotalValueWoVat.length() - Total.length();
+                        int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                        int AmountWoVatValuePadding = lineWidth - TotalValueWoVat.length() - amountWoVat.length();
                         // Enable bold text and set font size to 30
                        boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
@@ -296,12 +341,8 @@ public class PrintDailyReport extends AppCompatActivity {
 
                         // Print the "Total" and its value with the calculated padding
                         String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
-                        String totaltaxLine = TVA + " ".repeat(Math.max(0, TaxValuePadding)) + TotalVAT;
+
                         service.printText(totalLine + "\n", null);
-                        service.printText(totaltaxLine + "\n", null);
-
-
-
 
 
                         // Disable bold text
@@ -309,8 +350,10 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         service.setAlignment(1, null); // Align center
-
-
+                        String totalamountWoVatLine = amountWoVat + " ".repeat(Math.max(0, AmountWoVatValuePadding)) + TotalValueWoVat;
+                        String totaltaxLine = TVA + " ".repeat(Math.max(0, TaxValuePadding)) + TotalVAT;
+                        service.printText(totalamountWoVatLine + "\n", null);
+                        service.printText(totaltaxLine + "\n", null);
                         service.printText(lineSeparator + "\n", null);
                         // Footer Text
                         String FooterText = getString(R.string.Footer_See_You);
@@ -446,7 +489,7 @@ public class PrintDailyReport extends AppCompatActivity {
          localeString = intent.getStringExtra("locale");
          reportType = intent.getStringExtra("reportType");
          totalTax = intent.getStringExtra("totalTax");
-         totalAmounts = intent.getStringExtra("totalAmount");
+        totalAmountWOVat = intent.getStringExtra("totalAmount");
 
         if (localeString != null) {
             Locale locale = Locale.forLanguageTag(localeString);
@@ -464,9 +507,9 @@ public class PrintDailyReport extends AppCompatActivity {
             Log.d("PrintDailyReport", "Received Total Tax: " + totalTax);
         }
 
-        if (totalAmounts != null) {
+        if (totalAmountWOVat != null) {
             // Use the totalAmount as needed
-            Log.d("PrintDailyReport", "Received Total Amount: " + totalAmount);
+            Log.d("PrintDailyReport", "Received Total AmountWoVat: " + totalAmount);
         }
 
         mDatabaseHelper = new DatabaseHelper(this); // Initialize DatabaseHelper
@@ -584,117 +627,20 @@ public class PrintDailyReport extends AppCompatActivity {
 
         return dummyDataList;
     }
-    private double getDailyAmount(Date date) {
-        // Calculate the start and end date of the current day
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
+    private List<CatDataModel> fetchCatDataBasedOnReportType(String reportType) {
+        // Implement your logic to fetch data based on the selected report type
+        // For now, return a dummy list
+        List<CatDataModel> dummyDataList = new ArrayList<>();
 
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        Date endDate = calendar.getTime();
+        // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
+        // Replace the method and parameters with your actual database queries
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamille(reportType);
 
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the daily amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
-
+        return dummyDataList;
     }
 
-    private double getWeeklyAmount(Date date) {
-        // Calculate the start and end date of the current week
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
-
-        calendar.add(Calendar.WEEK_OF_YEAR, 1);
-        Date endDate = calendar.getTime();
-
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the weekly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
 
 
-    }
-
-    private double getMonthlyAmount(Date date) {
-        // Calculate the start and end date of the current month
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        Date startDate = calendar.getTime();
-
-        calendar.add(Calendar.MONTH, 1);
-        Date endDate = calendar.getTime();
-
-// Format startDate and endDate to 'yyyy-MM-dd' format
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedStartDate = dateFormat.format(startDate);
-        String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the monthly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
-
-        double amount = 0.0;
-
-        if (cursor.moveToFirst()) {
-            amount = cursor.getDouble(0);
-        }
-
-        cursor.close();
-
-        return amount;
-    }
-
-    private String formatAmount(double amount) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
-        return decimalFormat.format(amount);
-    }
-    private String formatDateTime(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return dateFormat.format(date);
-    }
-    private String formatDateTimes(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        return dateFormat.format(date);
-    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
