@@ -543,7 +543,7 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private void deleteItem(String itemId) {
         // Perform the delete operation here
         if (Xdatabasemanager != null) {
-            boolean deleted = Xdatabasemanager.deleteTransacItem(Long.parseLong(itemId));
+            boolean deleted = Xdatabasemanager.flagTransactionItemAsVoid(Long.parseLong(itemId));
             if (itemclearedListener != null) {
                 itemclearedListener.onItemDeleted();
             }

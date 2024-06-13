@@ -126,7 +126,7 @@ private double totalAmount,TaxtotalAmount;
     private static final String POSNumber="posNumber";
 private String transactionIdInProgress;
     private int transactionCounter = 1;
-private TextView textViewVATs,textViewTotals;
+private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTotal;
     private SoundPool soundPool;
     private int soundId;
     private IWoyouService woyouService;
@@ -801,8 +801,14 @@ private TextView textViewVATs,textViewTotals;
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
+        Cursor cursor1;
 
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+            String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+            String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+            cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
+
+
         actualdate = mDatabaseHelper.getCurrentDate();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
@@ -813,6 +819,7 @@ private TextView textViewVATs,textViewTotals;
 
         textViewVATs=view.findViewById(R.id.textViewVATs);
         textViewTotals=view.findViewById(R.id.textViewTotals);
+
         textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");
         textViewTotals.setText(getString(R.string.Total) + " : Rs 0.00");
 
@@ -858,12 +865,14 @@ private TextView textViewVATs,textViewTotals;
         TextView cashierTextView = view.findViewById(R.id.textViewCashier);
         cashierTextView.setText(" - Cashier: " + cashierId);
         // Load the data based on the transaction ID
-        if (transactionIdInProgress != null) {
-            Cursor cursor2 = mDatabaseHelper.getTransactionsByStatusAndId(DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
+
+            Cursor cursor2 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
             mAdapter.swapCursor(cursor2);
-        }
 
 
+
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
 
          emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         if (mAdapter.getItemCount() <= 0) {
@@ -1737,7 +1746,9 @@ if(Type.equals("DRN")) {
             Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
         }
      //   recreate(getActivity());
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
@@ -1866,7 +1877,7 @@ if(Type.equals("DRN")) {
                 Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
             }
 
-        } else {
+       } else {
 
             Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
@@ -1875,6 +1886,8 @@ if(Type.equals("DRN")) {
 
 
         }
+
+
 
     }
 
@@ -1944,7 +1957,9 @@ if(Type.equals("DRN")) {
         roomid = preferences.getInt("roomnum", 0);
         tableid = String.valueOf(preferences.getString("table_id", "0"));
 Log.d("room and table", roomid+ " " +tableid);
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 
@@ -1990,7 +2005,15 @@ Log.d("room and table", roomid+ " " +tableid);
 
         TextView cashierTextView = getView().findViewById(R.id.textViewCashier);
         cashierTextView.setText(" - Cashier: " + cashierId);
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(roonum,tableid);
+        Cursor cursor;
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(roonum,tableid);
+
+
+            String latesttransId= mDatabaseHelper.getLatestTransactionId(roonum,tableid,statusType);
+             cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,roonum,tableid);
+
+
+
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 
@@ -2009,15 +2032,28 @@ Log.d("room and table", roomid+ " " +tableid);
             emptyFrameLayout.setVisibility(View.VISIBLE);
         }
 
+
+
+
+        textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");
+        textViewTotals.setText(getString(R.string.Total) + " : Rs 0.00");
+
         // Update the tax and total amount TextViews
         TextView taxTextView = getView().findViewById(R.id.textViewVAT);
         String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
         taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
-
+        Log.d("update payment method", "onItemAdded called with roomid: " + roomid + ", tableid: " + tableid);
         TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
+
+        TextView textviewpaymentmethod=getView().findViewById(R.id.textViewVATs);
+        TextView textviewSubTotal=getView().findViewById(R.id.textViewTotals);
+        textviewpaymentmethod.setVisibility(View.VISIBLE);
+        textviewSubTotal.setVisibility(View.VISIBLE);
+        textviewpaymentmethod.setText(getString(R.string.PaymentMethods) + ": Rs " + formattedTotalAmount);
+        textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs " + formattedTotalAmount);
 
 
         // Play the sound effect

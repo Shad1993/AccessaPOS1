@@ -5,38 +5,24 @@ package com.accessa.ibora.product.items;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
-import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalAmount;
-import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalTax;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.Toast;
-
 import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.ItemsReport.DataModel;
 import com.accessa.ibora.ItemsReport.CatDataModel;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
-import com.accessa.ibora.R;
 import com.accessa.ibora.Report.PaymentItem;
 import com.accessa.ibora.Settings.Rooms.Rooms;
-import com.accessa.ibora.SplashFlashActivity;
-import com.accessa.ibora.product.Rooms.Room;
 import com.accessa.ibora.product.Rooms.Table;
 import com.accessa.ibora.product.couponcode.Coupon;
 import com.accessa.ibora.sales.ticket.Checkout.PaymentDetails;
-import com.accessa.ibora.sales.ticket.TicketFragment;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,7 +36,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String CAT_TABLE_NAME = "Category";
 
     // Table columns
-    private static SQLiteDatabase database;
+
     public static final String CatName = "CatName";
     public static final String Color = "Color";
     // Table Names
@@ -694,6 +680,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_TOTALIZER + " TEXT, " +
             TRANSACTION_COMMENT + " TEXT, " +
             TRANSACTION_SentToKitchen + " INTEGER DEFAULT 0, " + // 0 for not selected, 1 for selected
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('VALID','Void')), " +
             "FOREIGN KEY (" + ROOM_ID + ") REFERENCES " + ROOMS + "(" + ID + ")," +
 
             "FOREIGN KEY (" + TABLE_ID + ") REFERENCES " + TABLES + "(" + TABLE_ID + ") , " +
@@ -737,7 +724,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_CLIENT_NIC + " TEXT, " +
             TRANSACTION_CLIENT_ADR1 + " TEXT, " +
             TRANSACTION_CLIENT_ADR2 + " TEXT, " +
-            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed','TRN','Void')), " +
+            TRANSACTION_STATUS + " TEXT NOT NULL CHECK(TransactionStatus IN ('DRN','CRN','PRF', 'InProgress', 'Completed','TRN','CancelledOrder')), " +
             TRANSACTION_CLIENT_VAT_REG_NO + " TEXT, " +
             TRANSACTION_CLIENT_BRN + " TEXT, " +
             TRANSACTION_CLIENT_TEL + " TEXT, " +
@@ -1293,69 +1280,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-
-    public double calculateTotalPriceForUnpaidTransactions(String roomId, String tableId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        double totalPriceSum = 0.0;
-
-        String query = "SELECT SUM(" + TRANSACTION_TABLE_NAME + "." + TOTAL_PRICE + ") AS TotalPriceSum FROM " +
-                TRANSACTION_TABLE_NAME +
-                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " ON " +
-                TRANSACTION_TABLE_NAME + "." + ROOM_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + ROOM_ID +
-                " AND " + TRANSACTION_TABLE_NAME + "." + TABLE_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + TABLE_ID +
-                " WHERE " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " IN ('InProgress', 'PRF')" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + ROOM_ID + " = ?" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + TABLE_ID + " = ?" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + IS_PAID + " = 0";
-
-        String[] selectionArgs = {roomId, tableId};
-
-        Cursor cursor = db.rawQuery(query, selectionArgs);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int columnIndexTotalPriceSum = cursor.getColumnIndex("TotalPriceSum");
-            totalPriceSum = cursor.getDouble(columnIndexTotalPriceSum);
-        }
-
-        if (cursor != null) {
-            cursor.close();
-        }
-
-        return totalPriceSum;
-    }
-
-
-    public double calculateTotalVATForUnpaidTransactions(String roomId, String tableId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        double totalVATSum = 0.0;
-
-        String query = "SELECT SUM(" + TRANSACTION_TABLE_NAME + "." + VAT + ") AS TotalVATSum FROM " +
-                TRANSACTION_TABLE_NAME +
-                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " ON " +
-                TRANSACTION_TABLE_NAME + "." + ROOM_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + ROOM_ID +
-                " AND " + TRANSACTION_TABLE_NAME + "." + TABLE_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + TABLE_ID +
-                " WHERE " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " IN ('InProgress', 'PRF')" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + ROOM_ID + " = ?" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + TABLE_ID + " = ?" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + IS_PAID + " = 0";
-
-        String[] selectionArgs = {roomId, tableId};
-
-        Cursor cursor = db.rawQuery(query, selectionArgs);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int columnIndexTotalVATSum = cursor.getColumnIndex("TotalVATSum");
-            totalVATSum = cursor.getDouble(columnIndexTotalVATSum);
-        }
-
-        if (cursor != null) {
-            cursor.close();
-        }
-
-        return totalVATSum;
-    }
 
     private List<String> extractTableIds(String newTableId) {
         List<String> tableIds = new ArrayList<>();
@@ -2430,46 +2354,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return totalVATSum;
     }
-    public int calculateTotalQuantityByTransactionId(SQLiteDatabase db, String transactionId) {
-        int totalQuantitySum = 0;
 
-        try {
-            // Define the columns to be retrieved
-            String[] columns = {QUANTITY};
-
-            // Define the selection and selection arguments
-            String selection = TRANSACTION_ID + " = ?";
-            String[] selectionArgs = {transactionId};
-
-            // Execute the query to calculate the sum of QUANTITY
-            Cursor cursor = db.query(
-                    TRANSACTION_TABLE_NAME,
-                    columns,
-                    selection,
-                    selectionArgs,
-                    null,
-                    null,
-                    null
-            );
-
-            // Iterate through the cursor and sum up the QUANTITY values
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    int quantity = cursor.getInt(cursor.getColumnIndex(QUANTITY));
-                    totalQuantitySum += quantity;
-                }
-                cursor.close();
-            }
-
-            // Log the total sum
-            Log.d("calculateTotalQuantityByTransactionId", "Total Quantity Sum for Transaction ID " + transactionId + ": " + totalQuantitySum);
-
-        } catch (Exception e) {
-            Log.e("calculateTotalQuantityByTransactionId", "Error calculating total quantity by transaction id", e);
-        }
-
-        return totalQuantitySum;
-    }
 
     public double calculateTotalPriceByTransactionId(SQLiteDatabase db, String transactionId) {
         double totalPriceSum = 0.0;
@@ -2570,7 +2455,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return sum;
     }
     public  double calculateTotalAmount(String roomid,String tableid) {
-        Cursor cursor = getAllInProgressTransactions(roomid,tableid);
+        String statusType= getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
         double totalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
             int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
@@ -2671,7 +2559,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return totalAmount;
     }
     public  double calculateTotalTaxAmount(String roomid,String tableid) {
-        Cursor cursor = getAllInProgressTransactions(roomid,tableid);
+        String statusType= getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId=getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor =getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
         double totalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
             int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
@@ -3052,6 +2942,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         double roundedTotalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
         values.put(TRANSACTION_TOTAL_DISCOUNT, roundedTotalDiscount);
         values.put(TRANSACTION_DISCOUNT, roundedTotalDiscount);
+        values.put(TRANSACTION_STATUS, "VALID");
         values.put(IS_PAID, isPaid); // Add IS_PAID to the ContentValues
 
         long result = -1;
@@ -3260,25 +3151,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public Cursor getAllInProgressTransactionsbytable(String roomid, String tableid) {
+    public Cursor getAllInProgressTransactionsbytable(String transactionId, String roomid, String tableid) {
         SQLiteDatabase db = getReadableDatabase();
 
+        if (transactionId == null || transactionId.isEmpty() || roomid == null || roomid.isEmpty() || tableid == null || tableid.isEmpty()) {
+            Log.e("DatabaseHelper", "Invalid parameters: transactionId, roomid, or tableid is null or empty.");
+            return null;
+        }
 
         String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
-                " WHERE (th." + TRANSACTION_STATUS + "=? OR th." + TRANSACTION_STATUS + "=?) AND " +
-                "t." + ROOM_ID + "=? AND t." + TABLE_ID + "=? AND " +  // Add conditions for roomid and tableid
-                "t." + IS_PAID + "=? " + // Add condition for not paid
+                " WHERE th." + TRANSACTION_TICKET_NO + "=? AND " +
+                "t." + ROOM_ID + "=? AND t." + TABLE_ID + "=? AND " +
+                "t." + IS_PAID + "!=? AND " +
+                "t." + TRANSACTION_STATUS + "='VALID' " +
                 "ORDER BY t." + TRANSACTION_DATE + " ASC";
 
-        String[] selectionArgs = {"InProgress", "PRF", roomid, tableid, "0"};  // Add roomid, tableid, and "0" for not paid to selectionArgs
+        String[] selectionArgs = {transactionId, roomid, tableid, "1"};
 
         Cursor cursor = db.rawQuery(query, selectionArgs);
 
-        // Do not close the database connection here
-
         return cursor;
     }
+
+
     public Cursor getTransactionById1(String transactionId) {
         SQLiteDatabase db = getReadableDatabase();
 
@@ -3429,6 +3325,98 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 null,
                 null
         );
+    }
+
+
+    public String getLatestTransactionStatus(String roomid, String tableid) {
+        SQLiteDatabase db = getReadableDatabase();
+        // Query to get the latest transaction status from the header table based on room ID and table ID
+        String query = "SELECT th." + TRANSACTION_STATUS + " FROM " + TRANSACTION_HEADER_TABLE_NAME + " AS th " +
+                "WHERE th." + ROOM_ID + "=? AND th." + TABLE_ID + "=? " +
+                "ORDER BY th." + _ID + " DESC LIMIT 1";
+
+        String[] selectionArgs = {roomid, tableid};
+
+        Cursor cursor = null;
+        String latestTransactionStatus = null;
+
+        try {
+            cursor = db.rawQuery(query, selectionArgs);
+
+            if (cursor.moveToFirst()) {
+                int statusIndex = cursor.getColumnIndex(TRANSACTION_STATUS);
+                latestTransactionStatus = cursor.getString(statusIndex);
+                Log.d("TransactionFetchStatus", "Latest Transaction Status: " + latestTransactionStatus+ "roomid=" + roomid + ", tableid=" + tableid);
+            } else {
+                Log.d("TransactionFetchStatus", "No transactions found for roomid=" + roomid + ", tableid=" + tableid);
+            }
+        } catch (Exception e) {
+            Log.e("TransactionFetchStatus", "Error fetching latest transaction status", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return latestTransactionStatus;
+    }
+    public Cursor getTransactionsByStatusAndId(String status, String transactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String query = "SELECT t.* FROM " + TRANSACTION_TABLE_NAME + " AS t " +
+                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + " = th." + TRANSACTION_TICKET_NO +
+                " WHERE th." + TRANSACTION_STATUS + " IN (?, ?)" +
+                " AND t." + TRANSACTION_ID + " = ?" +
+                " AND t." + IS_PAID + " <> ?"; // Change here
+
+        String[] selectionArgs = {status, "PRF", transactionId, "1"};
+
+        Log.d("Query", "Executing query: " + query);
+        Log.d("Query", "With args: " + Arrays.toString(selectionArgs));
+
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        Log.d("Query", "Result count: " + cursor.getCount());
+
+        return cursor;
+    }
+    public String getLatestTransactionId(String roomid, String tableid, String status) {
+        // Validate the status
+        if (!"PRF".equals(status) && !"InProgress".equals(status)) {
+            Log.d("TransactionFetchTransId", "Invalid status: " + status);
+            return null;
+        }
+
+        SQLiteDatabase db = getReadableDatabase();
+        // Query to get the latest transaction ID from the header table based on room ID, table ID, and status
+        String query = "SELECT th." + TRANSACTION_TICKET_NO + " FROM " + TRANSACTION_HEADER_TABLE_NAME + " AS th " +
+                "WHERE th." + ROOM_ID + "=? AND th." + TABLE_ID + "=? AND th." + TRANSACTION_STATUS + "=? " +
+                "ORDER BY th." + _ID + " DESC LIMIT 1";
+
+        String[] selectionArgs = {roomid, tableid, status};
+
+        Cursor cursor = null;
+        String latestTransactionId = null;
+
+        try {
+            cursor = db.rawQuery(query, selectionArgs);
+
+            if (cursor.moveToFirst()) {
+                int transactionIdIndex = cursor.getColumnIndex(TRANSACTION_TICKET_NO);
+                latestTransactionId = cursor.getString(transactionIdIndex);
+                Log.d("TransactionFetchTransId", "Latest Transaction ID: " + latestTransactionId);
+            } else {
+                Log.d("TransactionFetchTransId", "No transactions found for roomid=" + roomid + ", tableid=" + tableid + ", status=" + status);
+            }
+        } catch (Exception e) {
+            Log.e("TransactionFetchTransId", "Error fetching latest transaction ID", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return latestTransactionId;
     }
 
 
@@ -3974,34 +3962,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL(joinQuery, selectionArgs);
     }
-
-
-
-
-    public Cursor getTransactionsByStatusAndId(String status, String transactionId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        String query = "SELECT t.* FROM " + TRANSACTION_TABLE_NAME + " AS t " +
-                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + " = th." + TRANSACTION_TICKET_NO +
-                " WHERE th." + TRANSACTION_STATUS + " IN (?, ?)" +
-                " AND t." + TRANSACTION_ID + " = ?" +
-                " AND t." + IS_PAID + " <> ?"; // Change here
-
-        String[] selectionArgs = {status, "PRF", transactionId, "13"};
-
-        Log.d("Query", "Executing query: " + query);
-        Log.d("Query", "With args: " + Arrays.toString(selectionArgs));
-
-        Cursor cursor = db.rawQuery(query, selectionArgs);
-
-        Log.d("Query", "Result count: " + cursor.getCount());
-
-        return cursor;
-    }
-
-
-
-
 
 
 
@@ -4995,7 +4955,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Update the transaction status to "Void" for the specified room and table
         ContentValues values = new ContentValues();
-        values.put(TRANSACTION_STATUS, "Void");
+        values.put(TRANSACTION_STATUS, "CancelledOrder");
 
         // Update rows in TRANSACTION_HEADER_TABLE_NAME where TRANSACTION_STATUS is "InProgress" or "PRF" for the specified room and table
         int rowsUpdated = db.update(TRANSACTION_HEADER_TABLE_NAME, values,

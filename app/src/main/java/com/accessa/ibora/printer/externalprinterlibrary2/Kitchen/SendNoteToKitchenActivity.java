@@ -177,8 +177,9 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
             cloudPrinter.dotsFeed(20);
             cloudPrinter.printText(currentDateTime);
         cloudPrinter.printText("--------------------------------");
-
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(String.valueOf(roomid), tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid), tableid);
         if (cursor1 != null && cursor1.moveToFirst()) {
             do {
                 String id = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.ITEM_ID));

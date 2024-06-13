@@ -44,6 +44,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLU
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
 import static com.accessa.ibora.product.items.DatabaseHelper.hasoptions;
@@ -1162,14 +1163,23 @@ public class DBManager {
         database.delete(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, selection, selectionArgs);
         return true;
     }
-    public boolean deleteTransacItem(long itemId) {
 
+
+    public boolean flagTransactionItemAsVoid(long itemId) {
+        // Define the values to update
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_STATUS, "Void");
+
+        // Define the selection criteria
         String selection = ITEM_ID + "=?";
         String[] selectionArgs = { String.valueOf(itemId) };
-       database.delete(DatabaseHelper.TRANSACTION_TABLE_NAME, selection, selectionArgs);
-        return true;
-    }
 
+        // Perform the update
+        int rowsAffected = database.update(DatabaseHelper.TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
+
+        // Return true if at least one row was updated, false otherwise
+        return rowsAffected > 0;
+    }
 
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();

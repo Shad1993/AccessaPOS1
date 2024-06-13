@@ -272,7 +272,9 @@ public class printerSetup extends AppCompatActivity {
                               splittype = cursorsplit.getString(columnIndexSplitType);
                             Log.e("splittype" , splittype );
                             if(areNOItemsSelected) {
-                                Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(String.valueOf(roomid),tableid);
+                                String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                                String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                                Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid), tableid);
                                 adapter = new TicketAdapter(printerSetup.this, cursor1);
                                 recyclerView.setAdapter(adapter);
 

@@ -517,8 +517,8 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         // Refresh the TicketFragment when transaction cleared
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (customerLcdFragment != null) {
-            double totalAmount = customerLcdFragment.calculateTotalAmount();
-            double taxTotalAmount = customerLcdFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid),tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);

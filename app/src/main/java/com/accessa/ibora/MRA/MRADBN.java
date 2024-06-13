@@ -315,10 +315,13 @@ public class MRADBN extends AppCompatActivity {
 
 // Add the itemList to the main JSON object
                         jsondetailedtransacs.put("itemList", itemList);
-
-
                         jsondetailedtransacs.put("salesTransactions", "CASH");
-                        jsondetailedtransacs.put("paymentMethods", "CASH");
+
+                       if(TransactionType.equals("DRN")) {
+                           jsondetailedtransacs.put("paymentMethods", "CREDIT");
+
+                       }
+
 
                         // Convert JSON object to string
                         String jsondetails = jsondetailedtransacs.toString();
@@ -719,7 +722,9 @@ public class MRADBN extends AppCompatActivity {
         List<Transaction> itemList = new ArrayList<>();
 
         // Replace the following with your actual database query logic
+        // Replace the following with your actual database query logic
         Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(TransactionType, newtransactionid);
+
 
         if (cursor != null && cursor.moveToFirst()) {
             do {

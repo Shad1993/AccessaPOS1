@@ -497,7 +497,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum= String.valueOf(catId);
-                                Log.d("roomtable", roomid + " " + tableid);
+                                Log.d("roomtable1", roomid + " " + tableid);
                                 // Item not selected, insert a new transaction with quantity 1 and total price
                                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -2137,7 +2137,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         return priceWithoutVat;
     }
     public double calculateTotalAmount() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
         double totalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
             int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
@@ -2152,7 +2155,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         return totalAmount;
     }
     public double calculateTotalTax() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
         double TaxtotalAmount = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
             int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);

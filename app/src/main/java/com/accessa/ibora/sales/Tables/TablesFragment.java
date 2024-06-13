@@ -326,7 +326,7 @@ String transactionIdInProgress;
 
         editor.putInt("roomnum", Integer.parseInt(roomId));
         editor.putInt("room_id", Integer.parseInt(roomId));
-        Log.d("roomtable", roomId + " " + newTableId);
+        Log.d("roomtables", roomId + " " + newTableId);
         editor.apply();
 
         // Now the table ID in SharedPreferences is updated and can be accessed elsewhere in your app

@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -506,6 +507,7 @@ if (cashReturn != 0.0) {
 
     @Override
     public void onItemAdded(String roomid, String tableid) {
+        Log.d("onItemAdded", "onItemAdded called with roomid: " + roomid + ", tableid: " + tableid);
 
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
@@ -553,8 +555,8 @@ if (cashReturn != 0.0) {
         // Refresh the TicketFragment when transaction cleared
         CustomerLcdFragment customerLcdFragment = (CustomerLcdFragment) getSupportFragmentManager().findFragmentById(R.id.customerDisplay_fragment);
         if (customerLcdFragment != null) {
-            double totalAmount = customerLcdFragment.calculateTotalAmount();
-            double taxTotalAmount = customerLcdFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid),tableid);
+            double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid),tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
                 ticketFragment.refreshData(totalAmount, taxTotalAmount);
@@ -856,7 +858,7 @@ if (cashReturn != 0.0) {
 
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshDatatable(calculateTotalAmount(roomnum,tableId), calculateTotalTaxAmount(roomnum,tableId),roomnum,tableId);
+                ticketFragment.refreshDatatable(mDatabaseHelper.calculateTotalAmount(roomnum,tableId), mDatabaseHelper.calculateTotalTaxAmount(roomnum,tableId),roomnum,tableId);
 
                 //ticketFragment.updateheader(calculateTotalAmount(roomnum,tableId),1);
                 CustomerLcd instance = new CustomerLcd();
@@ -864,36 +866,8 @@ if (cashReturn != 0.0) {
             }
 
     }
-    public double calculateTotalAmount(String roomid,String tableid) {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
-    }
-    public double calculateTotalTaxAmount(String roomid,String tableid) {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
-    }
+
+
     public void filterAndInsertTable(String newTableName) {
         TablesFragment tablesFragment = (TablesFragment) getSupportFragmentManager().findFragmentById(R.id.TableFragment);
 

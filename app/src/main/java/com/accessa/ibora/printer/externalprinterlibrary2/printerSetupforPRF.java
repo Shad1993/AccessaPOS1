@@ -122,7 +122,9 @@ public class printerSetupforPRF extends AppCompatActivity {
                     }else
 
                     {
-                        cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(String.valueOf(roomid),tableid);
+                        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                        cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
                         Log.d("room11", roomid);
                         Log.d("table11", tableid);
                     }
@@ -406,6 +408,14 @@ public class printerSetupforPRF extends AppCompatActivity {
             int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
             String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
             service.printText(TenderItemsTypesLine + "\n", null);
+
+            if(cashReturn >0) {
+                service.printText(singlelineSeparator + "\n", null);
+                int ReturnTypesPadding = lineWidth - formattedReturn.length() - CashReturn.length();
+                String ReturnTypesLine = CashReturn + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedReturn;
+                service.printText(ReturnTypesLine + "\n", null);
+
+            }
         }
     }
 }else{  service.printText("" + "\n", null);
@@ -413,13 +423,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                         }
 
 
-                        if(cashReturn >0) {
-                            service.printText(singlelineSeparator + "\n", null);
-                            int ReturnTypesPadding = lineWidth - formattedReturn.length() - CashReturn.length();
-                            String ReturnTypesLine = CashReturn + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedReturn;
-                            service.printText(ReturnTypesLine + "\n", null);
 
-                        }
                         service.printText(lineSeparator + "\n", null);
                         service.setAlignment(1, null); // Align center
                         // Footer Text

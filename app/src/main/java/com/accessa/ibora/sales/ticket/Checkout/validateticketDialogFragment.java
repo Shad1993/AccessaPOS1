@@ -109,7 +109,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private QRFragment.DataPassListener dataPassListener;
     private String tableid;
     private EditText clickedEditText;
-
+    private SalesFragment.ItemAddedListener itemAddedListener;
     private String roomid;
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
@@ -132,7 +132,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private double totalAmount, TaxtotalAmount;
     private DatabaseHelper mDatabaseHelper;
     private LinearLayout containerLayout; // Added
-    private  Button validateButton;
+    private  Button validateButton,Subtotal;
     private static final String amounts = "amount";
     private static final String popFragment = "popfragment";
     private static final String Buyertype="Buyertype";
@@ -269,6 +269,7 @@ public class validateticketDialogFragment extends DialogFragment  {
             // Full payment: Take the total amount as the value
             gridLayout.setVisibility(View.GONE);
             gifImageView.setVisibility(View.VISIBLE);
+            containerLayout.setVisibility(View.GONE);
 
         }
 
@@ -285,7 +286,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 // Set the visibility of the GridLayout to VISIBLE
                 gridLayout.setVisibility(View.VISIBLE);
-
+                containerLayout.setVisibility(View.VISIBLE);
 
                 String id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
@@ -295,6 +296,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     // Full payment: Take the total amount as the value
                     gridLayout.setVisibility(View.GONE);
                     gifImageView.setVisibility(View.VISIBLE);
+                    containerLayout.setVisibility(View.GONE);
                     handleFullPayment(id);
                 }
                 else if (id !=null && (id.equals("1") && name.equals("POP")))
@@ -382,6 +384,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                         // Set the visibility of the GridLayout to VISIBLE
                         gridLayout.setVisibility(View.VISIBLE);
+                        containerLayout.setVisibility(View.VISIBLE);
+                        Subtotal.setVisibility(View.VISIBLE);
                         editText.setLayoutParams(editParams);
 
                         // Set other properties of the EditText
@@ -416,7 +420,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
                     gridLayout.setVisibility(View.VISIBLE);
-
+                    containerLayout.setVisibility(View.VISIBLE);
                     gifImageView.setVisibility(View.GONE);
 
                     editText.setOnClickListener(new View.OnClickListener() {
@@ -629,8 +633,8 @@ public class validateticketDialogFragment extends DialogFragment  {
                 if(areAllItemsNotSelectedNotPaid) {
                     if (cursor1 != null && cursor1.moveToFirst()) {
 
-                        totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
-                        TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid,roomid,tableid);
+                        totalAmount =mDatabaseHelper.calculateTotalAmount(roomid,tableid);
+                        TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmount(roomid,tableid);
                         totalAmountTextView = view.findViewById(R.id.textViewAmount);
                         String formattedTotalAmount = String.format("%.2f", totalAmount);
                         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
@@ -703,7 +707,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
          validateButton = view.findViewById(R.id.buttonCash);
-
+        Subtotal=view.findViewById(R.id.buttonSubTotal);
         amountReceivedEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -777,11 +781,11 @@ public class validateticketDialogFragment extends DialogFragment  {
                     textViewCashReturnAmount.setVisibility(View.GONE);
                     cashReturnTextView.setVisibility(View.GONE);
                     validateButton.setVisibility(View.GONE);
+                    Subtotal.setVisibility(View.VISIBLE);
                 }
 
             }
         });
-
         validateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -900,14 +904,14 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Declare a variable to hold the total amount
                 double totalAmountinserted = 0.0;
 
-                    // Iterate over the settlement items to calculate the total amount
+                // Iterate over the settlement items to calculate the total amount
                 for (SettlementItem item : settlementItems) {
                     totalAmountinserted += item.getSettlementAmount();
                 }
 
                 // Print or use the total amount as needed
 
-                 cashReturn= totalAmountinserted- totalAmount;
+                cashReturn= totalAmountinserted- totalAmount;
 
 
 
@@ -994,6 +998,137 @@ public class validateticketDialogFragment extends DialogFragment  {
             }
 
         });
+        Subtotal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                validatepayment();
+            }
+
+            private void validatepayment() {
+
+
+
+
+                // Get the amount received
+                double amountReceived = 0.0;
+                if (!amountReceivedEditText.getText().toString().isEmpty()) {
+                    amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
+                }
+
+                // Iterate over the container layout to get the settlement details
+                ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+                for (int i = 0; i < containerLayout.getChildCount(); i += 2) {
+                    View childView = containerLayout.getChildAt(i);
+                    if (childView instanceof TextView) {
+                        TextView nameTextView = (TextView) childView;
+                        String paymentName = nameTextView.getText().toString();
+
+                        View amountView = containerLayout.getChildAt(i + 1);
+                        if (amountView instanceof EditText) {
+                            EditText amountEditText = (EditText) amountView;
+                            String amountText = amountEditText.getText().toString();
+                            double settlementAmount = 0.0;
+                            if (!amountText.isEmpty()) {
+                                settlementAmount = Double.parseDouble(amountText);
+                            }
+                            settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+                        }
+                    }
+                }
+
+// Update the table with settlement details
+
+                // Update the table with settlement details
+                for (SettlementItem settlementItem : settlementItems) {
+
+                    // Use a specific Locale for date formatting
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    String currentDate = dateFormat.format(new Date());
+                    Log.d("insertsettlementtest1", settlementItem.getPaymentName() );
+
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                    String currentTime = timeFormat.format(new Date());
+                    boolean updated = mDatabaseHelper.insertSettlementAmount(settlementItem.getPaymentName(), settlementItem.getSettlementAmount(), Transaction_Id, PosNum, currentDate,currentTime, String.valueOf(roomid),tableid);
+
+                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+                    ContentValues values = new ContentValues();
+                    values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Use the current date
+                    values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                    values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, settlementItem.getPaymentName());
+                    values.put(FINANCIAL_COLUMN_POSNUM, PosNum); // Insert the posnum
+
+// Check if a row with the same payment name, current date, cashier ID, and posnum already exists
+                    String[] whereArgs = new String[] {settlementItem.getPaymentName(), currentDate, cashierId, PosNum};
+                    Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                            FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                                    FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                            whereArgs, null, null, null);
+
+                    if (cursor.moveToFirst()) {
+                        // If a row with the same payment name, current date, cashier ID, and posnum exists, update the values
+                        int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                        double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                        double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                        values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                        values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + settlementItem.getSettlementAmount()); // Update the total
+
+                        // Check if the payment name is "Cash" or "Cheques" to update the totalizer
+                        if ("Cash".equals(settlementItem.getPaymentName()) || "Cheque".equals(settlementItem.getPaymentName())) {
+                            values.put(FINANCIAL_COLUMN_TOTALIZER, currentTotalizer + settlementItem.getSettlementAmount()); // Update the totalizer
+
+                        } else {
+                            // If the payment name is not "Cash" or "Cheques," do not update the totalizer
+                            values.put(FINANCIAL_COLUMN_TOTALIZER, 0.00);
+                        }
+
+                        db.update(FINANCIAL_TABLE_NAME, values, FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " +
+                                FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                                FINANCIAL_COLUMN_POSNUM + " = ?", whereArgs);
+                    } else {
+                        // If no row with the same payment name and current date exists, insert a new row
+                        values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
+                        values.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Initialize total
+                        values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getSettlementAmount()); // Initialize totalizer
+
+                        db.insert(FINANCIAL_TABLE_NAME, null, values);
+                    }
+                    if ("Cash".equals(settlementItem.getPaymentName()) ) {
+                        ContentValues cashReportValues = new ContentValues();
+                        cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                        cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                        cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                        cashReportValues.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Positive cash in amount
+                        cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+
+                        db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+                    }
+                    if (updated) {
+                        Toast.makeText(getActivity(), "Settlement amount insert for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to insert settlement amount for " + settlementItem.getPaymentName(), Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+
+                // Declare a variable to hold the total amount
+                double totalAmountinserted = 0.0;
+
+                    // Iterate over the settlement items to calculate the total amount
+                for (SettlementItem item : settlementItems) {
+                    totalAmountinserted += item.getSettlementAmount();
+                }
+
+                // Notify the listener that an item is added
+                if (itemAddedListener != null) {
+                    itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+                }
+
+            }
+
+        });
 
 
         Button splitPaymentButton = view.findViewById(R.id.Splitpayment);
@@ -1012,6 +1147,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 saveSelectedPaymentType("splitted");
                 gifImageView.setVisibility(view.GONE);
                 gridLayout.setVisibility(view.GONE);
+                containerLayout.setVisibility(View.GONE);
                 // Update button colors
                 updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
 
@@ -1027,7 +1163,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 // Full payment: Take the total amount as the value
                 gridLayout.setVisibility(view.GONE);
                 gifImageView.setVisibility(view.VISIBLE);
-
+                containerLayout.setVisibility(View.GONE);
                 // Update button colors
                 updateButtonColors("full", splitPaymentButton, fullPaymentButton);
             }
@@ -1783,7 +1919,14 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
     }
 
     private void onclearButtonClick(EditText amountReceivedEditText) {
-        amountReceivedEditText.setText(""); // Set the text of editTextOption1 to an empty string
+
+        if (amountReceivedEditText != null) {
+            // Insert the letter into the EditText
+            amountReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
     }
     public void oncommentButtonClick(EditText amountReceivedEditText , String letter) {
         if (amountReceivedEditText != null) {
@@ -1834,5 +1977,12 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
 
         builder.create().show();
     }
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof SalesFragment.ItemAddedListener) {
+            itemAddedListener = (SalesFragment.ItemAddedListener) context;
+        }
 
+    }
 }

@@ -427,36 +427,8 @@ public void clearTransact(){
         return image;
     }
 
-    public double calculateTotalAmount() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
-    }
-    public double calculateTotalTax(int roomid, String tableid) {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double TaxtotalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
-            do {
-                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
-                TaxtotalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return TaxtotalAmount;
-    }
+
+
 
 
 

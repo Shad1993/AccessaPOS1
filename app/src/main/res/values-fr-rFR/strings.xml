@@ -520,6 +520,7 @@
     <string name="supplements">Supplements</string>
     <string name="ClearTransaction">Clear Transaction</string>
     <string name="search_list">Search</string>
+    <string name="SUBTOTAL">SUBTOTAL</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

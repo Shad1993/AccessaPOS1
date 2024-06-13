@@ -254,10 +254,12 @@ private TextView textViewVATs,textViewTotals;
         }
 
         // Load the data based on the transaction ID
-        if (transactionIdInProgress != null) {
-            Cursor cursor2 = mDatabaseHelper.getTransactionsByStatusAndId(DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, transactionIdInProgress);
+
+            String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+            String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+            Cursor cursor2 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
             mAdapter.swapCursor(cursor2);
-        }
+
 
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
         Glide.with(getContext())
@@ -1075,7 +1077,9 @@ if(Type.equals("DRN")) {
 
         TextView cashierTextView = getView().findViewById(R.id.textViewCashier);
         cashierTextView.setText(" - Cashier: " + cashierId);
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(roonum,tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid), tableid);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 

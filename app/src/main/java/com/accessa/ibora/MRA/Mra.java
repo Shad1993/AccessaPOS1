@@ -466,7 +466,12 @@ if(SelectedBuyerProfile==null) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splashflash);
         mDatabaseHelper = new DatabaseHelper(this);
-
+        SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        cashierId = sharedPreference.getString("cashorId", null);
+        cashierName = sharedPreference.getString("cashorName", null);
+        cashorlevel = sharedPreference.getString("cashorlevel", null);
+        CompanyName=sharedPreference.getString("CompanyName",null);
+        ShopName = sharedPreference.getString("ShopName", null);
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
         if (intent != null) {
@@ -493,12 +498,7 @@ if(SelectedBuyerProfile==null) {
 
 
 
-        SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
-        cashierId = sharedPreference.getString("cashorId", null);
-        cashierName = sharedPreference.getString("cashorName", null);
-        cashorlevel = sharedPreference.getString("cashorlevel", null);
-        CompanyName=sharedPreference.getString("CompanyName",null);
-        ShopName = sharedPreference.getString("ShopName", null);
+
 
 
         try {
