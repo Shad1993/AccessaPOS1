@@ -27,7 +27,9 @@
     <item
         android:id="@+id/clear_ticket"
         android:title="@string/ClearTransaction" />
-
+    <item
+        android:id="@+id/clear_Payment"
+        android:title="@string/ClearPayment" />
     <item
         android:id="@+id/open_drawer"
         android:title="@string/OpenDrawer" />

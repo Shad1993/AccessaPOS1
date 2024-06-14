@@ -526,6 +526,8 @@
     <string name="ClearTransaction">Clear Transaction</string>
     <string name="search_list">Search</string>
     <string name="SUBTOTAL">SUBTOTAL</string>
+    <string name="PaymentMethod">Payment Method:</string>
+    <string name="ClearPayment">Clear Payments</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

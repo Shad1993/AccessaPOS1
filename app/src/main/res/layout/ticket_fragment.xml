@@ -214,8 +214,12 @@
             android:textSize="15sp"
             android:textColor="@color/BleuAccessaText"
             android:textStyle="bold" />
-
-        <!-- Total -->
+        <!-- Separator Line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/BleuAccessaText" />
+        <!-- SUBTotal -->
         <TextView
             android:id="@+id/textViewSubtotal"
             android:layout_width="match_parent"
@@ -223,7 +227,18 @@
             android:layout_weight="1"
             android:text="@string/SUBTOTAL"
             android:visibility="gone"
+            android:textSize="15sp"
+            android:textColor="@color/BleuAccessaText"
+            android:textStyle="bold" />
 
+        <!-- Cash Return -->
+        <TextView
+            android:id="@+id/textViewCashReturn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cashReturn"
+            android:visibility="gone"
             android:textSize="15sp"
             android:textColor="@color/BleuAccessaText"
             android:textStyle="bold" />
@@ -231,6 +246,7 @@
 
     <!-- Footer Section -->
     <LinearLayout
+        android:id="@+id/footer_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"

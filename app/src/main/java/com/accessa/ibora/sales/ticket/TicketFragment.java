@@ -50,6 +50,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -106,6 +107,8 @@ import woyou.aidlservice.jiuiv5.IWoyouService;
 public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
     private StringBuilder enterednumber;
     EditText numberOfPeopleEditText;
+
+    private LinearLayout FooterLayout; // Added
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
     private List<String> checkedItems;
@@ -326,7 +329,12 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
             clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
             return true;
-        } else if
+        }  else if
+        (id == R.id.clear_Payment) {
+
+            clearPayment(); // Call the clearTransact() function on the CustomerLcdFragment
+            return true;
+        }else if
         (id == R.id.open_drawer) {
             int level = Integer.parseInt(cashierLevel);
             if (level == 7) {
@@ -1720,6 +1728,43 @@ if(Type.equals("DRN")) {
 
     }
 
+    public void clearPayment(){
+        // Create an instance of the DatabaseHelper class
+// Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
+
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+        mDatabaseHelper.clearData(roomid,Integer.parseInt(tableid),latesttransId);
+
+        double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+        // Optionally, you can notify the user or perform any other actions after clearing the transaction
+// Notify the listener that an item is added
+
+        // Refresh the data in the RecyclerView
+        refreshData(totalAmount, TaxtotalAmount);
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
+        String deviceType = sharedPreferences.getString("device_type", null);
+
+
+        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+            //showSecondaryScreen(data);
+        }  else {
+            Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
+        }
+        //   recreate(getActivity());
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged();
+        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
+
+
+    }
 
     public void clearTransact(){
         // Create an instance of the DatabaseHelper class
@@ -1732,7 +1777,8 @@ if(Type.equals("DRN")) {
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
 // Notify the listener that an item is added
-
+        double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount);
 
@@ -1986,6 +2032,53 @@ Log.d("room and table", roomid+ " " +tableid);
         TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+        TextView textviewpaymentmethod=getView().findViewById(R.id.textViewpaymentname);
+        TextView textviewSubTotal=getView().findViewById(R.id.textViewSubtotal);
+        TextView cashreturn=getView().findViewById(R.id.textViewCashReturn);
+       FooterLayout = getView().findViewById(R.id.footer_layout); // Initialize the container layout
+        // Call the getSettlementSummaries method
+        List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, roomid, Integer.parseInt(tableid));
+
+        // Calculate the subtotal and display payment methods
+        if (summaries != null && !summaries.isEmpty()) {
+            double sum = 0.0;
+            StringBuilder paymentMethods = new StringBuilder();
+
+            for (DatabaseHelper.SettlementSummary summary : summaries) {
+                sum += summary.sum;
+                paymentMethods.append(summary.paymentName).append(": Rs ").append(String.format("%.2f", summary.sum)).append("\n");
+            }
+
+            double subtotal = totalAmount - sum;
+            double CashReturnVal= sum-totalAmount;
+            if(subtotal<0){
+                CashReturnVal= -1 * subtotal;
+
+            }
+            String formattedSubTotalAmount = String.format("%.2f", subtotal);
+            String formattedCashReturn = String.format("%.2f", CashReturnVal);
+            textviewpaymentmethod.setVisibility(View.VISIBLE);
+            textviewSubTotal.setVisibility(View.VISIBLE);
+            textviewpaymentmethod.setText(paymentMethods.toString().trim());
+            if(subtotal<0){
+                textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs 0.00");
+                cashreturn.setVisibility(View.VISIBLE);
+                FooterLayout.setVisibility(View.GONE);
+                cashreturn.setText(getString(R.string.cashReturn) + ": Rs " + formattedCashReturn);
+            }else {
+
+                textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs " + formattedSubTotalAmount);
+            }
+            // Log the results
+            System.out.println("Sum: " + sum + ", Payment Methods: " + paymentMethods.toString());
+        } else {
+            textviewpaymentmethod.setVisibility(View.GONE);
+            textviewSubTotal.setVisibility(View.GONE);
+            cashreturn.setVisibility(View.GONE);
+            FooterLayout.setVisibility(View.VISIBLE);
+            // Handle the case where no data was found
+            System.out.println("No data found for transaction ID: " + latesttransId + ", room ID: " + roomid + ", table ID: " + tableid);
+        }
 
 
 
@@ -2042,18 +2135,61 @@ Log.d("room and table", roomid+ " " +tableid);
         TextView taxTextView = getView().findViewById(R.id.textViewVAT);
         String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
         taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
-        Log.d("update payment method", "onItemAdded called with roomid: " + roomid + ", tableid: " + tableid);
+        Log.d("update payment method", "onItemAdded called with roomid: " + roonum + ", tableid: " + tableid);
         TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
         String formattedTotalAmount = String.format("%.2f", totalAmount);
         totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
 
 
-        TextView textviewpaymentmethod=getView().findViewById(R.id.textViewVATs);
-        TextView textviewSubTotal=getView().findViewById(R.id.textViewTotals);
-        textviewpaymentmethod.setVisibility(View.VISIBLE);
-        textviewSubTotal.setVisibility(View.VISIBLE);
-        textviewpaymentmethod.setText(getString(R.string.PaymentMethods) + ": Rs " + formattedTotalAmount);
-        textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs " + formattedTotalAmount);
+        TextView textviewpaymentmethod=getView().findViewById(R.id.textViewpaymentname);
+        TextView textviewSubTotal=getView().findViewById(R.id.textViewSubtotal);
+        TextView cashreturn=getView().findViewById(R.id.textViewCashReturn);
+        FooterLayout = getView().findViewById(R.id.footer_layout); // Initialize the container layout
+        List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, Integer.parseInt(roonum), Integer.parseInt(tableid));
+
+        // Calculate the subtotal and display payment methods
+        if (summaries != null && !summaries.isEmpty()) {
+            double sum = 0.0;
+            StringBuilder paymentMethods = new StringBuilder();
+
+            for (DatabaseHelper.SettlementSummary summary : summaries) {
+                sum += summary.sum;
+                paymentMethods.append(summary.paymentName).append(": Rs ").append(String.format("%.2f", summary.sum)).append("\n");
+            }
+
+            double subtotal = totalAmount - sum;
+            double CashReturnVal= sum-totalAmount;
+            if(subtotal<0){
+                CashReturnVal= -1 * subtotal;
+
+            }
+            String formattedSubTotalAmount = String.format("%.2f", subtotal);
+            String formattedCashReturn = String.format("%.2f", CashReturnVal);
+            textviewpaymentmethod.setVisibility(View.VISIBLE);
+            textviewSubTotal.setVisibility(View.VISIBLE);
+            textviewpaymentmethod.setText(paymentMethods.toString().trim());
+            if(subtotal<0){
+                textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs 0.00");
+                cashreturn.setVisibility(View.VISIBLE);
+                FooterLayout.setVisibility(View.GONE);
+                cashreturn.setText(getString(R.string.cashReturn) + ": Rs " + formattedCashReturn);
+            }else {
+
+                textviewSubTotal.setText(getString(R.string.SUBTOTAL) + ": Rs " + formattedSubTotalAmount);
+            }
+            // Log the results
+            System.out.println("Sum: " + sum + ", Payment Methods: " + paymentMethods.toString());
+        } else {
+            textviewpaymentmethod.setVisibility(View.GONE);
+            textviewSubTotal.setVisibility(View.GONE);
+            cashreturn.setVisibility(View.GONE);
+            FooterLayout.setVisibility(View.VISIBLE);
+
+            // Handle the case where no data was found
+            System.out.println("No data found for transaction ID: " + latesttransId + ", room ID: " + roonum + ", table ID: " + tableid);
+        }
+
+
 
 
         // Play the sound effect

@@ -3832,6 +3832,87 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return exists;
     }
+
+    // Method to get the sum of amount based on transactionId, roomId, and tableId
+    public double getSumOfAmount(String transactionId, int roomId, int tableId) {
+        SQLiteDatabase db = getReadableDatabase();
+        double sum = 0.0;
+        Cursor cursor = null;
+
+        try {
+            String query = "SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                    " WHERE " + SETTLEMENT_INVOICE_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
+            String[] selectionArgs = {transactionId, String.valueOf(roomId), String.valueOf(tableId)};
+
+            cursor = db.rawQuery(query, selectionArgs);
+            if (cursor.moveToFirst()) {
+                sum = cursor.getDouble(0);
+            }
+
+            Log.d("DatabaseHelper", "Sum of amount: " + sum + " for transactionId=" + transactionId + ", roomId=" + roomId + ", tableId=" + tableId);
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error fetching sum of amount for transactionId=" + transactionId + ", roomId=" + roomId + ", tableId=" + tableId, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+
+        return sum;
+    }
+    // Method to get the sum of settlement amounts and associated payment names
+    public List<SettlementSummary> getSettlementSummaries(String transactionId, int roomId, int tableId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        // SQL query to get the sum of SETTLEMENT_AMOUNT and the SETTLEMENT_PAYMENT_NAME
+        String query = "SELECT SUM(" + SETTLEMENT_AMOUNT + ") AS total_amount, " + SETTLEMENT_PAYMENT_NAME +
+                " FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                " WHERE " + SETTLEMENT_INVOICE_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?" +
+                " GROUP BY " + SETTLEMENT_PAYMENT_NAME;
+
+        String[] selectionArgs = {transactionId, String.valueOf(roomId), String.valueOf(tableId)};
+
+        List<SettlementSummary> summaries = new ArrayList<>();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery(query, selectionArgs);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    double sum = cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount"));
+                    String paymentName = cursor.getString(cursor.getColumnIndexOrThrow(SETTLEMENT_PAYMENT_NAME));
+                    summaries.add(new SettlementSummary(sum, paymentName));
+                } while (cursor.moveToNext());
+            }
+
+            if (!summaries.isEmpty()) {
+                Log.d("DatabaseHelper", "Sum fetch successful. Number of payment methods: " + summaries.size());
+            } else {
+                Log.d("DatabaseHelper", "No data found for transaction ID: " + transactionId + ", room ID: " + roomId + ", table ID: " + tableId);
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error fetching sum for transaction ID: " + transactionId + ", room ID: " + roomId + ", table ID: " + tableId, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return summaries;
+    }
+
+    // Helper class to store the settlement summary
+    public static class SettlementSummary {
+        public double sum;
+        public String paymentName;
+
+        public SettlementSummary(double sum, String paymentName) {
+            this.sum = sum;
+            this.paymentName = paymentName;
+        }
+    }
     public Cursor getTransactionByItemId(int itemId, String roomid, String tableid) {
         SQLiteDatabase db = getReadableDatabase();
 
@@ -4667,6 +4748,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {"%" + newText + "%"};
         String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
         return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+    }
+
+    // Method to delete data based on roomId, tableId, and transactionId
+    public void clearData(int roomId, int tableId, String transactionId) {
+        SQLiteDatabase db = getWritableDatabase();
+        try {
+            String whereClause = ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + SETTLEMENT_INVOICE_ID + " = ?";
+            String[] whereArgs = {String.valueOf(roomId), String.valueOf(tableId), transactionId};
+
+            int rowsDeleted = db.delete(INVOICE_SETTLEMENT_TABLE_NAME, whereClause, whereArgs);
+
+            Log.d("DatabaseHelper", "Deleted " + rowsDeleted + " rows where roomId=" + roomId + ", tableId=" + tableId + ", transactionId=" + transactionId);
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error deleting data for roomId=" + roomId + ", tableId=" + tableId + ", transactionId=" + transactionId, e);
+        } finally {
+            db.close();
+        }
     }
     public boolean insertSettlementAmount(String paymentName, double settlementAmount, String SettlementId, String PosNum, String transactionDate,String transactiontime,String roomid, String tableid) {
         SQLiteDatabase db = this.getWritableDatabase();
