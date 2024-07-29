@@ -37,6 +37,7 @@ import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.FirstFragment;
 import com.accessa.ibora.product.options.OptionsFragment;
+import com.accessa.ibora.product.supplements.SupplementsFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -126,6 +127,10 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
     }else if (fragmentKey != null && fragmentKey.equals("coupon_fragment")) {
             Fragment newFragment = new CouponFragment();
             setToolbarTitle(getString(R.string.couponcode)); // Set the toolbar title
+            replaceFragment(newFragment);
+        }else if (fragmentKey != null && fragmentKey.equals("Supplement_fragment")) {
+            Fragment newFragment = new SupplementsFragment();
+            setToolbarTitle(getString(R.string.Supplements)); // Set the toolbar title
             replaceFragment(newFragment);
         }
 

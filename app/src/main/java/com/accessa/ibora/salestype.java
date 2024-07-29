@@ -1,5 +1,8 @@
 package com.accessa.ibora;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.PREFERENCE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.STATUS_KEY;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,8 +19,7 @@ import com.bumptech.glide.Glide;
 
 public class salestype extends AppCompatActivity {
     private AlertDialog alertDialog;
-    private static final String PREFERENCE_NAME = "YourPreferences";
-    private static final String STATUS_KEY = "status";
+
     String cashorName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {

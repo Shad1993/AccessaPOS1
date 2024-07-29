@@ -1,5 +1,8 @@
 package com.accessa.ibora.printer.externalprinterlibrary2;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.PREFERENCE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.STATUS_KEY;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.PrintSplit;
+import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
@@ -122,9 +126,8 @@ public class printerSetupforPRF extends AppCompatActivity {
                     }else
 
                     {
-                        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-                        cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
+                        cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(newtransactionid,String.valueOf(roomid),tableid);
                         Log.d("room11", roomid);
                         Log.d("table11", tableid);
                     }
@@ -249,22 +252,45 @@ public class printerSetupforPRF extends AppCompatActivity {
 
                         // Print the custom layout
                         service.printText(titleTextView.getText().toString(), null);
+                        int actualcopyprinted= mDatabaseHelper.getCopyPrinted(newtransactionid);
+                        mDatabaseHelper.updateCopyPrinted(newtransactionid,actualcopyprinted);
+                        int newactualcopyprinted= mDatabaseHelper.getCopyPrinted(newtransactionid);
+                        SharedPreferences preferences = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+                        String status = preferences.getString(STATUS_KEY, "default_value");
+                        int covers=mDatabaseHelper.getNumberOfCovers(newtransactionid);
+                        String relatedtransid= mDatabaseHelper.getRelatedTransactionId(newtransactionid);
+                        String RelTrID= "Related Trans Id: " + relatedtransid ;
                         String cashierid= "Cashier Id: " + cashierId ;
+                        String Posnum = "POS Number: " + PosNum;
+                        String room= "Room Number: " + roomid + "\n";
+                        String table= "Table Number: " + tableid +"\n";
+                        String Printed= "Copy Printed: " + newactualcopyprinted +"\n";
+                        String SalesType= "Sales Type -" + status +"\n";
+                        String coversnum= "Number Of Servings: " + covers + "\n";
+
+                        service.printText(RelTrID + "\n", null);
+                        service.printText(SalesType + "\n", null);
+                        service.printText(coversnum, null);
                         service.printText(cashierid + "\n", null);
                         service.printText(contentTextView.getText().toString(), null);
-
+                        service.printText(Posnum + "\n", null);
+                        service.printText(room , null);
+                        service.printText(table, null);
+                        service.printText(Printed, null);
                         // Print a line separator
 
                         String lineSeparator = "=".repeat(lineWidth);
                         String singlelineSeparator = "-".repeat(lineWidth);
                         service.printText(lineSeparator + "\n", null);
-
+                        boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(newtransactionid);
                         // Print the data from the RecyclerView
                         for (Transaction items : item) {
                             String itemName = items.getItemName();
                             int itemQuantity = items.getItemQuantity();
                             String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
-
+                            int itemid = items.getitem_id();
+                            double totalprice=items.getItemPrice();
+                            double unitprice= totalprice/itemQuantity;
                             // Calculate the padding for the item name
                             int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
 
@@ -272,9 +298,10 @@ public class printerSetupforPRF extends AppCompatActivity {
                             // Inside the for loop where you print the data from the RecyclerView
 
 
+                            double currentprice= mDatabaseHelper.getItemPrice(String.valueOf(itemid));
+                            Log.e("currentprice1" , String.valueOf(currentprice));
                             double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
-                            String formattedUnitPrice = "Rs " + String.format("%.2f", numericUnitPrice);
-
+                            String formattedUnitPrice = "Rs " + String.format("%.2f", unitprice);
 
                             // Create the formatted item line
 
@@ -301,64 +328,76 @@ public class printerSetupforPRF extends AppCompatActivity {
                             int columnIndexTimeCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
                             int columnIndexDateCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
 
+
+
+                            double totalPriceSum = mDatabaseHelper.getTotalAmount(newtransactionid, roomid, tableid);
+                            double totalVATSum = mDatabaseHelper.getVAT(newtransactionid,String.valueOf(roomid), tableid);
+                            Log.d("totalAmount" , String.valueOf(totalAmount));
+                            Log.d("totalPriceSum" , String.valueOf(totalPriceSum));
                             totalAmount = cursor.getDouble(columnIndexTotalAmount);
                             TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                             DateCreated = cursor.getString(columnIndexDateCreated);
                             timeCreated = cursor.getString(columnIndexTimeCreated);
+                            Log.d("totalAmount" , String.valueOf(totalAmount));
+                            Log.d("totalPriceSum" , String.valueOf(totalPriceSum));
 
 
 
-                            String formattedTotalAmount = String.format("%.2f", totalAmount);
-                            String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
+                            String Total = getString(R.string.Total);
+                                String TVA = getString(R.string.Vat);
+                            String AmountWitoutVat= "Amount Excluding Vat  " ;
+                                String formattedTotalAmount = String.format("%.2f", totalPriceSum);
+                                String formattedTotalTAXAmount = String.format("%.2f", totalVATSum);
+                            double amountwvat= totalAmount - TaxtotalAmount;
+                            String formattedamountwvat = String.format("%.2f", amountwvat);
+                                String TotalValue = "Rs " + formattedTotalAmount;
+                                String TotalVAT = "Rs " + formattedTotalTAXAmount;
+                            String TotalAmounTWOVAT="Rs " +formattedamountwvat;
+                                int lineWidths = 38;
+                                // Calculate the padding for the item name
+                                int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
+                                int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                            int AmountWVatValuePadding = lineWidth - TotalAmounTWOVAT.length() - AmountWitoutVat.length();
 
-                            String Total= getString(R.string.Total);
-                            String TVA= getString(R.string.Vat);
+                                // Enable bold text and set font size to 30
+                                byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
+                                service.sendRAWData(boldOnBytes, null);
+                                service.setFontSize(30, null);
 
-                            String TotalValue= "Rs " + formattedTotalAmount;
-                            String TotalVAT= "Rs " + formattedTotalTAXAmount;
-                                int lineWidths= 38;
-                            // Calculate the padding for the item name
-                            int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
-                            int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                                // Print the "Total" and its value with the calculated padding
+                                String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
+                                service.printText(totalLine + "\n", null);
 
-
-                    // Enable bold text and set font size to 30
-                            byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
-                            service.sendRAWData(boldOnBytes, null);
-                            service.setFontSize(30, null);
-
-                // Print the "Total" and its value with the calculated padding
-                            String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
-                            service.printText(totalLine + "\n", null);
-
-                        // Disable bold text and reset font size
-                            byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
-                            service.sendRAWData(boldOffBytes, null);
-                            service.setFontSize(24, null);
+                                // Disable bold text and reset font size
+                                byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                                service.sendRAWData(boldOffBytes, null);
+                                service.setFontSize(24, null);
 
 
-                            // Query the transaction table to get distinct VAT types
-                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(newtransactionid,roomid,tableid);
-                            if (vatCursor != null && vatCursor.moveToFirst()) {
-                                StringBuilder vatTypesBuilder = new StringBuilder();
-                                do {
-                                    int columnIndexVATType = vatCursor.getColumnIndex(DatabaseHelper.VAT_Type);
-                                    String vatType = vatCursor.getString(columnIndexVATType);
-                                    vatTypesBuilder.append(vatType).append(", ");
-                                } while (vatCursor.moveToNext());
-                                vatCursor.close();
+                                // Query the transaction table to get distinct VAT types
+                                Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(newtransactionid, String.valueOf(roomid), tableid);
+                                if (vatCursor != null && vatCursor.moveToFirst()) {
+                                    StringBuilder vatTypesBuilder = new StringBuilder();
+                                    do {
+                                        int columnIndexVATType = vatCursor.getColumnIndex(DatabaseHelper.VAT_Type);
+                                        String vatType = vatCursor.getString(columnIndexVATType);
+                                        vatTypesBuilder.append(vatType).append(", ");
+                                    } while (vatCursor.moveToNext());
+                                    vatCursor.close();
 
-                                // Remove the trailing comma and space
-                                String vatTypes = vatTypesBuilder.toString().trim();
-                                if (vatTypes.endsWith(",")) {
-                                    vatTypes = vatTypes.substring(0, vatTypes.length() - 1);
+                                    // Remove the trailing comma and space
+                                    String vatTypes = vatTypesBuilder.toString().trim();
+                                    if (vatTypes.endsWith(",")) {
+                                        vatTypes = vatTypes.substring(0, vatTypes.length() - 1);
+                                    }
+
+
+                                    int vatTypesPadding = lineWidth - TotalVAT.length() - vatTypes.length();
+                                    String vatTypesLine = vatTypes + " ".repeat(Math.max(0, vatTypesPadding)) + TotalVAT;
+                                    service.printText(vatTypesLine + "\n", null);
                                 }
-
-
-                                int vatTypesPadding = lineWidth - TotalVAT.length() - vatTypes.length();
-                                String vatTypesLine = vatTypes + " ".repeat(Math.max(0, vatTypesPadding)) + TotalVAT;
-                                service.printText(vatTypesLine + "\n", null);
-                            }
+                            String AmountWOVATLine = AmountWitoutVat + " ".repeat(Math.max(0, AmountWVatValuePadding)) + TotalAmounTWOVAT;
+                            service.printText(AmountWOVATLine + "\n", null);
 
 
                         }
@@ -432,7 +471,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                         String Footer2Text = getString(R.string.Footer_OpenHours);
                         String Openinghours= Footer2Text + OpeningHours ;
 
-                        if (mraqr != null && !mraqr.equals("Request Failed")) {
+                        if (mraqr != null && !mraqr.startsWith("Request Failed")) {
                             // Log the received QR code string
                             Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
                             String MraFiscalised="MRA Fiscalised";
@@ -510,7 +549,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                                         int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
                                         String vatType = DrawerCursor.getString(columnIndexDrawer);
                                         if (cashReturn > 0 || "true".equals(vatType)) {
-                                            service.openDrawer(null);
+
                                         }
                                         vatTypesBuilder.append(vatType).append(", ");
                                     } while (DrawerCursor.moveToNext());
@@ -551,10 +590,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                         service.sendRAWData(openDrawerBytes, null);
                         // Open the cash drawer
 
-                        if(cashReturn > 0) {
-                            service.openDrawer(null);
 
-                        }
                        String transactionType;
                         if(cashorlevel.equals("1")) {
 

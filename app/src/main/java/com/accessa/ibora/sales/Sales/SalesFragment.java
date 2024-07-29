@@ -57,6 +57,8 @@ import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
     private EditText editTextOption1;
     private StringBuilder enteredcomment;
+
+    private  String  latesttransId;
     private  String NewBarcode;
     private static final String PREF_ROOM_ID = "room_id";
     public static RecyclerView mRecyclerView;
@@ -271,9 +273,12 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     String transactionCDN = "CRN";
                     String transactionDBN = "DRN";
 
+                    String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                     latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
                     if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF") || transactionSaved.equals("PRF") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")) {
                         if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
+                            Log.d("INSERT_Transactions1", "test1" );
                             transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                             // Store the transaction ID in SharedPreferences
                             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -281,12 +286,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             editor.apply();
                             refreshTicketFragment();
                             refreshTotal();
-
+                            transactionId = transactionIdInProgress;
                         }
                         transactionId = transactionIdInProgress;
 
-
+                        Log.d("transactionId", transactionId );
                     } else {
+                        Log.d("INSERT_Transactions2", "test1" );
                         transactionId = generateNewTransactionId(); // Generate a new transaction ID
                         refreshTicketFragment();
                         refreshTotal();
@@ -307,7 +313,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     refreshTotal();
 // Update the transaction ID for all items in progress
                     if (transactionStatus.equals("InProgress") ||(transactionStatus.equals("PRF"))) {
-                        mDatabaseHelper.updateTransactionIds(transactionIdInProgress, String.valueOf(roomid),tableid);
+
+                         statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+                        mDatabaseHelper.updateTransactionIds(latesttransId, String.valueOf(roomid),tableid);
                         refreshTicketFragment();
                         refreshTotal();
                     }
@@ -327,7 +337,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     Weight=item.getWeight();
                     catname=item.getCategory();
 
-                    if (Boolean.TRUE.equals(HasOptions)|| Hascomment.trim().equals("1") || Hascomment.trim().equals("true")) {
+                    if (Boolean.TRUE.equals(HasOptions)) {
 
 
 
@@ -341,7 +351,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         Log.d("sentToKitchen1", sentToKitchen);
 
                         if (sentToKitchen.equals("1")) {
-                            boolean existingitems=mDatabaseHelper.checkItemExists(transactionIdInProgress,tableid, String.valueOf(roomid));
+
+                            boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
                             int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
                             if(existingitems )
                             {
@@ -370,7 +381,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                                             String Catnum = String.valueOf(catId);
-                                            Log.d("roomtable", roomid + " " + tableid);
+                                            Log.d("roomtable1", roomid + " " + tableid);
                                             // Insert a new transaction with IS_PAID as 0
                                             mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -397,7 +408,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                     double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
                                     double newTotalPrice = UnitPrice * newQuantity;
                                     double newVat = newQuantity * calculateTax();
-                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
                                     refreshTicketFragment();
                                     refreshTotal();
                                 }
@@ -406,10 +417,14 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             }
 
                         // Check if the existing transaction ID matches the current transaction ID
-                        else if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
+                        else if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
                             Log.d("sentToKitchentestupdate2", sentToKitchen);
+                            Log.d("existingTransactionId1", existingTransactionId);
+                            Log.d("transactionIdInProgress", transactionIdInProgress);
+                            Log.d("latesttransId", latesttransId);
+                            Log.d("sentToKitchentest1", sentToKitchen);
                             // Item already selected, update the quantity and total price
-                            int currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
+                            int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,Barcode);
 
                             UnitPrice = Double.parseDouble(price);
 
@@ -424,11 +439,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
                             double newTotalPrice = UnitPrice * newQuantity;
                             double newVat = newQuantity * calculateTax();
-                            mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                            mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
                             refreshTicketFragment();
                             refreshTotal();
                         }else {
-
+                            Log.d("existingTransactionId", existingTransactionId);
+                            Log.d("transactionIdInProgress", transactionIdInProgress);
+                            Log.d("latesttransId", latesttransId);
                             Log.d("sentToKitchentest1", sentToKitchen);
                                     // Item is paid, insert a new transaction with IS_PAID as 0
                                     item = dbManager.getItemById(String.valueOf(itemId));
@@ -453,7 +470,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                                             String Catnum = String.valueOf(catId);
-                                            Log.d("roomtable", roomid + " " + tableid);
+                                            Log.d("roomtable2", roomid + " " + tableid);
                                             // Insert a new transaction with IS_PAID as 0
                                             mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -492,16 +509,23 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
                             if (cursorCompany != null && cursorCompany.moveToFirst()) {
                                 int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-                                ;
+
                                 String MRAMETHOD = "Single";
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
+
                                 String Catnum= String.valueOf(catId);
-                                Log.d("roomtable1", roomid + " " + tableid);
+                                Log.d("roomtable3", roomid + " " + tableid);
+                                Log.d("transactionId2", transactionId );
+                    boolean hasitem =mDatabaseHelper.hasItemsForTransactionId(transactionId);
+                    if(!hasitem){
+                        showNumberOfCoversDialog(transactionId);
+                    }
                                 // Item not selected, insert a new transaction with quantity 1 and total price
                                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
-                            }  refreshTicketFragment();
+                            }
+                            refreshTicketFragment();
                             refreshTotal();
                         }
                     }
@@ -523,7 +547,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         Barcode=item.getBarcode();
                         Weight=item.getWeight();
                         catname=item.getCategory();
+                        Log.d("SendToHeader1", "SendToHeader" );
+
                         SendToHeader(unitprice, calculateTax());
+
                     }
                     // Notify the listener that an item is added
                     if (itemAddedListener != null) {
@@ -542,6 +569,51 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         return view;
 
+    }
+    // Method to show popup dialog for number of covers
+    private void showNumberOfCoversDialog(String transactionid) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Enter Number of Covers");
+
+        final EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String numberOfCoversStr = input.getText().toString().trim();
+                if (!numberOfCoversStr.isEmpty()) {
+                    try {
+                        int numberOfCovers = Integer.parseInt(numberOfCoversStr);
+                        // Use numberOfCovers variable as needed
+                        processNumberOfCovers(transactionid,numberOfCovers);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Number of covers cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    // Method to process the number of covers entered
+    private void processNumberOfCovers(String trsansactionid,int numberOfCovers) {
+        // Use the numberOfCovers variable as needed in your code
+        // For example, store it as a class member or pass it to another method
+        Log.d("NumberOfCovers", "Number of covers entered: " + numberOfCovers);
+mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
+        // Continue with your application logic after setting numberOfCovers
     }
 
     private boolean isRoomTableInProgress(String roomid, String tableid) {
@@ -876,7 +948,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
-                NewBarcode=variant.getBarcode();
+                String NewBarcode=variant.getBarcode();
+
+                Log.d("NewBarcode", String.valueOf(NewBarcode));
+
                 String newDesc=variant.getDescription();
                 String newitemid=variant.getVariantitemid();
                 double newprice=variant.getPrice();
@@ -901,8 +976,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound1", "No variants found for ID " + id);
+                        insertdata(HasOptions,SupplementsItem ,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
                     /*   if (getContext() != null && variantButtonsLayout != null) { // Create and add EditText dynamically
                         option1edittext = new EditText(getContext());
@@ -959,7 +1034,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
-                NewBarcode=variant.getBarcode();
+                String NewBarcode=variant.getBarcode();
                 String newDesc=variant.getDescription();
                 String newitemid=variant.getVariantitemid();
                 double newprice=variant.getPrice();
@@ -983,7 +1058,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound2", "No variants found for ID " + id);
+
+                        insertdata(HasOptions,SupplementsItem,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
                         // Create and add EditText dynamically
                       /*  if (getContext() != null && variantButtonsLayout != null) {
                             option2edittext = new EditText(getContext());
@@ -1043,7 +1120,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
-                NewBarcode=variant.getBarcode();
+                String NewBarcode=variant.getBarcode();
                 String newDesc=variant.getDescription();
                 String newitemid=variant.getVariantitemid();
                 double newprice=variant.getPrice();
@@ -1067,7 +1144,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound3", "No variants found for ID " + id);
+
+                        insertdata(HasOptions,SupplementsItem,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
                      /*   option3edittext = new EditText(getContext());
                         option3edittext.setHint(variant.getDescription() +" - Enter your comment");
@@ -1124,7 +1203,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
-                NewBarcode=variant.getBarcode();
+
+                String NewBarcode=variant.getBarcode();
                 String newDesc=variant.getDescription();
                 String newitemid=variant.getVariantitemid();
                 double newprice=variant.getPrice();
@@ -1148,7 +1228,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound4", "No variants found for ID " + id);
+
+                        insertdata(HasOptions,SupplementsItem,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
                 /*        option4edittext = new EditText(getContext());
                         option4edittext.setHint(variant.getDescription() +" - Enter your comment");
@@ -1206,7 +1288,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 Button variantButton = new Button(getContext());
                 variantButton.setText(variant.getDescription()); // Set the button text to the variant description
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
-                NewBarcode=variant.getBarcode();
+                String NewBarcode=variant.getBarcode();
                 String newDesc=variant.getDescription();
                 String newitemid=variant.getVariantitemid();
                 double newprice=variant.getPrice();
@@ -1230,7 +1312,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound5", "No variants found for ID " + id);
+
+                        insertdata(HasOptions,SupplementsItem,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
                      /*   // Create and add EditText dynamically
                         option5edittext = new EditText(getContext());
@@ -1310,7 +1394,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        insertdata(id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
+                        Log.d("relateditemsfound6", "No variants found for ID " + id);
+
+                        insertdata(HasOptions,SupplementsItem,id,itemId,transactionId,transactionDate,vat,longDescription,priceWithoutVat,NewBarcode,newDesc,newprice,newitemid);
 
                 /*        // Create and add EditText dynamically
                        supplementsedittext= new EditText(getContext());
@@ -1415,23 +1501,31 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         builder.show();
     }
 
-    public void insertdata(String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String NewBarcode, String newdesc,double newprice,String newitemid) {
+    public void insertdata(Boolean HasOption,String SupplementsItem,String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String NewBarcode, String newdesc,double newprice,String newitemid) {
         Item item = dbManager.getItemById(id);
         Log.d("newbarcode", NewBarcode);
         Log.d("newitemid", newitemid);
-        Cursor cursor = mDatabaseHelper.getTransactionByItemId(Integer.parseInt(newitemid), String.valueOf(roomid), tableid);
-        longDescription= longDescription+"-"+newdesc;
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
+        Cursor cursor = mDatabaseHelper.getTransactionByItemId(Integer.parseInt(newitemid), String.valueOf(roomid), tableid);
+        if(mDatabaseHelper.isItemIdExists(newitemid)) {
+            longDescription = longDescription + "-" + newdesc;
+        }else if (mDatabaseHelper.isVariantBarcodeExists(newitemid)){
+            longDescription = "Sup" + "-" + newdesc;
+        }
         if
         (cursor != null && cursor.moveToFirst()) {
             // Retrieve the existing transaction ID for the item
             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
             sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(NewBarcode,existingTransactionId));
+
             Log.d("sentToKitchen4", sentToKitchen);
             // Check if the existing transaction ID matches the current transaction ID
             if (sentToKitchen.equals("1")) {
                 Log.d("sentToKitchentest2", sentToKitchen);
-                boolean existingitems=mDatabaseHelper.checkItemExists(transactionIdInProgress,tableid, String.valueOf(roomid));
+
+                boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
                 if(existingitems )
                 {
 
@@ -1442,10 +1536,24 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         // Other item details extraction code...
                         String CompanyShopNumber;
                        double unitprice = item.getPrice();
+                        String VatType= item.getVAT();
                         double UnitPrice = Double.parseDouble(price);
                         double newTotalPrice = UnitPrice * 1;
                         double taxbeforediscount = calculateinitialTax(String.valueOf(unitprice));
+                        double vatAmount=0;
+                        if (VatType.equals("VAT 15%")) {
+                            double vatRate = 0.15; // 15% VAT rate
 
+                            // Calculate the price without VAT
+                            double priceExcludingVAT = newTotalPrice / (1 + vatRate);
+
+                            // Calculate the VAT amount
+                             vatAmount = newTotalPrice - priceExcludingVAT;
+
+                            // Logging the calculated values
+                            Log.d("PriceExcludingVAT5", String.valueOf(priceExcludingVAT));
+                            Log.d("VATAmount5", String.valueOf(vatAmount));
+                        }
                         SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
                         cashierId = sharedPreference.getString("cashorId", null);
 
@@ -1459,9 +1567,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                             String Catnum = String.valueOf(catId);
-                            Log.d("roomtable", roomid + " " + tableid);
+                            Log.d("roomtable4", roomid + " " + tableid);
                             // Insert a new transaction with IS_PAID as 0
-                            mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                            mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
 
                         }
@@ -1471,7 +1579,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     }else {
                         Log.d("sentToKitchentest", sentToKitchen);
                         // Item already selected, update the quantity and total price
-                        int currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
+                        int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
                         double unitprice = item.getPrice();
                         UnitPrice = Double.parseDouble(price);
 
@@ -1482,11 +1590,25 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         double newpriceWithoutVat= pricewithoutVat * newQuantity;
                         double totaltaxbeforediscount= taxbeforediscount * newQuantity;
                         double newTotalDiscount= newQuantity * TotalDiscount;
-                        double taxafterdiscount= calculateTax();
-                        double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
+
+
                         double newTotalPrice = UnitPrice * newQuantity;
-                        double newVat = newQuantity * calculateTax();
-                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionIdInProgress, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                        double vatAmount=0;
+                        if (VatType.equals("VAT 15%")) {
+                            double vatRate = 0.15; // 15% VAT rate
+
+                            // Calculate the price without VAT
+                            double priceExcludingVAT = newTotalPrice / (1 + vatRate);
+
+                            // Calculate the VAT amount
+                            vatAmount = newTotalPrice - priceExcludingVAT;
+
+                            // Logging the calculated values
+                            Log.d("PriceExcludingVAT6", String.valueOf(priceExcludingVAT));
+                            Log.d("VATAmount6", String.valueOf(vatAmount));
+                        }
+                        double newVat =  vatAmount;
+                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
                         refreshTicketFragment();
                         refreshTotal();
                     }
@@ -1495,10 +1617,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             }
 
             // Check if the existing transaction ID matches the current transaction ID
-            else if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
-                // Item already selected, update the quantity and total price
-                int currentQuantity = mDatabaseHelper.getQuantity(transactionId,NewBarcode);
+            else if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
 
+                Log.d("existingTransactionId2", existingTransactionId);
+                Log.d("transactionIdInProgress", transactionIdInProgress);
+                Log.d("latesttransId", latesttransId);
+                Log.d("sentToKitchentest1", sentToKitchen);
+                Log.d("NewBarcode", NewBarcode);
+                // Item already selected, update the quantity and total price
+                int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
+                Log.d("currentQuantity", String.valueOf(currentQuantity));
                 UnitPrice = newprice;
                 double unitprice = item.getPrice();
 
@@ -1510,13 +1638,35 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 double totaltaxbeforediscount= taxbeforediscount * newQuantity;
                 double newTotalDiscount= newQuantity * TotalDiscount;
                 double newTotalPrice = UnitPrice * newQuantity;
-                double newVat = newQuantity * calculateTax();
-                double taxafterdiscount= calculateTax();
-                double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
+                double vatAmount=0;
+                if (VatType.equals("VAT 15%")) {
+                    double vatRate = 0.15; // 15% VAT rate
+
+                    // Calculate the price without VAT
+                    double priceExcludingVAT = newTotalPrice / (1 + vatRate);
+
+                    // Calculate the VAT amount
+                    vatAmount = newTotalPrice - priceExcludingVAT;
+
+                    // Logging the calculated values
+                    Log.d("PriceExcludingVAT2", String.valueOf(priceExcludingVAT));
+                    Log.d("VATAmount2", String.valueOf(vatAmount));
+                }
+                double newVat =  vatAmount;
+
+
+                double newtotaltaxafterdiscount= newVat ;
+                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
+                Log.d("newQuantity", String.valueOf(newQuantity));
                 refreshTicketFragment();
                 refreshTotal();
             } else {
+
+                Log.d("existingTransactionId3", existingTransactionId);
+                Log.d("transactionIdInProgress", transactionIdInProgress);
+                Log.d("latesttransId", latesttransId);
+                Log.d("sentToKitchentest3", sentToKitchen);
+                Log.d("NewBarcode3", NewBarcode);
                 if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
                     if (sentToKitchen.equals("1")) {
 
@@ -1544,9 +1694,24 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum = String.valueOf(catId);
-                                Log.d("roomtable", roomid + " " + tableid);
+                                Log.d("roomtable5", roomid + " " + tableid);
+                                double vatAmount=0;
+                                if (VatType.equals("VAT 15%")) {
+                                    double vatRate = 0.15; // 15% VAT rate
+
+                                    // Calculate the price without VAT
+                                    double priceExcludingVAT = newTotalPrice / (1 + vatRate);
+
+                                    // Calculate the VAT amount
+                                    vatAmount = newTotalPrice - priceExcludingVAT;
+
+                                    // Logging the calculated values
+                                    Log.d("PriceExcludingVAT3", String.valueOf(priceExcludingVAT));
+                                    Log.d("VATAmount3", String.valueOf(vatAmount));
+                                }
+
                                 // Insert a new transaction with IS_PAID as 0
-                                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                             }
                             refreshTicketFragment();
                             refreshTotal();
@@ -1562,6 +1727,23 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             double newTotalPrice = UnitPrice * 1;
             double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
 
+            String VatType= item.getVAT();
+
+            double vatAmount=0;
+            if (VatType.equals("VAT 15%")) {
+                double vatRate = 0.15; // 15% VAT rate
+
+                // Calculate the price without VAT
+                double priceExcludingVAT = newTotalPrice / (1 + vatRate);
+
+                // Calculate the VAT amount
+                vatAmount = newTotalPrice - priceExcludingVAT;
+
+                // Logging the calculated values
+                Log.d("PriceExcludingVAT4", String.valueOf(priceExcludingVAT));
+                Log.d("VATAmount4", String.valueOf(vatAmount));
+            }
+
             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
             String ShopName = sharedPreference.getString("ShopName", null);
@@ -1576,8 +1758,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                 String Catnum= String.valueOf(catId);
                 Log.d("INSERT_Transaction", "4");
+                Log.d("roomtable6", roomid + " " + tableid);
+                boolean hasitem =mDatabaseHelper.hasItemsForTransactionId(transactionId);
+                if(!hasitem){
+                    showNumberOfCoversDialog(transactionId);
+                }
                 // Item not selected, insert a new transaction with quantity 1 and total price
-                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vat, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+                mDatabaseHelper.insertTransaction(Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
             } refreshTicketFragment();
             refreshTotal();
 
@@ -1591,6 +1778,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             VatVall = item.getVAT();
 
             double unitprice = item.getPrice();
+            Log.d("SendToHeader2", unitprice +" " + calculateTax());
 
             SendToHeader(unitprice, calculateTax());
         }
@@ -1637,6 +1825,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 if (Available4sale != null && Available4sale.equalsIgnoreCase("true")) {
                     if (transactionStatus.equals("InProgress") || transactionSaved.equals("PRF")|| transactionCDN.equals("CRN")|| transactionDBN.equals("DRN")) {
                         if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
+                            Log.d("INSERT_Transactions3", "test1" );
                             transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                             // Store the transaction ID in SharedPreferences
                             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1649,6 +1838,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         transactionId = transactionIdInProgress;
 
                     } else {
+                        Log.d("INSERT_Transaction4", "test1" );
                         transactionId = generateNewTransactionId(); // Generate a new transaction ID
                         refreshTicketFragment();
                         refreshTotal();
@@ -1666,7 +1856,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     refreshTotal();
 // Update the transaction ID for all items in progress
                     if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF")) {
-                        mDatabaseHelper.updateTransactionIds(transactionIdInProgress, String.valueOf(roomid),tableid);
+
+                        String  statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+                        mDatabaseHelper.updateTransactionIds(latesttransId, String.valueOf(roomid),tableid);
                         refreshTicketFragment();
                         refreshTotal();
                     }
@@ -1679,7 +1873,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
                         Log.d("sentToKitchen2", sentToKitchen);
                         // Check if the existing transaction ID matches the current transaction ID
-                        if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
+                        if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
+                            Log.d("existingTransactionId3", existingTransactionId);
+                            Log.d("transactionIdInProgress", transactionIdInProgress);
+                            Log.d("latesttransId", latesttransId);
+                            Log.d("sentToKitchentest1", sentToKitchen);
                             // Item already selected, update the quantity and total price
                             int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -1696,7 +1894,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             double newVat = newQuantity * calculateTax();
                             double taxafterdiscount= calculateTax();
                             double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                            mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                            mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
                             refreshTicketFragment();
                             refreshTotal();
                         } else {
@@ -1735,6 +1933,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             String Catnum = String.valueOf(catId);
                                             Log.d("INSERT_Transaction", "5");
                                             // Item has a different transaction ID, insert a new transaction
+                                            Log.d("roomtable7", roomid + " " + tableid);
                                             mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                         }
                                         refreshTicketFragment();
@@ -1775,6 +1974,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum= String.valueOf(catId);
                                 Log.d("INSERT_Transaction", "6");
+                                Log.d("roomtable8", roomid + " " + tableid);
                                 // Item not selected, insert a new transaction with quantity 1 and total price
                                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                             }
@@ -1798,6 +1998,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         Currency=item.getCurrency();
                         ItemCode=item.getItemCode();
                         Barcode=item.getBarcode();
+                        Log.d("SendToHeader3", "SendToHeader" );
+
                         SendToHeader(unitprice, calculateTax());
                     }
                     // Notify the listener that an item is added
@@ -1884,7 +2086,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         if (status.equals("InProgress") || status.equals("PRF") || status.equals("DRN") || status.equals("CRN")  ) {
                             if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
-                                Log.d("INSERT_Transactions", "test1" );
+                                Log.d("INSERT_Transactions5", "test1" );
                                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                                 // Store the transaction ID in SharedPreferences
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1898,7 +2100,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             transactionId = transactionIdInProgress;
 
                         } else {
-
+                            Log.d("INSERT_Transactions6", "test1" );
                             transactionId = generateNewTransactionId(); // Generate a new transaction ID
                             refreshTicketFragment();
                             refreshTotal();
@@ -1917,7 +2119,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         refreshTotal();
                         // Update the transaction ID for all items in progress
                         if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF")) {
-                            mDatabaseHelper.updateTransactionIds(transactionIdInProgress, String.valueOf(roomid),tableid);
+
+                            String  statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                            String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+                            mDatabaseHelper.updateTransactionIds(latesttransId, String.valueOf(roomid),tableid);
 
                             refreshTicketFragment();
                             refreshTotal();
@@ -1930,7 +2136,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
                             Log.d("sentToKitchen3", sentToKitchen);
                             // Check if the existing transaction ID matches the current transaction ID
-                            if (existingTransactionId != null && existingTransactionId.equals(transactionIdInProgress) && sentToKitchen.equals("0")) {
+                            if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
+                                Log.d("existingTransactionId4", existingTransactionId);
+                                Log.d("transactionIdInProgress", transactionIdInProgress);
+                                Log.d("latesttransId", latesttransId);
+                                Log.d("sentToKitchentest1", sentToKitchen);
                                 // Item already selected, update the quantity and total price
                                 int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -1950,7 +2160,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 double newVat= newQuantity * calculateTax();
                                 double taxafterdiscount= calculateTax();
                                 double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                                mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,transactionId, newTotalPrice,newTotalDiscount,newVat,VatType, String.valueOf(roomid),tableid);
+                                mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount,newVat,VatType, String.valueOf(roomid),tableid);
                                 refreshTicketFragment();
                                 refreshTotal();
                             } else {
@@ -1987,6 +2197,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                                 String Catnum = String.valueOf(catId);
                                                 Log.d("INSERT_Transaction", "7 ");
+                                                Log.d("roomtable9", roomid + " " + tableid);
                                                 // Item has a different transaction ID, insert a new transaction
                                                 mDatabaseHelper.insertTransaction(itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                             }
@@ -2028,6 +2239,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                     int catId = mDatabaseHelper.getCatIdFromName(catname);
                                     String Catnum= String.valueOf(catId);
                                     Log.d("INSERT_Transaction", "8 ");
+                                    Log.d("roomtable10", roomid + " " + tableid);
                                     // Item not selected, insert a new transaction with quantity 1 and total price
                                     mDatabaseHelper.insertTransaction(itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                 }refreshTicketFragment();
@@ -2043,6 +2255,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             VatVall = item.getVAT();
                             priceAfterDiscount=item.getPriceAfterDiscount();
                             double unitprice=item.getPrice();
+                            Log.d("SendToHeader4", "SendToHeader" );
+
                             SendToHeader(unitprice, calculateTax());
                             Barcode=item.getBarcode();
                         }
@@ -2276,9 +2490,6 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         // Generate the transaction ID by combining the three letters and the counter
         return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
-    // Method to insert data when any insert button is clicked
-
-    // Method to insert data when "Insert A" button is clicked
 
 
     private void onBackspaceButtonClick() {

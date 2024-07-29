@@ -46,9 +46,10 @@ public class CompletedTransactionsAdapter extends RecyclerView.Adapter<Completed
                 String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                int uniqueid = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper._ID));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
-
-                Transaction item = new Transaction(itemName, itemPrice, itemQuantity, unitPrice);
+                int item_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
+                Transaction item = new Transaction(uniqueid,itemName, itemPrice, itemQuantity, unitPrice,item_id);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
         }

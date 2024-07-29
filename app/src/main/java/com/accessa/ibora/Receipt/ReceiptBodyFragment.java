@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -253,11 +255,11 @@ if(!TransactionType.equals("InProgress") ) {
 
     }else {
         // Generate the QR code image
-        Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
 
+        Bitmap imageBitmap = decodeBase64ToBitmap(TransactionQr);
 // Display the QR code in the ImageView
-        if (qrCodeBitmap != null) {
-            qrCodeImageView.setImageBitmap(qrCodeBitmap);
+        if (imageBitmap  != null) {
+            qrCodeImageView.setImageBitmap(imageBitmap);
             qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
         } else {
             qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
@@ -269,11 +271,11 @@ if(!TransactionType.equals("InProgress") ) {
 
     } else {
         // Generate the QR code image
-        Bitmap qrCodeBitmap = generateQRCode(TransactionQr, 500, 500); // Adjust the size as needed
 
+        Bitmap imageBitmap = decodeBase64ToBitmap(TransactionQr);
 // Display the QR code in the ImageView
-        if (qrCodeBitmap != null) {
-            qrCodeImageView.setImageBitmap(qrCodeBitmap);
+        if (imageBitmap != null) {
+            qrCodeImageView.setImageBitmap(imageBitmap);
             qrCodeImageView.setVisibility(View.VISIBLE); // Make the ImageView visible
         } else {
             qrCodeImageView.setVisibility(View.GONE); // Hide the ImageView if QR code generation fails
@@ -401,6 +403,17 @@ if(!TransactionType.equals("InProgress") ) {
 
         return view;
     }
+
+    private Bitmap decodeBase64ToBitmap(String base64Str) {
+        try {
+            byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     // Function to generate QR code
     private Bitmap generateQRCode(String content, int width, int height) {
         try {

@@ -84,7 +84,7 @@ String tableid;
         }
 
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_ID));
-        String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
+
         String tablenum = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
        String roomid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ROOM_ID));
         String mergedtableId = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.MERGED_SET_ID));
@@ -115,8 +115,8 @@ String tableid;
             holder.Table.setText(mergedSetId);
         } else {
             // The table is not merged or has a MERGED_SET_ID of "0", display the individual table number
-            holder.nameTextView.setText("T " + name);
-            holder.Table.setText(name);
+            holder.nameTextView.setText("T " + tablenum);
+            holder.Table.setText(tablenum);
         }
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();

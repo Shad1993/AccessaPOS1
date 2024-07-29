@@ -28,7 +28,6 @@
         android:icon="@drawable/baseline_live_help_24"
         android:title="@string/Help" />
 
-
     <item android:title="@string/Profile">
         <menu>
             <item
@@ -41,6 +40,10 @@
                 android:title="@string/admin" />
         </menu>
     </item>
-
-
+    <!-- Footer -->
+    <item
+        android:id="@+id/footer"
+        android:title=""
+        android:enabled="false"
+        android:actionLayout="@layout/version_nav_footer" />
 </menu>

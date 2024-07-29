@@ -46,7 +46,8 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="text"
+                        android:maxLength="26" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -62,7 +63,9 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="number"
+                        android:maxLength="13" /> <!-- Limit input to 13 characters -->
+
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/options_switch"
                         android:layout_width="wrap_content"
@@ -92,6 +95,26 @@
                         android:layout_marginTop="10dp"
                         android:layout_marginBottom="10dp"
                         android:layout_gravity="center"/>
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/supplements_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:checked="false"
+                        android:text="@string/supplements"
+                        android:textSize="18sp" />
+                    <!-- Button for adding options -->
+
+                    <LinearLayout
+                        android:id="@+id/supplements_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="vertical" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -120,7 +143,8 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="text"
+                        android:maxLength="10" />
                     <!-- Add this code within the LinearLayout that contains other fields -->
                     <TextView
                         android:layout_width="wrap_content"
@@ -272,7 +296,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textMultiLine"
-                        android:hint="@string/Desc" />
+                        android:hint="@string/Desc"
+                        android:maxLength="30" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -321,7 +346,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="@string/cost" />
+                        android:text="@string/cost"
+                        />
 
                     <EditText
                         android:id="@+id/cost_edittext"
@@ -351,7 +377,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:textSize="18sp"
-                        android:text="@string/LongDesc" />
+                        android:text="@string/LongDesc"
+                        />
 
                     <EditText
                         android:id="@+id/long_description_edittext"
@@ -359,7 +386,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:hint="@string/LongDesc" />
+                        android:hint="@string/LongDesc"
+                        android:maxLength="30"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -387,7 +415,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:hint="@string/variant" />
+                        android:hint="@string/variant"
+                        android:maxLength="20"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

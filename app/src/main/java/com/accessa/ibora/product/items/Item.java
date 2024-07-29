@@ -1,5 +1,7 @@
 package com.accessa.ibora.product.items;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
+
 public class Item {
     private int id;
     private String name;
@@ -23,6 +25,9 @@ public class Item {
     private String expiryDate;
     private String hascomment;
     private boolean hasoption;
+
+    private boolean hasSupplements;
+    private String relatedSupplement;
     private String relateditem;
     private String relateditem2;
     private String relateditem3;
@@ -99,6 +104,8 @@ public class Item {
         this.relateditem3=relateditem3;
         this.relateditem4=relateditem4;
         this.relateditem4=relateditem5;
+        this.hasSupplements=hasSupplements;
+        this.relatedSupplement=relatedSupplement;
     }
 
     public Item(String name, String id, String price, String description, String productImageName) {
@@ -130,6 +137,23 @@ public class Item {
         this.hasoption = hasoption;
     }
 
+    public boolean  gethassupplements() {
+        return hasSupplements;
+    }
+    public void sethassupplements(Boolean hasSupplements) {
+        this.hasSupplements = hasSupplements;
+    }
+
+
+
+
+    public String getrelatedSupplement() {
+        return relatedSupplement;
+    }
+
+    public void setrelatedSupplement(String relatedSupplement) {
+        this.relatedSupplement = relatedSupplement;
+    }
     public String getRelateditem() {
         return relateditem;
     }

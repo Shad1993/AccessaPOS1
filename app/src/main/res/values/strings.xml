@@ -528,6 +528,11 @@
     <string name="SUBTOTAL">SUBTOTAL</string>
     <string name="PaymentMethod">Payment Method:</string>
     <string name="ClearPayment">Clear Payments</string>
+    <string name="Cashiorsalesreport">Cashier Sales Report</string>
+    <string name="Editcovernum">Edit Servings Amount</string>
+    <string name="setshift">Set Shift Number</string>
+    <string name="close_Shift">Close Shift</string>
+    <string name="notransactionstarted">No transaction Found for today</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

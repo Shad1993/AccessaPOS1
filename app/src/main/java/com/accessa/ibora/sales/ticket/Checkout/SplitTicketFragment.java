@@ -17,6 +17,7 @@ import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -78,7 +79,7 @@ import woyou.aidlservice.jiuiv5.IWoyouService;
 public class SplitTicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
     private RecyclerView mRecyclerView;
     private TicketAdapter mAdapter;
-    private Buyer selectedBuyer;
+
     private String cashierId,cashierLevel,shopname, cashiername;
     private DatabaseHelper mDatabaseHelper;
 private double totalAmount,TaxtotalAmount;
@@ -86,7 +87,6 @@ private double totalAmount,TaxtotalAmount;
 
 
     private  String ItemId,PosNum;
-    private String VatVall;
     private static final String POSNumber="posNumber";
 private String transactionIdInProgress;
     private int transactionCounter = 1;
@@ -133,8 +133,8 @@ private TextView textViewVATs,textViewTotals;
 
         mDatabaseHelper = new DatabaseHelper(getContext());
     transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
-
-        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+        Log.d("transactionIdInProgress1", transactionIdInProgress);
+        if ("sunmit2".equalsIgnoreCase(deviceType)) {
            // showSecondaryScreen(data);
         }  else {
             Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
@@ -167,19 +167,11 @@ private TextView textViewVATs,textViewTotals;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.split_ticket_fragment, container, false);
 
-
-
-
         Intent intent = new Intent();
         intent.setPackage("woyou.aidlservice.jiuiv5");
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
         SharedPreferences sharedPreferences2 = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
-       String  buyername = sharedPreferences2.getString("BuyerName", null);
-        String  buyerpricelevel = sharedPreferences2.getString("PriceLevel", null);
-
-
-
 
 // Initialize the SoundPool and load the sound file
         soundPool = new SoundPool.Builder()
@@ -201,8 +193,10 @@ private TextView textViewVATs,textViewTotals;
         mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
-
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        Log.d("transactionIdInProgress2", latesttransId);
         actualdate = mDatabaseHelper.getCurrentDate();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
@@ -255,9 +249,10 @@ private TextView textViewVATs,textViewTotals;
 
         // Load the data based on the transaction ID
 
-            String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-            String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+             statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+             latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
             Cursor cursor2 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        Log.d("transactionIdInProgress3", latesttransId);
             mAdapter.swapCursor(cursor2);
 
 
@@ -275,13 +270,6 @@ private TextView textViewVATs,textViewTotals;
             mRecyclerView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
         }
-
-
-
-
-
-
-
 
         // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
@@ -321,494 +309,6 @@ private TextView textViewVATs,textViewTotals;
     }
 
 
-    private void SendToHeader(double totalAmount, double taxtotalAmount) {
-
-
-        // Save the transaction details in the TRANSACTION_HEADER table
-        if (transactionIdInProgress != null) {
-
-            SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
-
-            double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
-            double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
-
-            db.close();
-            // Get the current date and time
-            String currentDate = mDatabaseHelper.getCurrentDate();
-            String currentTime = mDatabaseHelper.getCurrentTime();
-
-            // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-            double totalHT_A = totalAmount- taxtotalAmount;
-            double totalTTC = totalAmount;
-            double TaxAmount=taxtotalAmount;
-            String transactionStatus = "InProgress";
-            // Get the total quantity of items in the transaction
-            int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
-             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
-            cashierId = sharedPreference.getString("cashorId", null);
-
-            String ShopName = sharedPreference.getString("ShopName", null);
-
-            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
-            if (cursorCompany != null && cursorCompany.moveToFirst()) {
-                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
-
-                String MRAMETHOD="Single";
-                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
-
-                // Save the transaction details in the TRANSACTION_HEADER table
-                mDatabaseHelper.saveTransactionHeader(
-                        CompanyShopNumber,
-                        transactionIdInProgress,
-                        totalAmount,
-                        currentDate,
-                        currentTime,
-                        totalHT_A,
-                        totalTTC,
-                        TaxAmount,
-                        quantityItem,
-                        cashierId,
-                        transactionStatus,
-                        PosNum,
-                        MRAMETHOD,
-                        String.valueOf(roomid),
-                        tableid,
-                        sumBeforeDisc,
-                        sumAfterDisc
-
-                );
-
-            }
-        }
-    }
-    private void showSaveOptionsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Save Transaction as");
-        String[] options = {"Proforma", "Debit Note", "Credit Note"};
-        builder.setItems(options, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Handle the user's selection here
-                if (which == 0) {
-                    String Type="PRF";
-                    double totalAmount = calculateTotalAmount();
-                    double TaxtotalAmount = calculateTotalTax();
-                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
-                    clearBuyerInfoFromPrefs();
-
-                } else if (which == 1) {
-                    String Type="DRN";
-                    double totalAmount = calculateTotalAmount();
-                    double TaxtotalAmount = calculateTotalTax();
-                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
-                    clearBuyerInfoFromPrefs();
-
-                }
-                else if (which == 2) {
-                    String Type="CRN";
-                    double totalAmount = calculateTotalAmount();
-                    double TaxtotalAmount = calculateTotalTax();
-                    SaveTransaction(Type,totalAmount,TaxtotalAmount);
-                    clearBuyerInfoFromPrefs();
-                }
-            }
-        });
-        builder.show();
-    }
-
-
-    private String getCurrentDateTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        return sdf.format(new Date());
-    }
-    private void startNewActivity(String type, String newTransactionId,String invoiceRefIdentifier,String roomid, String tableid) {
-        // Create an Intent to start the desired activity based on the selected type
-        Intent intent = new Intent(getContext(), MRADBN.class);
-
-        // Pass any data you need to the new activity using intent extras
-        intent.putExtra("TransactionType", type);
-        intent.putExtra("newtransactionid", newTransactionId);
-        intent.putExtra("invoiceRefIdentifier", invoiceRefIdentifier);
-        intent.putExtra("roomid", roomid);
-        intent.putExtra("tableid", tableid);
-        if (selectedBuyer != null) {
-            // Access selectedBuyer properties here
-
-
-            // Pass the selected buyer's information as an extra
-            intent.putExtra("selectedBuyerName", selectedBuyer.getNames());
-            intent.putExtra("selectedBuyerTAN", selectedBuyer.getTan());
-            intent.putExtra("selectedBuyerCompanyName", selectedBuyer.getCompanyName());
-            intent.putExtra("selectedBuyerType", selectedBuyer.getBuyerType());
-            intent.putExtra("selectedBuyerBRN", selectedBuyer.getBrn());
-            intent.putExtra("selectedBuyerNIC", selectedBuyer.getNic());
-            intent.putExtra("selectedBuyerAddresse", selectedBuyer.getBusinessAddr());
-            intent.putExtra("selectedBuyerprofile", selectedBuyer.getProfile());
-            mDatabaseHelper.updateTransactionBuyerInfo(
-                    newTransactionId,
-                    invoiceRefIdentifier,
-                    selectedBuyer.getNames(),
-                    selectedBuyer.getTan(),
-                    selectedBuyer.getCompanyName(),
-                    selectedBuyer.getBusinessAddr(),
-                    selectedBuyer.getBrn(),
-                    cashierId
-            );
-
-            startActivity(intent);
-        } else {
-
-
-            // Pass the selected buyer's information as an extra
-            intent.putExtra("selectedBuyerName", "");
-            intent.putExtra("selectedBuyerTAN", "");
-            intent.putExtra("selectedBuyerCompanyName", "");
-            intent.putExtra("selectedBuyerType", "");
-            intent.putExtra("selectedBuyerBRN", "");
-            intent.putExtra("selectedBuyerNIC", "");
-            intent.putExtra("selectedBuyerAddresse", "");
-            intent.putExtra("selectedBuyerprofile", "");
-
-            startActivity(intent);
-        }
-    }
-    private void replaceFragment(Fragment newFragment) {
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.scanner_container, newFragment);
-        fragmentTransaction.addToBackStack(null); // Optional: Add the transaction to the back stack
-        fragmentTransaction.commit();
-    }
-    private void SaveTransaction(String Type,double totalAmount, double TaxtotalAmount) {
-
-
-        // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
-
-if(Type.equals("DRN")) {
-    // Retrieve the data for receipts with QR codes
-    Cursor receiptCursor = mDatabaseHelper.getAllReceipt();
-
-
-
-
-    // Create a custom dialog to display the receipt data
-    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
-    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
-    dialogBuilder.setView(dialogView);
-    dialogBuilder.setTitle("Select a Receipt");
-
-    // Initialize your RecyclerView
-    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
-
-// Set a layout manager (for example, LinearLayoutManager)
-    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-    popupRecyclerView.setLayoutManager(layoutManager);
-
-// Initialize and set up your adapter
-    MRAdaptor popupAdapter = new MRAdaptor(receiptCursor);
-    popupRecyclerView.setAdapter(popupAdapter);
-
-
-// Set a click listener for the items in the dialog
-    popupRecyclerView.addOnItemTouchListener(
-            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
-                @Override
-                public void onItemClick(View view, int position) {
-                    TextView idTextView = view.findViewById(R.id.id_text_view);
-                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
-
-                    String id1 = idTextView.getText().toString();
-                    String id = idTextView.getText().toString();
-                    String name = deptNameEditText.getText().toString();
-
-                    // Get the latest transaction counter value from SharedPreferences
-                    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-                    int latestTransactionDBNCounter = sharedPreferences.getInt("transaction_counter_DBN", 0);
-                    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                    // Initialize SharedPreferences
-                    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    roomid = preferences.getInt("roomnum", 0);
-                    tableid = preferences.getString("table_id", "");
-                    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
-                    System.out.println("transactionIdInProgress: " + transactionIdInProgress);
-                    // Increment the transaction counter
-                    latestTransactionDBNCounter++;
-                    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-                    PosNum = shardPreference.getString(POSNumber, null);
-                    // Generate the transaction ID with the format "MEMO-integer"
-                    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionDBNCounter;
-                    // Update the transaction ID in the transaction table for transactions with status "InProgress"
-                    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
-                    // Update the transaction ID in the header table for transactions with status "InProgress"
-                    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
-
-                    // Update the transaction counter in SharedPreferences
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putInt("transaction_counter_DBN", latestTransactionDBNCounter);
-                    editor.apply();
-                    String MRAMETHOD="Single";
-                    // Update the transaction status for all in-progress transactions to "saved"
-                    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
-                    updateTransactionStatus();
-
-
-
-                    // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, name, String.valueOf(roomid),tableid);
-                    getActivity().finish();
-
-
-                }
-
-                @Override
-                public void onLongItemClick(View view, int position) {
-                    // Do whatever you want on long item click
-                }
-            })
-    );
-
-
-
-    // Create and show the dialog
-    AlertDialog alertDialog = dialogBuilder.create();
-    alertDialog.show();
-} else if (Type.equals("PRF")) {
-
-    // Get the latest transaction counter value from SharedPreferences
-    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-    int latestTransactionProformaCounter = sharedPreferences.getInt("transaction_counter_Proforma", 0);
-
-
-    // Initialize SharedPreferences
-    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-    roomid = preferences.getInt("roomnum", 0);
-    tableid = preferences.getString("table_id", "");
-    System.out.println("roomid: " + roomid);
-    System.out.println("tableid: " + tableid);
-    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
-    System.out.println("transactionIdInProgressprf: " + transactionIdInProgress);
-
-    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-    PosNum = shardPreference.getString(POSNumber, null);
-
-    // Increment the transaction counter
-    latestTransactionProformaCounter++;
-
-    // Generate the transaction ID with the format "MEMO-integer"
-    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionProformaCounter;
-    // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
-    // Update the transaction ID in the header table for transactions with status "InProgress"
-    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
-
-    // Update the transaction counter in SharedPreferences
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putInt("transaction_counter_Proforma", latestTransactionProformaCounter);
-    editor.apply();
-                    String MRAMETHOD="Single";
-    // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
-  //  updateTransactionStatus();
-
-                    // Start the activity with the selected receipt data
-
-    startNewActivity(Type, newTransactionId, null, String.valueOf(roomid),tableid);
-                    getActivity().finish();
-
-
-
-
-}else if (Type.equals("CRN")) {
-    // Retrieve the data for receipts with QR codes
-    Cursor newCursor1 = mDatabaseHelper.getAllReceiptWithQR();
-
-    // Create a custom dialog to display the receipt data
-    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
-    View dialogView = getLayoutInflater().inflate(R.layout.popup_receipt_list, null);
-    dialogBuilder.setView(dialogView);
-    dialogBuilder.setTitle("Select a Receipt");
-    // Create and show the dialog
-    AlertDialog alertDialog = dialogBuilder.create();
-// Find the "Cancel" button in your dialog's layout
-    Button cancelButton = dialogView.findViewById(R.id.saveButton);
-
-// Set an OnClickListener for the "Cancel" button
-    cancelButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            // Get the latest transaction counter value from SharedPreferences
-            SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-            int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
-            // Initialize SharedPreferences
-            SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-            roomid = preferences.getInt("roomnum", 0);
-            tableid = preferences.getString("table_id", "");
-            transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
-
-
-            SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-            PosNum = shardPreference.getString(POSNumber, null);
-
-
-            // Increment the transaction counter
-            latestTransactionCDNCounter++;
-
-            // Generate the transaction ID with the format "MEMO-integer"
-            String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
-            // Update the transaction ID in the transaction table for transactions with status "InProgress"
-            mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
-            // Update the transaction ID in the header table for transactions with status "InProgress"
-            mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
-
-            // Update the transaction counter in SharedPreferences
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
-            editor.apply();
-            String MRAMETHOD="Single";
-            // Update the transaction status for all in-progress transactions to "saved"
-            mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,null, String.valueOf(roomid),tableid);
-            updateTransactionStatus();
-
-            // Start the activity with the selected receipt data
-
-            startNewActivity(Type, newTransactionId, "null", String.valueOf(roomid),tableid);
-
-            getActivity().finish();
-
-
-            // Dismiss the dialog when the "Cancel" button is clicked
-            alertDialog.dismiss();
-        }
-    });
-    // Initialize your RecyclerView
-    RecyclerView popupRecyclerView = dialogView.findViewById(R.id.popupRecyclerView);
-
-// Set a layout manager (for example, LinearLayoutManager)
-    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-    popupRecyclerView.setLayoutManager(layoutManager);
-
-// Initialize and set up your adapter
-    MRAdaptor popupAdapter = new MRAdaptor(newCursor1);
-    popupRecyclerView.setAdapter(popupAdapter);
-
-// Set a click listener for the items in the dialog
-    popupRecyclerView.addOnItemTouchListener(
-            new RecyclerDepartmentClickListener(getContext(), popupRecyclerView, new RecyclerDepartmentClickListener.OnItemClickListener() {
-                @Override
-                public void onItemClick(View view, int position) {
-                    TextView idTextView = view.findViewById(R.id.id_text_view);
-                    TextView deptNameEditText = view.findViewById(R.id.name_text_view);
-
-                    String id1 = idTextView.getText().toString();
-                    String id = idTextView.getText().toString();
-                    String name = deptNameEditText.getText().toString();
-    // Get the latest transaction counter value from SharedPreferences
-    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
-    int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
-
-    SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-    transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
-
-    SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-    PosNum = shardPreference.getString(POSNumber, null);
-
-
-    // Increment the transaction counter
-    latestTransactionCDNCounter++;
-
-    // Generate the transaction ID with the format "MEMO-integer"
-    String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
-    // Update the transaction ID in the transaction table for transactions with status "InProgress"
-    mDatabaseHelper.updateTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
-    // Update the transaction ID in the header table for transactions with status "InProgress"
-    mDatabaseHelper.updateHeaderTransactionIdInProgress(newTransactionId, String.valueOf(roomid),tableid);
-
-    // Update the transaction counter in SharedPreferences
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
-    editor.apply();
-                    String MRAMETHOD="Single";
-    // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateAllTransactionsStatus(Type,MRAMETHOD,name, String.valueOf(roomid),tableid);
-    updateTransactionStatus();
-
-                    // Start the activity with the selected receipt data
-                    startNewActivity(Type, newTransactionId, name, String.valueOf(roomid),tableid);
-
-                    getActivity().finish();
-
-
-                }
-
-                @Override
-                public void onLongItemClick(View view, int position) {
-                    // Do whatever you want on long item click
-                }
-            })
-    );
-
-
-
-    // Create and show the dialog
-    AlertDialog alertDialogs = dialogBuilder.create();
-    alertDialogs.show();
-
-}
-
-    }
-
-    public void updateTransactionStatus() {
-
-        // Retrieve the SharedPreferences
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-
-        // Get the SharedPreferences editor
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        // Clear all the stored data in SharedPreferences
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();
-
-    }
-
-
-    public void clearTransact(){
-        // Create an instance of the DatabaseHelper class
-// Initialize SharedPreferences
-        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-        roomid = preferences.getInt("roomnum", 0);
-        tableid = preferences.getString("table_id", "");
-        mDatabaseHelper.deleteDataByInProgressStatus(String.valueOf(roomid),tableid);
-
-
-        // Optionally, you can notify the user or perform any other actions after clearing the transaction
-// Notify the listener that an item is added
-
-        // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
-
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
-        String deviceType = sharedPreferences.getString("device_type", null);
-
-
-        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
-            //showSecondaryScreen(data);
-        }  else {
-            Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
-        }
-     //   recreate(getActivity());
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        mAdapter.swapCursor(cursor);
-        mAdapter.notifyDataSetChanged();
-        Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
-
-
-    }
-
-
     public void showSecondaryScreen(List<String> data) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -843,37 +343,7 @@ if(Type.equals("DRN")) {
         return null;
     }
 
-    public  double calculateTotalAmount1() {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double totalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-            do {
-                double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                totalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return totalAmount;
-    }
-    public  double calculateTotalTax1() {
-        Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomid),tableid);
 
-        double TaxtotalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
-            do {
-                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
-                TaxtotalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return TaxtotalAmount;
-    }
     public void displayOnLCD() {
         if (woyouService == null) {
 
@@ -915,60 +385,7 @@ if(Type.equals("DRN")) {
 
         return TaxtotalAmount;
     }
-    public void updateheadertable(double totalAmount, double TaxtotalAmount, String roomid, String tableid) {
 
-        // Get the current date and time
-        String currentDate = mDatabaseHelper.getCurrentDate();
-        String currentTime = mDatabaseHelper.getCurrentTime();
-
-        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
-
-        double totalTTC = totalAmount;
-        double totaltax = TaxtotalAmount;
-        double totalHT_A = totalTTC - totaltax;
-        Toast.makeText(getContext(), "Room:" + roomid + " - Table" + tableid, Toast.LENGTH_SHORT).show();
-
-
-        // Get the total quantity of items in the transaction
-        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionIdInProgress);
-
-        // Save the transaction details in the TRANSACTION_HEADER table
-        boolean success = mDatabaseHelper.updateTransactionHeader(
-
-                totalAmount,
-                currentDate,
-                currentTime,
-                totalHT_A,
-                totalTTC,
-                quantityItem,
-                totaltax,
-                cashierId,
-                String.valueOf(roomid),
-                tableid
-        );
-
-        if (success) {
-            SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
-            String deviceType = sharedPreferences.getString("device_type", null);
-
-
-            if ("sunmiT2".equalsIgnoreCase(deviceType)) {
-                showSecondaryScreen(data);
-            } else {
-                Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
-            }
-
-        } else {
-
-            Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
-            startActivity(intent);
-            getActivity().finish();
-
-
-        }
-
-    }
 
         public void updateheader(double totalAmount, double TaxtotalAmount) {
 
@@ -1001,137 +418,11 @@ if(Type.equals("DRN")) {
                 tableid
         );
 
-        if (success) {
-            SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
-            String deviceType = sharedPreferences.getString("device_type", null);
-
-
-            if ("sunmiT2".equalsIgnoreCase(deviceType)) {
-                showSecondaryScreen(data);
-            }  else {
-                Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
-            }
-
-        } else {
-
-            Intent intent = new Intent(getActivity(), SplashFlashActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION); // Disable window animation
-            startActivity(intent);
-            getActivity().finish();
-
-
-        }
 
 
     }
 
 
 
-
-
-
-    public  void refreshData(double totalAmount, double TaxtotalAmount) {
-
-
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        mAdapter.swapCursor(cursor);
-        mAdapter.notifyDataSetChanged();
-
-        // Scroll to the last item in the RecyclerView
-        int itemCount = mAdapter.getItemCount();
-        if (itemCount > 0) {
-            mRecyclerView.smoothScrollToPosition(itemCount - 1);
-        }
-
-        // Show or hide the RecyclerView and empty view based on the cursor count
-        if (cursor != null && cursor.getCount() > 0) {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
-        } else {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
-        }
-
-        // Update the tax and total amount TextViews
-        TextView taxTextView = getView().findViewById(R.id.textViewVAT);
-        String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
-        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
-
-        TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
-        String formattedTotalAmount = String.format("%.2f", totalAmount);
-        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-
-
-
-        // Play the sound effect
-        playSoundEffect();
-    }
-    public  void refreshDatatable(double totalAmount, double TaxtotalAmount,String roonum,String tableid) {
-
-        // Set the data to the fragment views
-        TextView roomTextView = getView().findViewById(R.id.textViewRoom);
-        roomTextView.setText("Room: " + roonum);
-
-        TextView tableTextView = getView().findViewById(R.id.textViewTable);
-        tableTextView.setText(" - Table: " + tableid);
-
-        TextView cashierTextView = getView().findViewById(R.id.textViewCashier);
-        cashierTextView.setText(" - Cashier: " + cashierId);
-        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid), tableid);
-        mAdapter.swapCursor(cursor);
-        mAdapter.notifyDataSetChanged();
-
-        // Scroll to the last item in the RecyclerView
-        int itemCount = mAdapter.getItemCount();
-        if (itemCount > 0) {
-            mRecyclerView.smoothScrollToPosition(itemCount - 1);
-        }
-
-        // Show or hide the RecyclerView and empty view based on the cursor count
-        if (cursor != null && cursor.getCount() > 0) {
-            mRecyclerView.setVisibility(View.VISIBLE);
-            emptyFrameLayout.setVisibility(View.GONE);
-        } else {
-            mRecyclerView.setVisibility(View.GONE);
-            emptyFrameLayout.setVisibility(View.VISIBLE);
-        }
-
-        // Update the tax and total amount TextViews
-        TextView taxTextView = getView().findViewById(R.id.textViewVAT);
-        String formattedTaxAmount = String.format("%.2f", TaxtotalAmount);
-        taxTextView.setText(getString(R.string.tax) + ": Rs " + formattedTaxAmount);
-
-        TextView totalAmountTextView = getView().findViewById(R.id.textViewTotal);
-        String formattedTotalAmount = String.format("%.2f", totalAmount);
-        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-
-
-
-        // Play the sound effect
-        playSoundEffect();
-    }
-    // Helper method to save buyer info to shared preferences
-    private void saveBuyerInfoToPrefs(String buyerName, String priceLevel) {
-        SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("BuyerName", buyerName);
-        editor.putString("PriceLevel", priceLevel);
-
-        editor.apply();
-    }
-
-    // Helper method to clear buyer info from shared preferences
-    private void clearBuyerInfoFromPrefs() {
-        SharedPreferences sharedPrefs = requireContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.clear();
-        editor.apply();
-    }
-
-    private void playSoundEffect() {
-        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
-    }
 
 }

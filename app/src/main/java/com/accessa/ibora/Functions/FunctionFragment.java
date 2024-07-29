@@ -21,6 +21,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -31,29 +32,45 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import com.accessa.ibora.Constants;
+import com.accessa.ibora.ItemsReport.DataModel;
+import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
+import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
+import com.accessa.ibora.ItemsReport.SalesReportAdapter;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Report.ReportActivity;
+import com.accessa.ibora.printer.CloseShiftReport;
+
+import com.accessa.ibora.printer.PrintShiftReport;
 import com.accessa.ibora.printer.externalprinterlibrary2.printerSetupforPRF;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.printer.printerSetupForPickUp;
+import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.keyboard.CustomEditText;
+import com.accessa.ibora.sales.ticket.Checkout.Cashier;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
@@ -70,7 +87,7 @@ public class FunctionFragment extends Fragment {
     private AlertDialog alertDialog;
     private SearchView searchView;
     private StringBuilder enteredBarcode;
-
+    private DatabaseHelper mDatabaseHelper;
     private List<EditText> chequeEditTexts = new ArrayList<>();
     private CustomEditText editTextBarcode;
     private SQLiteDatabase database;
@@ -79,6 +96,12 @@ public class FunctionFragment extends Fragment {
     private TextWatcher textWatcher;
     private TableAdapter mAdapter;
     int roomid;
+
+    private Spinner spinnerReportType,cashiorspinnerReportType,spinnershiftnum;
+    private RecyclerView recyclerViewReports;
+    private RecyclerView secondRecyclerView;
+    private SalesReportAdapter reportAdapter;
+    private PaymentMethodAdapter paymentMethodAdapter;
     String tableid;
     private IWoyouService woyouService;
     private String cashierId,cashierLevel,shopname,posNum,shopId;
@@ -113,7 +136,7 @@ public class FunctionFragment extends Fragment {
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
 
-
+        mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
         String deviceType = sharedPreferences.getString("device_type", null);
 
@@ -133,7 +156,7 @@ public class FunctionFragment extends Fragment {
         // Check the value and set the content view accordingly
         if ("mobile".equalsIgnoreCase(deviceType)) {
             view = inflater.inflate(R.layout.mobile_keyboard_fragment, container, false);
-        } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+        } else if ("sunmit2".equalsIgnoreCase(deviceType)) {
              view = inflater.inflate(R.layout.functions_fragment, container, false);
         }
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
@@ -150,7 +173,239 @@ public class FunctionFragment extends Fragment {
         CardView buttondrawer = view.findViewById(R.id.buttonopendrawer);
         CardView buttonpricelevel = view.findViewById(R.id.buttonpricelevel);
         CardView buttonsearchTable = view.findViewById(R.id.buttonSearchTable);
+        CardView buttonShiftNumber = view.findViewById(R.id.btnSetShiftNumber);
 
+        buttonShiftNumber.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int level = Integer.parseInt(cashierLevel);
+                if (level >= 6) {
+                    // Create a dialog with a custom layout
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    LayoutInflater inflater = requireActivity().getLayoutInflater();
+                    View dialogView = inflater.inflate(R.layout.close_shift_report_popup, null);
+                    builder.setView(dialogView);
+                    Button extraButton = dialogView.findViewById(R.id.extraButton);
+                    Button closeShift = dialogView.findViewById(R.id.closeShift);
+                    spinnerReportType = dialogView.findViewById(R.id.spinnerReportType);
+                    spinnershiftnum = dialogView.findViewById(R.id.spinnerShiftnumber);
+                    recyclerViewReports = dialogView.findViewById(R.id.recyclerViewSalesReport);
+                    secondRecyclerView = dialogView.findViewById(R.id.secondRecyclerView);
+                    // Update TextViews
+                    TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
+                    TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
+                    TextView textViewnodata= dialogView.findViewById(R.id.textViewnodata);
+                    // Initialize the database helper
+                    mDatabaseHelper = new DatabaseHelper(requireContext());
+
+                    // Populate spinner with report types (daily, weekly, monthly, yearly)
+                    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(requireContext(),
+                            R.array.report_types, android.R.layout.simple_spinner_item);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerReportType.setAdapter(adapter);
+
+
+                    // Fetch shift numbers for today
+                    List<Integer> shiftNumbers = mDatabaseHelper.getShiftNumbersForToday();
+
+                    // Assume shiftNumbers is a List<Integer> that you populated from the database
+                    if ( shiftNumbers.isEmpty()) {
+                        Log.d("shiftNumbers", "shiftNumbers: " + shiftNumbers);
+                        // Handle the case where no data is populated
+                         spinnerReportType.setVisibility(View.GONE);
+                                spinnershiftnum.setVisibility(View.GONE);
+                                recyclerViewReports.setVisibility(View.GONE);
+                                secondRecyclerView.setVisibility(View.GONE);
+                                textViewTotalTax.setVisibility(View.GONE);
+                                textViewTotalAmount.setVisibility(View.GONE);
+                                extraButton.setVisibility(View.GONE);
+                                closeShift.setVisibility(View.GONE);
+                                textViewnodata.setVisibility(View.VISIBLE);
+
+
+
+                        } else if (shiftNumbers.size() == 1 && shiftNumbers.get(0) == 0) {
+                        Log.d("shiftNumbersnull", "shiftNumbers: " + shiftNumbers);
+                        spinnerReportType.setVisibility(View.GONE);
+                        spinnershiftnum.setVisibility(View.GONE);
+                        recyclerViewReports.setVisibility(View.GONE);
+                        secondRecyclerView.setVisibility(View.GONE);
+                        textViewTotalTax.setVisibility(View.GONE);
+                        textViewTotalAmount.setVisibility(View.GONE);
+                        extraButton.setVisibility(View.GONE);
+                        closeShift.setVisibility(View.VISIBLE);
+                        textViewnodata.setVisibility(View.GONE);
+                    } else {
+
+                        Log.d("shiftNumbers", "shiftNumbers: " + shiftNumbers);
+                        // Populate the spinner with shift numbers
+                        ArrayAdapter<Integer> adaptershiftnum = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, shiftNumbers);
+                        adaptershiftnum.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        spinnershiftnum.setAdapter(adaptershiftnum);
+                        spinnershiftnum.setEnabled(true);
+                    }
+
+                    // Set up RecyclerViews and their adapters
+                    setUpRecyclerViews(dialogView);
+
+                    // Variables to hold the selected report type, formatted total tax, and formatted total amount
+                    final String[] selectedReportType = new String[1];
+                    final String[] formattedTotalTax = new String[1];
+                    final String[] formattedTotalAmount = new String[1];
+                    final String[] selectedshift = new String[1];
+
+
+
+
+                    // Set the spinner's item selected listener
+                    spinnerReportType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+
+                            selectedReportType[0] = spinnerReportType.getSelectedItem().toString();
+
+                            // Log the selected report type and shift number for debugging
+                            Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType[0]);
+                            Log.d("ReportPopupDialog", "Selected Shift Number: " + selectedshift[0] );
+                            List<DataModel> newDataList ;
+                            List<PaymentMethodDataModel>newDataLists;
+                            double totalTax=0;
+                            double totalAmount=0;
+                            if( selectedshift[0]== null){
+                                selectedshift[0] ="0";
+
+                                 }
+                            // Fetch data based on the selected report type and shift number
+                            newDataList = fetchDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                            newDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+                            // Log the fetched data for debugging
+                            Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
+
+                            // Update the adapters with the new data
+                            reportAdapter.updateData(newDataList);
+                            paymentMethodAdapter.updateData(newDataLists);
+
+                            // Assuming you have methods to fetch total tax and total amount based on report type and shift number
+                            totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                            totalAmount = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+
+                            // Format totalTax and totalAmount to display only two decimal places
+                            formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
+                            formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
+
+                            textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax[0]);
+                            textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount[0]);
+
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            // Do nothing here
+                        }
+                    });
+                    spinnershiftnum.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                            // Get the selected report type and shift number
+
+
+                            selectedReportType[0] = spinnerReportType.getSelectedItem().toString();
+                            selectedshift[0] = spinnershiftnum.getSelectedItem().toString();
+                            // Log the selected report type and shift number for debugging
+                            Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType[0]);
+                            Log.d("ReportPopupDialog", "Selected Shift Number: " + selectedshift[0] );
+
+                            // Fetch data based on the selected report type and shift number
+                            List<DataModel> newDataList = fetchDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                            List<PaymentMethodDataModel> newDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+                            // Log the fetched data for debugging
+                            Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
+
+                            // Update the adapters with the new data
+                            reportAdapter.updateData(newDataList);
+                            paymentMethodAdapter.updateData(newDataLists);
+
+                            // Assuming you have methods to fetch total tax and total amount based on report type and shift number
+                            double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                            double totalAmount = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+                            // Update TextViews
+                            TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
+                            TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
+
+
+                            // Format totalTax and totalAmount to display only two decimal places
+                            formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
+                            formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
+                            textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax[0]);
+                            textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount[0]);
+
+
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            // Do nothing here
+                        }
+                    });
+                    builder.setTitle("Close/Shift Report")
+                            .setPositiveButton("OK", (dialog, which) -> {
+
+                            })
+                            .setNegativeButton("Cancel", null) // Optional: Add a cancel button
+                            .show();
+
+
+                    extraButton.setOnClickListener(s -> {
+                        Configuration configuration = getResources().getConfiguration();
+                        Locale currentLocale = configuration.locale;
+
+                            // Start the CloseShiftReport activity
+                            Intent intent = new Intent(getContext(), PrintShiftReport.class);
+                            intent.putExtra("locale", currentLocale.toString());
+                            intent.putExtra("reportType", selectedReportType[0]);
+                            intent.putExtra("shiftNumber", selectedshift[0]);
+                            intent.putExtra("reportType", selectedReportType[0]);
+                            intent.putExtra("totalTax", formattedTotalTax[0]);
+                            intent.putExtra("totalAmount", formattedTotalAmount[0]);
+                            startActivity(intent);
+
+                    });
+
+
+                    closeShift.setOnClickListener(s -> {
+                        Configuration configuration = getResources().getConfiguration();
+                        Locale currentLocale = configuration.locale;
+                        if(selectedshift[0] =="0"){
+                            Toast.makeText(getContext(), R.string.notransactionstarted, Toast.LENGTH_SHORT).show();
+                        }else {
+
+                            mDatabaseHelper.setShiftNumberInHeader();
+                            int actualshift=mDatabaseHelper.getCurrentShiftNumber();
+                            mDatabaseHelper.setShiftNumberInFinancialTable(actualshift);
+                            mDatabaseHelper.setShiftNumberInCountingReportTable(actualshift);
+                            mDatabaseHelper.setShiftNumberInCashReportTable(actualshift);
+                            // Start the CloseShiftReport activity
+                            Intent intent = new Intent(getContext(), CloseShiftReport.class);
+                            intent.putExtra("reportType", "Daily");
+                            intent.putExtra("shiftNumber", selectedshift[0]);
+                            intent.putExtra("reportType", selectedReportType[0]);
+                            intent.putExtra("totalTax", formattedTotalTax[0]);
+                            intent.putExtra("totalAmount", formattedTotalAmount[0]);
+                            startActivity(intent);
+                        }
+                    });
+
+                } else {
+                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+                }
+
+
+            }
+        });
 
         buttonsearchTable.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -965,7 +1220,53 @@ public class FunctionFragment extends Fragment {
         }
     }
 
+    private void setUpRecyclerViews(View view) {
+        // Set up RecyclerView and its adapter for Transaction Details
+        List<DataModel> transactionDataList = fetchDataBasedOnReportTypeAndShift("Daily",0);
+        reportAdapter = new SalesReportAdapter(transactionDataList);
+        recyclerViewReports.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerViewReports.setAdapter(reportAdapter);
 
+        // Set up RecyclerView and its adapter for Payment Method Details
+        List<PaymentMethodDataModel> paymentMethodDataList = fetchPaymentMethodDataBasedOnReportTypeAndShift("Daily",0);
+        paymentMethodAdapter = new PaymentMethodAdapter(paymentMethodDataList);
+        secondRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        secondRecyclerView.setAdapter(paymentMethodAdapter);
+    }
+
+    private List<DataModel> fetchDataBasedOnReportType(String reportType) {
+        // Implement your logic to fetch data based on the selected report type
+        // For now, return a dummy list
+        List<DataModel> dummyDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
+        // Replace the method and parameters with your actual database queries
+        dummyDataList = mDatabaseHelper.getDataBasedOnReportType(reportType);
+
+        return dummyDataList;
+    }
+
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportType(String reportType) {
+        // Implement logic to fetch data based on the selected report type for payment method
+        // Replace it with your actual logic
+        List<PaymentMethodDataModel> paymentMethodDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
+        // Replace the method and parameters with your actual database queries
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataBasedOnReportType(reportType);
+        Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
+
+        return paymentMethodDataList;
+    }
+    private List<DataModel> fetchDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
+        // Fetch data based on the selected report type and shift number
+        return mDatabaseHelper.getDataBasedOnReportTypeAndShift(reportType, shiftNumber);
+    }
+
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
+        // Fetch payment method data based on the selected report type and shift number
+        return mDatabaseHelper.getPaymentMethodDataBasedOnReportTypeAndShift(reportType, shiftNumber);
+    }
 
     @Override
     public void onDestroy() {

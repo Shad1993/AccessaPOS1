@@ -181,7 +181,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             Glide.with(mContext)
                     .load(productImageName)
                     .placeholder(R.drawable.emptybasket) // Placeholder image while loading
-                    .error(R.drawable.iboralogos1)
+                    .error(R.drawable.emptybasket)
                     .into(holder.productImage);
         } else {
             // Load image from local storage

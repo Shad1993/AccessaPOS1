@@ -460,7 +460,7 @@ public class PrintSave extends AppCompatActivity {
                         String Footer2Text = getString(R.string.Footer_OpenHours);
                         String Openinghours= Footer2Text + OpeningHours ;
 
-                        if (MRAQR != null && !MRAQR.equals("Request Failed")) {
+                        if (MRAQR != null && MRAQR.startsWith("Request Failed")) {
                             service.printText("MRA Response" + "\n", null);
                             service.printQRCode(MRAQR + "\n", 2, 1, null);
                         }

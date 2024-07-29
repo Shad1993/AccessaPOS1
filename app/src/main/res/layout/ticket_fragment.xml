@@ -97,6 +97,22 @@
         android:layout_weight="1"
         android:divider="@null"
         android:dividerHeight="0dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        >
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/checkboxfab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:visibility="gone"
+            android:src="@drawable/baseline_radio_button_unchecked_24"
+            app:tint="@android:color/white"
+            app:backgroundTint="@color/BleuAccessaText"
+            app:fabSize="normal" />
     <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
@@ -109,6 +125,7 @@
         app:backgroundTint="@color/BleuAccessaText"
         app:fabSize="normal" />
 
+    </LinearLayout>
     <FrameLayout
         android:id="@+id/empty_frame_layout"
         android:layout_width="match_parent"
@@ -243,6 +260,27 @@
             android:textColor="@color/BleuAccessaText"
             android:textStyle="bold" />
     </LinearLayout>
+    <LinearLayout
+        android:id="@+id/val_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:background="@color/white"
+        android:gravity="center">
+
+
+    <!-- validate Button -->
+
+            <Button
+                android:id="@+id/ValidateTicket"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ValTicket"
+                android:padding="16dp"
+               />
+
+    </LinearLayout>
 
     <!-- Footer Section -->
     <LinearLayout
@@ -289,7 +327,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/Checkout"
-
                     android:padding="16dp"
                     android:layout_centerInParent="true"/>
 

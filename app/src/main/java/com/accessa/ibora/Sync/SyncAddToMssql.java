@@ -38,6 +38,7 @@ import android.os.StrictMode;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.accessa.ibora.DeviceInfo;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -272,7 +273,16 @@ public class SyncAddToMssql extends IntentService {
             preparedStatements.setString(6, test);
 
             preparedStatements.executeUpdate();
-            SyncService.startSync(this);
+            String androidVersion = DeviceInfo.getAndroidVersion();
+            Log.d("DeviceInfo", "Android Version: " + androidVersion);
+            // Trim the strings to avoid any leading or trailing whitespace issues
+            if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                Log.d("SyncService", "Starting Syncforold");
+                Syncforold.startSync(this);
+            } else {
+                Log.d("SyncService", "Starting SyncService");
+                SyncService.startSync(this);
+            }
             // If the insertion is successful, you can show a success message or handle as needed
         } catch (SQLException se) {
             if (se.getMessage() != null) {
@@ -312,7 +322,16 @@ public class SyncAddToMssql extends IntentService {
 
             preparedStatement.executeUpdate();
 
-            SyncService.startSync(this);
+            String androidVersion = DeviceInfo.getAndroidVersion();
+            Log.d("DeviceInfo", "Android Version: " + androidVersion);
+            // Trim the strings to avoid any leading or trailing whitespace issues
+            if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                Log.d("SyncService", "Starting Syncforold");
+                Syncforold.startSync(this);
+            } else {
+                Log.d("SyncService", "Starting SyncService");
+                SyncService.startSync(this);
+            }
             // If the insertion is successful, you can show a success message or handle as needed
         } catch (SQLException se) {
             if (se.getMessage() != null) {

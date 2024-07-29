@@ -1,18 +1,25 @@
 package com.accessa.ibora.sales.Tables;
 
-import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalAmount;
-import static com.accessa.ibora.sales.ticket.ModifyItemDialogFragment.calculateTotalTax;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
+
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +44,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.Rooms.SpacesItemDecoration;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -50,8 +58,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import woyou.aidlservice.jiuiv5.IWoyouService;
+
 public class TablesFragment extends Fragment {
     private SharedPreferences sharedPreferences;
+    private SalesFragment.ItemAddedListener itemAddedListener;
+    private  List<String> data ;
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
     private SearchView mSearchView;
@@ -63,9 +75,10 @@ String transactionIdInProgress;
     private String selectedTableToMerge;
     private String selectedTableToTransfer;
 
-    public  String roomId;
+    public  String roomId,tableid;
     private TableAdapter mAdapter;
     private RecyclerView mRecyclerView;
+    private IWoyouService woyouService;
     private SimpleCursorAdapter adapter;
     private Spinner spinner;
     private ImageView arrow;
@@ -73,7 +86,21 @@ String transactionIdInProgress;
 
     final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
     final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
+    private ServiceConnection connService = new ServiceConnection() {
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            woyouService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            woyouService = IWoyouService.Stub.asInterface(service);
+
+            showSecondaryScreen(data);
+
+        }
+    };
     // onCreate
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -95,6 +122,7 @@ String transactionIdInProgress;
 
 // Retrieve the room id, with a default value of 1 if not found
          roomId = String.valueOf(preferences.getInt("room_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString("transaction_id", null);
@@ -270,21 +298,27 @@ String transactionIdInProgress;
                         String tableNum = priceTextView.getText().toString();
                         String roomnum = roomnumTextView.getText().toString();
 
-                        // Call the interface method to notify the MainActivity about the table click
-                          notifyTableClicked(tableNum,roomnum);
+
+                            updateTableId1(tableNum,roomnum);
+                            // Call the interface method to notify the MainActivity about the table click
+                            notifyTableClicked(tableNum,roomnum);
 
 
-                        refreshsales(roomnum,tableNum);
-                        // Update the room ID in SharedPreferences
-                        updateTableId(tableNum,roomnum);
+                            refreshsales(roomnum,tableNum);
 
-                        // Update the selected table ID in the adapter
-                        mAdapter.setSelectedTableId(id,tableNum);
 
-                        mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
+                            // Update the selected table ID in the adapter
+                            mAdapter.setSelectedTableId(id,tableNum);
 
-                        // Notify the adapter that the data has changed, triggering a rebind of items
-                        mAdapter.notifyDataSetChanged();
+                            mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
+
+                            showSecondaryScreen(data);
+
+                            // Notify the adapter that the data has changed, triggering a rebind of items
+                            mAdapter.notifyDataSetChanged();
+
+
+
 
                     }
 
@@ -316,9 +350,116 @@ String transactionIdInProgress;
 
         return view;
     }
+    // Method to show popup dialog for number of covers
+    private void showNumberOfCoversDialog(String  tablenum, String roomnum) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Enter Number of Covers");
+
+        final EditText input = new EditText(getActivity());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String numberOfCoversStr = input.getText().toString().trim();
+                if (!numberOfCoversStr.isEmpty()) {
+                    try {
+                        int numberOfCovers = Integer.parseInt(numberOfCoversStr);
+                        // Use numberOfCovers variable as needed
+                        processNumberOfCovers(numberOfCovers,roomnum, tablenum);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Number of covers cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    // Method to process the number of covers entered
+    private void processNumberOfCovers(int numberOfCovers,String roomnum, String tableNum) {
+        // Use the numberOfCovers variable as needed in your code
+        // For example, store it as a class member or pass it to another method
+        Log.d("NumberOfCovers", "Number of covers entered: " + numberOfCovers);
+
+        // Continue with your application logic after setting numberOfCovers
+        // Update the room ID in SharedPreferences
+        updateTableId(tableNum,roomnum,numberOfCovers);
+    }
+    public void showSecondaryScreen(List<String> data) {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
+
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            TransactionDisplay secondaryDisplay = new TransactionDisplay(getActivity(), presentationDisplay);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+
+            // Update the RecyclerView data on the secondary screen
+            secondaryDisplay.updateRecyclerViewData(data);
+        } else {
+            // Secondary screen not found or not supportedF
+            displayOnLCD();
+        }
+    }
+
+    private Display getPresentationDisplay() {
+        if (isAdded()) {  // Check if the Fragment is attached to an Activity
+            DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
+            Display[] displays = displayManager.getDisplays();
+            for (Display display : displays) {
+                if ((display.getFlags() & Display.FLAG_SECURE) != 0
+                        && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
+                        && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
+                    return display;
+                }
+            }
+        }
+        return null;
+    }
 
 
-    private void updateTableId(String newTableId,String roomId) {
+
+    public void displayOnLCD() {
+        if (woyouService == null) {
+
+            return;
+        }
+
+        try {
+            // Retrieve the total amount and total tax amount from the transactionheader table
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(String.valueOf(roomId),tableid);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                String formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                woyouService.sendLCDDoubleString("Total: Rs" + formattedTotalAmount, "Tax: " + formattedTaxAmount, null);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateTableId(String newTableId,String roomId,int numbercover) {
         // Update the table ID in SharedPreferences
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -326,6 +467,26 @@ String transactionIdInProgress;
 
         editor.putInt("roomnum", Integer.parseInt(roomId));
         editor.putInt("room_id", Integer.parseInt(roomId));
+        editor.putString("table_num",newTableId);
+        editor.putString("table_id",newTableId);
+        editor.putInt("servings", numbercover);
+        Log.d("roomtables", roomId + " " + newTableId);
+        editor.apply();
+
+        // Now the table ID in SharedPreferences is updated and can be accessed elsewhere in your app
+        // Notify the adapter or update UI to reflect the selection change
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void updateTableId1(String newTableId,String roomId) {
+        // Update the table ID in SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("table_id", newTableId);
+
+        editor.putInt("roomnum", Integer.parseInt(roomId));
+        editor.putInt("room_id", Integer.parseInt(roomId));
+
         Log.d("roomtables", roomId + " " + newTableId);
         editor.apply();
 
@@ -382,8 +543,18 @@ String transactionIdInProgress;
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 selectedTableToMerge = tableArray[which].toString();  // Store the selected table to merge
+                String statusType1= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomId),selectedTableToMerge);
+                String oldstatusType1= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomId),selectedTableNum);
+                String newTransactionId=mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId),selectedTableToMerge,statusType1);
+                String oldTransactionId=mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId),selectedTableNum,oldstatusType1);
+                int totalcovers=0;
+                if(oldTransactionId != null && newTransactionId != null) {
+                    int table1cover = mDatabaseHelper.getNumberOfCoversByTransactionTicketNo(oldTransactionId);
+                    int table2cover = mDatabaseHelper.getNumberOfCoversByTransactionTicketNo(newTransactionId);
+                     totalcovers = table1cover + table2cover;
+                }
 
-                mergeTables(selectedTableNum, selectedTableToMerge,roomId);
+                mergeTables(selectedTableNum, selectedTableToMerge,roomId,totalcovers);
                 // Call the interface method to notify the MainActivity about the table click
 
             }
@@ -398,14 +569,7 @@ String transactionIdInProgress;
                 transferTable(selectedTableNum, roomId);
             }
         });
-        // Add an "Unmerge" button
-        builder.setNegativeButton("Unmerge", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                unmergeTable(selectedTableNum);  // Pass the selected table to merge to the unmergeTable method
 
-            }
-        });
 
         builder.show();
     }
@@ -456,7 +620,7 @@ String transactionIdInProgress;
         String deviceType = sharedPreferences.getString("device_type", null);
 
 
-        if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+        if ("sunmit2".equalsIgnoreCase(deviceType)) {
             //showSecondaryScreen(data);
         }  else {
             Toast.makeText(getContext(), "No Secondary Screen", Toast.LENGTH_SHORT).show();
@@ -549,9 +713,57 @@ String transactionIdInProgress;
         return tables;
     }
 
+    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId) {
+        // Perform the transfer operation by updating the database
+        // For example, update the table number of the selected table with the new table number
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        Log.d("selectedTableNum", selectedTableNum);
+        Log.d("selectedTableToTransfer", selectedTableToTransfer);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomId),selectedTableToTransfer);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId),selectedTableToTransfer,statusType);
+      //  mDatabaseHelper.updateTableIdInTransactionsTransfer(db,cashierId,roomId, selectedTableNum, selectedTableToTransfer,latesttransId);
+        // Proceed with the update if latesttransId is not null
+        if (latesttransId != null) {
+            //  Log.d("transactionIdInProgress", transactionIdInProgress);
+            mDatabaseHelper.updateTableNumber(latesttransId,selectedTableNum, selectedTableToTransfer, roomId);
+            mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId,latesttransId);
+            if (selectedTableNum.startsWith("T T")) {
+                selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
+                unmergeTable(selectedTableNum);
+            } else if (selectedTableNum.startsWith("T")) {
+                unmergeTable(selectedTableNum);
+            }        } else {
+            // Handle the case where latesttransId is null (optional)
+            mDatabaseHelper.updateTableNumberfornew(selectedTableNum, selectedTableToTransfer, roomId);
+            mDatabaseHelper.updateTransactionTableNumberFornew(selectedTableNum, selectedTableToTransfer, roomId);
+            if (selectedTableNum.startsWith("T T")) {
+                selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
+                unmergeTable(selectedTableNum);
+                Log.d("startwithTT", "startwithT");
+            } else if (selectedTableNum.startsWith("T")) {
+                unmergeTable(selectedTableNum);
+                Log.d("startwithT", "startwithT");
+            }
+            Log.d("updateTableId", "Skipping update since latesttransId is null");
+        }
+
+        //mDatabaseHelper.deleteTransactionsByConditions(db,roomId,selectedTableNum,latesttransId);
+        mAdapter.notifyDataSetChanged();
+        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", selectedTableToTransfer).apply();
+        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomId)).apply();
 
 
-    private void mergeTables(String selectedTableNum, String selectedTableToMerge,String roomnum) {
+        // Notify the listener that an item is added
+        if (itemAddedListener != null) {
+            itemAddedListener.onItemAdded(roomId,selectedTableToTransfer);
+        }
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        startActivity(intent);
+    }
+
+
+    private void mergeTables(String selectedTableNum, String selectedTableToMerge,String roomnum,int totalcovers) {
         // Update your database to mark both tables with the same MERGED_SET_ID
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
         ContentValues valuesTable1 = new ContentValues();
@@ -562,8 +774,12 @@ String transactionIdInProgress;
 
 
         Log.d("mergeTables", "Before calling updateTableIdInTransactions");
+        Log.d("roomnum", roomnum );
         Log.d("test", selectedTableNum + " " + selectedTableToMerge );
-        mDatabaseHelper.updateTableIdInTransactions(db,cashierId,roomnum, selectedTableNum, newTableNumber);
+
+        Log.d("totalcovers", String.valueOf(totalcovers));
+
+        mDatabaseHelper.updateTableIdInTransactions(db,cashierId,roomnum, selectedTableNum, newTableNumber,totalcovers);
 
 
         Log.d("test", selectedTableNum + " " + selectedTableToMerge );
@@ -572,7 +788,7 @@ String transactionIdInProgress;
             Log.e("newTableId1", "newTableId1: " + newTableNumber);
         }
         Log.d("newTableNumber", newTableNumber);
-        Log.d("newTableNumber", newTableNumber);
+
         // Update the first table
         valuesTable1.put(DatabaseHelper.MERGED_SET_ID, newTableNumber);
         valuesTable1.put(DatabaseHelper.MERGED, 1);
@@ -584,26 +800,26 @@ String transactionIdInProgress;
 
 // If updating based on TABLE_NUMBER fails, update based on MERGED_SET_ID
         if (rowsUpdated1 == 0) {
-            db.update(DatabaseHelper.TABLES, valuesTable1, DatabaseHelper.MERGED_SET_ID + " = ?",
-                    new String[]{selectedTableNum});
+            db.update(DatabaseHelper.TABLES, valuesTable1, DatabaseHelper.MERGED_SET_ID + " = ? AND " + DatabaseHelper.ROOM_ID + " = ?",
+                    new String[]{selectedTableNum,roomnum});
         }
         // Update the second table
         valuesTable2.put(DatabaseHelper.MERGED, 1);
 // Update the second table based on TABLE_NUMBER
-        int rowsUpdated2 = db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
-                new String[]{selectedTableToMerge});
+        int rowsUpdated2 = db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ? AND " + DatabaseHelper.ROOM_ID + " = ?",
+                new String[]{selectedTableToMerge,roomnum});
 
 // If updating based on TABLE_NUMBER fails, update based on MERGED_SET_ID
         if (rowsUpdated2 == 0) {
-             db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.MERGED_SET_ID + " = ?",
-                    new String[]{newTableNumber});
+             db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.MERGED_SET_ID + " = ? AND " + DatabaseHelper.ROOM_ID + " = ?",
+                    new String[]{newTableNumber,roomnum});
         }
 
 // Log the number of rows updated
         Log.d("mergeTables", "Rows Updated for " + selectedTableNum + ": " + rowsUpdated1);
         Log.d("mergeTables", "Rows Updated for " + selectedTableToMerge + ": " + rowsUpdated2);
-        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
-                new String[]{selectedTableToMerge});
+        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ? AND " + DatabaseHelper.ROOM_ID + " = ?",
+                new String[]{selectedTableToMerge,roomnum});
 
         db.close();
 
@@ -643,22 +859,6 @@ String transactionIdInProgress;
         }
     }
 
-    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId) {
-        // Perform the transfer operation by updating the database
-        // For example, update the table number of the selected table with the new table number
-        Log.d("selectedTableNum", selectedTableNum);
-        Log.d("selectedTableToTransfer", selectedTableToTransfer);
-
-        mDatabaseHelper.updateTableNumber(selectedTableNum, selectedTableToTransfer, roomId);
-        mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId);
-        mAdapter.notifyDataSetChanged();
-        sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-        sharedPreferences.edit().putString("table_id", selectedTableToTransfer).apply();
-        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomId)).apply();
-
-        Intent intent = new Intent(requireContext(), MainActivity.class);
-        startActivity(intent);
-    }
 
 
     public void openNewActivity() {
@@ -688,6 +888,10 @@ String transactionIdInProgress;
         }
 
     }
+
+
+
+
     public void handleFilterAndInsert(String newTableName) {
         // Perform the insert operation using your DatabaseHelper or DBManager
         // For example:

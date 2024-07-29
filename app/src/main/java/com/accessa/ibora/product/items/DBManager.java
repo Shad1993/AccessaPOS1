@@ -42,8 +42,11 @@ import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLU
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_DESCRIPTION;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_OPTION_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_PAYMENTBYQY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCESS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
@@ -68,6 +71,8 @@ import com.accessa.ibora.product.Vendor.Vendor;
 import com.accessa.ibora.product.couponcode.Coupon;
 import com.accessa.ibora.product.options.Options1;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -263,15 +268,38 @@ public class DBManager {
         }
         return cursor;
     }
-    public boolean updateTransItem(long id,String quantity,String price,  String longDesc, String lastModified) {
+    public boolean updateTransItem(String transactionId, long id, String quantity, String price, String tax, String longDesc, String lastModified) {
+        // Convert price and tax to double and round to 2 decimal places
+        double roundedPrice = roundUp(Double.parseDouble(price), 2);
+        double roundedTax = roundUp(Double.parseDouble(tax), 2);
+
+        // Convert rounded values back to String
+        String roundedPriceStr = String.format("%.2f", roundedPrice);
+        String roundedTaxStr = String.format("%.2f", roundedTax);
+
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.QUANTITY, quantity);
-        contentValues.put(DatabaseHelper.TOTAL_PRICE, price);
+        contentValues.put(DatabaseHelper.TOTAL_PRICE, roundedPriceStr);
         contentValues.put(DatabaseHelper.TRANSACTION_DATE, lastModified);
         contentValues.put(DatabaseHelper.LongDescription, longDesc);
-        database.update(TRANSACTION_TABLE_NAME, contentValues, ITEM_ID + " = " + id, null);
-        return true;
+        contentValues.put(DatabaseHelper.VAT, roundedTaxStr);
+
+        String selection = TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(transactionId), String.valueOf(id)};
+
+        int rowsAffected = database.update(TRANSACTION_TABLE_NAME, contentValues, selection, selectionArgs);
+
+        return rowsAffected > 0;
     }
+
+    private double roundUp(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(Double.toString(value));
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
     public boolean updateUser(long id, String name, String enteredPIN, String dept, String level,String lastmodified) {
 
         ContentValues contentValues = new ContentValues();
@@ -288,7 +316,7 @@ public class DBManager {
     }
 
 
-    public boolean updateItem(long id,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public boolean updateItem(long id,String optionStatus,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         ContentValues contentValues = new ContentValues();
 
 
@@ -326,7 +354,13 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Price2AfterDiscount, currentPrice2);
         contentValues.put(DatabaseHelper.Price3AfterDiscount, currentPrice3);
         contentValues.put(DatabaseHelper.SyncStatus, SyncStatus);
-
+        contentValues.put(DatabaseHelper.hasoptions, optionStatus);
+        contentValues.put(DatabaseHelper.related_item, optionsid);
+        contentValues.put(DatabaseHelper.related_item2, optionsid2);
+        contentValues.put(DatabaseHelper.related_item3, optionsid3);
+        contentValues.put(DatabaseHelper.related_item4, optionsid4);
+        contentValues.put(DatabaseHelper.related_item5, optionsid5);
+        contentValues.put(DatabaseHelper.relatedSupplements, supplementid);
         database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
         return true;
     }
@@ -449,6 +483,8 @@ public class DBManager {
                 DatabaseHelper.related_item3,
                 DatabaseHelper.related_item4,
                 DatabaseHelper.related_item5,
+                DatabaseHelper.hasSupplements,
+                DatabaseHelper.relatedSupplements,
                 DatabaseHelper.Variant,
                 DatabaseHelper.Image,
                 DatabaseHelper.Nature,
@@ -503,6 +539,8 @@ public class DBManager {
             item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
             item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
             item.setHasoption(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.hasoptions))));
+            item.sethassupplements(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(hasSupplements))));
+            item.setrelatedSupplement(cursor.getString(cursor.getColumnIndex(DatabaseHelper.relatedSupplements)));
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
             item.setHascomment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.comment)));
             item.setRelateditem(cursor.getString(cursor.getColumnIndex(DatabaseHelper.related_item)));
@@ -811,7 +849,7 @@ public class DBManager {
     public void insertSup(String subDeptName) {
 
         ContentValues contentValue = new ContentValues();
-        contentValue.put(DatabaseHelper.SUPPLEMENT_OPTION_NAME , subDeptName);
+        contentValue.put(SUPPLEMENT_OPTION_NAME , subDeptName);
 
         database.insert(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME , null, contentValue);
     }
@@ -1011,7 +1049,7 @@ public class DBManager {
         Options1 options = null;
         String[] columns = new String[]{
                 DatabaseHelper.SUPPLEMENT_OPTION_ID ,
-                DatabaseHelper.SUPPLEMENT_OPTION_NAME ,
+                SUPPLEMENT_OPTION_NAME ,
 
 
         };
@@ -1024,7 +1062,7 @@ public class DBManager {
         if (cursor != null && cursor.moveToFirst()) {
             options = new Options1();
             options.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_ID )));
-            options.setNames(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_NAME )));
+            options.setNames(cursor.getString(cursor.getColumnIndex(SUPPLEMENT_OPTION_NAME )));
 
 
 
@@ -1080,7 +1118,7 @@ public class DBManager {
                 DatabaseHelper.SUPPLEMENT_NAME,
                 DatabaseHelper.VARIANT_BARCODE,
                 DatabaseHelper.SUPPLEMENT_OPTION_ID,
-                DatabaseHelper.SUPPLEMENT_DESCRIPTION,
+                SUPPLEMENT_DESCRIPTION,
                 DatabaseHelper.SUPPLEMENT_PRICE
         };
 
@@ -1094,7 +1132,7 @@ public class DBManager {
                 Variant variant = new Variant();
                 variant.setVariantId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_ID)));
                 variant.setVariantitemid(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_OPTION_ID)));
-                variant.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_DESCRIPTION)));
+                variant.setDescription(cursor.getString(cursor.getColumnIndex(SUPPLEMENT_DESCRIPTION)));
                 variant.setItemId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_NAME)));
                 variant.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.VARIANT_BARCODE)));
                 variant.setPrice(cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.SUPPLEMENT_PRICE)));
@@ -1165,14 +1203,14 @@ public class DBManager {
     }
 
 
-    public boolean flagTransactionItemAsVoid(long itemId) {
+    public boolean flagTransactionItemAsVoid(long itemId, String transactionId) {
         // Define the values to update
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_STATUS, "Void");
 
         // Define the selection criteria
-        String selection = ITEM_ID + "=?";
-        String[] selectionArgs = { String.valueOf(itemId) };
+        String selection = ITEM_ID + "=? AND " + TRANSACTION_ID + "=?";
+        String[] selectionArgs = { String.valueOf(itemId), transactionId };
 
         // Perform the update
         int rowsAffected = database.update(DatabaseHelper.TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
@@ -1180,6 +1218,7 @@ public class DBManager {
         // Return true if at least one row was updated, false otherwise
         return rowsAffected > 0;
     }
+
 
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
         ContentValues contentValue = new ContentValues();
@@ -1272,6 +1311,15 @@ public class DBManager {
         contentValue.put(OPTION_NAME, name);
 
         database.update(DatabaseHelper.OPTIONS_TABLE_NAME, contentValue, DatabaseHelper.OPTION_ID + " = " + id, null);
+        return true;
+    }
+
+    public boolean updateSupplemets(long id, String name) {
+
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(SUPPLEMENT_OPTION_NAME, name);
+
+        database.update(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME, contentValue, DatabaseHelper.SUPPLEMENT_OPTION_ID + " = " + id, null);
         return true;
     }
 

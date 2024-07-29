@@ -230,7 +230,7 @@ if(sentToKitchen.equals("0")) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(SendNoteToKitchenActivity.this, String.format(getString(R.string.toast_print_failed), cloudPrinterStatus.name()), Toast.LENGTH_LONG).show();
+
                     }
                 });
 

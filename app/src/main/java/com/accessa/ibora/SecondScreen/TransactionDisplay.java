@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -56,13 +57,29 @@ public class TransactionDisplay extends Presentation {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Initialize the views to display the content
 
-        setContentView(R.layout.second_screen_presentation);
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+        mDatabaseHelper = new DatabaseHelper(getContext());
         SharedPreferences preferences = getContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
         tableid = String.valueOf(preferences.getString("table_id", "0"));
+        // Check if tableid is "0" and set to "1" if true
+        if (tableid.equals("0")) {
+            tableid = "1";
+            String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+            transactionIdInProgress= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+            Log.d("tableid", tableid);
+            Log.d("roomid", String.valueOf(roomid));
+        }else{
+            Log.d("tableid", tableid);
+            Log.d("roomid", String.valueOf(roomid));
+            String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+            transactionIdInProgress= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        }
+
+// Log the table ID for debugging
+
+        setContentView(R.layout.second_screen_presentation);
 
         textViewTime = findViewById(R.id.textViewTime);
         handler = new Handler(Looper.getMainLooper());
@@ -78,13 +95,12 @@ public class TransactionDisplay extends Presentation {
 
 
 
-        // Initialize the views to display the content
 
-        mDatabaseHelper = new DatabaseHelper(getContext());
-        mDatabaseHelper = new DatabaseHelper(getContext());
+
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(transactionIdInProgress,String.valueOf(roomid),tableid);
+
         adapter= new TicketAdapter(getContext(), cursor1);
         recyclerView.setAdapter(adapter);
 
@@ -148,28 +164,6 @@ public class TransactionDisplay extends Presentation {
         adapter.notifyDataSetChanged();
     }
 
-
-    public void updateRecyclerView(List<String> newData) {
-        adapter.updateData(newData);
-    }
-
-
-
-
-    private void displayVideo(String videoUrl) {
-        // Display the video content
-        if (videoView != null) {
-            // Set the video URI to the videoUrl
-            videoView.setVideoURI(Uri.parse(videoUrl));
-
-            // Start playing the video
-            videoView.start();
-
-            videoView.setVisibility(View.VISIBLE);
-        }
-        textView.setVisibility(View.GONE);
-        imageView.setVisibility(View.GONE);
-    }
     private void startUpdatingTime() {
         handler.post(timeRunnable);
     }

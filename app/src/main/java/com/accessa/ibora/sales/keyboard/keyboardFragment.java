@@ -52,7 +52,7 @@ public class keyboardFragment extends Fragment {
         // Check the value and set the content view accordingly
         if ("mobile".equalsIgnoreCase(deviceType)) {
             view = inflater.inflate(R.layout.mobile_keyboard_fragment, container, false);
-        } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+        } else if ("sunmit2".equalsIgnoreCase(deviceType)) {
              view = inflater.inflate(R.layout.keyboard_fragment, container, false);
         }
         // Set the screen orientation to landscape

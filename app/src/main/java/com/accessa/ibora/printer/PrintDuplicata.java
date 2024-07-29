@@ -2,6 +2,9 @@ package com.accessa.ibora.printer;
 
 
 import static android.app.PendingIntent.getActivity;
+import static com.accessa.ibora.product.items.DatabaseHelper.PREFERENCE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.STATUS_KEY;
+
 import java.nio.charset.Charset;
 
 import androidx.appcompat.app.AlertDialog;
@@ -242,16 +245,36 @@ public class PrintDuplicata extends AppCompatActivity {
                             if (itemCursor != null && itemCursor.moveToFirst()) {
                                 int cashiernameindex = itemCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME);
                                 int cashieridindex = itemCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id);
-
+                                int roomnumber=mDatabaseHelper.getRoomIdByTransactionTicketNo(transactionIdInProgress);
+                                int tablenumber= mDatabaseHelper.getTableIdByTransactionTicketNo(transactionIdInProgress);
                                 String Cashiername = itemCursor.getString(cashiernameindex);
                                 String Cashierid = itemCursor.getString(cashieridindex);
-
+                                Log.d("transactionIdInProgress", transactionIdInProgress);
+                                int actualcopyprinted= mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
+                                mDatabaseHelper.updateCopyPrinted(transactionIdInProgress,actualcopyprinted);
+                                int newactualcopyprinted= mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
+                               String status=mDatabaseHelper.getOrderTypeByTransactionTicketNo(transactionIdInProgress);
+                                int covers=mDatabaseHelper.getNumberOfCovers(transactionIdInProgress);
+                                String relatedtransid= mDatabaseHelper.getRelatedTransactionId(transactionIdInProgress);
+                                String RelTrID= "Related Trans Id: " + relatedtransid ;
                                 String cashiename = "Cashier Name: " + Cashiername;
                                 String cashierid = "Cashier Id: " + Cashierid;
                                 String Posnum = "POS Number: " + TerminalNum;
+                                String room= "Room Number: " + roomnumber + "\n";
+                                String table= "Table Number: " + tablenumber +"\n";
+                                String Printed= "Copy Printed: " + newactualcopyprinted +"\n";
+                                String SalesType= "Sales Type -" + status +"\n";
+                                String coversnum= "Number Of Servings: " + covers + "\n";
+                                service.printText(RelTrID, null);
+                                service.printText(SalesType, null);
+                                service.printText(coversnum, null);
                                 service.printText(cashiename + "\n" , null);
+                                service.printText(SalesType + "\n", null);
                                 service.printText(cashierid + "\n", null);
                                 service.printText(Posnum + "\n", null);
+                                service.printText(room , null);
+                                service.printText(table, null);
+                                service.printText(Printed, null);
                             }
 
 
@@ -318,16 +341,19 @@ public class PrintDuplicata extends AppCompatActivity {
 
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
                             String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
-
+                            String AmountWitoutVat= "Amount Excluding Vat  " ;
                             String Total= getString(R.string.Total);
                             String TVA= getString(R.string.Vat);
-
+                            double amountwvat= totalAmount - TaxtotalAmount;
+                            String formattedamountwvat = String.format("%.2f", amountwvat);
                             String TotalValue= "Rs " + formattedTotalAmount;
                             String TotalVAT= "Rs " + formattedTotalTAXAmount;
+                            String TotalAmounTWOVAT="Rs " +formattedamountwvat;
                             int lineWidths= 38;
                             // Calculate the padding for the item name
                             int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
                             int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                            int AmountWVatValuePadding = lineWidth - TotalAmounTWOVAT.length() - AmountWitoutVat.length();
 
 
                             // Enable bold text and set font size to 30
@@ -368,7 +394,8 @@ public class PrintDuplicata extends AppCompatActivity {
                                 service.printText(vatTypesLine + "\n", null);
                             }
 
-
+                            String AmountWOVATLine = AmountWitoutVat + " ".repeat(Math.max(0, AmountWVatValuePadding)) + TotalAmounTWOVAT;
+                            service.printText(AmountWOVATLine + "\n", null);
                         }
                         String formattedTotalTender = String.format("%.2f", TenderAmount);
                         String formattedTotalReturn = String.format("%.2f", CashReturn);
@@ -487,10 +514,37 @@ public class PrintDuplicata extends AppCompatActivity {
                         String Footer2Text = getString(R.string.Footer_OpenHours);
                         String Openinghours= Footer2Text + OpeningHours ;
 
-                        if (MRAQR != null && !MRAQR.equals("Request Failed")) {
-                            service.printText("MRA Response" + "\n", null);
-                            service.printQRCode(MRAQR + "\n", 2, 1, null);
+
+                        if (MRAQR != null && !MRAQR.startsWith("Request Failed")) {
+                            service.printText("MRA Transaction Id: "+ transactionIdInProgress + "\n", null);
+
+                            // Decode Base64 string to byte array
+                            byte[] imageBytes;
+                            try {
+                                imageBytes = android.util.Base64.decode(MRAQR, android.util.Base64.DEFAULT);
+                            } catch (IllegalArgumentException e) {
+                                // Handle decoding errors
+                                e.printStackTrace();
+                                return;
+                            }
+
+                            // Log the decoded byte array for debugging
+                            Log.d("QR_DEBUG", "Decoded byte array length: " + imageBytes.length);
+
+                            try {
+                                // Convert the decoded byte array to a Bitmap
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+                                // Print the Bitmap using your existing print method
+                                service.printBitmap(bitmap, null);
+                                service.printText(" " + "\n", null);
+                            } catch (Exception e) {
+                                // Handle decoding or printing errors
+                                e.printStackTrace();
+                            }
                         }
+
+
 
                         // Print the centered footer text
                         service.printText(FooterText + "\n", null);

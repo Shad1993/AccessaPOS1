@@ -76,6 +76,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -137,7 +138,10 @@ public class Mra extends AppCompatActivity {
                 requestBody.put("requestId", requestidmethod); // Replace with your request ID
                 requestBody.put("payload", encryptedPayload);
 
-                OkHttpClient client = new OkHttpClient();
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectTimeout(5, TimeUnit.SECONDS) // 10 seconds timeout for connection
+                        .readTimeout(5, TimeUnit.SECONDS) // 30 seconds timeout for reading the response
+                        .build();
 
                 MediaType mediaType = MediaType.parse("application/json");
                 RequestBody body = RequestBody.create(mediaType, requestBody.toString());
@@ -205,7 +209,7 @@ public class Mra extends AppCompatActivity {
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
                         Log.d("cashier", cashorlevel);
-if(SelectedBuyerProfile==null) {
+if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
     if(cashorlevel.equals("1")) {
         transactionType = "TRN";
     }else{
@@ -426,22 +430,22 @@ if(SelectedBuyerProfile==null) {
                         intent.putExtra("tableid", tableid);
                         System.out.println("tr: " + transactionIdInProgress);
                         System.out.println("selectedBuyerTAN: " + selectedBuyerTAN);
-
+                        System.out.println("settlementItems: " + settlementItems);
                         String MRAMETHOD="Single";
                         insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
                         startActivity(intent);
                     } else {
-                        String result="Request Failed";
+                        String resulta="Request Failed";
                         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
                         // Show "MRA Request Failed" message
-                        Log.d("qrcode", result); // Log the QR code string
+                        Log.d("qrcode", resulta); // Log the QR code string
                         Log.d("result2", result);
                         unmergeTable(tableid);
                         Intent intent = new Intent(getApplication(), printerSetup.class);
                         intent.putExtra("amount_received", totalAmountinserted);
                         intent.putExtra("cash_return", cashReturn);
                         intent.putExtra("settlement_items", settlementItems);
-                        intent.putExtra("mraQR", result);
+                        intent.putExtra("mraQR", resulta);
                         intent.putExtra("MRAIRN", irn);
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
@@ -490,15 +494,7 @@ if(SelectedBuyerProfile==null) {
             roomid= getIntent().getStringExtra("roomid");
             tableid  = getIntent().getStringExtra("tableid");
 
-
-
-            // Retrieve other buyer information as needed
         }
-
-
-
-
-
 
 
         try {

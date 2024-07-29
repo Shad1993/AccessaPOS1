@@ -44,6 +44,8 @@ import java.util.Locale;
 public class ModifyItemDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
     private ItemClearedListener itemclearedListener;
+
+    private SalesFragment.ItemAddedListener itemAddedListener;
     private String tableid;
     private int roomid;
     private EditText editTextOption1,quantityEditText,priceEditText,longDescEditText;
@@ -441,6 +443,13 @@ public class ModifyItemDialogFragment extends DialogFragment {
             }
 
 
+// Set the selected item in the spinner
+            if (quantity != null) {
+                quantity = quantity.trim();
+                int quantityInt = Integer.parseInt(quantity);
+                int spinnerPosition = adapter.getPosition(quantityInt);
+                quantitySpinner.setSelection(spinnerPosition);
+            }
 
             // Set the values in the edit texts
 
@@ -452,22 +461,46 @@ public class ModifyItemDialogFragment extends DialogFragment {
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(getString(R.string.delete_confirmation))
-                        .setMessage(getString(R.string.delete_confirmation_message))
-                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                deleteItem(ITEM_ID); // Call the deleteItem() method with the item ID
-                                refreshTicketFragment();
-                                dismiss(); // Close the dialog after deleting the item
-                                if (itemclearedListener != null) {
-                                    itemclearedListener.onItemDeleted();
-                                }
-                            }
-                        })
-                        .setNegativeButton(getString(R.string.no), null)
-                        .show();
+                String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                    int distinctitemcount= mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
+
+                    Log.d("distinctitemcount", String.valueOf(distinctitemcount));
+                    if(distinctitemcount==1){
+// Show a pop-up dialog
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Confirm Action")
+                                .setMessage("There is only one item left in this transaction. Do you want to void the item or clear the entire transaction?")
+                                .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        deleteItem(ITEM_ID,latesttransId);
+                                        // Perform the delete operation here
+                                        if (Xdatabasemanager != null) {
+                                            Xdatabasemanager.flagTransactionItemAsVoid(Long.parseLong(ITEM_ID), latesttransId);
+                                            if (itemclearedListener != null) {
+                                                itemclearedListener.onItemDeleted();
+                                            }
+
+                                            refreshTicketFragment();
+                                            dismiss(); // Close the dialog after deleting the item
+
+                                        }
+                                    }
+                                })
+                                .setNegativeButton("Clear Transaction", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
+                                        clearTransact();
+                                        returnHome();
+                                    }
+                                })
+                                .setCancelable(false)
+                                .show();
+
+                }
+
             }
         });
 
@@ -494,17 +527,54 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             ModifyItemDialogListener listener = (ModifyItemDialogListener) getTargetFragment();
                             listener.onItemModified(quantity, price, longDesc);
                         }
-                       double UnitPrice= mDatabaseHelper.getItemPrice(id);
+                        Log.d("ITEM_ID", String.valueOf(ITEM_ID));
+                        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+                        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
 
+                        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                        String taxcode=mDatabaseHelper.getTransactionTaxCode(latesttransId,id);
+
+                       double currentprice= mDatabaseHelper.getItemPrice(id);
+
+                       if (currentprice==0.0){
+                    currentprice=mDatabaseHelper.getVariantPriceByItemId(id);
+                           if (currentprice==0.0){
+                            currentprice=mDatabaseHelper.getSupplementPrice(id);
+
+                           }
+                       }
+                        String VatType=mDatabaseHelper.getVatTypeById(id);
                         double Quantity= Double.parseDouble(quantity);
-                       double  totalPrice= Quantity * UnitPrice;
-                        boolean isUpdated = Xdatabasemanager.updateTransItem(Long.parseLong(id), quantity, String.valueOf(totalPrice), longDesc,lastmodified);
+                       double  totalPrice= Quantity * currentprice;
+                        Log.d("Quantity", String.valueOf(Quantity));
+                        Log.d("totalPrice", String.valueOf(totalPrice));
+                        Log.d("taxcode", String.valueOf(taxcode));
+                        Log.d("ITEM_ID", String.valueOf(id));
+                        double vatAmount=0;
+                        if (taxcode.equals("TC01")) {
+                            double vatRate = 0.15; // 15% VAT rate
+
+                            // Calculate the price without VAT
+                            double priceExcludingVAT = totalPrice / (1 + vatRate);
+
+                            // Calculate the VAT amount
+                             vatAmount = totalPrice - priceExcludingVAT;
+
+                            // Logging the calculated values
+                            Log.d("PriceExcludingVAT", String.valueOf(priceExcludingVAT));
+                            Log.d("VATAmount", String.valueOf(vatAmount));
+                        }
+                        double totaltax = totalVATSum;
+                      
+                        Log.d("currentvat", String.valueOf(totaltax));
+                        boolean isUpdated = Xdatabasemanager.updateTransItem(latesttransId,Long.parseLong(id), quantity, String.valueOf(totalPrice), String.valueOf(vatAmount), longDesc,lastmodified);
                         if (itemclearedListener != null) {
                             itemclearedListener.onAmountModified();
                         }
                         String option1Text = editTextOption1.getText().toString();
                         Log.d("DialogFragment", "Option1 Text: " + option1Text);
-                        updateCommentForTransaction(mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid),option1Text,id );
+                        updateCommentForTransaction(latesttransId,option1Text,id );
                         if (!TextUtils.isEmpty(option1Text)) {
                             Log.d("DialogFragment", "Starting SendNoteToKitchenActivity");
 
@@ -531,7 +601,21 @@ public class ModifyItemDialogFragment extends DialogFragment {
                 .setNegativeButton(getString(R.string.cancel), null)
                 .create();
     }
+    public double calculateTax(String price,String VatVall) {
+        double taxAmount = 0.0;
 
+        double unitPriceInclusive = Double.parseDouble(price);
+        double unitPriceExclusive = unitPriceInclusive / 1.15; // Removing 15% VAT to get exclusive price
+
+        if (VatVall.equals("VAT 15%")) {
+            taxAmount = unitPriceExclusive * 0.15; // Calculate VAT based on exclusive price
+        }
+
+        // Ensure that the tax amount is rounded to two decimal places
+        taxAmount = Math.round(taxAmount * 100.0) / 100.0;
+
+        return taxAmount;
+    }
     public void updateCommentForTransaction(String transactionId, String comment,String itemid) {
         // Call your database helper method to update the comment for the given transaction ID
         mDatabaseHelper.updateTransactionComment(transactionId, comment,itemid);
@@ -540,10 +624,10 @@ public class ModifyItemDialogFragment extends DialogFragment {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());
     }
-    private void deleteItem(String itemId) {
+    private void deleteItem(String itemId,String transactionid) {
         // Perform the delete operation here
         if (Xdatabasemanager != null) {
-            boolean deleted = Xdatabasemanager.flagTransactionItemAsVoid(Long.parseLong(itemId));
+            boolean deleted = Xdatabasemanager.flagTransactionItemAsVoid(Long.parseLong(itemId),transactionid);
             if (itemclearedListener != null) {
                 itemclearedListener.onItemDeleted();
             }
@@ -555,71 +639,50 @@ public class ModifyItemDialogFragment extends DialogFragment {
             }
         }
     }
+
+    public  void clearTransact(){
+
+
+        mDatabaseHelper.updateStatusToVoid(String.valueOf(roomid),tableid);
+
+
+        // Optionally, you can notify the user or perform any other actions after clearing the transaction
+// Notify the listener that an item is added
+        double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
+        refreshTicketFragment();
+        dismiss(); // Close the dialog after deleting the item
+        if (itemclearedListener != null) {
+            itemclearedListener.onItemDeleted();
+        }
+
+        if (itemAddedListener != null) {
+            itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+        }
+
+
+    }
     private void refreshTicketFragment() {
+
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
         TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            ticketFragment.refreshData(calculateTotalAmount(String.valueOf(roomid),tableid),calculateTotalTax(roomid,tableid));
-        }
-    }
-    public static double calculateTotalAmount(String roomid, String tableid) {
-        if (roomid == null && tableid ==null) {
-            // Continue with the rest of your logic
-            Cursor cursor = mDatabaseHelper.getAllInProgressTransactions("0", "0");
-            double totalAmount = 0.0;
-            if (cursor != null && cursor.moveToFirst()) {
-                int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-                do {
-                    double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                    totalAmount += totalPrice;
-                } while (cursor.moveToNext());
-            }
-
-            if (cursor != null) {
-                cursor.close();
-            }
-
-            return totalAmount;
-        } else {
-            // Continue with the rest of your logic
-            Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(roomid, tableid);
-            double totalAmount = 0.0;
-            if (cursor != null && cursor.moveToFirst()) {
-                int totalPriceColumnIndex = cursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE);
-                do {
-                    double totalPrice = cursor.getDouble(totalPriceColumnIndex);
-                    totalAmount += totalPrice;
-                } while (cursor.moveToNext());
-            }
-
-            if (cursor != null) {
-                cursor.close();
-            }
-
-            return totalAmount;
+            ticketFragment.refreshData(totalPriceSum,totalVATSum);
         }
     }
 
-    public static double calculateTotalTax(int roomid,String tableid) {
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactions(String.valueOf(roomid),tableid);
-        double TaxtotalAmount = 0.0;
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalTaxColumnIndex = cursor.getColumnIndex(DatabaseHelper.VAT);
-            do {
-                double totalPrice = cursor.getDouble(totalTaxColumnIndex);
-                TaxtotalAmount += totalPrice;
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return TaxtotalAmount;
-    }
+
     public void returnHome() {
         Intent home_intent1 = new Intent(getContext(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         home_intent1.putExtra("fragment", "Ticket_fragment");
         startActivity(home_intent1);
     }
+
+
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);
     }

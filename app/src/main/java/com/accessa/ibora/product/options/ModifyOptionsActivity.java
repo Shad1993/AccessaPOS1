@@ -168,7 +168,7 @@ public class ModifyOptionsActivity extends Activity {
                 if (rowsAffected > 0) {
                     // Update successful
                     // Optionally, you can perform any other action needed after successful update
-                    createVariantButton(variantOptionId, newBarcode, newDescription, newPrice,itemid);
+                    updateVariantButton(variantOptionId, newBarcode, newDescription, newPrice,itemid);
                 } else {
                     // No rows were affected, update failed
                     Log.e("DatabaseUpdate", "Failed to update data in VARIANTS_TABLE_NAME");
@@ -333,7 +333,7 @@ public class ModifyOptionsActivity extends Activity {
 
 
                     // Insert the variant into the database
-                    insertVariantIntoDatabase(newoptionid, barcode, description, price, ItemIdText);
+                    updateVariantIntoDatabase(newoptionid, barcode, description, price, ItemIdText);
 
 
                     // Close the dialog
@@ -348,7 +348,7 @@ public class ModifyOptionsActivity extends Activity {
     }
 
 
-    private void insertVariantIntoDatabase(long optionId, String barcode, String description, double price,String itemid) {
+    private void updateVariantIntoDatabase(long optionId, String barcode, String description, double price,String itemid) {
         try {
             // Assuming you have a DatabaseHelper instance
             DatabaseHelper dbHelper = new DatabaseHelper(this);
@@ -376,7 +376,7 @@ public class ModifyOptionsActivity extends Activity {
                     // Insertion successful
                     // Optionally, you can use the variantId if needed for further actions
                     // After successful insertion, dynamically create a button for the variant
-                    createVariantButton(optionId, barcode, description, price,itemid);
+                    updateVariantButton(optionId, barcode, description, price,itemid);
                 } else {
                     // Insertion failed
                     Log.e("DatabaseInsert", "Failed to insert data into VARIANTS_TABLE_NAME");
@@ -394,6 +394,48 @@ public class ModifyOptionsActivity extends Activity {
             Log.e("DatabaseInsert", "Exception: " + e.getMessage());
         }
     }
+    private void updateVariantButton(long optionId, String barcode, String description, double price, String variantItemId) {
+        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        Button existingButton = null;
+
+        // Iterate through the child views to find the button with the matching barcode
+        for (int i = 0; i < variantButtonsLayout.getChildCount(); i++) {
+            View child = variantButtonsLayout.getChildAt(i);
+            if (child instanceof Button && barcode.equals(child.getTag())) {
+                existingButton = (Button) child;
+                break;
+            }
+        }
+
+        if (existingButton != null) {
+            // Update the existing button's text and tag
+            existingButton.setText(description);
+            existingButton.setTag(barcode);
+
+            // Update the click listener for normal click
+            existingButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Handle button click, e.g., open details or perform an action
+                    showAddVariantDialog(optionId, barcode, description, price, variantItemId);
+                }
+            });
+
+            // Update the long click listener for deletion
+            existingButton.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    // Handle long click, e.g., show confirmation dialog and delete the variant
+                    showDeleteVariantDialog(optionId, barcode);
+                    return true; // Consume the long click event
+                }
+            });
+        } else {
+            // If the button doesn't exist, create a new one
+            createVariantButton(optionId, barcode, description, price, variantItemId);
+        }
+    }
+
     private void showAddVariantDialog(long optionId,String barcode,String description,double Price,String variantitemid) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);

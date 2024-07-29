@@ -55,10 +55,6 @@ import static com.accessa.ibora.product.items.DatabaseHelper.related_item4;
 import static com.accessa.ibora.product.items.DatabaseHelper.related_item5;
 
 import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -66,10 +62,7 @@ import android.os.Build;
 import android.os.StrictMode;
 import android.util.Log;
 
-import androidx.core.app.NotificationCompat;
-
 import com.accessa.ibora.Admin.AdminMenuFragment;
-import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -82,36 +75,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SyncService extends IntentService {
+public class Syncforold extends IntentService {
     private DatabaseHelper mDatabaseHelper;
     private static final String TAG = "SyncService";
-    private static final String CHANNEL_ID = "SyncServiceChannel";
-    private static final int NOTIFICATION_ID = 1;
+
     // Your database connection parameters
     private static final String _user = "sa";
     private static final String _pass = "Logi2131";
     private static final String _DB = "IboraResto";
     private static final String _server = "192.168.1.89";
 
-    public SyncService() {
+    public Syncforold() {
         super("SyncService");
     }
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        createNotificationChannel();
 
-        Notification notification = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            notification = new Notification.Builder(this, CHANNEL_ID)
-                    .setContentTitle("Sync Service")
-                    .setContentText("Running sync service")
-                    .setSmallIcon(R.drawable.iboralogo) // Replace with your app's icon
-                    .build();
-        }
-
-        startForeground(1, notification);
-    }
     @Override
     protected void onHandleIntent(Intent intent) {
         // This method will run in the background when the service is started
@@ -120,7 +97,6 @@ public class SyncService extends IntentService {
             performBidirectionalSync(conn);
         }
     }
-
 
     public Connection start() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
@@ -160,9 +136,8 @@ public class SyncService extends IntentService {
             Log.e("SYNC_ERROR", e.getMessage());
         }
     }
-
-
     private void getItemsFromMssql(Connection conn) {
+
         try {
             String selectQuery = "SELECT COUNT(*) as totalItems FROM ITEMS";
             Statement statement = conn.createStatement();
@@ -272,9 +247,16 @@ public class SyncService extends IntentService {
                                 availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
 
+
+                        // dbManager.insertwithnewbarcode(itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
+                        //             subDepartment, longDescription, quantity, expiryDate, vAT,
+                        //           availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
+                        //          nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
+
                         // Redirect to the Product activity
-                        Intent intent = new Intent(SyncService.this, Product.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        Intent intent = new Intent(Syncforold.this, Product.class);
+
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     }
 
@@ -283,6 +265,7 @@ public class SyncService extends IntentService {
                 }
             }
             resultSets.close();
+
             statement.close();
             dbManager.close();
         } catch (SQLException se) {
@@ -292,30 +275,6 @@ public class SyncService extends IntentService {
         }
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Sync Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(serviceChannel);
-        }
-    }
-    private Notification buFildNotification() {
-        Intent notificationIntent = new Intent(this, Product.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Sync Service")
-                .setContentText("Running sync service")
-                .setSmallIcon(R.drawable.iboralogo) // Replace with your app's icon
-                .setContentIntent(pendingIntent);
-
-        return builder.build();
-    }
     private void showToast(String message) {
         // Display a toast (or update UI) from the background service
         Log.d(TAG, message);
@@ -323,7 +282,7 @@ public class SyncService extends IntentService {
     }
 
     public static void startSync(Context context) {
-        Intent intent = new Intent(context, SyncService.class);
+        Intent intent = new Intent(context, Syncforold.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {

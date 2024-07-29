@@ -2,10 +2,6 @@ package com.accessa.ibora.printer;
 
 
 import static com.accessa.ibora.Constants.DB_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_AMOUNT;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_DATE_TRANSACTION;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_PAYMENT_NAME;
 
 import android.content.Context;
 import android.content.Intent;
@@ -29,9 +25,6 @@ import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.Report.PaymentAdapter;
-import com.accessa.ibora.Report.PaymentItem;
-import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.company.Company;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -47,18 +40,15 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 
-public class PrintDailyReport extends AppCompatActivity {
+public class CloseShiftReport extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
     private TextView CompanyName;
     private String Shopname;
@@ -85,6 +75,8 @@ public class PrintDailyReport extends AppCompatActivity {
 
    private String localeString ;
     private String reportType ;
+    private  int actualshift;
+
     private String totalTax ;
     private String totalAmountWOVat;
     private   String      TelNum,compTelNum,compFaxNum,TransactionTypename;
@@ -109,7 +101,7 @@ public class PrintDailyReport extends AppCompatActivity {
 
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(PrintDailyReport.this));
+                    recyclerView.setLayoutManager(new LinearLayoutManager(CloseShiftReport.this));
 
 
                     try {
@@ -194,6 +186,9 @@ public class PrintDailyReport extends AppCompatActivity {
 
 
                         }
+                        reportType="Daily";
+                         actualshift=mDatabaseHelper.getCurrentShiftNumber();
+                        Log.d("actualshift ", String.valueOf(actualshift));
                         Cursor itemCursor = mDatabaseHelper.getUserById(Integer.parseInt(cashorId));
                         if (itemCursor != null && itemCursor.moveToFirst()) {
                             int cashiernameindex = itemCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME);
@@ -206,13 +201,15 @@ public class PrintDailyReport extends AppCompatActivity {
                             PosNum = shardPreference.getString(POSNumber, null);
                             String Till_id = readTextFromFile("till_num.txt");
 
-                            int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
 
+                            int covernumber= mDatabaseHelper.getSumNumberOfCoversByReportTypePerShift(reportType,actualshift);
                             String numberofcovers = "Number Of covers: " + covernumber;
+                            String lastshift = "******: "+"Shift Number: " + actualshift+"******";
 
                             String cashiename = "Cashier Name: " + Cashiername;
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
+                            service.printText(lastshift + "\n\n", null);
                             service.printText(cashiename + "\n", null);
                             service.printText(cashierid + "\n", null);
                             service.printText(Posnum + "\n", null);
@@ -255,7 +252,7 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        newDataList = fetchDataBasedOnReportType(reportType);
+                        newDataList = fetchDataBasedOnReportTypeAndShift(reportType, actualshift);
                         // Initialize the paymentAdapter
 
                         int lineWidths= 48;
@@ -292,10 +289,10 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        newDataList = fetchDataBasedOnReportType(reportType);
+                        newDataList = fetchDataBasedOnReportTypeAndShift(reportType, actualshift);
                         // Initialize the paymentAdapter
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        CatDataList = fetchCatDataBasedOnReportType(reportType);
+                        CatDataList = fetchCatDataBasedOnReportTypeByShift(reportType, actualshift);
                         // Initialize the paymentAdapter
 
                          lineWidths= 48;
@@ -348,7 +345,7 @@ public class PrintDailyReport extends AppCompatActivity {
                             service.printText(SellerName + "\n", null);
 
                             // Fetch payment method data for the current cashier
-                            List<PaymentMethodDataModel> SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndCashier(reportType, Integer.parseInt(cashierId));
+                            List<PaymentMethodDataModel> SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndCashierAndShiftNumber(reportType, Integer.parseInt(cashierId), actualshift);
                             for (PaymentMethodDataModel item : SettlementDataLists) {
                                 String paymentName = item.getPaymentName();
                                 double totalAmount = item.getTotalAmount();
@@ -392,8 +389,8 @@ public class PrintDailyReport extends AppCompatActivity {
                         for (String cashierId : cashierIds) {
 
 
-                            double amountWOVat = mDatabaseHelper.getSumOfTransactionTotalHTA(cashierId,reportType);
-                            double grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTC(cashierId,reportType);
+                            double amountWOVat = mDatabaseHelper.getSumOfTransactionTotalHTAperShift(cashierId,reportType, actualshift);
+                            double grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTCPerShift(cashierId,reportType, actualshift);
                             double tax = grandTotal- amountWOVat;
                             String formattedTotalAmount = String.format("%.2f", grandTotal);
                             String Total= "Total";
@@ -432,16 +429,16 @@ public class PrintDailyReport extends AppCompatActivity {
 
 
 
-                            double cashret = mDatabaseHelper.getSumglobalCashReturn(reportType);
-                            double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportType(reportType);
+                            double cashret = mDatabaseHelper.getSumglobalCashReturnPerShift(reportType, actualshift);
+                            double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportTypePerShift(reportType,actualshift);
                             double cashbackval = 0.0;
-                            double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
-                            double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportType(reportType);
-                            double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportType(reportType);
+                            double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportTypePerShift(reportType, actualshift);
+                            double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportTypeperShift(reportType, actualshift);
+                            double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportTypepershift(reportType, actualshift);
                             double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
                             double cashnetval = tenderval - cashret;
 
-// Format values to 2 decimal places
+                            // Format values to 2 decimal places
                             String formattedCashret = String.format("%.2f", cashret);
                             String formattedTenderval = String.format("%.2f", tenderval);
                             String formattedCashbackval = String.format("%.2f", cashbackval);
@@ -483,11 +480,11 @@ public class PrintDailyReport extends AppCompatActivity {
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
 
-                            double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportType(reportType);
-                            double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportType(reportType);
-                            double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportType(reportType);
-                            double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportType(reportType);
-                            double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportType(reportType);
+                            double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportTypePerShift(reportType, actualshift);
+                            double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportTypePerShift(reportType, actualshift);
+                            double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportTypePerShift(reportType, actualshift);
+                            double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportTypePerShift(reportType, actualshift);
+                            double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportTypePerShift(reportType, actualshift);
 
 
                             String formattedcreditcard = String.format("%.2f", creditCardTotal);
@@ -514,13 +511,17 @@ public class PrintDailyReport extends AppCompatActivity {
                         // Retrieve the total amount and total tax amount from the transactionheader table
                         Log.d("cashnetval",  "cashnetval: " + cashnetval + "debitCardTotal: " +debitCardTotal+  "creditCardTotal: " +creditCardTotal+  "chequeTotal: " +chequeTotal);
                         double doubleval= cashnetval + debitCardTotal+ creditCardTotal+ chequeTotal +popTotal+ couponCodeTotal;
-                        int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
+                        int covernumber= mDatabaseHelper.getSumNumberOfCoversByReportTypePerShift(reportType, actualshift);
                         double average= doubleval/covernumber;
                         String formatedtotalval = String.format("%.2f", doubleval);
                         String formatedaverage = String.format("%.2f", average);
                         String averagetext=  covernumber + " Couverts :Rs " + formatedtotalval + " Average :Rs " + formatedaverage;
                         service.printText(averagetext + "\n", null);
                         service.printText(lineSeparator + "\n", null);
+                        double totalTaxval = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(reportType, actualshift);
+                        double totalAmountWOVatval = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(reportType, actualshift);
+                        totalTax= String.valueOf(totalTaxval);
+                        totalAmountWOVat= String.valueOf(totalAmountWOVatval);
                         String Total= "Total";
                         String TVA= getString(R.string.Vat);
                         String amountWoVat= "Amount W/0 VAT";
@@ -576,7 +577,7 @@ public class PrintDailyReport extends AppCompatActivity {
                             @Override
                             public void run() {
 
-                                Intent intent = new Intent(PrintDailyReport.this, MainActivity.class);
+                                Intent intent = new Intent(CloseShiftReport.this, MainActivity.class);
 
                                 startActivity(intent);
 
@@ -623,30 +624,11 @@ public class PrintDailyReport extends AppCompatActivity {
         // Retrieve the intent and its extras
         Intent intent = getIntent();
          localeString = intent.getStringExtra("locale");
-         reportType = intent.getStringExtra("reportType");
-         totalTax = intent.getStringExtra("totalTax");
-        totalAmountWOVat = intent.getStringExtra("totalAmount");
+        // Assuming you have methods to fetch total tax and total amount based on report type and shift number
 
-        if (localeString != null) {
-            Locale locale = Locale.forLanguageTag(localeString);
-            // Use the locale as needed
-            Log.d("PrintDailyReport", "Received Locale: " + locale.toString());
-        }
 
-        if (reportType != null) {
-            // Use the reportType as needed
-            Log.d("PrintDailyReport", "Received Report Type: " + reportType);
-        }
 
-        if (totalTax != null) {
-            // Use the totalTax as needed
-            Log.d("PrintDailyReport", "Received Total Tax: " + totalTax);
-        }
 
-        if (totalAmountWOVat != null) {
-            // Use the totalAmount as needed
-            Log.d("PrintDailyReport", "Received Total AmountWoVat: " + totalAmount);
-        }
 
         mDatabaseHelper = new DatabaseHelper(this); // Initialize DatabaseHelper
         database = mDatabaseHelper.getWritableDatabase(); // Initialize the SQLiteDatabase object
@@ -751,7 +733,7 @@ public class PrintDailyReport extends AppCompatActivity {
             return null;
         }
     }
-    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndCashier(String reportType, int cashierId) {
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndCashierAndShiftNumber(String reportType, int cashierId,int shiftnumber) {
         // Implement the logic to fetch payment method data based on the report type and cashier ID
 
 
@@ -759,30 +741,25 @@ public class PrintDailyReport extends AppCompatActivity {
 
         // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
         // Replace the method and parameters with your actual database queries
-        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndCashier(reportType, cashierId);
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndShiftAndCashier(reportType,shiftnumber, cashierId);
         Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
 
         return paymentMethodDataList;
     }
-    private List<DataModel> fetchDataBasedOnReportType(String reportType) {
-        // Implement your logic to fetch data based on the selected report type
-        // For now, return a dummy list
-        List<DataModel> dummyDataList = new ArrayList<>();
 
-        // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
-        // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnReportType(reportType);
 
-        return dummyDataList;
+    private List<DataModel> fetchDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
+        // Fetch data based on the selected report type and shift number
+        return mDatabaseHelper.getDataBasedOnReportTypeAndShift(reportType, shiftNumber);
     }
-    private List<CatDataModel> fetchCatDataBasedOnReportType(String reportType) {
+    private List<CatDataModel> fetchCatDataBasedOnReportTypeByShift(String reportType,int shiftnum) {
         // Implement your logic to fetch data based on the selected report type
         // For now, return a dummy list
         List<CatDataModel> dummyDataList = new ArrayList<>();
 
         // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
         // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamille(reportType);
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndShiftNumber(reportType,shiftnum);
 
         return dummyDataList;
     }

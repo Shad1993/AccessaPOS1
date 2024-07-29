@@ -1,6 +1,8 @@
 package com.accessa.ibora.product.options;
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import static com.accessa.ibora.product.items.DatabaseHelper.DB_VERSION;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -25,7 +27,7 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = Constants.DB_NAME;
 
     // database version
-    static final int DB_VERSION = 1;
+
 
     
 

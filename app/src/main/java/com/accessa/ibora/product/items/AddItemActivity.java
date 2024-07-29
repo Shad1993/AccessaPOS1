@@ -133,10 +133,6 @@ public class AddItemActivity extends Activity {
         setContentView(R.layout.activity_add_record);
 
 
-
-
-
-
         subjectEditText = findViewById(R.id.itemName_edittext);
         descEditText = findViewById(R.id.description_edittext);
         priceEditText = findViewById(R.id.price_edittext);

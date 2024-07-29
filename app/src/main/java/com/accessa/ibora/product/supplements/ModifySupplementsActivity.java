@@ -2,6 +2,12 @@ package com.accessa.ibora.product.supplements;
 
 
 
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENTS_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_DESCRIPTION;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_OPTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANTS_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_BARCODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VARIANT_DESC;
@@ -138,7 +144,85 @@ public class ModifySupplementsActivity extends Activity {
         Userid_Edittext.setText(String.valueOf(cashorId));
 
     }
+    private void insertVariantIntoDatabase(String optionId, String barcode, String description, double price,String itemid) {
+        try {
+            // Assuming you have a DatabaseHelper instance
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
 
+            // Open the database for writing
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            // Check if the barcode already exists
+            if (isBarcodeUnique(db, barcode) || isItemidUnique(db,itemid)) {
+                // Prepare the ContentValues to insert into the VARIANTS_TABLE_NAME
+                ContentValues values = new ContentValues();
+                values.put(SUPPLEMENT_NAME , optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
+                values.put(VARIANT_BARCODE, barcode);
+                values.put(SUPPLEMENT_DESCRIPTION , description);
+                values.put(SUPPLEMENT_PRICE , price);
+                values.put(SUPPLEMENT_OPTION_ID, itemid);
+                // Insert the data into the VARIANTS_TABLE_NAME
+                long variantId = db.insert(SUPPLEMENTS_TABLE_NAME , null, values);
+
+                // Close the database
+                db.close();
+
+                if (variantId != -1) {
+                    // Insertion successful
+                    // Optionally, you can use the variantId if needed for further actions
+                    // After successful insertion, dynamically create a button for the variant
+                    createVariantButton1(optionId, barcode, description, price);
+                } else {
+                    // Insertion failed
+                    Log.e("DatabaseInsert", "Failed to insert data into SUPPLEMENTS_TABLE_NAME");
+                }
+            } else {
+                // Barcode is not unique, show a popup or toast
+                Toast.makeText(ModifySupplementsActivity.this, "Barcode already exists", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            // Handle any exceptions that occur during the insertion process
+            e.printStackTrace();
+            // Display a toast or perform any other action as needed
+            Toast.makeText(ModifySupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+
+            Log.e("DatabaseInsert", "Exception: " + e.getMessage());
+        }
+    }
+
+    private void createVariantButton1(String optionId, String barcode, String description, double price) {
+        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+
+        Button variantButton = new Button(this);
+        variantButton.setText(description); // Set the button text to the variant description
+        variantButton.setTag(barcode); // Set a tag to identify the variant (you can use barcode or variantId)
+        variantButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle button click, e.g., open details or perform an action
+                Toast.makeText(ModifySupplementsActivity.this, "Variant Clicked: " + description, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Add the button to the layout
+        variantButtonsLayout.addView(variantButton);
+
+        // Optionally, you can customize the button appearance (e.g., set background, text color, etc.)
+    }
+    private boolean isItemidUnique(SQLiteDatabase db, String itemid) {
+        String[] projection = {SUPPLEMENT_OPTION_ID};
+        String selection = SUPPLEMENT_OPTION_ID + " = ?";
+        String[] selectionArgs = {itemid};
+
+        Cursor cursor = db.query(SUPPLEMENTS_TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+        boolean isUnique = cursor == null || cursor.getCount() == 0;
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return isUnique;
+    }
     private void updateVariantInDatabase(long variantOptionId, String newBarcode, String newDescription, double newPrice,String itemid) {
         try {
             // Assuming you have a DatabaseHelper instance
@@ -150,12 +234,12 @@ public class ModifySupplementsActivity extends Activity {
                 // Prepare the ContentValues to update the row in the VARIANTS_TABLE_NAME
                 ContentValues values = new ContentValues();
                 values.put(VARIANT_BARCODE, newBarcode);
-                values.put(VARIANT_DESC, newDescription);
-            values.put(VARIANT_ITEM_ID, itemid);
-                values.put(VARIANT_PRICE, newPrice);
+                values.put(SUPPLEMENT_DESCRIPTION, newDescription);
+                 values.put(SUPPLEMENT_OPTION_ID, itemid);
+                values.put(SUPPLEMENT_PRICE, newPrice);
 
                 // Update the data in the VARIANTS_TABLE_NAME based on VARIANT_ID
-                int rowsAffected = db.update(VARIANTS_TABLE_NAME, values, VARIANT_BARCODE + " = ?", new String[]{String.valueOf(newBarcode)});
+                int rowsAffected = db.update(SUPPLEMENTS_TABLE_NAME, values, VARIANT_BARCODE + " = ?", new String[]{String.valueOf(newBarcode)});
 
                 // Close the database
                 db.close();
@@ -163,10 +247,10 @@ public class ModifySupplementsActivity extends Activity {
                 if (rowsAffected > 0) {
                     // Update successful
                     // Optionally, you can perform any other action needed after successful update
-                    createVariantButton(variantOptionId, newBarcode, newDescription, newPrice,itemid);
+                    updateVariantButton(variantOptionId, newBarcode, newDescription, newPrice,itemid);
                 } else {
                     // No rows were affected, update failed
-                    Log.e("DatabaseUpdate", "Failed to update data in VARIANTS_TABLE_NAME");
+                    Log.e("DatabaseUpdate", "Failed to update data in SUPPLEMENTS_TABLE_NAME");
                 }
 
         } catch (Exception e) {
@@ -210,6 +294,48 @@ public class ModifySupplementsActivity extends Activity {
 
         return isUnique;
     }
+    private void updateVariantButton(long optionId, String barcode, String description, double price, String variantItemId) {
+        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        Button existingButton = null;
+
+        // Iterate through the child views to find the button with the matching barcode
+        for (int i = 0; i < variantButtonsLayout.getChildCount(); i++) {
+            View child = variantButtonsLayout.getChildAt(i);
+            if (child instanceof Button && barcode.equals(child.getTag())) {
+                existingButton = (Button) child;
+                break;
+            }
+        }
+
+        if (existingButton != null) {
+            // Update the existing button's text and tag
+            existingButton.setText(description);
+            existingButton.setTag(barcode);
+
+            // Update the click listener for normal click
+            existingButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Handle button click, e.g., open details or perform an action
+                    showAddVariantDialog(optionId, barcode, description, price, variantItemId);
+                }
+            });
+
+            // Update the long click listener for deletion
+            existingButton.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    // Handle long click, e.g., show confirmation dialog and delete the variant
+                    showDeleteVariantDialog(optionId, barcode);
+                    return true; // Consume the long click event
+                }
+            });
+        } else {
+            // If the button doesn't exist, create a new one
+            createVariantButton(optionId, barcode, description, price, variantItemId);
+        }
+    }
+
     private void createVariantButton(long optionId, String barcode, String description, double price,String variantitemid) {
         LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
@@ -328,7 +454,7 @@ public class ModifySupplementsActivity extends Activity {
 
 
                     // Insert the variant into the database
-                    insertVariantIntoDatabase(newoptionid, barcode, description, price, ItemIdText);
+                    insertVariantIntoDatabase(String.valueOf(newoptionid), barcode, description, price, ItemIdText);
 
 
                     // Close the dialog
@@ -343,7 +469,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
 
-    private void insertVariantIntoDatabase(long optionId, String barcode, String description, double price,String itemid) {
+    private void updateSupIntoDatabase(long optionId, String barcode, String description, double price, String itemid) {
         try {
             // Assuming you have a DatabaseHelper instance
             DatabaseHelper dbHelper = new DatabaseHelper(this);
@@ -351,44 +477,50 @@ public class ModifySupplementsActivity extends Activity {
             // Open the database for writing
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-            // Check if the barcode already exists
-            if (isBarcodeUnique(db, barcode) || isItemIdUnique(db,itemid)) {
-                // Prepare the ContentValues to insert into the VARIANTS_TABLE_NAME
-                ContentValues values = new ContentValues();
-                values.put(VARIANT_ID, optionId); // Assuming VARIANT_ID is the correct column name for OPTION_ID in the VARIANTS_TABLE_NAME
-                values.put(VARIANT_BARCODE, barcode);
-                values.put(VARIANT_DESC, description);
-                values.put(VARIANT_ITEM_ID, itemid);
-                values.put(VARIANT_PRICE, price);
+            // Prepare the ContentValues to update the SUPPLEMENTS_TABLE_NAME
+            ContentValues values = new ContentValues();
+            values.put(SUPPLEMENT_ID, optionId); // Assuming SUPPLEMENT_ID is the correct column name for OPTION_ID in the SUPPLEMENTS_TABLE_NAME
+            values.put(VARIANT_BARCODE, barcode);
+            values.put(SUPPLEMENT_DESCRIPTION, description);
+            values.put(SUPPLEMENT_OPTION_ID, itemid);
+            values.put(SUPPLEMENT_PRICE, price);
 
-                // Insert the data into the VARIANTS_TABLE_NAME
-                long variantId = db.insert(VARIANTS_TABLE_NAME, null, values);
+            // Define the whereClause and whereArgs for the update
+            String whereClause = SUPPLEMENT_OPTION_ID + " = ?";
+            String[] whereArgs = { itemid };
+            Log.d("itemid", itemid);
+            Log.d("optionId", String.valueOf(optionId));
+            Log.d("description", description);
+            Log.d("price", String.valueOf(price));
 
-                // Close the database
-                db.close();
+            // Update the data in the SUPPLEMENTS_TABLE_NAME
+            int rowsAffected = db.update(SUPPLEMENTS_TABLE_NAME, values, whereClause, whereArgs);
 
-                if (variantId != -1) {
-                    // Insertion successful
-                    // Optionally, you can use the variantId if needed for further actions
-                    // After successful insertion, dynamically create a button for the variant
-                    createVariantButton(optionId, barcode, description, price,itemid);
-                } else {
-                    // Insertion failed
-                    Log.e("DatabaseInsert", "Failed to insert data into VARIANTS_TABLE_NAME");
-                }
+            // Close the database
+            db.close();
+
+            if (rowsAffected > 0) {
+                // Update successful
+                // Optionally, you can perform further actions if needed
+                // After successful update, dynamically update a button for the variant
+                createVariantButton(optionId, barcode, description, price,itemid);
             } else {
-                // Barcode is not unique, show a popup or toast
-                Toast.makeText(ModifySupplementsActivity.this, "Barcode/Item ID already exists", Toast.LENGTH_SHORT).show();
+                // Update failed
+                Log.e("DatabaseUpdate", "Failed to update data in SUPPLEMENTS_TABLE_NAME");
             }
         } catch (Exception e) {
-            // Handle any exceptions that occur during the insertion process
+            // Handle any exceptions that occur during the update process
             e.printStackTrace();
             // Display a toast or perform any other action as needed
             Toast.makeText(ModifySupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 
-            Log.e("DatabaseInsert", "Exception: " + e.getMessage());
+            Log.e("DatabaseUpdate", "Exception: " + e.getMessage());
         }
     }
+
+    // Placeholder method for updating a variant button (implement as needed)
+
+
     private void showAddVariantDialog(long optionId,String barcode,String description,double Price,String variantitemid) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -462,7 +594,7 @@ public class ModifySupplementsActivity extends Activity {
         }
 
 
-        boolean isUpdated = dbManager.updateOptions( _id, name);
+        boolean isUpdated = dbManager.updateSupplemets( _id, name);
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, R.string.Options_updated_successfully, Toast.LENGTH_SHORT).show();
@@ -500,7 +632,7 @@ public class ModifySupplementsActivity extends Activity {
     public void returnHome() {
         Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "Options_fragment");
+        home_intent1.putExtra("fragment", "Supplement_fragment");
         startActivity(home_intent1);
     }
 

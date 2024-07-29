@@ -530,10 +530,13 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     }
 
     public void onItemDeleted() {
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = totalPriceSum;
+            double taxTotalAmount = totalVATSum;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
@@ -545,10 +548,13 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
 
     @Override
     public void onAmountModified() {
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = totalPriceSum;
+            double taxTotalAmount = totalVATSum;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 

@@ -2,10 +2,6 @@ package com.accessa.ibora.printer;
 
 
 import static com.accessa.ibora.Constants.DB_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_AMOUNT;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_DATE_TRANSACTION;
-import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_PAYMENT_NAME;
 
 import android.content.Context;
 import android.content.Intent;
@@ -29,9 +25,6 @@ import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.Report.PaymentAdapter;
-import com.accessa.ibora.Report.PaymentItem;
-import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.company.Company;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -47,18 +40,15 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 
-public class PrintDailyReport extends AppCompatActivity {
+public class PrintDailyReportPerCashior extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
     private TextView CompanyName;
     private String Shopname;
@@ -85,6 +75,7 @@ public class PrintDailyReport extends AppCompatActivity {
 
    private String localeString ;
     private String reportType ;
+    private int Cashior;
     private String totalTax ;
     private String totalAmountWOVat;
     private   String      TelNum,compTelNum,compFaxNum,TransactionTypename;
@@ -109,7 +100,7 @@ public class PrintDailyReport extends AppCompatActivity {
 
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(PrintDailyReport.this));
+                    recyclerView.setLayoutManager(new LinearLayoutManager(PrintDailyReportPerCashior.this));
 
 
                     try {
@@ -205,20 +196,24 @@ public class PrintDailyReport extends AppCompatActivity {
                             SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
                             PosNum = shardPreference.getString(POSNumber, null);
                             String Till_id = readTextFromFile("till_num.txt");
-
-                            int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
-
-                            String numberofcovers = "Number Of covers: " + covernumber;
-
                             String cashiename = "Cashier Name: " + Cashiername;
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
+                            String SellerInfo = "** Seller Info *** " ;
+                            String SellerID = "Seller ID: " + Cashior;
+                           String cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();
+                           int covernumber= mDatabaseHelper.getSumNumberOfCovers(reportType,Cashior);
+                            String SellerName = "Seller Name: " + cashiorname;
+                            String numberofcovers = "Number Of covers: " + covernumber;
                             service.printText(cashiename + "\n", null);
                             service.printText(cashierid + "\n", null);
-                            service.printText(Posnum + "\n", null);
+                            service.printText(Posnum + "\n\n", null);
                             service.printText(numberofcovers + "\n", null);
-                        }
+                            service.printText(SellerInfo + "\n", null);
+                            service.printText(SellerID + "\n", null);
+                            service.printText(SellerName + "\n", null);
 
+                        }
 
                             // Print a line separator
                             String lineSeparator = "=".repeat(lineWidth);
@@ -255,7 +250,7 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        newDataList = fetchDataBasedOnReportType(reportType);
+                        newDataList = fetchDataBasedOnReportTypeAndCashier(reportType,Cashior);
                         // Initialize the paymentAdapter
 
                         int lineWidths= 48;
@@ -292,10 +287,10 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        newDataList = fetchDataBasedOnReportType(reportType);
+                        newDataList = fetchDataBasedOnReportTypeAndCashier(reportType,Cashior);
                         // Initialize the paymentAdapter
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
-                        CatDataList = fetchCatDataBasedOnReportType(reportType);
+                        CatDataList = fetchCatDataBasedOnReportType(reportType,Cashior);
                         // Initialize the paymentAdapter
 
                          lineWidths= 48;
@@ -326,7 +321,17 @@ public class PrintDailyReport extends AppCompatActivity {
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
                         service.printText(lineSeparator + "\n", null);
-                        String TotalSettlement = "Sellers(Encaissement) ";
+
+                        String TotalSettlement= "Seller(Encaissement) "  ;
+                        double tax = Double.parseDouble(totalTax);
+                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
+                        double grandTotal = tax + amountWOVat;
+                        String formattedTotalAmount = String.format("%.2f", grandTotal);
+                        String Total= "Total";
+                        String TotalValue= "Rs " + formattedTotalAmount;
+                        int TotalValuePadding = lineWidth - TotalValue.length() - Total.length();
+                        String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
+
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
                         service.setFontSize(30, null);
@@ -337,45 +342,37 @@ public class PrintDailyReport extends AppCompatActivity {
                         boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
-                        // Get a list of all cashier IDs from the database
-                     List<String> cashierIds = mDatabaseHelper.getAllCashierIds();
-
-                        for (String cashierId : cashierIds) {
-
-                            // Fetch cashier name by ID
-                            String cashierName = mDatabaseHelper.getCashierNameById(Integer.parseInt(cashierId)).toString();
-                            String SellerName = "Seller Name: " + cashierName;
-                            service.printText(SellerName + "\n", null);
-
-                            // Fetch payment method data for the current cashier
-                            List<PaymentMethodDataModel> SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndCashier(reportType, Integer.parseInt(cashierId));
-                            for (PaymentMethodDataModel item : SettlementDataLists) {
-                                String paymentName = item.getPaymentName();
-                                double totalAmount = item.getTotalAmount();
-                                int quantity = item.getPaymentCount();
-
-                                Log.d("paymentname", String.valueOf(paymentName));
-                                Log.d("quantity", String.valueOf(quantity));
-
-                               String formattedTotalAmount = String.format("%.2f", totalAmount);
-
-                                String formattedPaymentInfo = paymentName + " X " + quantity;
-                                String formattedAmount = " Rs " + formattedTotalAmount;
-
-                                int remainingSpace = lineWidth - formattedPaymentInfo.length() - formattedAmount.length();
-
-                                String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
-
-                                // Print the payment information for the current item
-                                service.printText(paddedPaymentInfo + "\n", null);
-                            }
 
 
+                        service.printText(totalLine + "\n", null);
+                        String cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();
+                        String SellerName = "Seller Name: " + cashiorname;
+                        service.printText(SellerName + "\n", null);
+                        List<PaymentMethodDataModel> SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndCashier(reportType, Cashior);
+                        for (PaymentMethodDataModel item : SettlementDataLists) {
+                            String paymentname = item.getPaymentName();
+                            double totalAmount = item.getTotalAmount();
+                            int quantity= item.getPaymentCount();
+
+                            Log.d("paymentname" , String.valueOf(paymentname));
+                            Log.d("quantity" , String.valueOf(quantity));
+
+                             formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                            String formattedPaymentInfo =  paymentname + " X " + quantity ;
+                            String formattedam=" Rs " + formattedTotalAmount;
+
+                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+
+                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                            // Print the payment information for the current item
+                            service.printText(paddedPaymentInfo + "\n", null);
                         }
-
-
                         service.printText(lineSeparator + "\n", null);
-                        String TotalsalesSettlement= "Sellers(Vente) "  ;
+
+                        String TotalsalesSettlement= "Seller(Vente) "  ;
+
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
                         service.setFontSize(30, null);
@@ -386,34 +383,24 @@ public class PrintDailyReport extends AppCompatActivity {
                         boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
-                        // Get a list of all cashier IDs from the database
-                         cashierIds = mDatabaseHelper.getAllCashierIds();
-
-                        for (String cashierId : cashierIds) {
-
-
-                            double amountWOVat = mDatabaseHelper.getSumOfTransactionTotalHTA(cashierId,reportType);
-                            double grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTC(cashierId,reportType);
-                            double tax = grandTotal- amountWOVat;
-                            String formattedTotalAmount = String.format("%.2f", grandTotal);
-                            String Total= "Total";
-                            String TVA= getString(R.string.Vat);
-                            String amountWoVat= "Amount W/0 VAT";
-                            String TotalValueWoVat= "Rs " + amountWOVat;
-                            String TotalVAT= "Rs " + tax;
-                            String TotalValue= "Rs " + formattedTotalAmount;
-                            String cashiorname= mDatabaseHelper.getCashierNameById(Integer.parseInt(cashierId)).toString();
-                            String SellerName = "Seller Name: " + cashiorname;
-                            int TotalValuePadding = lineWidth - TotalValue.length() - Total.length();
-                            int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
-                            int AmountWoVatValuePadding = lineWidth - TotalValueWoVat.length() - amountWoVat.length();
-                           String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
-                            service.printText(SellerName + "\n", null);
-                            service.printText(totalLine + "\n", null);
-
-
-
-                        }
+                         tax = Double.parseDouble(totalTax);
+                         amountWOVat = Double.parseDouble(totalAmountWOVat);
+                         grandTotal = tax + amountWOVat;
+                         formattedTotalAmount = String.format("%.2f", grandTotal);
+                         Total= "Total";
+                        String TVA= getString(R.string.Vat);
+                        String amountWoVat= "Amount W/0 VAT";
+                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
+                        String TotalVAT= "Rs " + totalTax;
+                         TotalValue= "Rs " + formattedTotalAmount;
+                         cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();
+                         SellerName = "Seller Name: " + cashiorname;
+                         TotalValuePadding = lineWidth - TotalValue.length() - Total.length();
+                        int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                        int AmountWoVatValuePadding = lineWidth - TotalValueWoVat.length() - amountWoVat.length();
+                         totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
+                        service.printText(SellerName + "\n", null);
+                        service.printText(totalLine + "\n", null);
                         service.printText(lineSeparator + "\n", null);
                         // Retrieve the total amount and total tax amount from the transactionheader table
                         String MeansOfpayment= "Means Of payment "  ;
@@ -429,123 +416,102 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
 
-
-
-
-                            double cashret = mDatabaseHelper.getSumglobalCashReturn(reportType);
-                            double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportType(reportType);
-                            double cashbackval = 0.0;
-                            double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
-                            double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportType(reportType);
-                            double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportType(reportType);
-                            double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
-                            double cashnetval = tenderval - cashret;
+                        double cashret = mDatabaseHelper.getSumCashReturn(reportType, Cashior);
+                        double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        double cashbackval = 0.0;
+                        double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
+                        double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportType(reportType);
+                        double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportType(reportType);
+                        double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
+                        double cashnetval = tenderval - cashret;
 
 // Format values to 2 decimal places
-                            String formattedCashret = String.format("%.2f", cashret);
-                            String formattedTenderval = String.format("%.2f", tenderval);
-                            String formattedCashbackval = String.format("%.2f", cashbackval);
-                            String formattedLoans = String.format("%.2f", loans);
-                            String formattedPickupval = String.format("%.2f", pickupval);
-                            String formattedCashinval = String.format("%.2f", cashinval);
-                            String formattedAmountindrawerval = String.format("%.2f", amountindrawerval);
-                            String formattedCashnetval = String.format("%.2f", cashnetval);
+                        String formattedCashret = String.format("%.2f", cashret);
+                        String formattedTenderval = String.format("%.2f", tenderval);
+                        String formattedCashbackval = String.format("%.2f", cashbackval);
+                        String formattedLoans = String.format("%.2f", loans);
+                        String formattedPickupval = String.format("%.2f", pickupval);
+                        String formattedCashinval = String.format("%.2f", cashinval);
+                        String formattedAmountindrawerval = String.format("%.2f", amountindrawerval);
+                        String formattedCashnetval = String.format("%.2f", cashnetval);
 
-                            // Prepare the strings for printing
-                            String cash = "CASH: Rs " + formattedTenderval;
-                            String cashreturn = "Change Returned: Rs " + formattedCashret;
-                            String cashback = "CASHBACK: Rs " + formattedCashbackval;
-                            String cashin = "Cash In: Rs " + formattedCashinval;
-                            String loan = "Loan: Rs " + formattedLoans;
-                            String pickup = "Pickup: Rs " + formattedPickupval;
-                            String cashnet = "Cash Net: Rs " + formattedCashnetval;
-                            String amountindrawer = "Amount In Drawer: Rs " + formattedAmountindrawerval;
+// Prepare the strings for printing
+                        String cash = "CASH: Rs " + formattedTenderval;
+                        String cashreturn = "Change Returned: Rs " + formattedCashret;
+                        String cashback = "CASHBACK: Rs " + formattedCashbackval;
+                        String cashin = "Cash In: Rs " + formattedCashinval;
+                        String loan = "Loan: Rs " + formattedLoans;
+                        String pickup = "Pickup: Rs " + formattedPickupval;
+                        String cashnet = "Cash Net: Rs " + formattedCashnetval;
+                        String amountindrawer = "Amount In Drawer: Rs " + formattedAmountindrawerval;
 
-                            // Print the values
-                            service.printText(cash + "\n", null);
-                            service.printText(cashreturn + "\n", null);
-                            service.printText(cashback + "\n", null);
-                            service.printText(cashin + "\n", null);
-                            service.printText(loan + "\n", null);
-                            service.printText(pickup + "\n", null);
-                            service.printText(amountindrawer + "\n\n\n", null);
-                            // Enable bold text and set font size to 30
-                            boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
-                            service.sendRAWData(boldOnBytes, null);
-                            service.setFontSize(30, null);
-
-
-                            service.printText(cashnet + "\n", null);
+// Print the values
+                        service.printText(cash + "\n", null);
+                        service.printText(cashreturn + "\n", null);
+                        service.printText(cashback + "\n", null);
+                        service.printText(cashin + "\n", null);
+                        service.printText(loan + "\n", null);
+                        service.printText(pickup + "\n", null);
+                        service.printText(amountindrawer + "\n\n\n", null);
+                        // Enable bold text and set font size to 30
+                        boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
+                        service.sendRAWData(boldOnBytes, null);
+                        service.setFontSize(30, null);
 
 
-                            // Disable bold text
-                            boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
-                            service.sendRAWData(boldOffBytes, null);
-                            service.setFontSize(24, null);
-
-                            double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportType(reportType);
-                            double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportType(reportType);
-                            double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportType(reportType);
-                            double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportType(reportType);
-                            double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportType(reportType);
+                        service.printText(cashnet + "\n", null);
 
 
-                            String formattedcreditcard = String.format("%.2f", creditCardTotal);
-                            String formatteddebitcard = String.format("%.2f", debitCardTotal);
-                            String formattedchequeTotal = String.format("%.2f", chequeTotal);
-                            String formattedpopTotal = String.format("%.2f", popTotal);
-                            String formatteddcouponCodeTotal = String.format("%.2f", couponCodeTotal);
+                        // Disable bold text
+                        boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                        service.sendRAWData(boldOffBytes, null);
+                        service.setFontSize(24, null);
 
-                            String creditcard = "Credit card: Rs " + formattedcreditcard;
-                            String debitcard = "Debit card: Rs " + formatteddebitcard;
-                            String mcbjuice = "MCB Juice: Rs 0.00";
-                            String cheque = "CHEQUES: Rs " + formattedchequeTotal;
-                            String pop = "POP: Rs " + formattedpopTotal;
-                            String couponcode = "Coupon Code: Rs " + formatteddcouponCodeTotal;
+                        double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportTypeAndCashierId(reportType, Cashior);
 
-                            service.printText(creditcard + "\n", null);
-                            service.printText(debitcard + "\n", null);
-                            service.printText(cheque + "\n", null);
-                            service.printText(mcbjuice + "\n", null);
-                            service.printText(pop + "\n", null);
-                            service.printText(couponcode + "\n", null);
 
+                        String formattedcreditcard = String.format("%.2f", creditCardTotal);
+                        String formatteddebitcard = String.format("%.2f", debitCardTotal);
+                        String formattedchequeTotal = String.format("%.2f", chequeTotal);
+                        String formattedpopTotal = String.format("%.2f", popTotal);
+                        String formatteddcouponCodeTotal = String.format("%.2f", couponCodeTotal);
+
+                        String creditcard = "Credit card: Rs " + formattedcreditcard;
+                        String debitcard = "Debit card: Rs " + formatteddebitcard;
+                        String mcbjuice = "MCB Juice: Rs 0.00" ;
+                        String cheque=  "CHEQUES: Rs " + formattedchequeTotal;
+                        String pop=  "POP: Rs " + formattedpopTotal;
+                        String couponcode=  "Coupon Code: Rs " + formatteddcouponCodeTotal;
+
+                        service.printText(creditcard + "\n", null);
+                        service.printText(debitcard + "\n", null);
+                        service.printText(cheque + "\n", null);
+                        service.printText(mcbjuice + "\n", null);
+                        service.printText(pop + "\n", null);
+                        service.printText(couponcode + "\n", null);
                         service.printText(lineSeparator + "\n", null);
-                        // Retrieve the total amount and total tax amount from the transactionheader table
                         Log.d("cashnetval",  "cashnetval: " + cashnetval + "debitCardTotal: " +debitCardTotal+  "creditCardTotal: " +creditCardTotal+  "chequeTotal: " +chequeTotal);
                         double doubleval= cashnetval + debitCardTotal+ creditCardTotal+ chequeTotal +popTotal+ couponCodeTotal;
-                        int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
+                        int covernumber= mDatabaseHelper.getSumNumberOfCovers(reportType,Cashior);
                         double average= doubleval/covernumber;
                         String formatedtotalval = String.format("%.2f", doubleval);
                         String formatedaverage = String.format("%.2f", average);
                         String averagetext=  covernumber + " Couverts :Rs " + formatedtotalval + " Average :Rs " + formatedaverage;
                         service.printText(averagetext + "\n", null);
                         service.printText(lineSeparator + "\n", null);
-                        String Total= "Total";
-                        String TVA= getString(R.string.Vat);
-                        String amountWoVat= "Amount W/0 VAT";
-                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
-                        String TotalVAT= "Rs " + totalTax;
-                         lineWidths= 38;
+                        lineWidths= 38;
                         int lineWidth = 48;
-                        // Calculate the padding for the item name
-                        double tax = Double.parseDouble(totalTax);
-                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
-                        double grandTotal = tax + amountWOVat;
-                        String formattedTotalAmount = String.format("%.2f", grandTotal);
-
-                        String TotalValue= "Rs " + formattedTotalAmount;
-
-                        int TotalValuePadding = lineWidth - TotalValueWoVat.length() - Total.length();
-                        int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
-                        int AmountWoVatValuePadding = lineWidth - TotalValueWoVat.length() - amountWoVat.length();
                         // Enable bold text and set font size to 30
                        boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                         service.sendRAWData(boldOnBytes, null);
                         service.setFontSize(30, null);
                         int TotalValuePaddings = lineWidths - TotalValue.length() - Total.length();
                         // Print the "Total" and its value with the calculated padding
-                        String totalLine = Total + " ".repeat(Math.max(0, TotalValuePaddings)) + TotalValue;
+                         totalLine = Total + " ".repeat(Math.max(0, TotalValuePaddings)) + TotalValue;
 
                         service.printText(totalLine + "\n", null);
 
@@ -561,11 +527,8 @@ public class PrintDailyReport extends AppCompatActivity {
                         service.printText(totaltaxLine + "\n\n", null);
                         service.printText(lineSeparator + "\n\n", null);
 
-
                         // Cut the paper
                         service.cutPaper(null);
-
-
 
                         MainActivity mainActivity = MainActivity.getInstance();
                         if (mainActivity != null) {
@@ -576,7 +539,7 @@ public class PrintDailyReport extends AppCompatActivity {
                             @Override
                             public void run() {
 
-                                Intent intent = new Intent(PrintDailyReport.this, MainActivity.class);
+                                Intent intent = new Intent(PrintDailyReportPerCashior.this, MainActivity.class);
 
                                 startActivity(intent);
 
@@ -604,7 +567,19 @@ public class PrintDailyReport extends AppCompatActivity {
 
 
 
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndCashier(String reportType, int cashierId) {
+        // Implement the logic to fetch payment method data based on the report type and cashier ID
 
+
+        List<PaymentMethodDataModel> paymentMethodDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
+        // Replace the method and parameters with your actual database queries
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndCashier(reportType, cashierId);
+        Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
+
+        return paymentMethodDataList;
+    }
 
 
     private Date parseDate(String dateString) {
@@ -624,6 +599,7 @@ public class PrintDailyReport extends AppCompatActivity {
         Intent intent = getIntent();
          localeString = intent.getStringExtra("locale");
          reportType = intent.getStringExtra("reportType");
+        Cashior = intent.getIntExtra("Cashior",0);
          totalTax = intent.getStringExtra("totalTax");
         totalAmountWOVat = intent.getStringExtra("totalAmount");
 
@@ -751,38 +727,21 @@ public class PrintDailyReport extends AppCompatActivity {
             return null;
         }
     }
-    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndCashier(String reportType, int cashierId) {
-        // Implement the logic to fetch payment method data based on the report type and cashier ID
-
-
-        List<PaymentMethodDataModel> paymentMethodDataList = new ArrayList<>();
-
-        // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
-        // Replace the method and parameters with your actual database queries
-        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndCashier(reportType, cashierId);
-        Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
-
-        return paymentMethodDataList;
-    }
-    private List<DataModel> fetchDataBasedOnReportType(String reportType) {
-        // Implement your logic to fetch data based on the selected report type
-        // For now, return a dummy list
+    private List<DataModel> fetchDataBasedOnReportTypeAndCashier(String reportType, int cashierId) {
+        // Implement the logic to fetch data based on the report type and cashier ID
         List<DataModel> dummyDataList = new ArrayList<>();
-
-        // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
-        // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnReportType(reportType);
-
+        dummyDataList = mDatabaseHelper.getDataForReportTypeAndCashier(reportType, cashierId);
         return dummyDataList;
     }
-    private List<CatDataModel> fetchCatDataBasedOnReportType(String reportType) {
+
+    private List<CatDataModel> fetchCatDataBasedOnReportType(String reportType,int cashierId) {
         // Implement your logic to fetch data based on the selected report type
         // For now, return a dummy list
         List<CatDataModel> dummyDataList = new ArrayList<>();
 
         // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
         // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamille(reportType);
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndCashiorid(reportType,cashierId);
 
         return dummyDataList;
     }

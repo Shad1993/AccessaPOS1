@@ -49,8 +49,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
                 String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
+                int item_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
+                int unique_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper._ID));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
-                Transaction item = new Transaction(itemName, itemPrice, itemQuantity, unitPrice);
+
+                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
         }
@@ -62,6 +65,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView idTextView;
+        public TextView uniqueidTextView;
         public TextView nameTextView;
         public TextView PriceTextView;
         public TextView QuantityTextView;
@@ -72,6 +76,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public ItemViewHolder(View itemView) {
             super(itemView);
             ItemIdTextView = itemView.findViewById(R.id.id_text_view);
+            uniqueidTextView = itemView.findViewById(R.id.uniqueid_text_view);
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
@@ -110,6 +115,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             return;
         }
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
+        String uniques = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
@@ -128,6 +134,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String totalPriceString = decimalFormat.format(totalPrice);
 
         holder.ItemIdTextView.setText(id);
+        holder.uniqueidTextView.setText(uniques);
         holder.nameTextView.setText(description);
         holder.QuantityTextView.setText("x  " + quantity); // Add a multiplication sign after the quantity value
         holder.PriceTextView.setText("Rs " + totalPriceString);

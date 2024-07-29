@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,10 +28,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.DeviceInfo;
 import com.accessa.ibora.Sync.MasterSync.MSSQLDataInserter;
 import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.Sync.SyncService;
+import com.accessa.ibora.Sync.Syncforold;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -283,8 +286,16 @@ private  EditText searchEditText;
                 mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
                 mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
                // dbManager.deleteItemsWithSyncStatusNotOffline();
-                    // Start the synchronization process when the FAB is clicked
+                String androidVersion = DeviceInfo.getAndroidVersion();
+                Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                // Trim the strings to avoid any leading or trailing whitespace issues
+                if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                    Log.d("SyncService", "Starting Syncforold");
+                    Syncforold.startSync(requireContext());
+                } else {
+                    Log.d("SyncService", "Starting SyncService");
                     SyncService.startSync(requireContext());
+                }
 
             }
         });

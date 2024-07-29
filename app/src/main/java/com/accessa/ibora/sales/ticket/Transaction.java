@@ -1,7 +1,9 @@
 package com.accessa.ibora.sales.ticket;
 
 public class Transaction {
+    private int unique_id;
     private int id;
+    private int item_id;
     private String itemName;
     private String Longdescription;
     private String category;
@@ -30,12 +32,13 @@ public class Transaction {
 
     private int itemQuantity;
 
-    public Transaction(String itemName, double itemPrice, int itemQuantity,String unitPrice) {
+    public Transaction(int unique_id,String itemName, double itemPrice, int itemQuantity,String unitPrice,int item_id) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemQuantity = itemQuantity;
         this.unitPrice = unitPrice;
-
+        this.item_id=item_id;
+        this.unique_id = unique_id;
     }
     public Transaction() {
         this.id = id;
@@ -61,13 +64,25 @@ public class Transaction {
         this.TotalPrice = TotalPrice;
         this.TaxCode = TaxCode;
     }
+    public int getitem_id() {
+        return item_id;
+    }
+    public void setitem_id(int item_id) {
+        this.item_id = item_id;
+    }
+    public int getunique_id() {
+        return unique_id;
+    }
+    public void setunique_id(int unique_id) {
+        this.id = id;
+    }
+
     public int getId() {
         return id;
     }
     public void setId(int id) {
         this.id = id;
     }
-
     public String getTaxCode() {
         return TaxCode;
     }

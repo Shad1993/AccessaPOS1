@@ -1,6 +1,7 @@
 package com.accessa.ibora;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -29,6 +30,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -116,7 +119,8 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private CustomerLcdFragment customerLcdFragment;
     private int transactionCounter = 1;
     private String actualdate;
-
+    private StringBuilder enteredPIN = new StringBuilder();
+    private EditText editTexteditAbbrev;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private BroadcastReceiver cancelReceiver = new BroadcastReceiver() {
         @Override
@@ -236,7 +240,7 @@ if (cashReturn != 0.0) {
                 fragmentManager.beginTransaction().hide(salesFragment).commit();
 
             }
-        } else if ("sunmiT2".equalsIgnoreCase(deviceType)) {
+        } else if ("sunmit2".equalsIgnoreCase(deviceType)) {
             setContentView(R.layout.activity_main);
         }
 
@@ -520,6 +524,8 @@ if (cashReturn != 0.0) {
                ticketFragment.updateheadertable(totalAmount,TaxtotalAmount, String.valueOf(roomid), tableid);
                 CustomerLcd instance = new CustomerLcd();
                 displayOnLCD();
+
+
             }
         }
     }
@@ -568,10 +574,14 @@ if (cashReturn != 0.0) {
     }
 
     public void onItemDeleted() {
+
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid), tableid);
+
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = totalPriceSum;
+            double taxTotalAmount = totalVATSum;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
@@ -581,12 +591,17 @@ if (cashReturn != 0.0) {
         }
     }
 
+
     @Override
     public void onAmountModified() {
+
+        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
+        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
+
         TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
         if (ticketFragment != null) {
-            double totalAmount = ModifyItemDialogFragment.calculateTotalAmount(String.valueOf(roomid),tableid);
-            double taxTotalAmount = ModifyItemDialogFragment.calculateTotalTax(roomid,tableid);
+            double totalAmount = totalPriceSum;
+            double taxTotalAmount = totalVATSum;
             ticketFragment.refreshData(totalAmount, taxTotalAmount);
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 

@@ -66,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -127,7 +128,11 @@ public class MRADBN extends AppCompatActivity {
                 requestBody.put("requestId", requestidmethod); // Replace with your request ID
                 requestBody.put("payload", encryptedPayload);
 
-                OkHttpClient client = new OkHttpClient();
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectTimeout(5, TimeUnit.SECONDS) // 10 seconds timeout for connection
+                        .readTimeout(5, TimeUnit.SECONDS) // 30 seconds timeout for reading the response
+                        .build();
+
 
                 MediaType mediaType = MediaType.parse("application/json");
                 RequestBody body = RequestBody.create(mediaType, requestBody.toString());
@@ -449,7 +454,7 @@ public class MRADBN extends AppCompatActivity {
                             unmergeTable(tableid);
                         }
                         insertCashReturn("0","0",result,irn,MRAMETHOD);
-
+                        startActivity(intent);
                     }
                 }
             });
