@@ -109,6 +109,7 @@ public class ModifyItemActivity extends Activity {
     private boolean isAvailableForSale, isCommentRequired,isOptionrequired,IsSupplementRequired;
 
     private TextView ExpiryDateText;
+
     private DBManager dbManager;
     private String ImageLink,cashorId;
     private long _id;
@@ -168,9 +169,8 @@ private ImageView image_view;
         // Create a list of currency options
         List<String> currencyOptions = new ArrayList<>();
         currencyOptions.add("MUR");
-        currencyOptions.add("USD");
-        currencyOptions.add("EUR");
-        currencyOptions.add("GBP");
+
+
 
         // Assuming you have already retrieved the item's ID as _id
         String cur = mDatabaseHelper.getCurrencyById(Long.parseLong(id));
@@ -317,7 +317,7 @@ private ImageView image_view;
                 IsSupplementRequired = isChecked;
                 if (isChecked) {
                     // Display options
-                    displaySupplements();
+                    displaySupplements(id);
 
                 } else {
                     // Clear options
@@ -427,20 +427,20 @@ private ImageView image_view;
             Boolean hasoptions =item.gethasoptions();
 
 
-            Log.d("hasoption", String.valueOf(hasoptions));
+            Log.d("hasoption1", String.valueOf(hasoptions));
             if (Boolean.TRUE.equals(hasoptions)) {
                 optionsSwitch.setChecked(true);
             }
 
             String hascomments =item.gethascomment();
-
-            if (hascomments.trim().equals("true")){
-                Log.d("hascomments", hascomments);
+            Log.d("hascomments", hascomments);
+            if (hascomments.trim().equals("1") ||hascomments.trim().equals("true")){
+                Log.d("hascomments1", hascomments);
                 hascomment.setChecked(true);
             }
-            Boolean hasrelatedSupplement = item.gethassupplements();
-            Log.d("hassupplement", String.valueOf(hasrelatedSupplement));
-            if (Boolean.TRUE.equals(hasrelatedSupplement)) {
+            String hasrelatedSupplement = item.gethassupplements();
+            Log.d("hassupplements1", String.valueOf(hasrelatedSupplement));
+            if (hasrelatedSupplement.trim().equals("1") || hasrelatedSupplement.trim().equals("true")) {
                 SupplementSwitch.setChecked(true);
             }
         }
@@ -629,10 +629,97 @@ private ImageView image_view;
                 deleteItem();
             }
         });
-    }
-    private void displaySupplements() {
+    }private void displaysup(String id) {
         // Retrieve options from the database
         List<Options> optionsList = mDatabaseHelper.getAllSupplements1();
+        List<String> relatedItems = mDatabaseHelper.getRelatedsupplementById(Integer.parseInt(id));
+
+        // Example: Log the related items retrieved
+        for (String relatedItem : relatedItems) {
+            Log.d("RelatedItem", relatedItem);
+        }
+
+        // Clear previous options
+        optionsContainer.removeAllViews();
+
+        // Dynamically create checkboxes for each option
+        for (int i = 0; i < optionsList.size(); i++) {
+            Options options = optionsList.get(i);
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(options.getOptionname());
+
+            final long optionId = options.getOptionId(); // Get the option ID from the Options object
+            Log.d("optionId", String.valueOf(optionId));
+
+            // Check if related item corresponding to this option is not 0
+            boolean isChecked = false;
+            if (i < relatedItems.size()) {
+                String relatedItem = relatedItems.get(i);
+                if (relatedItem != null && !relatedItem.equals("0")) {
+                    isChecked = true;
+                }
+            }
+            checkBox.setChecked(isChecked);
+
+            // Store the option ID in the corresponding variable if checked
+            if (isChecked) {
+                selectedOptionIds.add((int) optionId);
+                switch (i) {
+                    case 0:
+                        supplementId1 = optionId;
+                        break;
+
+                }
+            }
+
+            // Set a listener for checkbox changes
+            final int finalIndex = i; // Store the index in a final variable for use inside the listener
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Check if the maximum limit is reached
+                        if (selectedOptionIds.size() < MAX_SELECTION_LIMIT) {
+                            // Checkbox is checked, add the option ID to the selected list
+                            selectedOptionIds.add((int) optionId);
+                            // Store the option ID in the corresponding variable
+                            switch (finalIndex) {
+                                case 0:
+                                    supplementId1 = optionId;
+                                    break;
+
+                            }
+                            // Toast the option ID
+                            Toast.makeText(ModifyItemActivity.this, "Option ID: " + optionId + " checked", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Maximum limit reached, uncheck the checkbox and display a message
+                            checkBox.setChecked(false);
+                            Toast.makeText(ModifyItemActivity.this, "Maximum limit of 5 options reached", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Checkbox is unchecked, remove the option ID from the selected list
+                        selectedOptionIds.remove(Integer.valueOf((int) optionId));
+                        // Clear the corresponding variable
+                        switch (finalIndex) {
+                            case 0:
+                                supplementId1 = 0;
+                                break;
+
+                        }
+                    }
+                    updateSelectedOptions(); // Display selected option IDs
+                }
+            });
+
+            // Add the checkbox to the container
+            optionsContainer.addView(checkBox);
+        }
+    }
+
+    private void displaySupplements(String id) {
+        // Retrieve options from the database
+        List<Options> optionsList = mDatabaseHelper.getAllSupplements1();
+        List<String> relatedItems = mDatabaseHelper.getRelatedsupplementById(Integer.parseInt(id));
 
         // Clear previous options
         supplementContainer.removeAllViews();
@@ -645,7 +732,28 @@ private ImageView image_view;
             checkBox.setChecked(false); // Set the initial state as unchecked
 
             final long supplementid = options.getOptionId(); // Get the option ID from the Options object
+            Log.d("optionId", String.valueOf(supplementid));
 
+            // Check if related item corresponding to this option is not 0
+            boolean isChecked = false;
+            if (i < relatedItems.size()) {
+                String relatedItem = relatedItems.get(i);
+                if (relatedItem != null && !relatedItem.equals("0")) {
+                    isChecked = true;
+                }
+            }
+            checkBox.setChecked(isChecked);
+
+            // Store the option ID in the corresponding variable if checked
+            if (isChecked) {
+                selectedOptionIds.add((int) supplementid);
+                switch (i) {
+                    case 0:
+                        supplementId1 = supplementid;
+                        break;
+
+                }
+            }
             // Set a listener for checkbox changes
             final int finalIndex = i; // Store the index in a final variable for use inside the listener
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -657,9 +765,14 @@ private ImageView image_view;
                             // Checkbox is checked, add the option ID to the selected list
                             selectedOptionIds.add((int) supplementid);
                             // Store the option ID in the corresponding variable
-                            supplementId1=supplementid;
+                            switch (finalIndex) {
+                                case 0:
+                                    supplementId1 = supplementid;
+                                    break;
+
+                            }
                             // Toast the option ID
-                            Toast.makeText(ModifyItemActivity.this, "Supplement ID: " + supplementid + " checked", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ModifyItemActivity.this, "Option ID: " + supplementid + " checked", Toast.LENGTH_SHORT).show();
                         } else {
                             // Maximum limit reached, uncheck the checkbox and display a message
                             checkBox.setChecked(false);
@@ -669,7 +782,12 @@ private ImageView image_view;
                         // Checkbox is unchecked, remove the option ID from the selected list
                         selectedOptionIds.remove(Integer.valueOf((int) supplementid));
                         // Clear the corresponding variable
-                        supplementId1=0;
+                        switch (finalIndex) {
+                            case 0:
+                                supplementId1 = 0;
+                                break;
+
+                        }
                     }
                     updateSelectedOptions(); // Display selected option IDs
                 }
@@ -956,6 +1074,9 @@ private ImageView image_view;
         String soldBy = getSelectedRadioButtonText(soldByRadioGroup);
         String vat = getSelectedRadioButtonText(vatRadioGroup);
         String availableForSale =String.valueOf(isAvailableForSale);
+        String CommentRequired=String.valueOf(isCommentRequired);
+        String hasoption=String.valueOf(isOptionrequired);
+        String hassupplemet=String.valueOf(IsSupplementRequired);
         String itemCode =ItemCode.getText().toString().trim();
         String selectedNature = Nature.getSelectedItem().toString();
         String selectedCurrency = Currency.getSelectedItem().toString();
@@ -1031,7 +1152,7 @@ private ImageView image_view;
 
         boolean isUpdated = dbManager.updateItem( _id,   optionStatus,String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2),String.valueOf(optionId3),String.valueOf(optionId4),String.valueOf(optionId5),name, desc,selectedDiscounts, price,price2,price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
-                availableForSale, soldBy, image, variant, sku, cost, cashorId,  lastmodified,
+                availableForSale,CommentRequired,hasoption,hassupplemet, soldBy, image, variant, sku, cost, cashorId,  lastmodified,
                 selectedNature, selectedCurrency, itemCode,VatCode, discountedAmount,discountedAmount2,discountedAmount3, currentPrice,currentPrice2,currentPrice3,"Offline");
 
 

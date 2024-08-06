@@ -334,19 +334,19 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                                                 double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
 
-                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount,"movetobottom");
                                             } else if (selectedPriceLevel.equals("Price Level 2")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
                                                 mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo, "Price Level 2");
                                                 double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
-                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount,"movetobottom");
                                             } else if (selectedPriceLevel.equals("Price Level 3")) {
                                                 // Update the TRANSACTION table based on the retrieved TRANSACTION_TICKET_NO
                                                 mDatabaseHelper.updateTransactionBasedOnInProgressTicketNo(transactionTicketNo, "Price Level 3");
                                                 double sumPriceAfterDiscountInProgress = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
 
-                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount);
+                                                refreshData(sumPriceAfterDiscountInProgress, TaxtotalAmount,"movetobottom");
                                             }
 
 
@@ -970,7 +970,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
                             // Display result text
                             resultTextView.setText(resultTextBuilder.toString());
-                            refreshData(totalAmount, TaxtotalAmount);
+                            refreshData(totalAmount, TaxtotalAmount,"movetobottom");
                         }
                     }
                 });
@@ -1296,7 +1296,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
                         SendToHeader(enteredAmount,0.00);
                         // Perform your desired action with the data (e.g., save it)
-                        mDatabaseHelper.insertTransaction(Integer.parseInt(finalDepartmentid),"00",0,0,0,"0","Supplements", transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00, String.valueOf(roomid),tableid,0);
+                        mDatabaseHelper.insertTransaction(null,Integer.parseInt(finalDepartmentid),"00",0,0,0,"0","Supplements", transactionIdInProgress, transactionDate, 1, enteredAmount, 0.00, selectedDepartment, enteredAmount, 0.00, selectedVAT, PosNum, selectedType, finalDepartmentid, "MUR","TC01",0.0,0.00, String.valueOf(roomid),tableid,0);
 
 
                         // Dismiss the dialog
@@ -1611,7 +1611,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
                         // Create and show the dialog fragment with the data only if the CheckBox is not visible
                         if (!isCheckBoxVisible) {
-                            ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quantity, Price, LongDesc, ItemId,newbc);
+                            ModifyItemDialogFragment dialogFragment = ModifyItemDialogFragment.newInstance(Quantity, Price, LongDesc,uniqueid, ItemId,newbc);
                             dialogFragment.setTargetFragment(TicketFragment.this, 0);
                             dialogFragment.show(activity.getSupportFragmentManager(), "modify_item_dialog");
                         } else {
@@ -1625,7 +1625,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                                 mDatabaseHelper.updateItemSelectedperuniqueid(uniqueid, checkBox.isChecked());
                                 double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
                                 double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
-                                refreshData(totalAmount, totalTax);
+                                refreshData(totalAmount, totalTax,"Notmovetobottom");
 
                             } else {
                                 checkedItems.remove(uniqueid);
@@ -1633,13 +1633,13 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                                 mDatabaseHelper.updateItemSelectedperuniqueid(uniqueid, checkBox.isChecked());
                                 double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
                                 double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
-                                refreshData(totalAmount, totalTax);
+                                refreshData(totalAmount, totalTax,"Notmovetobottom");
                             }
 
 // Calculate the total amount
                             double totalAmount = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid),tableid);
                             double totalTax = mDatabaseHelper.calculateTotalTaxAmounts(String.valueOf(roomid),tableid);
-                            refreshData(totalAmount, totalTax);
+                            refreshData(totalAmount, totalTax,"Notmovetobottom");
 
 
 
@@ -1854,7 +1854,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
 
         // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
+        refreshData(totalAmount, TaxtotalAmount,"movetobottom");
 
 if(Type.equals("DRN")) {
     // Retrieve the data for receipts with QR codes
@@ -2169,7 +2169,7 @@ if(Type.equals("DRN")) {
 // Notify the listener that an item is added
 
         // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
+        refreshData(totalAmount, TaxtotalAmount,"movetobottom");
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
         String deviceType = sharedPreferences.getString("device_type", null);
@@ -2205,7 +2205,7 @@ if(Type.equals("DRN")) {
         double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
         double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
         // Refresh the data in the RecyclerView
-        refreshData(totalAmount, TaxtotalAmount);
+        refreshData(totalAmount, TaxtotalAmount,"movetobottom");
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
         String deviceType = sharedPreferences.getString("device_type", null);
@@ -2427,7 +2427,7 @@ if(Type.equals("DRN")) {
 
 
 
-    public  void refreshData(double totalAmount, double TaxtotalAmount) {
+    public  void refreshData(double totalAmount, double TaxtotalAmount,String movetobottom) {
 
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
@@ -2445,12 +2445,14 @@ Log.d("room and table", roomid+ " " +tableid);
         }
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
+if(!movetobottom.equals("Notmovetobottom")){
+    // Scroll to the last item in the RecyclerView
+    int itemCount = mAdapter.getItemCount();
+    if (itemCount > 0) {
+        mRecyclerView.smoothScrollToPosition(itemCount - 1);
+    }
+}
 
-        // Scroll to the last item in the RecyclerView
-        int itemCount = mAdapter.getItemCount();
-        if (itemCount > 0) {
-            mRecyclerView.smoothScrollToPosition(itemCount - 1);
-        }
 
         // Show or hide the RecyclerView and empty view based on the cursor count
         if (cursor != null && cursor.getCount() > 0) {

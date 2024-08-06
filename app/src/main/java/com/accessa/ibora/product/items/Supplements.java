@@ -5,7 +5,7 @@ public class Supplements {
     private long itemId;
     private String barcode;
     private String description;
-
+    private long OptionsId;
     private String Variantitemid;
     private double price;
 
@@ -21,7 +21,7 @@ public class Supplements {
 
     }
 
-    public long getsupplementId() {
+    public  long getsupplementId() {
         return supplementId;
     }
     public void setsupplementId(int supplementId) {

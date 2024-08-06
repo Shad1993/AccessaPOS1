@@ -271,7 +271,7 @@ private TextView textViewVATs,textViewTotals;
             emptyFrameLayout.setVisibility(View.GONE);
         }
 
-        // Set item click listener for RecyclerView
+  /*      // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
@@ -304,7 +304,7 @@ private TextView textViewVATs,textViewTotals;
                     }
                 })
         );
-
+*/
         return view;
     }
 

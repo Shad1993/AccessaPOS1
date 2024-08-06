@@ -478,7 +478,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
             double TaxtotalAmount = salesFragment.calculateTotalTax();
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshData(totalAmount, TaxtotalAmount);
+                ticketFragment.refreshData(totalAmount, TaxtotalAmount,"movetobottom");
                ticketFragment.updateheader(totalAmount,TaxtotalAmount);
                 CustomerLcd instance = new CustomerLcd();
                 displayOnLCD();
@@ -521,7 +521,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
             double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid),tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshData(totalAmount, taxTotalAmount);
+                ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
                 ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
                 customerLcdFragment.displayOnLCD();
@@ -537,7 +537,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         if (ticketFragment != null) {
             double totalAmount = totalPriceSum;
             double taxTotalAmount = totalVATSum;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
 
@@ -555,7 +555,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         if (ticketFragment != null) {
             double totalAmount = totalPriceSum;
             double taxTotalAmount = totalVATSum;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
 
@@ -762,7 +762,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         if (ticketFragment != null) {
             double totalAmount = 0.0;
             double taxTotalAmount = 0.0;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
            displayOnLCD();
         }
 

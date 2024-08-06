@@ -50,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String STATUS_KEY = "status";
     public static String FINANCIAL_COLUMN_TransId="Transid";
     public static String FINANCIAL_CashReturn="CashReturn";
-
+    public static String RELATED_Option_ID="RelatedOptionId";
     public static final String CatName = "CatName";
     public static final String Color = "Color";
     // Table Names
@@ -78,6 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static String related_item3= "related_item3";
     public static String related_item4= "related_item4";
     public static String related_item5= "related_item5";
+    public static String Related_ITEM_ID="RelatedItemId";
     // Items table columns
     public static final String Name = "name";
     public static final String Category = "category";
@@ -443,10 +444,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String SUPPLEMENT_PRICE = "SupplementPrice";
     public static final String SUPPLEMENT_OPTION_ID = "SupplementOptionId";
     public static final String SUPPLEMENT_OPTION_NAME = "SupplementOptionName";
-    private static final String CREATE_CAT_TABLE = "CREATE TABLE IF NOT EXISTS " + CAT_TABLE_NAME + "(" +
-            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            CatName + " TEXT UNIQUE NOT NULL, " +
-            Color + " TEXT NOT NULL);";
+    public static final String CAT_PRINTER_OPTION = "Printer_Option";
+    private static final String CREATE_CAT_TABLE = "CREATE TABLE IF NOT EXISTS " + CAT_TABLE_NAME + " ("
+            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + CatName + " TEXT UNIQUE NOT NULL, "
+            + CAT_PRINTER_OPTION + " TEXT NOT NULL DEFAULT 0, " // Default value is 0 (false)
+            + Color + " TEXT NOT NULL);";
+
 
     // Room table
     private static final String CREATE_ROOM_TABLE =
@@ -500,8 +504,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_ITEMS_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + Barcode + " TEXT(20) UNIQUE NOT NULL, "
-            + Name + " TEXT NOT NULL, "
+            + Barcode + " TEXT(13) UNIQUE NOT NULL, "
+            + Related_ITEM_ID + " TEXT  NULL, "
+            + Name + " TEXT(26) NOT NULL CHECK(Name GLOB '[a-zA-Z0-9 ]*'), "
             + DESC + " TEXT NOT NULL, "
             + Category + " TEXT NOT NULL, "
             + Quantity + " INTEGER, "
@@ -521,7 +526,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + Image + " TEXT, "
             + SKU + " TEXT  , "
             + Variant + " TEXT NOT NULL, "
-            + Cost + " DECIMAL(10, 2) NOT NULL, "
+            + Cost + " DECIMAL(10, 2), "
             + Weight + " DECIMAL(10, 2), "
             + UserId + " INTEGER NOT NULL, "
             + Nature + " TEXT, "
@@ -651,6 +656,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
 
+
     // Creating Transaction table query
     private static final String CREATE_TRANSACTION_TABLE = "CREATE TABLE " + TRANSACTION_TABLE_NAME + "(" +
             _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -659,6 +665,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             IS_SELECTED + " INTEGER DEFAULT 0, " + // 0 for not selected, 1 for selected
             IS_PAID + " INTEGER DEFAULT 0, " +
             TRANSACTION_ID + " INTEGER NOT NULL, " +
+            RELATED_Option_ID  + " TEXT, " +
             ITEM_ID + " INTEGER NOT NULL, " +
             TRANSACTION_DATE + " DATETIME NOT NULL, " +
             QUANTITY + " INTEGER NOT NULL, " +
@@ -2493,6 +2500,33 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return tableIds;
     }
+
+    public Cursor getTransactionsForNetPrinting(String transactionId, String roomid, String tableid) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        if (transactionId == null || transactionId.isEmpty() || roomid == null || roomid.isEmpty() || tableid == null || tableid.isEmpty()) {
+            Log.e("Invalid parameters", "Invalid parameters: transactionId, roomid, or tableid is null or empty.");
+            return null;
+        }
+
+        // Define your query with the join
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                " INNER JOIN " + CAT_TABLE_NAME + " ON " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_FAMILLE + " = " + CAT_TABLE_NAME + "." + _ID +
+                " WHERE " + TRANSACTION_TICKET_NO + "=? AND " +
+                ROOM_ID + "=? AND " +
+                TABLE_ID + "=? AND " +
+                IS_PAID + "!=? AND " +
+                TRANSACTION_STATUS + "='VALID' AND " +
+                CAT_TABLE_NAME + "." + CAT_PRINTER_OPTION + "=? " +
+                "ORDER BY " + TRANSACTION_DATE + " ASC";
+
+        String[] selectionArgs = {transactionId, roomid, tableid, "1", "true"};
+
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+
+        return cursor;
+    }
+
     public void deleteTransactionsByConditions(SQLiteDatabase db, String roomId, String tableIdToDelete, String transactionIdToKeep) {
         SQLiteDatabase dbs = getWritableDatabase();
 
@@ -2861,7 +2895,37 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return relatedItems;
     }
+    public List<String> getRelatedsupplementById(int itemId) {
+        List<String> relatedItems = new ArrayList<>();
 
+        // Define the columns you want to retrieve
+        String[] columns = { "RelatedSupplements" };
+
+        // Selection criteria based on the item ID
+        String selection = _ID + " = ?";
+        String[] selectionArgs = { String.valueOf(itemId) };
+
+        // Query the database
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, columns, selection, selectionArgs, null, null, null);
+
+        // Check if cursor has results
+        if (cursor != null && cursor.moveToFirst()) {
+            // Iterate through each column and add non-null values to the list
+            for (String column : columns) {
+                String value = cursor.getString(cursor.getColumnIndex(column));
+                if (value != null) {
+                    relatedItems.add(value);
+                }
+            }
+            cursor.close();
+        }
+
+        // Close the database connection
+        db.close();
+
+        return relatedItems;
+    }
     public String getOptionNameById(int optionId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {OPTION_NAME};
@@ -4319,11 +4383,10 @@ removeDuplicateTransactions(db,newTransactionId);
 
 
 
-    public long insertTransaction(int itemId, String Barcode, float weight, double taxwithoutdiscount, double totaldiscbeforetax, String shopnumber, String catId, String transactionId, String transactionDate, int quantity,
+    public long insertTransaction(String related3optionid,int itemId, String Barcode, float weight, double taxwithoutdiscount, double totaldiscbeforetax, String shopnumber, String catId, String transactionId, String transactionDate, int quantity,
                                   double totalPrice, double vat, String longDescription, double unitPrice, double priceWithoutVat,
                                   String vatType, String posNum, String Nature, String ItemCode, String Currency, String taxCode,
                                   double priceAfterDiscount, double totalDiscount, String roomid, String tabeid, int isPaid) {
-
 
         SQLiteDatabase db = getWritableDatabase();
         if (db != null && db.isOpen()) {
@@ -4332,11 +4395,10 @@ removeDuplicateTransactions(db,newTransactionId);
             Log.d("closed", "Failed to insert transaction");
         }
         ContentValues values = new ContentValues();
-        String statusType= getLatestTransactionStatus(String.valueOf(roomid),tabeid);
-        String latesttransId= getLatestTransactionId(String.valueOf(roomid),tabeid,statusType);
 
         values.put(ITEM_ID, itemId);
         values.put(TRANSACTION_ID, transactionId);
+        values.put(RELATED_Option_ID, related3optionid);
         values.put(TRANSACTION_DATE, transactionDate);
         values.put(TRANSACTION_BARCODE, Barcode);
         values.put(QUANTITY, quantity);
@@ -4666,13 +4728,13 @@ removeDuplicateTransactions(db,newTransactionId);
             return null;
         }
 
-        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME + " AS t " +
-                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS th ON t." + TRANSACTION_ID + "=th." + TRANSACTION_TICKET_NO +
-                " WHERE th." + TRANSACTION_TICKET_NO + "=? AND " +
-                "t." + ROOM_ID + "=? AND t." + TABLE_ID + "=? AND " +
-                "t." + IS_PAID + "!=? AND " +
-                "t." + TRANSACTION_STATUS + "='VALID' " +
-                "ORDER BY t." + TRANSACTION_DATE + " ASC";
+        String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + "=? AND " +
+                ROOM_ID + "=? AND " +
+                TABLE_ID + "=? AND " +
+                IS_PAID + "!=? AND " +
+                TRANSACTION_STATUS + "='VALID' " +
+                "ORDER BY " + _ID + " ASC";
 
         String[] selectionArgs = {transactionId, roomid, tableid, "1"};
 
@@ -5518,6 +5580,32 @@ removeDuplicateTransactions(db,newTransactionId);
             this.paymentName = paymentName;
         }
     }
+
+    public void updateRelatedOptionId(String transactionId, String itemId, String newRelatedOptionId) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(RELATED_Option_ID, newRelatedOptionId);
+
+        String selection = TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ?" +
+                " AND " + IS_PAID + " = 0" +
+                " AND " + TRANSACTION_STATUS + " = 'VALID'";
+        String[] selectionArgs = {transactionId, itemId};
+
+        try {
+            int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
+            if (rowsAffected > 0) {
+                Log.d("DatabaseHelper", "Related Option ID updated successfully for Transaction ID: " + transactionId + " and Item ID: " + itemId);
+            } else {
+                Log.d("DatabaseHelper", "No rows affected. Transaction ID: " + transactionId + " and Item ID: " + itemId);
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error updating Related Option ID for Transaction ID: " + transactionId + " and Item ID: " + itemId, e);
+        } finally {
+            db.close();
+        }
+    }
+
+
     public Cursor getTransactionByItemId(int itemId, String roomid, String tableid) {
         SQLiteDatabase db = getReadableDatabase();
 
@@ -5528,7 +5616,11 @@ removeDuplicateTransactions(db,newTransactionId);
                 " AND " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_STATUS + " = ?" + // Ensure TransactionStatus is VALID
                 " AND " + TRANSACTION_HEADER_TABLE_NAME + "." + ROOM_ID + " = ?" +
                 " AND " + TRANSACTION_HEADER_TABLE_NAME + "." + TABLE_ID + " = ?" +
-                " AND " + TRANSACTION_TABLE_NAME + "." + IS_PAID + " = ?"; // Add condition for IS_PAID
+                " AND " + TRANSACTION_TABLE_NAME + "." + IS_PAID + " = ?" +
+                " AND (" + TRANSACTION_TABLE_NAME + "." + RELATED_Option_ID + " IS NULL" +
+                " OR " + TRANSACTION_TABLE_NAME + "." + RELATED_Option_ID + " = '')";
+
+        ; // Add condition for IS_PAID
 
         String[] selectionArgs = {String.valueOf(itemId), "InProgress", "PRF", "VALID", roomid, tableid, "0"}; // "0" for not paid
 
@@ -6926,13 +7018,13 @@ removeDuplicateTransactions(db,newTransactionId);
         return db.query( TRANSACTION_HEADER_TABLE_NAME, columns, null, null, null, null, sortOrder);
     }
 
-    public String getTransactionTaxCode(String transactionId, String itemId) {
+    public String getTransactionTaxCode(String transactionId, String uniqueId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(
                 TRANSACTION_TABLE_NAME,
                 new String[]{TRANSACTION_TAX_CODE},
-                TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ?",
-                new String[]{transactionId, itemId},
+                TRANSACTION_ID + " = ? AND " + _ID + " = ?",
+                new String[]{transactionId, uniqueId},
                 null,
                 null,
                 null
@@ -8565,7 +8657,7 @@ removeDuplicateTransactions(db,newTransactionId);
         ContentValues values = new ContentValues();
         values.put(IS_SELECTED, isSelected ? 1 : 0);
 
-        int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, ITEM_ID + "=?", new String[]{String.valueOf(itemId)});
+        int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, _ID + "=?", new String[]{String.valueOf(itemId)});
         db.close();
 
         boolean isUpdateSuccessful = rowsAffected > 0;
@@ -8839,57 +8931,6 @@ removeDuplicateTransactions(db,newTransactionId);
     }
 
 
-    // In your DatabaseHelper class, add a method to update an item
-    public void updateItem(Item item) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(Name , item.getName());
-        values.put(DESC , item.getDescription());
-        values.put(Price , item.getPrice());
-        // Add more columns as needed
-
-        // Define the WHERE clause to identify the item by its unique identifier (e.g., Barcode)
-        String whereClause = Barcode + "=?";
-        String[] whereArgs = { item.getBarcode() };
-
-        // Perform the update operation
-        int rowsUpdated = db.update(TABLE_NAME, values, whereClause, whereArgs);
-
-        // Close the database connection
-        db.close();
-
-        // Check if the update was successful
-        if (rowsUpdated > 0) {
-            Log.d("Database Update", "Item updated successfully: " + item.getBarcode());
-        } else {
-            Log.e("Database Update", "Failed to update item: " + item.getBarcode());
-        }
-    }
-    public long insertItem(Item newItem) {
-        // Get a writable database instance
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        // Create a ContentValues object to store the item's values
-        ContentValues values = new ContentValues();
-        values.put(Barcode , newItem.getBarcode());
-        values.put(Name , newItem.getName());
-        values.put(DESC , newItem.getDescription());
-        values.put(Category , newItem.getCategory());
-        values.put(Quantity , newItem.getQuantity());
-        values.put(Department , newItem.getDepartment());
-        values.put(LongDescription , newItem.getLongDescription());
-        // Add other columns as needed
-
-        // Insert the item into the database and get the inserted row ID
-        long newRowId = db.insert(TABLE_NAME, null, values);
-
-        // Close the database connection
-        db.close();
-
-        // Return the inserted row ID (or -1 if the insertion failed)
-        return newRowId;
-    }
 
 
 

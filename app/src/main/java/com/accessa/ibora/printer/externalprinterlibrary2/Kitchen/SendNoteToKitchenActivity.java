@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -154,8 +155,6 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
 
 
 
-
-
     public void printSample(CloudPrinter cloudPrinter,String noteText) {
 
         String currentDateTime = getCurrentDateTime();
@@ -179,7 +178,7 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
         cloudPrinter.printText("--------------------------------");
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid), tableid);
+        Cursor cursor1 = mDatabaseHelper.getTransactionsForNetPrinting(latesttransId,String.valueOf(roomid), tableid);
         if (cursor1 != null && cursor1.moveToFirst()) {
             do {
                 String id = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.ITEM_ID));
@@ -196,12 +195,40 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
 
                 Log.d("sentToKitchen", sentToKitchen);
 if(sentToKitchen.equals("0")) {
-    cloudPrinter.printColumnsText(new String[]{description, "X", quantity}, new int[]{26, 2, 4},
-            new AlignStyle[]{AlignStyle.LEFT, AlignStyle.LEFT, AlignStyle.RIGHT});
-    if(comment != null) {
-        cloudPrinter.setCharacterSize(1, 1);
-        cloudPrinter.printText(comment);
+
+    // Assuming cloudPrinter is already initialized and configured
+
+// Your small image data
+
+
+// Update item view based on relatedOptionId and description
+    if (description.startsWith("Sup")) {
+        // Adjust the alignment slightly to the left
+        String adjustedDescription = " --->> " + description; // Add padding for left alignment
+
+        // Print the description with adjusted alignment
+        cloudPrinter.printColumnsText(new String[]{adjustedDescription, "X", quantity}, new int[]{25, 2, 4},
+                new AlignStyle[]{AlignStyle.LEFT, AlignStyle.LEFT, AlignStyle.RIGHT});
+
+
+        // Print the comment if it's not null
+        if (comment != null) {
+            cloudPrinter.setCharacterSize(1, 1);
+            cloudPrinter.printText(comment);
+        }
+    } else {
+        // Regular printing for other descriptions
+        cloudPrinter.printColumnsText(new String[]{description, "X", quantity}, new int[]{26, 2, 4},
+                new AlignStyle[]{AlignStyle.LEFT, AlignStyle.LEFT, AlignStyle.RIGHT});
+
+        // Print the comment if it's not null
+        if (comment != null) {
+            cloudPrinter.setCharacterSize(1, 1);
+            cloudPrinter.printText(comment);
+        }
     }
+
+
 }
                 // Use the variables as needed
                 // For example, you can pass them to another method or use them to populate views

@@ -22,7 +22,7 @@ public class Transaction {
     private String Discount;
     private double AmountWOVAT;
     private String TotalDiscount;
-
+    private String relatedoptionid;
 
     private double itemPrice;
     private String unitPrice;
@@ -31,15 +31,16 @@ public class Transaction {
     private double TotalPrice;
 
     private int itemQuantity;
-
-    public Transaction(int unique_id,String itemName, double itemPrice, int itemQuantity,String unitPrice,int item_id) {
+    public Transaction(int uniqueId, String itemName, double itemPrice, int itemQuantity, String unitPrice, int itemId, String relatedoptionid) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemQuantity = itemQuantity;
         this.unitPrice = unitPrice;
         this.item_id=item_id;
         this.unique_id = unique_id;
+        this.relatedoptionid = relatedoptionid;
     }
+
     public Transaction() {
         this.id = id;
         this.itemName = itemName;
@@ -64,6 +65,9 @@ public class Transaction {
         this.TotalPrice = TotalPrice;
         this.TaxCode = TaxCode;
     }
+
+
+
     public int getitem_id() {
         return item_id;
     }

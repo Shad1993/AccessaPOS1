@@ -26,7 +26,7 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
     public static final String Color = "Color";
 
     // Database Information
-
+    public static final String CAT_PRINTER_OPTION = "Printer_Option";
     private static final String DB_NAME = Constants.DB_NAME;
 
     // database version
@@ -35,10 +35,13 @@ public class CategoryDatabaseHelper extends SQLiteOpenHelper {
     
 
     // Creating table query
-    private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(" +
-            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            CatName + " TEXT UNIQUE NOT NULL, " +
-            Color + " TEXT NOT NULL);";
+    private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "("
+            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + CatName + " TEXT UNIQUE NOT NULL, "
+            + CAT_PRINTER_OPTION + " TEXT NOT NULL DEFAULT 0, " // Default value is 0 (false)
+            + Color + " TEXT NOT NULL);";
+
+
 
 
 

@@ -26,7 +26,7 @@ public class Item {
     private String hascomment;
     private boolean hasoption;
 
-    private boolean hasSupplements;
+    private String hasSupplements;
     private String relatedSupplement;
     private String relateditem;
     private String relateditem2;
@@ -137,12 +137,11 @@ public class Item {
         this.hasoption = hasoption;
     }
 
-    public boolean  gethassupplements() {
+    public String  gethassupplements() {
         return hasSupplements;
     }
-    public void sethassupplements(Boolean hasSupplements) {
-        this.hasSupplements = hasSupplements;
-    }
+    public void sethassupplements(String hasSupplements) {
+        this.hasSupplements = hasSupplements;}
 
 
 

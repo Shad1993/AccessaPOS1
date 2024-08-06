@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -48,12 +49,13 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             do {
                 String itemName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
                 double itemPrice = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
+                String relatedoptionid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.RELATED_Option_ID));
                 int itemQuantity = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
                 int item_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
                 int unique_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper._ID));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
 
-                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id);
+                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id,relatedoptionid);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
         }
@@ -70,6 +72,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public TextView PriceTextView;
         public TextView QuantityTextView;
         private TextView ItemIdTextView;
+        public ImageView relatedOptionIcon; // Add this line
 
         CheckBox checkBox;
 
@@ -80,6 +83,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             nameTextView = itemView.findViewById(R.id.Longdescription_text_view);
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
+            relatedOptionIcon = itemView.findViewById(R.id.related_option_icon); // Initialize the ImageView
+
             // Initialize other views...
             checkBox = itemView.findViewById(R.id.checkbox);
             checkBox.setVisibility(isCheckBoxVisible ? View.VISIBLE : View.GONE);
@@ -116,6 +121,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         }
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
         String uniques = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
+        String relatedoptionid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.RELATED_Option_ID));
         String quantity = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.QUANTITY));
         String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
@@ -142,20 +148,20 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         holder.checkBox.setVisibility(isCheckBoxVisible ? View.VISIBLE : View.GONE);
 
         // Bind data to the view holder
-        holder.checkBox.setChecked(checkedItems.contains(id));
+        holder.checkBox.setChecked(checkedItems.contains(uniques));
 
         // Set an OnClickListener for the checkbox
         holder.checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Update IS_SELECTED field in the database when the checkbox is clicked
-                updateItemSelectedInDatabase(id, holder.checkBox.isChecked());
+                updateItemSelectedInDatabase(uniques, holder.checkBox.isChecked());
 
                 // Update the list of checked items
                 if (holder.checkBox.isChecked()) {
-                    checkedItems.add(id);
+                    checkedItems.add(uniques);
                 } else {
-                    checkedItems.remove(id);
+                    checkedItems.remove(uniques);
                 }
             }
         });
@@ -165,6 +171,19 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.yellow)); // Replace with your desired color
         } else {
             holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.textviewextColor)); // Default color
+        }
+
+        // Update item view based on relatedOptionId and description
+        if (description.startsWith("Sup")) {
+            holder.relatedOptionIcon.setVisibility(View.VISIBLE);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+            params.leftMargin = 50; // Adjust the left margin as needed
+            holder.itemView.setLayoutParams(params);
+        } else {
+            holder.relatedOptionIcon.setVisibility(View.GONE);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+            params.leftMargin = 0; // Reset the left margin if there's no relatedOptionId or description starts with "SUP"
+            holder.itemView.setLayoutParams(params);
         }
     }
 

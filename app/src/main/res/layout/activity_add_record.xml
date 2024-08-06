@@ -120,22 +120,7 @@
                         android:layout_height="wrap_content"
                         android:spinnerMode="dropdown" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start"
-                        android:text="@string/ItemCode"
-                        android:textSize="18sp" />
 
-                    <EditText
-                        android:id="@+id/IdItemCode_edittext"
-                        style="@style/modifiedEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/ItemCode"
-                        android:inputType="text"
-                        android:singleLine="true"
-                        android:maxLength="13" />
                     <!-- Add this code within the LinearLayout that contains other fields -->
                     <TextView
                         android:layout_width="wrap_content"

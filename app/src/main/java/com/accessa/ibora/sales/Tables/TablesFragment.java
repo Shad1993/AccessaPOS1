@@ -297,9 +297,15 @@ String transactionIdInProgress;
                         String title = subjectEditText.getText().toString();
                         String tableNum = priceTextView.getText().toString();
                         String roomnum = roomnumTextView.getText().toString();
+                          String statusType= mDatabaseHelper.getLatestTransactionStatus(roomnum,tableNum);
+                          String latesttransId= mDatabaseHelper.getLatestTransactionId(roomnum,tableNum,statusType);
 
+                       //   if(latesttransId== null) {
+                         //     showNumberOfCoversDialog(tableNum, roomnum);
 
-                            updateTableId1(tableNum,roomnum);
+                        //  }else{
+                              updateTableId1(tableNum, roomnum);
+                         // }
                             // Call the interface method to notify the MainActivity about the table click
                             notifyTableClicked(tableNum,roomnum);
 
@@ -460,16 +466,17 @@ String transactionIdInProgress;
     }
 
     private void updateTableId(String newTableId,String roomId,int numbercover) {
+
+
         // Update the table ID in SharedPreferences
         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("table_id", newTableId);
-
+        editor.putString("table_num", newTableId);
+        editor.putInt("servings", numbercover);
         editor.putInt("roomnum", Integer.parseInt(roomId));
         editor.putInt("room_id", Integer.parseInt(roomId));
-        editor.putString("table_num",newTableId);
-        editor.putString("table_id",newTableId);
-        editor.putInt("servings", numbercover);
+
         Log.d("roomtables", roomId + " " + newTableId);
         editor.apply();
 

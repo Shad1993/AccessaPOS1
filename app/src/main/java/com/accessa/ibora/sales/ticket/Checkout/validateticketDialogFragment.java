@@ -102,6 +102,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -593,6 +594,8 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                         TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
                         TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
+
+
                         if(sumOfAmountAmountpaid>0){
                             remainingTotalAmountTextView.setVisibility(view.VISIBLE);
                             remainingAmountTextView.setVisibility(View.VISIBLE);
@@ -710,14 +713,28 @@ public class validateticketDialogFragment extends DialogFragment  {
                 boolean isAtLeastOneItemSelected=mDatabaseHelper.isAtLeastOneItemSelected(latesttransId);
                 double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
                 double sumOfAmountAmountpaid = mDatabaseHelper.getSumOfAmount(latesttransId, Integer.parseInt(roomid), tableid);
+                double sum = 0.0;
+                List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, Integer.parseInt(roomid), tableid);
 
+                // Calculate the subtotal and display payment methods
+                if (summaries != null && !summaries.isEmpty()) {
+
+                    StringBuilder paymentMethods = new StringBuilder();
+
+                    for (DatabaseHelper.SettlementSummary summary : summaries) {
+                        sum += summary.sum;
+                    }
+                    sumOfAmountAmountpaid= sum;
+                }
                 double remainingAmount = totalAmount - sumOfAmountAmountpaid - totalAmountEntered;
 
                 TextView remainingAmountTextView = view.findViewById(R.id.textViewAmountdue);
                 TextView remainingTotalAmountTextView = view.findViewById(R.id.textViewTotalAmountdue);
+
+
                 TextView textViewCashReturn = view.findViewById(R.id.textViewCashReturn);
 if(isAtLeastOneItemSelected){
-    remainingAmount= totalsplit  - totalAmountEntered;
+    remainingAmount= totalsplit  - totalAmountEntered-sum;
     if (remainingAmount < 0) {
         remainingAmount = 0;
         remainingAmountTextView.setVisibility(View.GONE);
@@ -1238,27 +1255,49 @@ if(isAtLeastOneItemSelected){
         for (SettlementItem item : settlementItems) {
             totalAmountinserted += item.getSettlementAmount();
         }
-
+        double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
         String MRAMETHOD="Single";
-        Log.d("totalAmountinserted1", "= " + totalAmountinserted);
-
         insertCashReturn(String.valueOf(cashReturn), String.valueOf(totalAmountinserted),qrMra,mrairn,MRAMETHOD);
         boolean isAtLeastOneItemSelected= mDatabaseHelper.isAtLeastOneItemSelected(latesttransId);
+        Log.d("cashReturn", "= " + cashReturn);
+        Log.d("total", "= " + totalsplit);
+        Log.d("isAtLeastOneItemSelected", "= " + isAtLeastOneItemSelected);
 
-        if(isAtLeastOneItemSelected && cashReturn >= 0) {
-            double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
-            cashReturn= totalAmountinserted- totalsplit;
+
+        double sum = 0.0;
+        List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, Integer.parseInt(roomid), tableid);
+
+        // Calculate the subtotal and display payment methods
+        if (summaries != null && !summaries.isEmpty()) {
+
+            StringBuilder paymentMethods = new StringBuilder();
+
+            for (DatabaseHelper.SettlementSummary summary : summaries) {
+                sum += summary.sum;
+            }
+
+        }
+
+
+        if(isAtLeastOneItemSelected) {
+            cashReturn= sum - totalsplit;
+
+            Log.d("total", "= " + totalsplit);
+            Log.d("sum", "= " + sum);
+            Log.d("totalAmountinserted", "= " + totalAmountinserted);
+            Log.d("cashReturn", "= " + cashReturn);
+
             if( cashReturn>=0){
                 String newtransid=  generateNewTransactionId();
-                Log.d("latesttransId", String.valueOf(latesttransId));
-                Log.d("newtransid", String.valueOf(newtransid));
+                Log.d("latesttransIditemsel", String.valueOf(latesttransId));
+                Log.d("newtransiditemsel", String.valueOf(newtransid));
                 mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
                 // Update the transaction ID in the header table for transactions with status "InProgress"
-                SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),newtransid);
+                SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),newtransid);
 
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
-                intent.putExtra("amount_received", String.valueOf(totalAmount));
+                intent.putExtra("amount_received", String.valueOf(totalsplit));
                 intent.putExtra("cash_return", String.valueOf(cashReturn));
                 intent.putExtra("settlement_items", settlementItems);
                 intent.putExtra("id", newtransid);
@@ -1274,12 +1313,44 @@ if(isAtLeastOneItemSelected){
                 intent.putExtra("tableid", tableid);
                 System.out.println("selectedBuyerTANs: " + BuyTAN);
                 startActivity(intent);
+                mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
             }
 
 
-        }else{
+        }else {
+            cashReturn= sum - totalAmount;
 
-            mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
+            Log.d("total", "= " + totalsplit);
+            Log.d("sum", "= " + sum);
+            Log.d("totalAmountinserted", "= " + totalAmountinserted);
+            Log.d("cashReturn", "= " + cashReturn);
+            if( cashReturn>=0){
+
+                Log.d("latesttransIditemsel", String.valueOf(latesttransId));
+
+                // Update the transaction ID in the header table for transactions with status "InProgress"
+                SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
+
+                mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
+                Intent intent = new Intent(getActivity(), Mra.class);
+                intent.putExtra("amount_received", String.valueOf(totalsplit));
+                intent.putExtra("cash_return", String.valueOf(cashReturn));
+                intent.putExtra("settlement_items", settlementItems);
+                intent.putExtra("id", latesttransId);
+                intent.putExtra("selectedBuyerName", Buyname);
+                intent.putExtra("selectedBuyerTAN", BuyTAN);
+                intent.putExtra("selectedBuyerCompanyName", BuyComp);
+                intent.putExtra("selectedBuyerType", BuyType);
+                intent.putExtra("selectedBuyerBRN", BuyBRN);
+                intent.putExtra("selectedBuyerNIC", BuyNIC);
+                intent.putExtra("selectedBuyerAddresse", BuyAdd);
+                intent.putExtra("selectedBuyerprofile", BuyProfile);
+                intent.putExtra("roomid", roomid);
+                intent.putExtra("tableid", tableid);
+                System.out.println("selectedBuyerTANs: " + BuyTAN);
+                startActivity(intent);
+                mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
+            }
         }
 
     }

@@ -565,7 +565,7 @@ if (cashReturn != 0.0) {
             double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid),tableid);
             TicketFragment ticketFragment = (TicketFragment) getSupportFragmentManager().findFragmentById(R.id.right_container);
             if (ticketFragment != null) {
-                ticketFragment.refreshData(totalAmount, taxTotalAmount);
+                ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
                 ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
                 customerLcdFragment.displayOnLCD();
@@ -582,7 +582,7 @@ if (cashReturn != 0.0) {
         if (ticketFragment != null) {
             double totalAmount = totalPriceSum;
             double taxTotalAmount = totalVATSum;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
 
@@ -602,7 +602,7 @@ if (cashReturn != 0.0) {
         if (ticketFragment != null) {
             double totalAmount = totalPriceSum;
             double taxTotalAmount = totalVATSum;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
             ticketFragment.updateheader(totalAmount, taxTotalAmount);
 
 
@@ -809,7 +809,7 @@ if (cashReturn != 0.0) {
         if (ticketFragment != null) {
             double totalAmount = 0.0;
             double taxTotalAmount = 0.0;
-            ticketFragment.refreshData(totalAmount, taxTotalAmount);
+            ticketFragment.refreshData(totalAmount, taxTotalAmount,"movetobottom");
            displayOnLCD();
         }
 

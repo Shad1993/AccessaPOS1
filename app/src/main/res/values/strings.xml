@@ -533,6 +533,10 @@
     <string name="setshift">Set Shift Number</string>
     <string name="close_Shift">Close Shift</string>
     <string name="notransactionstarted">No transaction Found for today</string>
+    <string name="categoryprinted">This Category will be printed.</string>
+    <string name="categorynotprinted">This Category will not be Printed</string>
+    <string name="choix">Choose an Option</string>
+    <string name="choixsup">Choose a supplement</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

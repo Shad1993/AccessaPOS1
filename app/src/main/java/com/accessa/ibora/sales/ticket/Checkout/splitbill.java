@@ -261,7 +261,7 @@ public class splitbill extends Dialog {
                 TicketFragment ticketFragment = new TicketFragment();
 
                 if (ticketFragment != null) {
-                    ticketFragment.refreshData(totalAmount,totalTax);
+                    ticketFragment.refreshData(totalAmount,totalTax,"movetobottom");
                 }
             }
         });

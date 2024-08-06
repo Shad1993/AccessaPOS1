@@ -8,12 +8,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import top.defaults.colorpicker.ColorPickerPopup;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.menu.Product;
 
 
@@ -29,6 +33,7 @@ public class AddCategoryActivity extends Activity {
     // Inside your activity or fragment
 
     private Button colorPickerButton;
+    private boolean IsNeededToPrint;
 
 
 
@@ -41,7 +46,7 @@ public class AddCategoryActivity extends Activity {
 
     // this is the default color of the preview box
     private int mDefaultColor;
-
+    SwitchCompat printerOptionSwitch;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,19 +59,30 @@ public class AddCategoryActivity extends Activity {
         CatNameEditText = (EditText) findViewById(R.id.CatName_edittext);
         ColorEditText = (EditText) findViewById(R.id.Color_edittext);
 
-
-
-        // register two of the buttons with their
         // appropriate IDs
         mPickColorButton = findViewById(R.id.pick_color_button);
 
         // and also register the view which shows the
         // preview of the color chosen by the user
         mColorPreview = findViewById(R.id.preview_selected_color);
+         printerOptionSwitch = findViewById(R.id.printer_option_switch);
 
         // set the default color to 0 as it is black
         mDefaultColor = 0;
+        printerOptionSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                IsNeededToPrint = isChecked;
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(AddCategoryActivity.this, R.string.categoryprinted, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(AddCategoryActivity.this, R.string.categorynotprinted, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         // handling the Pick Color Button to open color
         // picker dialog
         mPickColorButton.setOnClickListener(
@@ -159,11 +175,12 @@ public class AddCategoryActivity extends Activity {
     public void openNewActivity() {
         final String CatName = CatNameEditText.getText().toString();
         final String Color = ColorEditText.getText().toString();
+        String printingstatus = String.valueOf(IsNeededToPrint);
         if (CatName.isEmpty() ) {
             Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        CatdbManager.insert(CatName, Color);
+        CatdbManager.insert(CatName, Color,printingstatus);
 
         // Create an Intent to navigate to the desired Fragment
         Intent intent = new Intent(AddCategoryActivity.this, Product.class);

@@ -45,5 +45,16 @@
         android:visibility="gone"
         android:textColor="#000"
         android:textSize="20sp" />
+    <TextView
+        android:id="@+id/printingstatus_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Color_text_view"
+        android:layout_toRightOf="@id/id_text_view"
+        android:layout_marginLeft="10dp"
+        android:text="Color"
+        android:visibility="gone"
+        android:textColor="#000"
+        android:textSize="20sp" />
 
 </RelativeLayout>

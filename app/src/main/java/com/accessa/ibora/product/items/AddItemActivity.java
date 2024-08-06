@@ -20,7 +20,9 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.InputFilter;
 import android.text.InputType;
+import android.text.Spanned;
 import android.view.View;
 import android.view.Window;
 import android.webkit.URLUtil;
@@ -60,6 +62,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class AddItemActivity extends Activity {
     static final int REQUEST_IMAGE_GALLERY = 1;
@@ -131,13 +134,25 @@ public class AddItemActivity extends Activity {
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
         setContentView(R.layout.activity_add_record);
-
+        // Set the maximum number of decimal places
+        int maxDigitsAfterDecimal = 2;
 
         subjectEditText = findViewById(R.id.itemName_edittext);
         descEditText = findViewById(R.id.description_edittext);
         priceEditText = findViewById(R.id.price_edittext);
+        // Create and apply the input filter
+        priceEditText.setFilters(new InputFilter[] {
+                new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
+        });
+
         price2EditText = findViewById(R.id.price2_edittext);
+        price2EditText.setFilters(new InputFilter[] {
+                new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
+        });
         price3EditText = findViewById(R.id.price3_edittext);
+        price3EditText.setFilters(new InputFilter[] {
+                new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
+        });
         categorySpinner = findViewById(R.id.category_spinner);
         barcodeEditText = findViewById(R.id.IdBarcode_edittext);
         departmentSpinner = findViewById(R.id.Dept_spinner);
@@ -146,7 +161,13 @@ public class AddItemActivity extends Activity {
         weightEditText = findViewById(R.id.weight_edittext);
         variantEditText = findViewById(R.id.variant_edittext);
         skuEditText = findViewById(R.id.sku_edittext);
+        skuEditText.setFilters(new InputFilter[] {
+                new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
+        });
         costEditText = findViewById(R.id.cost_edittext);
+        costEditText.setFilters(new InputFilter[] {
+                new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
+        });
         quantityEditText = findViewById(R.id.quantity_edittext);
         expiryDatePicker = findViewById(R.id.expirydate_picker);
         vatRadioGroup = findViewById(R.id.VAT_radioGroup);
@@ -161,16 +182,15 @@ public class AddItemActivity extends Activity {
         ExpiryDateText= findViewById(R.id.ExpiryText);
         Discount = findViewById(R.id.discount_spinner);
 
-        ItemCode = findViewById(R.id.IdItemCode_edittext);
+        //
+        // ItemCode = findViewById(R.id.IdItemCode_edittext);
         // Inside your onCreate method, after initializing other views
         Currency = findViewById(R.id.Currency_spinner);
 
         // Create a list of currency options
         List<String> currencyOptions = new ArrayList<>();
         currencyOptions.add("MUR");
-        currencyOptions.add("USD");
-        currencyOptions.add("EUR");
-        currencyOptions.add("GBP");
+
 
 
         // Create an ArrayAdapter for the Currency spinner
@@ -753,9 +773,22 @@ public class AddItemActivity extends Activity {
         String selectedVat = selectedRadioButton1.getText().toString();
 
         String barcode = barcodeEditText.getText().toString().trim();
+        if (barcode.length() < 13) {
+            barcode = String.format("%013d", Long.parseLong(barcode));
+        }
+
         String name = subjectEditText.getText().toString().trim();
+        // Check if the name contains special characters
+        // Check if the name contains special characters
+        if (name.matches(".*[^a-zA-Z0-9 ].*")) {
+            // Display a Toast message to indicate that special characters are not allowed
+            Toast.makeText(this, "Item name cannot contain special characters.", Toast.LENGTH_SHORT).show();
+            return; // Stop further processing and stay on the current page
+        }
+
+
         String desc = descEditText.getText().toString().trim();
-        String itemCode = ItemCode.getText().toString().trim();
+        String itemCode = generateItemCode();
         String category = categorySpinner.getSelectedItem().toString().trim();
         String quantity = quantityEditText.getText().toString().trim();
 
@@ -764,7 +797,18 @@ public class AddItemActivity extends Activity {
         }
         String DateCreated = dateFormat.format(new Date(currentTimeMillis));
         String department = departmentSpinner.getSelectedItem().toString().trim();
+        // Get and trim the long description
         String longDescription = longDescEditText.getText().toString().trim();
+
+// If long description is empty, set it to the item name
+        if (longDescription.isEmpty()) {
+            longDescription = name;
+        }
+        if (longDescription.matches(".*[^a-zA-Z0-9 ].*")) {
+            // Display a Toast message to indicate that special characters are not allowed
+            Toast.makeText(this, "Item name cannot contain special characters.", Toast.LENGTH_SHORT).show();
+            return; // Stop further processing and stay on the current page
+        }
         String subDepartment = subDepartmentSpinner.getSelectedItem().toString().trim();
         String price = priceEditText.getText().toString().trim();
         String price2 = price2EditText.getText().toString().trim();
@@ -866,7 +910,7 @@ public class AddItemActivity extends Activity {
         if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || price2.isEmpty() || price3.isEmpty() || barcode.isEmpty()
                 || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty() || commentrequired.isEmpty()
                 || availableForSale.isEmpty() || longDescription.isEmpty()
-                || variant.isEmpty() || sku.isEmpty() || cost.isEmpty()) {
+                || variant.isEmpty() ) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -878,35 +922,37 @@ public class AddItemActivity extends Activity {
             Toast.makeText(this, getString(R.string.barcodecodeexists), Toast.LENGTH_SHORT).show();
             return;
         }
+// Insert the record into the database
+        DBManager dbManager = new DBManager(this);
+        dbManager.open();
+        dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, Float.parseFloat(weight), department,
+                subDepartment, longDescription, quantity, expiryDate, vat,
+                availableForSale,optionStatus,commentrequired, String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2), String.valueOf(optionId3), String.valueOf(optionId4), String.valueOf(optionId5),soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
+                selectedNature, selectedCurrency, itemCode,VatCode,  String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice,currentPrice2,currentPrice3,"Offline");
 
+        dbManager.close();
 
-        showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
+                // Redirect to the Product activity
+        Intent intent = new Intent(AddItemActivity.this, Product.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+       /* showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale,optionStatus, String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2),String.valueOf(optionId3),String.valueOf(optionId4),String.valueOf(optionId5),  commentrequired,soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode, VatCode, String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice, currentPrice2, currentPrice3);
 
-
-        // Clear the input fields
-        subjectEditText.setText("");
-        descEditText.setText("");
-        priceEditText.setText("");
-        barcodeEditText.setText("");
-        longDescEditText.setText("");
-        weightEditText.setText("");
-        quantityEditText.setText("");
-        variantEditText.setText("");
-        skuEditText.setText("");
-        costEditText.setText("");
-
-        // Reset spinners to default selection
-        categorySpinner.setSelection(0);
-        departmentSpinner.setSelection(0);
-        subDepartmentSpinner.setSelection(0);
+*/
 
 
     }
 
-
+    // Method to generate a unique ItemCode
+    public static String generateItemCode() {
+        // Example using timestamp and random number
+        String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        int randomNum = new Random().nextInt(1000); // Random number between 0 and 999
+        return String.format("IC-%s-%03d", timestamp, randomNum); // Format as IC-yyyyMMddHHmmss-###
+    }
 
     //  retrieve the value of isAvailableForSale
     private boolean getIsAvailableForSale() {
@@ -1036,7 +1082,35 @@ public class AddItemActivity extends Activity {
         dialog.show();
     }
 
+    private static class DecimalDigitsInputFilter implements InputFilter {
+        private final int maxDigitsAfterDecimal;
 
+        public DecimalDigitsInputFilter(int maxDigitsAfterDecimal) {
+            this.maxDigitsAfterDecimal = maxDigitsAfterDecimal;
+        }
+
+        @Override
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            String resultingString = dest.subSequence(0, dstart).toString() +
+                    source.subSequence(start, end).toString() +
+                    dest.subSequence(dend, dest.length()).toString();
+
+            if (resultingString.isEmpty()) {
+                return null;
+            }
+
+            String[] split = resultingString.split("\\.");
+            if (split.length > 2) {
+                return "";
+            }
+
+            if (split.length == 2 && split[1].length() > maxDigitsAfterDecimal) {
+                return "";
+            }
+
+            return null;
+        }
+    }
     // Handle the permission request response
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_CODE) {

@@ -9,10 +9,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.menu.Product;
@@ -34,7 +37,8 @@ public class ModifyCategoryActivity extends Activity {
 
     private ImageView imageView;
 
-
+    SwitchCompat printerOptionSwitch;
+    private boolean IsNeededToPrint;
     private Button  mPickColorButton;
 
     private View mColorPreview;
@@ -60,6 +64,7 @@ public class ModifyCategoryActivity extends Activity {
 
 
         mColorPreview = findViewById(R.id.preview_selected_color);
+        printerOptionSwitch = findViewById(R.id.printer_option_switch);
 
         mDefaultColor = 0;
 
@@ -67,10 +72,32 @@ public class ModifyCategoryActivity extends Activity {
         String id = intent.getStringExtra("id");
         String CatName = intent.getStringExtra("CatName");
         String colorValue = intent.getStringExtra("Color");
+        String printingstatus = intent.getStringExtra("printingstatus");
         mDefaultColor = Color.parseColor(colorValue);
         _id = Long.parseLong(id);
         CatNameText.setText(CatName);
         ColorText.setText(colorValue);
+
+
+
+        if (printingstatus.equals("true") ||printingstatus.equals("1")) {
+            printerOptionSwitch.setChecked(true);
+        }
+
+        printerOptionSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                IsNeededToPrint = isChecked;
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(ModifyCategoryActivity.this, R.string.categoryprinted, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(ModifyCategoryActivity.this, R.string.categorynotprinted, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         mColorPreview.setBackgroundColor(mDefaultColor);
         mPickColorButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,13 +146,13 @@ public class ModifyCategoryActivity extends Activity {
     public void openNewActivity() {
         String CatName = CatNameText.getText().toString();
         String colorValue = ColorText.getText().toString();
-
+        String printingstatus = String.valueOf(IsNeededToPrint);
         Toast.makeText(getApplicationContext(), "Category MODIFIED", Toast.LENGTH_LONG).show();
         if (CatName.isEmpty() ) {
             Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        CatdbManager.update(_id, CatName, colorValue);
+        CatdbManager.update(_id, CatName, colorValue,printingstatus);
         returnHome();
     }
 

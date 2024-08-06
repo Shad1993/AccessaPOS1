@@ -39,7 +39,7 @@ public class CategoryFragment  extends Fragment   {
 
     private CategoryDatabaseHelper CatDatabaseHelper;
 
-    final String[] from = new String[] { CategoryDatabaseHelper._ID,
+    final String[] from = new String[] { CategoryDatabaseHelper._ID,CategoryDatabaseHelper.CAT_PRINTER_OPTION,
             CategoryDatabaseHelper.CatName, CategoryDatabaseHelper.Color };
 
     final int[] to = new int[] { R.id.id, R.id.title, R.id.desc , R.id.price};
@@ -148,6 +148,7 @@ public class CategoryFragment  extends Fragment   {
                         TextView idTextView = (TextView) view.findViewById(R.id.id_text_view);
                         TextView CatName_edittext = (TextView) view.findViewById(R.id.Catname_text_view);
                         TextView Color_edittext = (TextView) view.findViewById(R.id.Color_text_view);
+                        TextView printing_status_edittext = (TextView) view.findViewById(R.id.printingstatus_view);
 
 
 
@@ -156,11 +157,13 @@ public class CategoryFragment  extends Fragment   {
                         String id = idTextView.getText().toString();
                         String CatName = CatName_edittext.getText().toString();
                         String Color =Color_edittext .getText().toString();
+                        String printingstatus =printing_status_edittext .getText().toString();
 
                         Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyCategoryActivity.class);
                         modify_intent.putExtra("CatName", CatName);
                         modify_intent.putExtra("Color", Color);
                         modify_intent.putExtra("id", id);
+                        modify_intent.putExtra("printingstatus", printingstatus);
 
                         startActivity(modify_intent);
 

@@ -49,6 +49,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NAME_STD_ACCE
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.hasSupplements;
 import static com.accessa.ibora.product.items.DatabaseHelper.hasoptions;
 
@@ -246,7 +247,7 @@ public class DBManager {
         return null;
     }
     public Cursor fetch() {
-        String[] columns = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
+        String[] columns = new String[]{_ID, DatabaseHelper.Name, DatabaseHelper.DESC, DatabaseHelper.LongDescription, DatabaseHelper.Barcode, DatabaseHelper.Price};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -284,7 +285,7 @@ public class DBManager {
         contentValues.put(DatabaseHelper.LongDescription, longDesc);
         contentValues.put(DatabaseHelper.VAT, roundedTaxStr);
 
-        String selection = TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ?";
+        String selection = TRANSACTION_ID + " = ? AND " + _ID + " = ?";
         String[] selectionArgs = {String.valueOf(transactionId), String.valueOf(id)};
 
         int rowsAffected = database.update(TRANSACTION_TABLE_NAME, contentValues, selection, selectionArgs);
@@ -316,7 +317,7 @@ public class DBManager {
     }
 
 
-    public boolean updateItem(long id,String optionStatus,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public boolean updateItem(long id,String optionStatus,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String CommentRequired,String hasoption,String hassupplemet,String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         ContentValues contentValues = new ContentValues();
 
 
@@ -360,8 +361,11 @@ public class DBManager {
         contentValues.put(DatabaseHelper.related_item3, optionsid3);
         contentValues.put(DatabaseHelper.related_item4, optionsid4);
         contentValues.put(DatabaseHelper.related_item5, optionsid5);
+        contentValues.put(hasoptions, hasoption);
+        contentValues.put(hasSupplements, hassupplemet);
+        contentValues.put(DatabaseHelper.comment, CommentRequired);
         contentValues.put(DatabaseHelper.relatedSupplements, supplementid);
-        database.update(DatabaseHelper.TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
+        database.update(DatabaseHelper.TABLE_NAME, contentValues, _ID + " = " + id, null);
         return true;
     }
     public boolean deleteItem(long _id) {
@@ -371,7 +375,7 @@ public class DBManager {
         // Check if barcode is not null or empty
         if (barcode != null && !barcode.isEmpty()) {
             // First, delete from the main table
-            String selectionMain = DatabaseHelper._ID + "=?";
+            String selectionMain = _ID + "=?";
             String[] selectionArgsMain = { String.valueOf(_id) };
             database.delete(DatabaseHelper.TABLE_NAME, selectionMain, selectionArgsMain);
 
@@ -390,7 +394,7 @@ public class DBManager {
     public String getBarcodeFromMainTable(long _id) {
         String barcode = null;
         String[] projection = { "Barcode" };
-        String selection = DatabaseHelper._ID + "=?";
+        String selection = _ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
 
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
@@ -456,7 +460,7 @@ public class DBManager {
     public Item getItemById(String id) {
         Item item = null;
         String[] columns = new String[]{
-                DatabaseHelper._ID,
+                _ID,
                 DatabaseHelper.Name,
                 DatabaseHelper.DESC,
                 DatabaseHelper.Price,
@@ -496,13 +500,13 @@ public class DBManager {
                 // Add other columns as needed
         };
 
-        String selection = DatabaseHelper._ID + " = ?";
+        String selection = _ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             item = new Item();
-            item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
+            item.setId((int) cursor.getLong(cursor.getColumnIndex(_ID)));
             item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
             item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
             item.setRateDiscount(cursor.getString(cursor.getColumnIndex(DatabaseHelper.RateDiscount)));
@@ -539,7 +543,7 @@ public class DBManager {
             item.setSoldBy(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SoldBy)));
             item.setAvailableForSale(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.AvailableForSale))));
             item.setHasoption(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(DatabaseHelper.hasoptions))));
-            item.sethassupplements(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(hasSupplements))));
+            item.sethassupplements(cursor.getString(cursor.getColumnIndex(hasSupplements)));
             item.setrelatedSupplement(cursor.getString(cursor.getColumnIndex(DatabaseHelper.relatedSupplements)));
             item.setSKU(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SKU)));
             item.setHascomment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.comment)));
@@ -565,7 +569,7 @@ public class DBManager {
     public Item getItemByBarcode(String barcode) {
         Item item = null;
         String[] columns = new String[]{
-                DatabaseHelper._ID,
+                _ID,
                 DatabaseHelper.Name,
                 DatabaseHelper.DESC,
                 DatabaseHelper.Price,
@@ -596,7 +600,7 @@ public class DBManager {
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             item = new Item();
-            item.setId((int) cursor.getLong(cursor.getColumnIndex(DatabaseHelper._ID)));
+            item.setId((int) cursor.getLong(cursor.getColumnIndex(_ID)));
             item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
             item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
 
@@ -642,7 +646,7 @@ public class DBManager {
         String vatValue = null;
         String[] columns = new String[]{DatabaseHelper.VAT}; // Specify the VAT column
 
-        String selection = DatabaseHelper._ID + " = ?";
+        String selection = _ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME, columns, selection, selectionArgs, null, null, null);
@@ -677,7 +681,7 @@ public class DBManager {
         contentValues.put(DEPARTMENT_CODE, deptCode);
 
 
-        database.update(DEPARTMENT_TABLE_NAME, contentValues, DatabaseHelper._ID + " = " + id, null);
+        database.update(DEPARTMENT_TABLE_NAME, contentValues, _ID + " = " + id, null);
         return true;
     }
 
@@ -714,7 +718,7 @@ public class DBManager {
     }
 
     public boolean deleteDept(long _id) {
-        String selection = DatabaseHelper._ID + "=?";
+        String selection = _ID + "=?";
         String[] selectionArgs = { String.valueOf(_id) };
         database.delete(DEPARTMENT_TABLE_NAME, selection, selectionArgs);
         return true;
@@ -730,7 +734,7 @@ public class DBManager {
     public Department getDepartmentById(String id) {
         Department department = null;
         String[] columns = new String[]{
-                DatabaseHelper._ID,
+                _ID,
                 DatabaseHelper.DEPARTMENT_ID,
                 DEPARTMENT_CODE,
                 DatabaseHelper.DEPARTMENT_NAME,
@@ -740,7 +744,7 @@ public class DBManager {
                 // Add other columns as needed
         };
 
-        String selection = DatabaseHelper._ID + " = ?";
+        String selection = _ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
@@ -799,7 +803,7 @@ public class DBManager {
         Department department = null;
         String[] columns = new String[]{
                 DEPARTMENT_CODE,
-                DatabaseHelper._ID,
+                _ID,
                 DatabaseHelper.DEPARTMENT_ID,
 
                 DatabaseHelper.DEPARTMENT_NAME,
@@ -857,7 +861,7 @@ public class DBManager {
     public SubDepartment getSubDepartmentById(String id) {
         SubDepartment Subdepartment = null;
         String[] columns = new String[]{
-                DatabaseHelper._ID,
+                _ID,
                 DatabaseHelper.SUBDEPARTMENT_ID,
                 DEPARTMENT_CODE,
                 DatabaseHelper.SUBDEPARTMENT_NAME,
@@ -867,7 +871,7 @@ public class DBManager {
                 // Add other columns as needed
         };
 
-        String selection = DatabaseHelper._ID + " = ?";
+        String selection = _ID + " = ?";
         String[] selectionArgs = new String[]{id};
 
         Cursor cursor = database.query(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, columns, selection, selectionArgs, null, null, null);
@@ -1196,21 +1200,21 @@ public class DBManager {
 
     public boolean deleteSubDept(long id) {
 
-        String selection = DatabaseHelper._ID + "=?";
+        String selection = _ID + "=?";
         String[] selectionArgs = { String.valueOf(id) };
         database.delete(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, selection, selectionArgs);
         return true;
     }
 
 
-    public boolean flagTransactionItemAsVoid(long itemId, String transactionId) {
+    public boolean flagTransactionItemAsVoid(String uniqueitemId, String transactionId) {
         // Define the values to update
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_STATUS, "Void");
 
         // Define the selection criteria
-        String selection = ITEM_ID + "=? AND " + TRANSACTION_ID + "=?";
-        String[] selectionArgs = { String.valueOf(itemId), transactionId };
+        String selection = _ID + "=? AND " + TRANSACTION_ID + "=?";
+        String[] selectionArgs = { uniqueitemId, transactionId };
 
         // Perform the update
         int rowsAffected = database.update(DatabaseHelper.TRANSACTION_TABLE_NAME, values, selection, selectionArgs);
@@ -1218,6 +1222,7 @@ public class DBManager {
         // Return true if at least one row was updated, false otherwise
         return rowsAffected > 0;
     }
+
 
 
     public void insertVendor(String vendorName, String lastModified, String userId, String vendCode, String phoneNumber, String street, String town, String postalCode, String email, String internalCode, String salesmen) {
@@ -1263,7 +1268,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.DEPARTMENT_CASHIER_ID, userId);
         contentValue.put(DEPARTMENT_CODE, deptCode);
         contentValue.put(DatabaseHelper.SUBDEPARTMENT_DEPARTMENT_ID, id);
-        database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, DatabaseHelper._ID + " = " + id, null);
+        database.update(DatabaseHelper.SUBDEPARTMENT_TABLE_NAME, contentValue, _ID + " = " + id, null);
         return true;
     }
 
@@ -1677,13 +1682,16 @@ public class DBManager {
         }
     }
 
-    public void updateItemWithBarcode(String barcode, String itemname, String desc, String price, String category, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String nature, String currency, String itemCode, String taxCode, String totalDiscount, double priceAfterDiscount) {
+    public void updateItemWithBarcode(String barcode, String itemname, String desc, String price, String category, float weight, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vAT, String availableForSale,String hascomment,String hasoption,String HasSupplement, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String nature, String currency, String itemCode, String taxCode, String totalDiscount, double priceAfterDiscount) {
 
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, itemname);
         contentValue.put(DatabaseHelper.DESC, desc);
         contentValue.put(DatabaseHelper.Price, price);
         contentValue.put(DatabaseHelper.Category, category);
+        contentValue.put(hasoptions, hasoption);
+        contentValue.put(hasSupplements, hasSupplements);
+        contentValue.put(DatabaseHelper.comment, hascomment);
         contentValue.put(DatabaseHelper.Barcode, barcode); // Use the existing barcode for updating
         contentValue.put(DatabaseHelper.Department, department);
         contentValue.put(DatabaseHelper.SubDepartment, subDepartment);

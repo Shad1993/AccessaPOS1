@@ -28,16 +28,17 @@ public class CategoryDBManager {
         dbHelper.close();
     }
 
-    public void insert(String CatName, String Color ) {
+    public void insert(String CatName, String Color,String printingstatus ) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(CategoryDatabaseHelper.CatName, CatName);
         contentValue.put(CategoryDatabaseHelper.Color, Color);
+        contentValue.put(CategoryDatabaseHelper.CAT_PRINTER_OPTION, printingstatus);
 
         database.insert(CategoryDatabaseHelper.TABLE_NAME, null, contentValue);
     }
 
     public Cursor fetch() {
-        String[] columns = new String[] { CategoryDatabaseHelper._ID, CategoryDatabaseHelper.CatName, CategoryDatabaseHelper.Color };
+        String[] columns = new String[] { CategoryDatabaseHelper._ID,CategoryDatabaseHelper.CAT_PRINTER_OPTION, CategoryDatabaseHelper.CatName, CategoryDatabaseHelper.Color };
         Cursor cursor = database.query(CategoryDatabaseHelper.TABLE_NAME, columns, null, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -45,11 +46,12 @@ public class CategoryDBManager {
         return cursor;
     }
 
-    public int update(long _id, String CatName,  String Color) {
+    public int update(long _id, String CatName,  String Color,String printingstatus) {
         ContentValues contentValues = new ContentValues();
 
         contentValues.put(CategoryDatabaseHelper.CatName, CatName);
         contentValues.put(CategoryDatabaseHelper.Color, Color);
+        contentValues.put(CategoryDatabaseHelper.CAT_PRINTER_OPTION, printingstatus);
 
 
         int i = database.update(CategoryDatabaseHelper.TABLE_NAME, contentValues, CategoryDatabaseHelper._ID + " = " + _id, null);
