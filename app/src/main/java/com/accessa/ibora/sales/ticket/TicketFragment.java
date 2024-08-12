@@ -159,9 +159,11 @@ public class TicketFragment extends Fragment implements Toolbar.OnMenuItemClickL
     EditText numberOfPeopleEditText;
         private   double CashReturnVal;
     private LinearLayout FooterLayout,validate; // Added
+    private View separationline;
 
-    private RecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView,SplittedItemsRecycleView;
     private TicketAdapter mAdapter;
+    private SplittedTicketAdapter mSplittedAdapter;
     private List<String> checkedItems;
     private SparseBooleanArray checkedState = new SparseBooleanArray();
 
@@ -859,8 +861,12 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                         Log.d("latesttransId", "latesttransId ID: " + latesttransId);
                         String transactionIdInProgress = latesttransId;
                         StringBuilder resultTextBuilder = new StringBuilder();
-                        mDatabaseHelper.getWritableDatabase().delete(
+                        ContentValues values1 = new ContentValues();
+                        values1.put(TRANSACTION_STATUS, "Splitted");
+
+                        int rowsAffected = mDatabaseHelper.getWritableDatabase().update(
                                 TRANSACTION_TABLE_NAME,
+                                values1,
                                 ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + TRANSACTION_ID + " = ?",
                                 new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
                         );
@@ -1046,24 +1052,29 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
             }
         });
 
-
+        separationline=view.findViewById(R.id.sep);
         mRecyclerView = view.findViewById(R.id.recycler_view);
+        SplittedItemsRecycleView=view.findViewById(R.id.splittedrecycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        SplittedItemsRecycleView.setLayoutManager(new LinearLayoutManager(getActivity()));
         emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         SharedPreferences sharedPreference = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreference.getString(TRANSACTION_ID_KEY, null);
-        Cursor cursor1;
+        Cursor cursor1,cursorsplitted;
 
             String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
             String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
             cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
 
 
 
         actualdate = mDatabaseHelper.getCurrentDate();
 
         mAdapter = new TicketAdapter(getActivity(), cursor1);
+        mSplittedAdapter=new SplittedTicketAdapter(getActivity(),cursorsplitted);
         mRecyclerView.setAdapter(mAdapter);
+        SplittedItemsRecycleView.setAdapter(mSplittedAdapter);
 
         dbManager = new DBManager(getContext());
         dbManager.open();
@@ -1118,12 +1129,13 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
         // Load the data based on the transaction ID
 
             Cursor cursor2 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
 
             mAdapter.swapCursor(cursor2);
+        mSplittedAdapter.swapCursor(cursorsplitted);
 
 
 
-        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
 
          emptyFrameLayout = view.findViewById(R.id.empty_frame_layout);
         if (mAdapter.getItemCount() <= 0) {
@@ -1131,6 +1143,13 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
             emptyFrameLayout.setVisibility(View.VISIBLE);
         } else {
             mRecyclerView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+        }
+        if (mSplittedAdapter.getItemCount() <= 0) {
+            SplittedItemsRecycleView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+        } else {
+            SplittedItemsRecycleView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
         }
 
@@ -2183,8 +2202,13 @@ if(Type.equals("DRN")) {
         }
         //   recreate(getActivity());
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
+
+        mSplittedAdapter.swapCursor(cursorsplitted);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
+        mSplittedAdapter.notifyDataSetChanged();
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
 
 
@@ -2222,8 +2246,14 @@ if(Type.equals("DRN")) {
      //   recreate(getActivity());
 
         Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
+
+        mSplittedAdapter.swapCursor(cursorsplitted);
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
+        mSplittedAdapter.notifyDataSetChanged();
+
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
 
 
@@ -2443,6 +2473,13 @@ Log.d("room and table", roomid+ " " +tableid);
 
 
         }
+
+
+        Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+
+
+        mSplittedAdapter.swapCursor(cursorsplitted);
+        mSplittedAdapter.notifyDataSetChanged();
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
 if(!movetobottom.equals("Notmovetobottom")){
@@ -2455,11 +2492,36 @@ if(!movetobottom.equals("Notmovetobottom")){
 
 
         // Show or hide the RecyclerView and empty view based on the cursor count
-        if (cursor != null && cursor.getCount() > 0) {
+        if (cursor != null && cursor.getCount() > 0 && (cursorsplitted == null || cursorsplitted.getCount() <= 0)) {
+            // Case 2: Only cursor has data, cursorsplitted is null or empty
+            Log.d("condition", "2");
             mRecyclerView.setVisibility(View.VISIBLE);
+            SplittedItemsRecycleView.setVisibility(View.GONE);
             emptyFrameLayout.setVisibility(View.GONE);
-        } else {
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor == null || cursor.getCount() <= 0 && cursorsplitted != null && cursorsplitted.getCount() > 0) {
+            // Case 3: Only cursorsplitted has data, cursor is null or empty
+            Log.d("condition", "3");
             mRecyclerView.setVisibility(View.GONE);
+            SplittedItemsRecycleView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor != null && cursor.getCount() > 0 && cursorsplitted != null && cursorsplitted.getCount() > 0) {
+            // Case 1: Both cursors have data
+            Log.d("condition", "1");
+            mRecyclerView.setVisibility(View.VISIBLE);
+            SplittedItemsRecycleView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+            separationline.setVisibility(View.VISIBLE);
+
+        } else {
+            // Default case: neither cursor has data
+            Log.d("condition", "4");
+            mRecyclerView.setVisibility(View.GONE);
+            SplittedItemsRecycleView.setVisibility(View.GONE);
+            separationline.setVisibility(View.GONE);
             emptyFrameLayout.setVisibility(View.VISIBLE);
         }
 
@@ -2545,9 +2607,10 @@ if(!movetobottom.equals("Notmovetobottom")){
         playSoundEffect();
     }
     public  void refreshDatatable(double totalAmount, double TaxtotalAmount,String roonum,String tableid) {
-        TicketAdapter adapter = (TicketAdapter) mRecyclerView.getAdapter();
-
+       TicketAdapter adapter = (TicketAdapter) mRecyclerView.getAdapter();
+        SplittedTicketAdapter sadapter= (SplittedTicketAdapter) SplittedItemsRecycleView.getAdapter();
         adapter.setCheckBoxVisibility(false);
+        sadapter.setCheckBoxVisibility(false);
         // Set the data to the fragment views
         TextView roomTextView = getView().findViewById(R.id.textViewRoom);
         roomTextView.setText("Room: " + roonum);
@@ -2564,7 +2627,11 @@ if(!movetobottom.equals("Notmovetobottom")){
             String latesttransId= mDatabaseHelper.getLatestTransactionId(roonum,tableid,statusType);
              cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,roonum,tableid);
 
+        Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(latesttransId,roonum,tableid);
 
+
+        mSplittedAdapter.swapCursor(cursorsplitted);
+        mSplittedAdapter.notifyDataSetChanged();
 
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
@@ -2574,17 +2641,44 @@ if(!movetobottom.equals("Notmovetobottom")){
         if (itemCount > 0) {
             mRecyclerView.smoothScrollToPosition(itemCount - 1);
         }
-
+        int itemCounts = mSplittedAdapter.getItemCount();
+        if (itemCounts > 0) {
+            SplittedItemsRecycleView.smoothScrollToPosition(itemCounts - 1);
+        }
         // Show or hide the RecyclerView and empty view based on the cursor count
-        if (cursor != null && cursor.getCount() > 0) {
+
+        if (cursor != null && cursor.getCount() > 0 && (cursorsplitted == null || cursorsplitted.getCount() <= 0)) {
+            // Case 2: Only cursor has data, cursorsplitted is null or empty
+            Log.d("condition", "2");
             mRecyclerView.setVisibility(View.VISIBLE);
+            SplittedItemsRecycleView.setVisibility(View.GONE);
             emptyFrameLayout.setVisibility(View.GONE);
-        } else {
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor == null || cursor.getCount() <= 0 && cursorsplitted != null && cursorsplitted.getCount() > 0) {
+            // Case 3: Only cursorsplitted has data, cursor is null or empty
+            Log.d("condition", "3");
             mRecyclerView.setVisibility(View.GONE);
+            SplittedItemsRecycleView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor != null && cursor.getCount() > 0 && cursorsplitted != null && cursorsplitted.getCount() > 0) {
+            // Case 1: Both cursors have data
+            Log.d("condition", "1");
+            mRecyclerView.setVisibility(View.VISIBLE);
+            SplittedItemsRecycleView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+            separationline.setVisibility(View.VISIBLE);
+
+        } else {
+            // Default case: neither cursor has data
+            Log.d("condition", "4");
+            mRecyclerView.setVisibility(View.GONE);
+            SplittedItemsRecycleView.setVisibility(View.GONE);
+            separationline.setVisibility(View.GONE);
             emptyFrameLayout.setVisibility(View.VISIBLE);
         }
-
-
 
 
         textViewVATs.setText(getString(R.string.tax) + " : Rs 0.00");

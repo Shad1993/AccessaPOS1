@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.ItemsReport.CatDataModel;
 import com.accessa.ibora.ItemsReport.DataModel;
+import com.accessa.ibora.ItemsReport.ItemSummary;
 import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.MainActivity;
@@ -196,7 +197,7 @@ public class PrintShiftReport extends AppCompatActivity {
                             SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
                             PosNum = shardPreference.getString(POSNumber, null);
                             String Till_id = readTextFromFile("till_num.txt");
-                            int actualshift=mDatabaseHelper.getCurrentShiftNumber();
+                            int actualshift=mDatabaseHelper.getactualShiftNumber();
                             int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
                             String numberofcovers = "Number Of covers: " + covernumber;
                             String lastshift = "******: "+"Shift Number: " + actualshift+"******";
@@ -294,7 +295,7 @@ public class PrintShiftReport extends AppCompatActivity {
                         for (CatDataModel item : CatDataList) {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
-                            int quantity= item.getQuantity();
+                            int quantity= item.getTotalQuantity();
 
                             Log.d("categorycode" , String.valueOf(categorycode));
                             Log.d("quantity" , String.valueOf(quantity));
@@ -388,11 +389,13 @@ public class PrintShiftReport extends AppCompatActivity {
                             double grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTCPerShift(cashierId,reportType, Integer.parseInt(shiftnumber));
                             double tax = grandTotal- amountWOVat;
                             String formattedTotalAmount = String.format("%.2f", grandTotal);
+                            String formattedTamountWOVat = String.format("%.2f", amountWOVat);
+                            String formattedtax = String.format("%.2f", tax);
                             String Total= "Total";
                             String TVA= getString(R.string.Vat);
                             String amountWoVat= "Amount W/0 VAT";
-                            String TotalValueWoVat= "Rs " + amountWOVat;
-                            String TotalVAT= "Rs " + tax;
+                            String TotalValueWoVat= "Rs " + formattedTamountWOVat;
+                            String TotalVAT= "Rs " + formattedtax;
                             String TotalValue= "Rs " + formattedTotalAmount;
                             String cashiorname= mDatabaseHelper.getCashierNameById(Integer.parseInt(cashierId)).toString();
                             String SellerName = "Seller Name: " + cashiorname;
@@ -763,7 +766,7 @@ public class PrintShiftReport extends AppCompatActivity {
     }
 
 
-    private List<DataModel> fetchDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
+    private  List<DataModel> fetchDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
         // Fetch data based on the selected report type and shift number
         return mDatabaseHelper.getDataBasedOnReportTypeAndShift(reportType, shiftNumber);
     }

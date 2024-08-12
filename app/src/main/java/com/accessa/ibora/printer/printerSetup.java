@@ -51,6 +51,7 @@ import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
+import com.accessa.ibora.sales.ticket.SplittedTicketAdapter;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
@@ -93,7 +94,7 @@ public class printerSetup extends AppCompatActivity {
     private String cashorlevel,ShopName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
-
+    private SplittedTicketAdapter mSplittedAdapter;
     private String    OpeningHours;
     private   String      TelNum,compTelNum,compFaxNum;
     private  String  FaxNum;
@@ -143,7 +144,9 @@ public class printerSetup extends AppCompatActivity {
 
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                    RecyclerView splittedrecyclerView = findViewById(R.id.splittedrecyclerView);
                     recyclerView.setLayoutManager(new LinearLayoutManager(printerSetup.this));
+                    splittedrecyclerView.setLayoutManager(new LinearLayoutManager(printerSetup.this));
 
 
                     try {
@@ -292,17 +295,25 @@ public class printerSetup extends AppCompatActivity {
                               //  String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
                               //  String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
                                 Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(transactionIdInProgress,String.valueOf(roomid), tableid);
+                                Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(transactionIdInProgress,roomid,tableid);
+
+
+
                                 adapter = new TicketAdapter(printerSetup.this, cursor1);
+                                mSplittedAdapter = new SplittedTicketAdapter(printerSetup.this, cursorsplitted);
                                 recyclerView.setAdapter(adapter);
+                                splittedrecyclerView.setAdapter(mSplittedAdapter);
 
 
 
                                 List<Transaction> item = adapter.getData();
 
+
                                 Log.d("room", roomid);
                                 Log.d("table", tableid);
                                 Log.d("trans11", item.toString());
-                                // Print the data from the RecyclerView
+
+
                                 for (Transaction items : item) {
                                     String itemName = items.getItemName();
                                     int itemQuantity = items.getItemQuantity();
@@ -327,13 +338,57 @@ public class printerSetup extends AppCompatActivity {
 
                                     // Create the formatted item line
 
-                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
 
+                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+                                    String ItemsInSplitBill = itemQuantity + " X " + formattedUnitPrice;
                                     // Create the formatted item price line
                                     String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
 
                                     service.printText(itemPriceLine + "\n" , null);
                                     service.printText(QuantityLine + "\n", null);
+                                } // Print the data from the RecyclerView
+                                if (cursorsplitted != null && cursorsplitted.moveToFirst()) {
+                                    List<Transaction> splitteditem = mSplittedAdapter.getData();
+                                    Log.d("trans12", splitteditem.toString());
+                                    service.printText(lineSeparator + "\n", null);
+                                    String itemsinsplbill=getString(R.string.itemsinsplitbil);
+                                    String styleitem="*** " +itemsinsplbill + "  ***";
+                                    service.setAlignment(1, null);
+                                    service.printText(styleitem + "\n", null);
+                                    service.setAlignment(0, null);
+                                    for (Transaction items : splitteditem) {
+                                        String itemName = items.getItemName();
+                                        int itemQuantity = items.getItemQuantity();
+                                        int itemid = items.getitem_id();
+                                        String itemprice = "Rs " + String.format("%.2f", items.getItemPrice());
+                                        double totalprice = items.getItemPrice();
+                                        double unitprice = totalprice / itemQuantity;
+                                        // Calculate the padding for the item name
+                                        int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
+
+                                        Log.e("splittype", splittype);
+                                        // Inside the for loop where you print the data from the RecyclerView
+                                        // Inside the for loop where you print the data from the RecyclerView
+                                        String newid = String.valueOf(items.getId());
+                                        Log.e("newid1", String.valueOf(itemid));
+                                        Log.e("itemName", itemName);
+                                        double currentprice = mDatabaseHelper.getItemPrice(String.valueOf(itemid));
+                                        Log.e("currentprice1", String.valueOf(currentprice));
+                                        double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
+                                        String formattedUnitPrice = "Rs " + String.format("%.2f", unitprice);
+
+
+                                        // Create the formatted item line
+
+                                        String QuantityLine = itemQuantity + " X " + formattedUnitPrice;
+
+                                        // Create the formatted item price line
+                                        String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
+
+                                        service.printText(itemPriceLine + "\n", null);
+                                        service.printText(QuantityLine + "\n", null);
+                                    }
+                                    //service.printText(lineSeparator + "\n", null);
                                 }
                             }else{
 
@@ -886,7 +941,8 @@ public class printerSetup extends AppCompatActivity {
             Log.d("isprf", String.valueOf(isprf));
 
 
-
+            mDatabaseHelper.updateSettlementInvoiceId(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
+            mDatabaseHelper.updateCashReportTransactionId(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             // Update the transaction ID in the transaction table for transactions with status "InProgress"
             mDatabaseHelper.updateTransactionTransactionIdInProgress(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             // Update the transaction ID in the header table for transactions with status "InProgress"

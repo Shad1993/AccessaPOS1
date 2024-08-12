@@ -21,6 +21,8 @@ import static com.accessa.ibora.product.items.DatabaseHelper.Image;
 import static com.accessa.ibora.product.items.DatabaseHelper.ItemCode;
 import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
 import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
+import static com.accessa.ibora.product.items.DatabaseHelper.MERGED;
+import static com.accessa.ibora.product.items.DatabaseHelper.MERGED_SET_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.Name;
 import static com.accessa.ibora.product.items.DatabaseHelper.Nature;
 import static com.accessa.ibora.product.items.DatabaseHelper.Price;
@@ -30,18 +32,28 @@ import static com.accessa.ibora.product.items.DatabaseHelper.Price3;
 import static com.accessa.ibora.product.items.DatabaseHelper.Price3AfterDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.PriceAfterDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.Quantity;
+import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.RateDiscount;
+import static com.accessa.ibora.product.items.DatabaseHelper.SEAT_COUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.SKU;
+import static com.accessa.ibora.product.items.DatabaseHelper.STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.ShopNum;
 import static com.accessa.ibora.product.items.DatabaseHelper.SoldBy;
 import static com.accessa.ibora.product.items.DatabaseHelper.SubDepartment;
 import static com.accessa.ibora.product.items.DatabaseHelper.SyncStatus;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_COUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.TaxCode;
+import static com.accessa.ibora.product.items.DatabaseHelper.TillNum;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount2;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount3;
 import static com.accessa.ibora.product.items.DatabaseHelper.UserId;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 import static com.accessa.ibora.product.items.DatabaseHelper.Variant;
+import static com.accessa.ibora.product.items.DatabaseHelper.WAITER_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.Weight;
 import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.comment;
@@ -127,13 +139,84 @@ public class Syncforold extends IntentService {
     private void performBidirectionalSync(Connection conn) {
         try {
             // Step 1: Fetch data from the local SQLite database
-            mDatabaseHelper = new DatabaseHelper(this);
-            Cursor localCursor = mDatabaseHelper.getAllItems();
-
+           // mDatabaseHelper = new DatabaseHelper(this);
+          //  Cursor localCursor = mDatabaseHelper.getAllItems();
+            getRoomsAndTablesFromMssql(conn);
             getItemsFromMssql(conn);
 
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
+        }
+    }
+
+    private void getRoomsAndTablesFromMssql(Connection conn) {
+        try {
+            String selectQuery = "SELECT COUNT(*) as totalrooms FROM rooms";
+            Statement statement = conn.createStatement();
+            DBManager dbManager = new DBManager(this);
+            dbManager.open();
+            DatabaseHelper databaseHelper = new DatabaseHelper(this);
+
+            ResultSet resultSets = null;
+            ResultSet resultSet = statement.executeQuery(selectQuery);
+            if (resultSet.next()) {
+                int totalItems = resultSet.getInt("totalrooms");
+                if (totalItems > 0) {
+                    showToast("Total Rooms in MSSQL database: " + totalItems);
+                    // Execute your SQL query
+
+                    String tablesQuery = "SELECT * FROM tables ";
+                    PreparedStatement tablestatement = conn.prepareStatement(tablesQuery);
+
+                    ResultSet tablesResultSet = tablestatement.executeQuery();
+                    Log.d("tablesQuery", tablesQuery);
+                    while (tablesResultSet.next()) {
+                        // Retrieve data from the users table
+                        int tableId = tablesResultSet.getInt(TABLE_ID);
+                        int roomId = tablesResultSet.getInt(ROOM_ID);
+                        int TableNumber = tablesResultSet.getInt(TABLE_NUMBER);
+                        int seatCount = tablesResultSet.getInt(SEAT_COUNT);
+                        String waiterName = tablesResultSet.getString(WAITER_NAME);
+                        String status = tablesResultSet.getString(STATUS);
+                        String merged = tablesResultSet.getString(MERGED);
+                        String mergeSetid = tablesResultSet.getString(MERGED_SET_ID);
+                        int RoomNum = tablesResultSet.getInt("RoomNum");
+                        int TableNum = tablesResultSet.getInt("TillNum");
+                        // Call the method to insert this data into your target table
+                        // Modify the method as needed to accept these parameters
+                        databaseHelper.inserttablesDatas(tableId, roomId, TableNumber, seatCount, waiterName, status, merged, mergeSetid,RoomNum,TableNum);
+                    }
+
+                    String query = "SELECT * FROM rooms";
+                    resultSets = statement.executeQuery(query);
+                    Log.d("rooms", query);
+                    while (resultSets.next()) {
+                        // Process each row of data here
+                        int _id= resultSets.getInt(_ID);
+                        String roomname = resultSets.getString(ROOM_NAME);
+                        String tablecount = resultSets.getString(TABLE_COUNT);
+                        int RoomNum = tablesResultSet.getInt("RoomNum");
+                        int TableNum = tablesResultSet.getInt("TillNum");
+
+                        databaseHelper.insertroomsDatas(_id,roomname, tablecount,RoomNum,TableNum);
+
+                        // Redirect to the Product activity
+                        Intent intent = new Intent(Syncforold.this, Product.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
+
+                } else {
+                    showToast("No items found in MSSQL database.");
+                }
+            }
+            resultSets.close();
+            statement.close();
+            dbManager.close();
+        } catch (SQLException se) {
+            Log.e("ItemsREMOTE_DATA_TEST_ERROR", se.getMessage());
+        } catch (Exception e) {
+            Log.e("ItemsREMOTE_DATA_TEST_ERROR", e.getMessage());
         }
     }
     private void getItemsFromMssql(Connection conn) {
@@ -238,11 +321,13 @@ public class Syncforold extends IntentService {
                         String HasSupplements = resultSets.getString(hasSupplements);
                         //relatedSupplements
                         String RelatedSupplements = resultSets.getString(relatedSupplements);
+                        int ShopNums = resultSets.getInt(ShopNum);
+                        int TillNums = resultSets.getInt(TillNum);
 
                         Log.e("Hasoptions",Hasoptions);
                         Log.e("Related_item",Related_item);
 
-                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
+                        databaseHelper.insertItemsDatas(_id,ShopNums,TillNums,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
                                 subDepartment, longDescription, quantity, expiryDate, vAT,
                                 availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);

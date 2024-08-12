@@ -234,15 +234,40 @@
                     android:background="@color/black" />
 
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view"
+                <!-- RecyclerViews and Separator Line -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="10dp"
                     android:layout_weight="1"
-                    android:divider="@null"
-                    android:dividerHeight="0dp" />
+                    android:orientation="vertical">
+
+                    <!-- First RecyclerView - 30% of the height -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/splittedrecycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:padding="0dp"
+                        android:layout_margin="0dp" />
+
+                    <!-- Separator Line -->
+                    <View
+                        android:id="@+id/sep"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/BleuAccessaText" />
+
+                    <!-- Second RecyclerView - 50% of the height -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="3"
+                        android:padding="0dp"
+                        android:layout_margin="0dp" />
+
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"

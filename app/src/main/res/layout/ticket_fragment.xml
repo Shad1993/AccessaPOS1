@@ -1,284 +1,279 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:screenOrientation="portrait"
-    android:background="@color/textviewextColor"
-    android:orientation="vertical">
+    android:background="@color/textviewextColor">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/topAppBar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/Tickets"
-            android:background="@color/BleuAccessaText"
-            app:titleTextColor="@color/white"
-
-            >
-        </com.google.android.material.appbar.MaterialToolbar>
-    </com.google.android.material.appbar.AppBarLayout>
+    <!-- Main content layout -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp">
-
-        <!-- Room Icon -->
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:src="@drawable/room"
-            android:tint="@color/BleuAccessaText" />
-
-        <!-- Room Number -->
-        <TextView
-            android:id="@+id/textViewRoom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Room: "
-            android:textSize="9sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-
-
-        <!-- Table Icon -->
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:src="@drawable/tableimg"
-            android:tint="@color/BleuAccessaText" />
-
-        <!-- Table Number -->
-        <TextView
-            android:id="@+id/textViewTable"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" - Table: "
-            android:textSize="9sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-
-
-
-        <!-- Cashier Icon -->
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:src="@drawable/cashier"
-            android:tint="@color/BleuAccessaText" />
-
-        <!-- Cashier Name -->
-        <TextView
-            android:id="@+id/textViewCashier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" - Cashier: "
-            android:textSize="9sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-
-
-
-    </LinearLayout>
-
-    <!-- Product List -->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@null"
-        android:dividerHeight="0dp" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        >
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/checkboxfab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:visibility="gone"
-            android:src="@drawable/baseline_radio_button_unchecked_24"
-            app:tint="@android:color/white"
-            app:backgroundTint="@color/BleuAccessaText"
-            app:fabSize="normal" />
-    <!-- Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/baseline_add_24"
-       app:tint="@android:color/white"
-        app:backgroundTint="@color/BleuAccessaText"
-        app:fabSize="normal" />
-
-    </LinearLayout>
-    <FrameLayout
-        android:id="@+id/empty_frame_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true"
-        android:visibility="visible"
-        android:gravity="center">
+        android:orientation="vertical">
 
+        <!-- App Bar -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/topAppBar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:title="@string/Tickets"
+                android:background="@color/BleuAccessaText"
+                app:titleTextColor="@color/white"/>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- Room, Table, and Cashier Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <!-- Room Icon -->
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/room"
+                android:tint="@color/BleuAccessaText" />
+
+            <!-- Room Number -->
+            <TextView
+                android:id="@+id/textViewRoom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Room: "
+                android:textSize="9sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
+
+            <!-- Table Icon -->
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/tableimg"
+                android:tint="@color/BleuAccessaText" />
+
+            <!-- Table Number -->
+            <TextView
+                android:id="@+id/textViewTable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" - Table: "
+                android:textSize="9sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
+
+            <!-- Cashier Icon -->
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/cashier"
+                android:tint="@color/BleuAccessaText" />
+
+            <!-- Cashier Name -->
+            <TextView
+                android:id="@+id/textViewCashier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" - Cashier: "
+                android:textSize="9sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- RecyclerViews and Separator Line -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- First RecyclerView - 30% of the height -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/splittedrecycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="0dp"
+                android:layout_margin="0dp" />
+
+            <!-- Separator Line -->
+            <View
+                android:id="@+id/sep"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/BleuAccessaText" />
+
+            <!-- Second RecyclerView - 50% of the height -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="3"
+                android:padding="0dp"
+                android:layout_margin="0dp" />
+
+        </LinearLayout>
+        <FrameLayout
+            android:id="@+id/empty_frame_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:visibility="visible"
+            android:gravity="center">
+
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+
+                android:layout_gravity="bottom"
+                android:background="@color/BleuAccessaText"
+                android:orientation="vertical">
+                <!-- Separator Line -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/white" />
+
+                <!-- VAT -->
+                <TextView
+                    android:id="@+id/textViewVATs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tax"
+                    android:textSize="15sp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+
+                <!-- Separator Line -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/white" />
+
+                <!-- Total -->
+                <TextView
+                    android:id="@+id/textViewTotals"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/Total"
+                    android:textSize="15sp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:layout_gravity="bottom"
-            android:background="@color/BleuAccessaText"
-            android:orientation="vertical">
+            android:layout_marginBottom="70dp"
+            android:orientation="vertical"
+            android:background="@color/textviewextColor"
+            >
             <!-- Separator Line -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/white" />
-
+                android:background="@color/BleuAccessaText" />
             <!-- VAT -->
             <TextView
-                android:id="@+id/textViewVATs"
+                android:id="@+id/textViewVAT"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/tax"
-                android:textSize="15sp"
-                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textColor="@color/BleuAccessaText"
                 android:textStyle="bold" />
-
             <!-- Separator Line -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/white" />
-
+                android:background="@color/BleuAccessaText" />
             <!-- Total -->
             <TextView
-                android:id="@+id/textViewTotals"
+                android:id="@+id/textViewTotal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/Total"
-                android:textSize="15sp"
-                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textColor="@color/BleuAccessaText"
                 android:textStyle="bold" />
 
+            <!-- Total paid -->
+            <TextView
+                android:id="@+id/textViewpaymentname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:text="@string/PaymentMethods"
+                android:textSize="15sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
+            <!-- Separator Line -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/BleuAccessaText" />
+            <!-- SUBTotal -->
+            <TextView
+                android:id="@+id/textViewSubtotal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/SUBTOTAL"
+                android:visibility="gone"
+                android:textSize="15sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
+
+            <!-- Cash Return -->
+            <TextView
+                android:id="@+id/textViewCashReturn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/cashReturn"
+                android:visibility="gone"
+                android:textSize="15sp"
+                android:textColor="@color/BleuAccessaText"
+                android:textStyle="bold" />
         </LinearLayout>
 
-    </FrameLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:orientation="vertical"
-        android:background="@color/textviewextColor"
-        >
-        <!-- Separator Line -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/BleuAccessaText" />
-        <!-- VAT -->
-        <TextView
-            android:id="@+id/textViewVAT"
+        <!-- Validate Button -->
+        <LinearLayout
+            android:id="@+id/val_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/tax"
-            android:textSize="18sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-        <!-- Separator Line -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/BleuAccessaText" />
-        <!-- Total -->
-        <TextView
-            android:id="@+id/textViewTotal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/Total"
-            android:textSize="18sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-
-        <!-- Total paid -->
-        <TextView
-            android:id="@+id/textViewpaymentname"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:padding="16dp"
             android:visibility="gone"
-            android:text="@string/PaymentMethods"
-            android:textSize="15sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-        <!-- Separator Line -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/BleuAccessaText" />
-        <!-- SUBTotal -->
-        <TextView
-            android:id="@+id/textViewSubtotal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/SUBTOTAL"
-            android:visibility="gone"
-            android:textSize="15sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-
-        <!-- Cash Return -->
-        <TextView
-            android:id="@+id/textViewCashReturn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/cashReturn"
-            android:visibility="gone"
-            android:textSize="15sp"
-            android:textColor="@color/BleuAccessaText"
-            android:textStyle="bold" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/val_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:visibility="gone"
-        android:background="@color/white"
-        android:gravity="center">
-
-
-    <!-- validate Button -->
+            android:background="@color/white"
+            android:gravity="center">
 
             <Button
                 android:id="@+id/ValidateTicket"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/ValTicket"
-                android:padding="16dp"
-               />
+                android:padding="16dp"/>
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -286,12 +281,12 @@
     <LinearLayout
         android:id="@+id/footer_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:padding="16dp"
         android:background="@color/white"
-        >
+        android:layout_gravity="bottom">
 
-        <!-- save Button -->
+        <!-- Save Button -->
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -300,25 +295,18 @@
                 android:id="@+id/saveTicket"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Save"
-                android:padding="16dp"
-                android:layout_centerInParent="true"/>
+                android:layout_centerInParent="true"
+                android:padding="1dp"
+                android:text="@string/Save" />
+        </RelativeLayout>
 
-        <!-- <ImageView
-          android:layout_width="24dp"
-          android:layout_height="24dp"
-          android:layout_centerInParent="true"
-          android:src="@drawable/receiptwhite" />
--->
-  </RelativeLayout>
+        <!-- Checkout Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end">
 
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:gravity="end"
-      >
-  <!-- Checkout Button -->
-             <RelativeLayout
+            <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
@@ -326,22 +314,56 @@
                     android:id="@+id/buttonCheckout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/Checkout"
-                    android:padding="16dp"
-                    android:layout_centerInParent="true"/>
+                    android:layout_centerInParent="true"
+                    android:padding="1dp"
+                    android:text="@string/Checkout" />
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
 
-                 <!--  <ImageView
-                       android:layout_width="24dp"
-                   android:layout_height="24dp"
-                   android:layout_centerInParent="true"
-                   android:src="@drawable/cartwhite" />
-                   -->
+    <!-- Floating Action Buttons -->
+    <FrameLayout
+        android:layout_marginBottom="90dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-               </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-           </LinearLayout>
+            <!-- Floating Action Button 1 -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/checkboxfab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="80dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                android:src="@drawable/baseline_radio_button_unchecked_24"
+                app:tint="@android:color/white"
+                app:backgroundTint="@color/BleuAccessaText"
+                app:fabSize="normal" />
 
-       </LinearLayout>
+            <!-- Floating Action Button 2 -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="16dp"
+                android:layout_toStartOf="@id/checkboxfab"
+                android:layout_marginBottom="16dp"
+                android:visibility="visible"
+                android:src="@drawable/baseline_add_24"
+                app:tint="@android:color/white"
+                app:backgroundTint="@color/BleuAccessaText"
+                app:fabSize="normal" />
 
+        </RelativeLayout>
 
-   </LinearLayout>
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

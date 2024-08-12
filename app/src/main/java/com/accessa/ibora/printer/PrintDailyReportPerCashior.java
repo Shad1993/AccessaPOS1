@@ -297,7 +297,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         for (CatDataModel item : CatDataList) {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
-                            int quantity= item.getQuantity();
+                            int quantity= item.getTotalQuantity();
 
                             Log.d("categorycode" , String.valueOf(categorycode));
                             Log.d("quantity" , String.valueOf(quantity));

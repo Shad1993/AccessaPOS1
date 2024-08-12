@@ -285,6 +285,8 @@ private  EditText searchEditText;
                 mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
                 mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
                 mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+                mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
                // dbManager.deleteItemsWithSyncStatusNotOffline();
                 String androidVersion = DeviceInfo.getAndroidVersion();
                 Log.d("DeviceInfo", "Android Version: " + androidVersion);

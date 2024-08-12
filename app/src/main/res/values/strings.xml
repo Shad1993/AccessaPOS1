@@ -537,6 +537,7 @@
     <string name="categorynotprinted">This Category will not be Printed</string>
     <string name="choix">Choose an Option</string>
     <string name="choixsup">Choose a supplement</string>
+    <string name="itemsinsplitbil">Item In Split Bill.</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

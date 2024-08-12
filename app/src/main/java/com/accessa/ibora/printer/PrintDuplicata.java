@@ -45,6 +45,7 @@ import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
+import com.accessa.ibora.sales.ticket.SplittedTicketAdapter;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
@@ -80,6 +81,7 @@ public class PrintDuplicata extends AppCompatActivity {
     private String cashorlevel,ShopName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
+    private SplittedTicketAdapter SplittedAdapter;
 
     private String    OpeningHours;
     private   String      TelNum,compTelNum,compFaxNum,TransactionTypename;
@@ -113,13 +115,20 @@ public class PrintDuplicata extends AppCompatActivity {
                     // Set up the RecyclerView
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
                     recyclerView.setLayoutManager(new LinearLayoutManager(PrintDuplicata.this));
-                    Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsByType(TransactionType,transactionIdInProgress);
+                    RecyclerView splittedrecyclerView = findViewById(R.id.splittedrecyclerView);
+                    splittedrecyclerView.setLayoutManager(new LinearLayoutManager(PrintDuplicata.this));
+                    Cursor cursor1 = mDatabaseHelper.getValidTransactionsByType(TransactionType,transactionIdInProgress);
+
+                    Cursor cursorsplitted= mDatabaseHelper.getSplittedTransactionsByType(TransactionType,transactionIdInProgress);
+
                     adapter = new TicketAdapter(PrintDuplicata.this, cursor1);
+                    SplittedAdapter= new SplittedTicketAdapter(PrintDuplicata.this, cursorsplitted);
                     recyclerView.setAdapter(adapter);
+                    splittedrecyclerView.setAdapter(SplittedAdapter);
 
                     // Get the data from the adapter
                     List<Transaction> item = adapter.getData();
-
+                    List<Transaction> splitteditem = SplittedAdapter.getData();
 
                     try {
 
@@ -242,6 +251,7 @@ public class PrintDuplicata extends AppCompatActivity {
 
                             }
                             Cursor itemCursor = mDatabaseHelper.getUserById(Integer.parseInt(cashierCode));
+
                             if (itemCursor != null && itemCursor.moveToFirst()) {
                                 int cashiernameindex = itemCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME);
                                 int cashieridindex = itemCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id);
@@ -310,6 +320,47 @@ public class PrintDuplicata extends AppCompatActivity {
 
                             service.printText(itemPriceLine + "\n" , null);
                             service.printText(QuantityLine + "\n", null);
+                        } if (cursorsplitted != null && cursorsplitted.moveToFirst()) {
+
+                            Log.d("trans12", splitteditem.toString());
+                            service.printText(lineSeparator + "\n", null);
+                            String itemsinsplbill = getString(R.string.itemsinsplitbil);
+                            String styleitem = "*** " + itemsinsplbill + "  ***";
+                            service.setAlignment(1, null);
+                            service.printText(styleitem + "\n", null);
+                            service.setAlignment(0, null);
+                            for (Transaction items : splitteditem) {
+                                String itemName = items.getItemName();
+                                int itemQuantity = items.getItemQuantity();
+                                int itemid = items.getitem_id();
+                                String itemprice = "Rs " + String.format("%.2f", items.getItemPrice());
+                                double totalprice = items.getItemPrice();
+                                double unitprice = totalprice / itemQuantity;
+                                // Calculate the padding for the item name
+                                int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
+
+
+                                // Inside the for loop where you print the data from the RecyclerView
+                                // Inside the for loop where you print the data from the RecyclerView
+                                String newid = String.valueOf(items.getId());
+                                Log.e("newid1", String.valueOf(itemid));
+                                Log.e("itemName", itemName);
+                                double currentprice = mDatabaseHelper.getItemPrice(String.valueOf(itemid));
+                                Log.e("currentprice1", String.valueOf(currentprice));
+                                double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
+                                String formattedUnitPrice = "Rs " + String.format("%.2f", unitprice);
+
+
+                                // Create the formatted item line
+
+                                String QuantityLine = itemQuantity + " X " + formattedUnitPrice;
+
+                                // Create the formatted item price line
+                                String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
+
+                                service.printText(itemPriceLine + "\n", null);
+                                service.printText(QuantityLine + "\n", null);
+                            }
                         }
                         // Print a line separator
 

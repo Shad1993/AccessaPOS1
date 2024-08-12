@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,9 +41,11 @@ import com.google.zxing.qrcode.QRCodeWriter;
 public class ReceiptBodyFragment extends Fragment {
 
     private boolean doubleBackToExitPressedOnce = false;
-    private RecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView,mSplittedRecyclerView;
     private CompletedTransactionsAdapter mAdapter;
+    private CompletedSplittedTransactionsAdapter mSplittedAdapter;
     private DatabaseHelper mDatabaseHelper;
+    private View separationline;
     private String cashierName,cashierId;
     private String cashorlevel,ShopName,LogoPath;
     private double totalAmount,TaxtotalAmount;
@@ -76,8 +79,10 @@ public class ReceiptBodyFragment extends Fragment {
 
 
         mRecyclerView = view.findViewById(R.id.recycler_view);
+        separationline=view.findViewById(R.id.sep);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
+        mSplittedRecyclerView = view.findViewById(R.id.splittedrecycler_view);
+        mSplittedRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Set the transaction details to TextViews or any other views in your layout
         TextView transactionIdTextView = view.findViewById(R.id.transaction_id_text_view);
@@ -397,10 +402,43 @@ if(!TransactionType.equals("InProgress") ) {
         }
 
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor2 = mDatabaseHelper.getAllTransactions(transactionId);
+        Cursor cursor2 = mDatabaseHelper.getValidTransactions(transactionId);
+        Cursor cursor3 = mDatabaseHelper.getSplittedTransactions(transactionId);
         mAdapter = new CompletedTransactionsAdapter(getContext(), cursor2);
+        mSplittedAdapter=new CompletedSplittedTransactionsAdapter(getContext(),cursor3);
         mRecyclerView.setAdapter(mAdapter);
+        mSplittedRecyclerView.setAdapter(mSplittedAdapter);
+        // Show or hide the RecyclerView and empty view based on the cursor count
+        if (cursor2 != null && cursor2.getCount() > 0 && (cursor3 == null || cursor3.getCount() <= 0)) {
+            // Case 2: Only cursor has data, cursorsplitted is null or empty
+            Log.d("condition", "2");
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mSplittedRecyclerView.setVisibility(View.GONE);
 
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor2 == null || cursor2.getCount() <= 0 && cursor3 != null && cursor3.getCount() > 0) {
+            // Case 3: Only cursorsplitted has data, cursor is null or empty
+            Log.d("condition", "3");
+            mRecyclerView.setVisibility(View.GONE);
+            mSplittedRecyclerView.setVisibility(View.VISIBLE);
+            separationline.setVisibility(View.GONE);
+
+        } else if (cursor2 != null && cursor2.getCount() > 0 && cursor3 != null && cursor3.getCount() > 0) {
+            // Case 1: Both cursors have data
+            Log.d("condition", "1");
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mSplittedRecyclerView.setVisibility(View.VISIBLE);
+
+            separationline.setVisibility(View.VISIBLE);
+
+        } else {
+            // Default case: neither cursor has data
+            Log.d("condition", "4");
+            mRecyclerView.setVisibility(View.GONE);
+            mSplittedRecyclerView.setVisibility(View.GONE);
+            separationline.setVisibility(View.GONE);
+        }
         return view;
     }
 
@@ -415,29 +453,7 @@ if(!TransactionType.equals("InProgress") ) {
     }
 
     // Function to generate QR code
-    private Bitmap generateQRCode(String content, int width, int height) {
-        try {
-            QRCodeWriter writer = new QRCodeWriter();
-            BitMatrix bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height);
-            int matrixWidth = bitMatrix.getWidth();
-            int matrixHeight = bitMatrix.getHeight();
-            int[] pixels = new int[matrixWidth * matrixHeight];
 
-            for (int y = 0; y < matrixHeight; y++) {
-                for (int x = 0; x < matrixWidth; x++) {
-                    pixels[y * matrixWidth + x] = bitMatrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF;
-                }
-            }
-
-            Bitmap bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
-            bitmap.setPixels(pixels, 0, matrixWidth, 0, 0, matrixWidth, matrixHeight);
-
-            return bitmap;
-        } catch (WriterException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     // set text
     public void setText(String item) {

@@ -6,6 +6,7 @@ public class CatDataModel {
     private String Categorycode;
     private double totalPrice;
     private int quantity;
+    private String famille;
 
     public CatDataModel(String Categorycode, double totalPrice, int quantity) {
         this.Categorycode = Categorycode;
@@ -20,9 +21,18 @@ public class CatDataModel {
     public double getTotalPrice() {
         return totalPrice;
     }
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
 
-    public int getQuantity() {
+
+
+    public void setTotalQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+    public int getTotalQuantity() {
         return quantity;
     }
+    public String getFamilleName(){return famille;}
 }
 

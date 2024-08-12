@@ -10,6 +10,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
@@ -208,11 +209,16 @@ public class splitbill extends Dialog {
 
                 String transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid), tableid);
                 StringBuilder resultTextBuilder = new StringBuilder();
-                mDatabaseHelper.getWritableDatabase().delete(
+                ContentValues values1 = new ContentValues();
+                values1.put(TRANSACTION_STATUS, "Splitted");
+
+                int rowsAffected = mDatabaseHelper.getWritableDatabase().update(
                         TRANSACTION_TABLE_NAME,
+                        values1,
                         ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + TRANSACTION_ID + " = ?",
                         new String[]{String.valueOf(roomid), tableid, transactionIdInProgress}
                 );
+
                 for (int i = 0; i < numberOfPeople; i++) {
 
                     // Insert new records

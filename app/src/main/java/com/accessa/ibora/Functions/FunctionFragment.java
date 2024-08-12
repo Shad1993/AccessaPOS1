@@ -54,6 +54,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.ItemsReport.DataModel;
+import com.accessa.ibora.ItemsReport.ItemSummary;
 import com.accessa.ibora.ItemsReport.PaymentMethodAdapter;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.ItemsReport.SalesReportAdapter;
@@ -384,10 +385,11 @@ public class FunctionFragment extends Fragment {
                         }else {
 
                             mDatabaseHelper.setShiftNumberInHeader();
-                            int actualshift=mDatabaseHelper.getCurrentShiftNumber();
+                            int actualshift=mDatabaseHelper.getactualShiftNumber();
                             mDatabaseHelper.setShiftNumberInFinancialTable(actualshift);
                             mDatabaseHelper.setShiftNumberInCountingReportTable(actualshift);
                             mDatabaseHelper.setShiftNumberInCashReportTable(actualshift);
+
                             // Start the CloseShiftReport activity
                             Intent intent = new Intent(getContext(), CloseShiftReport.class);
                             intent.putExtra("reportType", "Daily");
