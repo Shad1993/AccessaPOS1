@@ -84,12 +84,18 @@ String tableid;
         }
 
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_ID));
-
+        String status = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.STATUS));
+        String seat = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SEAT_COUNT));
         String tablenum = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
+        String covernumber = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.CoverCount));
        String roomid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ROOM_ID));
         String mergedtableId = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.MERGED_SET_ID));
+        if(covernumber== null){
 
+            covernumber="0";
+        }
         holder.idTextView.setText(id);
+
        // holder.nameTextView.setText("Table " + name);
         holder.Table.setText(tablenum);
         holder.room.setText(roomid);
@@ -140,13 +146,6 @@ String tableid;
             int roomid1 = preferences.getInt("roomnum", 0);
             String tableid1 = preferences.getString("table_id", "0");
 
-
-
-            Log.d("prfRoomId", inProgressRoomId+ " " +inProgressTableId  );
-            Log.d("inProgressTableId", inProgressTableId  );
-            Log.d("tableid1", tableid1  );
-            Log.d("currentRoomId1", currentTableId1  );
-            Log.d("mergedtableId", mergedtableId );
             if (currentRoomId.equals(inProgressRoomId) && tableid1.equals(currentTableId1)) {
                 // The current table is in progress
                 isselectedaftermerged = true;
@@ -177,20 +176,28 @@ String tableid;
 // Check if this item's table ID matches the selected table ID
         // Check if this item's table ID matches the selected table ID
 
-
-        if (id.equals(selectedTableId) || isselectedaftermerged ) {
+        if (status.equals("reserved")) {
+            // This item is selected, set a different button color
+            holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.lightSkyBlue));
+            holder.nameTextView.setText("Reserved/T " + tablenum);
+        }
+        else if (id.equals(selectedTableId) || isselectedaftermerged ) {
             // This item is selected, set a different button color
             holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
+            holder.nameTextView.setText("T " + tablenum  +" S "+ covernumber +"/" + seat);
         } else {
             if (isCurrentTablePRF) {
                 // The current table has a status of "PRF"
                 holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.red));
+                holder.nameTextView.setText("T " + tablenum  +" S "+ covernumber +"/" + seat);
             } else if (isCurrentTableInProgress) {
                 // The current table is in progress
                 holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.yellow));
+                holder.nameTextView.setText("T " + tablenum  +" S "+ covernumber +"/" + seat);
             } else {
                 // The current table does not have a status of "PRF" or "InProgress"
                 holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.green));
+                holder.nameTextView.setText("T " + tablenum  +" S "+ covernumber +"/" + seat);
             }
         }
 

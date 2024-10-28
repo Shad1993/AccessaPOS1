@@ -12,7 +12,7 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:scaleType="fitXY"
-        android:src="@drawable/cashier" />
+        android:src="@drawable/usericon" />
     <TextView
         android:id="@+id/id_text_view"
         android:layout_width="wrap_content"

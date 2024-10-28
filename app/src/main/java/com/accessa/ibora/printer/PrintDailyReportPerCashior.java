@@ -72,7 +72,8 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
     private DBManager dbManager;
-
+    private boolean printable ;
+    private String printerpartname ;
    private String localeString ;
     private String reportType ;
     private int Cashior;
@@ -104,6 +105,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
 
 
                     try {
+                        List<PrinterSetupPrefs> printerSetups = mDatabaseHelper.getPrinterSetups(getApplicationContext());
 
                         dbManager = new DBManager(getApplicationContext());
                         dbManager.open();
@@ -130,10 +132,16 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                             compFaxNum = company.getCompFax();
 
                             LogoPath = company.getImage();
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
+                                if( printerpartname.equals("Logo") && printable) {
 
+                                    printLogoAndReceipt(service, LogoPath, 100, 100);
 
+                                }
+                            }
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
                             // Create the formatted companyAddress1Line  line
@@ -168,18 +176,35 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
                             // Print the formatted company name line
-                            service.printText(CompAdd1andAdd2, null);
-                            service.printText(CompAdd3, null);
-                            service.printText(compTel + "\n", null);
-                            service.printText(compFax + "\n\n", null);
-                            // Print the formatted company name line
-                            service.printText(shopname, null);
-                            service.printText(Add1andAdd2, null);
-                            service.printText(shopAdress3, null);
-                            service.printText(Tel + "\n", null);
-                            service.printText(Fax + "\n", null);
-                            service.printText(CompVatNo, null);
-                            service.printText(CompBRNNo, null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Company Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(CompAdd1andAdd2, null);
+                                    service.printText(CompAdd3, null);
+                                    service.printText(compTel + "\n", null);
+                                    service.printText(compFax + "\n\n", null);
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Shop Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(shopname, null);
+                                    service.printText(Add1andAdd2, null);
+                                    service.printText(shopAdress3, null);
+                                    service.printText(Tel + "\n", null);
+                                    service.printText(Fax + "\n", null);
+                                    service.printText(CompVatNo, null);
+                                    service.printText(CompBRNNo, null);
+                                }
+                            }
 
                             service.setAlignment(0, null);
 
@@ -205,10 +230,42 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                            int covernumber= mDatabaseHelper.getSumNumberOfCovers(reportType,Cashior);
                             String SellerName = "Seller Name: " + cashiorname;
                             String numberofcovers = "Number Of covers: " + covernumber;
-                            service.printText(cashiename + "\n", null);
-                            service.printText(cashierid + "\n", null);
-                            service.printText(Posnum + "\n\n", null);
-                            service.printText(numberofcovers + "\n", null);
+
+
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Cashior name") && printable) {
+                                    service.printText(cashiename + "\n", null);
+                                }
+                            }
+
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                if (printerpartname.equals("Cashier Id") && printable) {
+                                    service.printText(cashierid + "\n", null);
+
+                                }
+                            }
+
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("POS NUM") && printable) {
+                                    service.printText(Posnum + "\n", null);
+                                }
+                            }
+
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Number Of servings") && printable) {
+
+                                    service.printText(numberofcovers + "\n", null);
+                                }
+                            }
                             service.printText(SellerInfo + "\n", null);
                             service.printText(SellerID + "\n", null);
                             service.printText(SellerName + "\n", null);
@@ -256,8 +313,20 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         int lineWidths= 48;
                         for (DataModel item : newDataList) {
                             String paymentName = item.getLongDescription();
-                            double totalAmount = item.getTotalPrice();
-                                    int quantity= item.getQuantity();
+                            String transactionid = item.getTransactionid();
+
+                                String comment=item.getComment();
+                                double totalAmount = item.getTotalPrice();
+                            int quantity= item.getQuantity();
+                            if (transactionid != null && transactionid.startsWith("CRN")) {
+                                // Transaction ID starts with "CRN"
+                                totalAmount=-totalAmount;
+                                // Implement your logic here
+                            } else {
+                                // Transaction ID does not start with "CRN"
+                                totalAmount=totalAmount;
+                            }
+
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
 
 
@@ -270,6 +339,27 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
+                            if ("EVENTS".equals(paymentName) && comment != null) {
+
+
+
+                                String commentsname = item.getComment();
+                                double totalAmounts = item.getTotalPrice();
+                                int quantitys= item.getQuantity();
+                                formattedTotalAmount = String.format("%.2f", totalAmounts);
+
+
+                                formattedPaymentInfo =  commentsname + " X " + quantitys ;
+                                formattedam="("+" Rs " + formattedTotalAmount+ ")";
+                                formattedPaymentInfo = "--->" + formattedPaymentInfo;
+                                remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+
+                                paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                                // Print the payment information for the current item
+                                service.printText(paddedPaymentInfo + "\n", null);
+
+                            }
                         }
                         service.printText(lineSeparator + "\n", null);
 
@@ -298,7 +388,16 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
                             int quantity= item.getTotalQuantity();
+                            String transactionid = item.getTransactionid();
 
+                            if (transactionid != null && transactionid.startsWith("CRN")) {
+                                // Transaction ID starts with "CRN"
+                                totalAmount=-totalAmount;
+                                // Implement your logic here
+                            } else {
+                                // Transaction ID does not start with "CRN"
+                                totalAmount=totalAmount;
+                            }
                             Log.d("categorycode" , String.valueOf(categorycode));
                             Log.d("quantity" , String.valueOf(quantity));
                             String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
@@ -422,7 +521,9 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
                         double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportType(reportType);
                         double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportType(reportType);
-                        double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
+                        double creditnotetotal= mDatabaseHelper.getSumOfTransactionTotalTTCForCRNpercashior(reportType,Cashior);
+
+                        double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval) -creditnotetotal;
                         double cashnetval = tenderval - cashret;
 
 // Format values to 2 decimal places
@@ -434,6 +535,8 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         String formattedCashinval = String.format("%.2f", cashinval);
                         String formattedAmountindrawerval = String.format("%.2f", amountindrawerval);
                         String formattedCashnetval = String.format("%.2f", cashnetval);
+                        String formattedCreditnote = String.format("%.2f", creditnotetotal);
+
 
 // Prepare the strings for printing
                         String cash = "CASH: Rs " + formattedTenderval;
@@ -443,6 +546,8 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         String loan = "Loan: Rs " + formattedLoans;
                         String pickup = "Pickup: Rs " + formattedPickupval;
                         String cashnet = "Cash Net: Rs " + formattedCashnetval;
+                        String creditnote = "Refund: -Rs " + formattedCreditnote;
+
                         String amountindrawer = "Amount In Drawer: Rs " + formattedAmountindrawerval;
 
 // Print the values
@@ -452,6 +557,8 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         service.printText(cashin + "\n", null);
                         service.printText(loan + "\n", null);
                         service.printText(pickup + "\n", null);
+                        service.printText(creditnote + "\n", null);
+
                         service.printText(amountindrawer + "\n\n\n", null);
                         // Enable bold text and set font size to 30
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -467,35 +574,31 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
 
-                        double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportTypeAndCashierId(reportType, Cashior);
-                        double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportTypeAndCashierId(reportType, Cashior);
-                        double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportTypeAndCashierId(reportType, Cashior);
-                        double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportTypeAndCashierId(reportType, Cashior);
-                        double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportTypeAndCashierId(reportType, Cashior);
+                        SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndCashier(reportType, Cashior);
+                        for (PaymentMethodDataModel item : SettlementDataLists) {
+                            String paymentname = item.getPaymentName();
+                            double totalAmount = item.getTotalAmount();
+                            int quantity= item.getPaymentCount();
 
 
-                        String formattedcreditcard = String.format("%.2f", creditCardTotal);
-                        String formatteddebitcard = String.format("%.2f", debitCardTotal);
-                        String formattedchequeTotal = String.format("%.2f", chequeTotal);
-                        String formattedpopTotal = String.format("%.2f", popTotal);
-                        String formatteddcouponCodeTotal = String.format("%.2f", couponCodeTotal);
+                            Log.d("paymentname", String.valueOf(paymentname));
+                            Log.d("quantity", String.valueOf(quantity));
+                            if(paymentname.equals("Cash")){
 
-                        String creditcard = "Credit card: Rs " + formattedcreditcard;
-                        String debitcard = "Debit card: Rs " + formatteddebitcard;
-                        String mcbjuice = "MCB Juice: Rs 0.00" ;
-                        String cheque=  "CHEQUES: Rs " + formattedchequeTotal;
-                        String pop=  "POP: Rs " + formattedpopTotal;
-                        String couponcode=  "Coupon Code: Rs " + formatteddcouponCodeTotal;
+                                totalAmount=totalAmount- cashret;
+                            }
+                             formattedTotalAmount = String.format("%.2f", totalAmount);
 
-                        service.printText(creditcard + "\n", null);
-                        service.printText(debitcard + "\n", null);
-                        service.printText(cheque + "\n", null);
-                        service.printText(mcbjuice + "\n", null);
-                        service.printText(pop + "\n", null);
-                        service.printText(couponcode + "\n", null);
-                        service.printText(lineSeparator + "\n", null);
-                        Log.d("cashnetval",  "cashnetval: " + cashnetval + "debitCardTotal: " +debitCardTotal+  "creditCardTotal: " +creditCardTotal+  "chequeTotal: " +chequeTotal);
-                        double doubleval= cashnetval + debitCardTotal+ creditCardTotal+ chequeTotal +popTotal+ couponCodeTotal;
+                            String formattedPaymentInfo = paymentname ;
+                            String formattedAmount = " Rs " + formattedTotalAmount;
+
+
+                            String payment= formattedPaymentInfo + formattedAmount;
+                            service.printText(payment + "\n", null);
+                        }
+                         grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTC(String.valueOf(Cashior),reportType);
+
+                        double doubleval= grandTotal;
                         int covernumber= mDatabaseHelper.getSumNumberOfCovers(reportType,Cashior);
                         double average= doubleval/covernumber;
                         String formatedtotalval = String.format("%.2f", doubleval);
@@ -741,7 +844,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
 
         // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
         // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndCashiorid(reportType,cashierId);
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndCashierId(reportType,cashierId);
 
         return dummyDataList;
     }

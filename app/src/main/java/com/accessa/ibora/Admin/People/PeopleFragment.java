@@ -1,9 +1,12 @@
 package com.accessa.ibora.Admin.People;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +40,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class PeopleFragment extends Fragment {
 private  EditText searchEditText;
@@ -47,6 +52,12 @@ private  EditText searchEditText;
     private SimpleCursorAdapter adapter;
     private Spinner spinner;
     private ImageView arrow;
+    private SharedPreferences sharedPreferences;
+    private String cashorId,Shopname;
+    private  String cashorlevel;
+    private TextView name;
+    private TextView CashorId;
+    private TextView CompanyName;
     private DatabaseHelper mDatabaseHelper;
 
     final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
@@ -68,6 +79,11 @@ private  EditText searchEditText;
 
         // Spinner
         spinner = view.findViewById(R.id.spinner);
+        // Retrieve the shared preferences
+        sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+
+         cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
 
         //arrow
         arrow=view.findViewById(R.id.spinner_icon);
@@ -215,6 +231,10 @@ private  EditText searchEditText;
         adapter = new SimpleCursorAdapter(getContext(), R.layout.admin_activity_view_record, cursor1, froms, tos, 0);
         adapter.notifyDataSetChanged();
         // Set item click listener for RecyclerView
+        adapter = new SimpleCursorAdapter(getContext(), R.layout.admin_activity_view_record, cursor1, froms, tos, 0);
+        adapter.notifyDataSetChanged();
+
+        // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
@@ -224,20 +244,33 @@ private  EditText searchEditText;
                         TextView LevelEditText = view.findViewById(R.id.Level_text_view);
                         TextView DeptEditText = view.findViewById(R.id.Dept_text_view);
 
-
-                        String id1 = idTextView.getText().toString();
                         String id = idTextView.getText().toString();
                         String name = NameEditText.getText().toString();
                         String level = LevelEditText.getText().toString();
                         String Dept = DeptEditText.getText().toString();
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyPeopleActivity.class);
-                        modifyIntent.putExtra("name", name);
-                        modifyIntent.putExtra("level", level);
-                        modifyIntent.putExtra("dept", Dept);
-                        modifyIntent.putExtra("id", id);
+                        // Get current user level
+                        int userLevel = Integer.parseInt(cashorlevel); // Assuming you have cashorlevel as a string variable
+                        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
-                        startActivity(modifyIntent);
+
+                        boolean canModifyUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "modifyUser_", userLevel);
+
+
+
+                        // If the user does not have permission, show a toast
+                        if (!canModifyUser) {
+                            Toast.makeText(requireContext(), "User is not allowed to modify users.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // If permission is granted, start the ModifyPeopleActivity
+                            Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyPeopleActivity.class);
+                            modifyIntent.putExtra("name", name);
+                            modifyIntent.putExtra("level", level);
+                            modifyIntent.putExtra("dept", Dept);
+                            modifyIntent.putExtra("id", id);
+
+                            startActivity(modifyIntent);
+                        }
                     }
 
                     @Override
@@ -247,12 +280,28 @@ private  EditText searchEditText;
                 })
         );
 
+
+
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                // Assuming you have a method to get the current user level
+                int userLevel = Integer.parseInt(cashorlevel);
+                SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+
+                boolean canAddUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "addUser_", userLevel);
+
+                // If the user does not have permission, show a toast
+                if (!canAddUser) {
+                    Toast.makeText(requireContext(), "User is not allowed to add new users.", Toast.LENGTH_SHORT).show();
+                } else {
+                    // If permission is granted, open the new activity
+                    openNewActivity();
+                }
             }
         });
+
 
         return view;
     }

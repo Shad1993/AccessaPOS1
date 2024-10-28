@@ -1,6 +1,7 @@
 package com.accessa.ibora.product.items;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.BUYER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.CAT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_1;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_2;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_3;
@@ -30,6 +31,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_START_DATE;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TIME_CREATED;
+import static com.accessa.ibora.product.items.DatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
@@ -41,6 +43,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.OpenDrawer;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_VIsibility;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_DESCRIPTION;
 import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_OPTION_NAME;
@@ -77,8 +80,10 @@ import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class DBManager {
 
@@ -100,7 +105,7 @@ public class DBManager {
         dbHelper.close();
     }
 
-    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String hascomment, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public void insert(String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category,String SubCategory, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale,String options,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String hascomment, String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId, String DateCreated, String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String selectedDiscount,String selectedDiscount2,String selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         // Insert the item into the main table
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.Name, name);
@@ -110,6 +115,7 @@ public class DBManager {
         contentValue.put(DatabaseHelper.Price2, price2);
         contentValue.put(DatabaseHelper.Price3, price3);
         contentValue.put(DatabaseHelper.Category, Category);
+        contentValue.put(DatabaseHelper.SubCategory, SubCategory);
         contentValue.put(DatabaseHelper.Barcode, Barcode);
         contentValue.put(DatabaseHelper.Department, Department);
         contentValue.put(DatabaseHelper.SubDepartment, SubDepartment);
@@ -269,10 +275,14 @@ public class DBManager {
         }
         return cursor;
     }
+
+
+
     public boolean updateTransItem(String transactionId, long id, String quantity, String price, String tax, String longDesc, String lastModified) {
         // Convert price and tax to double and round to 2 decimal places
         double roundedPrice = roundUp(Double.parseDouble(price), 2);
         double roundedTax = roundUp(Double.parseDouble(tax), 2);
+        double pricewovat= Double.parseDouble(price) - Double.parseDouble(tax);
 
         // Convert rounded values back to String
         String roundedPriceStr = String.format("%.2f", roundedPrice);
@@ -281,6 +291,9 @@ public class DBManager {
         ContentValues contentValues = new ContentValues();
         contentValues.put(DatabaseHelper.QUANTITY, quantity);
         contentValues.put(DatabaseHelper.TOTAL_PRICE, roundedPriceStr);
+        contentValues.put(DatabaseHelper.TRANSACTION_TOTAL_HT_A, pricewovat);
+        contentValues.put(DatabaseHelper.TRANSACTION_TOTAL_TTC, roundedPriceStr);
+        contentValues.put(DatabaseHelper.TRANSACTION_UNIT_PRICE, roundedPriceStr);
         contentValues.put(DatabaseHelper.TRANSACTION_DATE, lastModified);
         contentValues.put(DatabaseHelper.LongDescription, longDesc);
         contentValues.put(DatabaseHelper.VAT, roundedTaxStr);
@@ -317,7 +330,7 @@ public class DBManager {
     }
 
 
-    public boolean updateItem(long id,String optionStatus,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String CommentRequired,String hasoption,String hassupplemet,String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
+    public boolean updateItem(long id,String optionStatus,String supplementid,String optionsid,String optionsid2,String optionsid3,String optionsid4,String optionsid5,String name, String desc,int selectedDiscounts, String price,String price2,String price3, String Category,String Subcategory, String Barcode, float weight, String Department, String SubDepartment, String LongDescription, String Quantity, String ExpiryDate, String VAT, String AvailableForSale, String CommentRequired,String hasoption,String hassupplemet,String SoldBy, String Image, String Variant, String SKU, String Cost, String UserId,  String LastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, double selectedDiscount,double selectedDiscount2,double selectedDiscount3, double currentPrice,double currentPrice2,double currentPrice3,String SyncStatus) {
         ContentValues contentValues = new ContentValues();
 
 
@@ -328,6 +341,7 @@ public class DBManager {
         contentValues.put(DatabaseHelper.Price2, price2);
         contentValues.put(DatabaseHelper.Price3, price3);
         contentValues.put(DatabaseHelper.Category, Category);
+        contentValues.put(DatabaseHelper.SubCategory, Subcategory);
         contentValues.put(DatabaseHelper.Barcode, Barcode);
         contentValues.put(DatabaseHelper.Department, Department);
         contentValues.put(DatabaseHelper.SubDepartment, SubDepartment);
@@ -468,6 +482,7 @@ public class DBManager {
                 DatabaseHelper.Price3,
                 DatabaseHelper.RateDiscount,
                 DatabaseHelper.Category,
+                DatabaseHelper.SubCategory,
                 DatabaseHelper.Barcode,
                 DatabaseHelper.Department,
                 DatabaseHelper.SubDepartment,
@@ -507,6 +522,7 @@ public class DBManager {
         if (cursor != null && cursor.moveToFirst()) {
             item = new Item();
             item.setId((int) cursor.getLong(cursor.getColumnIndex(_ID)));
+
             item.setName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name)));
             item.setDescription(cursor.getString(cursor.getColumnIndex(DatabaseHelper.DESC)));
             item.setRateDiscount(cursor.getString(cursor.getColumnIndex(DatabaseHelper.RateDiscount)));
@@ -532,6 +548,7 @@ public class DBManager {
             item.setWeight(WeightString.isEmpty() ? 0.0f : Float.parseFloat(WeightString));
 
             item.setCategory(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category)));
+            item.setSubCategory(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SubCategory)));
             item.setBarcode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Barcode)));
             item.setDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.Department)));
             item.setSubDepartment(cursor.getString(cursor.getColumnIndex(DatabaseHelper.SubDepartment)));
@@ -1436,6 +1453,7 @@ public class DBManager {
                 DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON,
                 DatabaseHelper.OpenDrawer,
                 PAYMENT_METHOD_COLUMN_CASHOR_ID,
+                DatabaseHelper.PAYMENT_METHOD_COLUMN_VIsibility,
 
                 // Add other columns as needed
         };
@@ -1450,6 +1468,7 @@ public class DBManager {
             payments.setPaymentMethodName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME)));
             payments.setDrawerOpen(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(OpenDrawer))));
             payments.setDPaymentMethodIcon(cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ICON)));
+            payments.setVisibility(cursor.getInt(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_VIsibility)));
         }
         if (cursor != null) {
             cursor.close();
@@ -1457,12 +1476,20 @@ public class DBManager {
         return payments;
     }
 
-    public boolean updatePayment(long id, String paymentName, String lastmodified, String userId, String icon, String drawer) {
+    public boolean updatePayment(long id, String paymentName, String lastmodified, String userId, String icon, String drawer,String Visible) {
         ContentValues contentValue = new ContentValues();
+
+
+        if(Visible.equals("true")){
+            Visible="1";
+        }else{
+            Visible="0";
+        }
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME, paymentName);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_LAST_MODIFIED, lastmodified);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID, userId);
         contentValue.put(PAYMENT_METHOD_COLUMN_ICON, icon);
+        contentValue.put(PAYMENT_METHOD_COLUMN_VIsibility, Visible);
         contentValue.put(OpenDrawer, drawer);
 
         database.update(PAYMENT_METHOD_TABLE_NAME, contentValue, PAYMENT_METHOD_COLUMN_ID + " = " + id, null);

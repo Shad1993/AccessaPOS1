@@ -40,6 +40,7 @@
         <Button
             android:id="@+id/FreeSales"
             android:text="Free Sales"
+            android:visibility="gone"
             android:textSize="18sp"
             android:drawableRight="@drawable/drivethru"
             android:layout_marginStart="500dp"

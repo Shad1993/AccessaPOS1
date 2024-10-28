@@ -145,6 +145,20 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
             // Change the image in the ImageView
             holder.Imageview.setImageResource(R.drawable.saves);
+        }    else if (status.equals("OLDPRF") ) {
+            holder.statusTextView.setText("Proforma");
+            holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.BleuAccessaText));
+
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.saved);
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
+            }
+            holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            // Change the image in the ImageView
+            holder.Imageview.setImageResource(R.drawable.saves);
         } else if (status.equals("InProgress")) {
             holder.statusTextView.setText("In Progress");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.OrangeAccessa));
@@ -159,6 +173,18 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             holder.Imageview.setImageResource(R.drawable.syncs);
         } else if (status.equals("Completed")) {
             holder.statusTextView.setText("Completed");
+            holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.green));
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.check);
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
+            }
+            holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            holder.Imageview.setImageResource(R.drawable.receipts);
+        }else if (status.equals("CancelledOrder")) {
+            holder.statusTextView.setText("Cancelled Order");
             holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.green));
             holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.green));
             holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.green));

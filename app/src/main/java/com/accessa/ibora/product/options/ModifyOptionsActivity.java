@@ -547,7 +547,7 @@ public class ModifyOptionsActivity extends Activity {
     public void returnHome() {
         Intent home_intent1 = new Intent(getApplicationContext(), Product.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        home_intent1.putExtra("fragment", "Options_fragment");
+        home_intent1.putExtra("fragment", "Option_fragment");
         startActivity(home_intent1);
     }
 

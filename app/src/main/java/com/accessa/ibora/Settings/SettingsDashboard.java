@@ -22,19 +22,24 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.Buyer.buyerFragment;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
+import com.accessa.ibora.Settings.Language.SelectLanguageFragment;
 import com.accessa.ibora.Settings.PaymentFragment.PaymentFragment;
+import com.accessa.ibora.Settings.PrinterSetup.PrinterSetUpFragment;
 import com.accessa.ibora.Settings.QRMethods.QRSettingsFragment;
 import com.accessa.ibora.Settings.Rooms.RoomsFragment;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Department.DepartmentFragment;
 import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.FirstFragment;
 import com.accessa.ibora.product.menu.BodyActivity;
 import com.accessa.ibora.product.menu.BodyFragment;
@@ -50,7 +55,8 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
     private String cashorName;
     private TextView name;
     private TextView CashorId;
-    private SharedPreferences sharedPreferences;
+    private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
     private TextView CompanyName;
     private String Company_name;
 
@@ -59,9 +65,11 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.settings_dashboard);
+        mDatabaseHelper = new DatabaseHelper(this);
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        usersharedPreferences = getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
@@ -72,8 +80,6 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
         toolbar = findViewById(R.id.topAppBar);
         toolbar.setTitle(R.string.Settings);
         setSupportActionBar(toolbar);
-
-
 
 
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
@@ -105,13 +111,21 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
             Fragment newFragment = new PaymentFragment();
             setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
             replaceFragment(newFragment);
-        }else if (fragmentKey != null && fragmentKey.equals("buyer_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("buyer_fragment")) {
             Fragment newFragment = new buyerFragment();
             setToolbarTitle(getString(R.string.PaymentMethods)); // Set the toolbar title
             replaceFragment(newFragment);
-        }else if (fragmentKey != null && fragmentKey.equals("Rooms_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("Rooms_fragment")) {
             Fragment newFragment = new RoomsFragment();
             setToolbarTitle(getString(R.string.Roomstable)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("Printer_fragment")) {
+            Fragment newFragment = new PrinterSetUpFragment();
+            setToolbarTitle(getString(R.string.PrinterSettings)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("language_fragment")) {
+            Fragment newFragment = new SelectLanguageFragment();
+            setToolbarTitle(getString(R.string.Language)); // Set the toolbar title
             replaceFragment(newFragment);
         }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -128,52 +142,98 @@ public class SettingsDashboard extends AppCompatActivity implements OnMenufragLi
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
+                // Assuming you have a way to determine the user's access level
+                int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's actual level
+
                 if (id == R.id.Sales) {
-                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    // Set "roomnum" to 1
-                    editor.putInt("roomnum", 1);
-                    editor.putInt("room_id", 1);
-                    editor.putString("table_id", "0");
-                    editor.putString("table_num", "0");
-                    // Commit the changes
-                    editor.apply();
-                    Intent intent = new Intent(SettingsDashboard.this, MainActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        // Set "roomnum" to 1
+                        editor.putInt("roomnum", 1);
+                        editor.putInt("room_id", 1);
+                        editor.putString("table_id", "0");
+                        editor.putString("table_num", "0");
+                        // Commit the changes
+                        editor.apply();
+                        Intent intent = new Intent(SettingsDashboard.this, MainActivity.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(SettingsDashboard.this, ReceiptActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Receipts_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, ReceiptActivity.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(SettingsDashboard.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, SalesReportActivity.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(SettingsDashboard.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, Product.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, SettingsDashboard.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                    // Check permission for Help
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, Help.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(SettingsDashboard.this, AdminActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent intent = new Intent(SettingsDashboard.this, AdminActivity.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
-                return true;
+
+                return true; // Indicate that the event was handled
             }
         });
     }
 
-
-    private void logout() {
+        private void logout() {
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

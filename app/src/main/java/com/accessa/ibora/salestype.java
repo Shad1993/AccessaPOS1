@@ -62,7 +62,7 @@ public class salestype extends AppCompatActivity {
         // Load the GIF using Glide
         Glide.with(this)
                 .asGif()
-                .load(R.drawable.hello)
+                .load(R.drawable.welcomtill)
                 .into(gifImageView);
         // Find the "Retry" button
         Button retryButton = view.findViewById(R.id.button_retry);

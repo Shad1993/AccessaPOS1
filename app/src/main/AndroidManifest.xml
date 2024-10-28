@@ -36,7 +36,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+
+    android:allowBackup="true"
         android:screenOrientation="landscape"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -85,6 +87,8 @@
         <activity android:name=".product.Vendor.ModifyVendorActivity" />
         <activity android:name=".product.category.AddCategoryActivity" />
         <activity android:name=".product.category.ModifyCategoryActivity" />
+        <activity android:name=".product.SubCategory.AddSubCategoryActivity" />
+        <activity android:name=".product.SubCategory.ModifySubCategoryActivity" />
 
         <activity android:name=".Admin.RegistorAdmin" />
         <activity android:name=".Admin.AdminActivity" />
@@ -103,11 +107,14 @@
         <activity android:name=".printer.cloudPrinter.bluetoothPrinter"/>
         <activity android:name=".Report.ReportActivity"/>
        <activity android:name=".Admin.CompanyInfo.FormPager.InsertCompanyDataActivity"/>
+        <activity android:name=".Settings.PrinterSetup.ModifyPrinterActivity"/>
         <activity android:name=".Receipt.ReceiptActivity"/>
         <activity android:name=".Admin.CompanyInfo.POSINFO.PosInfo"/>
         <activity android:name=".SplashFlashActivity"/>
         <activity android:name=".Report.SalesReportActivity"/>
+        <activity android:name=".Help.Help"/>
         <activity android:name=".POP.POP"/>
+        <activity android:name=".Settings.Rooms.EditRoomActivity"/>
         <activity android:name=".POP.MerchantValidationActivity"/>
         <activity android:name=".POP.EncryptionActivity"/>
         <activity android:name=".POP.RSAEncryptionActivity"/>
@@ -128,7 +135,9 @@
         <activity android:name=".scanner.InbuiltScannerActivity"/>
         <activity android:name=".MainActivityMobile"/>
         <service android:name=".Sync.SyncService" />
+        <service android:name=".Sync.SyncServiceroomstable" />
         <service android:name=".Sync.Syncforold"/>
+        <service android:name=".Sync.Syncforoldroomstable"/>
         <service android:name=".Sync.SyncAddToMssql" />
         <service android:name=".Sync.SyncActivitySync" />
         <activity android:name="com.accessa.ibora.product.couponcode.ModifyCouponActivity"/>
@@ -144,6 +153,7 @@
         <activity android:name=".product.supplements.AddSupplementsActivity"/>
         <activity android:name=".product.supplements.ModifySupplementsActivity"/>
         <activity android:name=".Sync.SyncService"/>
+        <activity android:name=".Sync.SyncServiceroomstable"/>
 
         <activity android:name=".printer.printerSetupForPickUp"/>
         <activity android:name=".printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity"/>

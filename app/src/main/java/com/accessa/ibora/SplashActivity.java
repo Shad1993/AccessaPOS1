@@ -59,6 +59,7 @@ public class SplashActivity extends Activity {
             displayOnLCD();
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,14 +69,13 @@ public class SplashActivity extends Activity {
         logoImageView = findViewById(R.id.logoImageView);
         loadingBar = findViewById(R.id.loadingBar);
 
-
-
         Intent intent1 = new Intent();
         intent1.setPackage("woyou.aidlservice.jiuiv5");
         intent1.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         bindService(intent1, connService, Context.BIND_AUTO_CREATE);
 
         mDatabaseHelper = new DatabaseHelper(this);
+
         // Apply bouncing animation to the logo image
         Animation bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.bounce_animation);
         bounceAnimation.setInterpolator(new BounceInterpolator());
@@ -121,6 +121,7 @@ public class SplashActivity extends Activity {
         // Start the progress animation
         handler.post(progressUpdateRunnable);
     }
+
     private void showSecondaryScreen() {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -141,21 +142,19 @@ public class SplashActivity extends Activity {
         }
     }
 
-    public  void displayOnLCD() {
+    public void displayOnLCD() {
         if (woyouService == null) {
             Toast.makeText(this, "Service not ready", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
-
-
-                woyouService.sendLCDDoubleString("Welcome" , "Back " , null);
-
+            woyouService.sendLCDDoubleString("Welcome", "Back", null);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
+
     private Display getPresentationDisplay() {
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
         Display[] displays = displayManager.getDisplays();
@@ -168,33 +167,30 @@ public class SplashActivity extends Activity {
         }
         return null;
     }
+
     private void navigateToNextScreen() {
-        // Store "sunmit2" as the device type in shared preferences
-        storeDeviceType("sunmit2");
-        // Start the next activity (e.g., main activity)
-        //Intent intent = new Intent(this, SelectDevice.class);
-     //   Intent intent = new Intent(this, login.class);
-     //   startActivity(intent);
-     //   finish();
+        // Initialize SharedPreferences with default language if not already set
+        initializeLanguagePreference();
+
+        // Load and apply the language preference
+        String languageCode = loadLanguagePreference();
+        Locale locale = new Locale(languageCode);
+        openNewActivity(locale);
     }
 
+    private void initializeLanguagePreference() {
+        SharedPreferences prefs = getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        // Check if the language has been set; if not, set it to default ("en")
+        if (!prefs.contains("Selected_Language")) {
+            editor.putString("Selected_Language", "en");
+            editor.apply();
+        }
+    }
 
-    private void storeDeviceType(String deviceType) {
-        // Define a custom name for your SharedPreferences
-        String customSharedPreferencesName = "device";
-
-// Create the SharedPreferences instance with the custom name
-        SharedPreferences sharedPreferences = getSharedPreferences(customSharedPreferencesName, Context.MODE_PRIVATE);
-
-// Now, you can edit and use this sharedPreferences as needed
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("device_type", deviceType);
-        editor.apply();
-
-// Start the SelectLanguage activity
-        Intent intent = new Intent(this, SelectLanguage.class);
-        startActivity(intent);
-       openNewActivity(Locale.ENGLISH);
+    private String loadLanguagePreference() {
+        SharedPreferences prefs = getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        return prefs.getString("Selected_Language", "en"); // Default to English if not set
     }
 
     public void openNewActivity(Locale locale) {
@@ -206,12 +202,12 @@ public class SplashActivity extends Activity {
         configuration.setLocale(locale);
         getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
 
-
+        // Check table contents and navigate to the appropriate activity
         CheckTableUser();
         CheckTableCompany();
     }
 
-    public void CheckTableUser(){
+    public void CheckTableUser() {
         // Check if "Users" table is not empty
         boolean isUserTableEmpty = mDatabaseHelper.isUserTableEmpty();
 
@@ -228,7 +224,7 @@ public class SplashActivity extends Activity {
         }
     }
 
-    public void CheckTableCompany(){
+    public void CheckTableCompany() {
         // Check if "Company" table is not empty
         boolean isUserTableEmpty = mDatabaseHelper.isCompanyTableEmpty();
 
@@ -244,6 +240,7 @@ public class SplashActivity extends Activity {
             startActivity(intent);
         }
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -257,3 +254,5 @@ public class SplashActivity extends Activity {
         handler.removeCallbacks(navigateToNextScreenRunnable);
     }
 }
+
+

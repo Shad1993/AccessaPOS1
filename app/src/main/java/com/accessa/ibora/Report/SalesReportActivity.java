@@ -41,10 +41,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.printer.PrintDuplicata;
 import com.accessa.ibora.printer.PrintReport;
@@ -71,7 +73,7 @@ public class SalesReportActivity extends AppCompatActivity {
     private TextView name;
     private TextView CashorId;
     private List<PaymentItem> paymentItems; // Define the paymentItems list
-    private SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
     private MaterialToolbar toolbar;
     private TextView CompanyName;
     private String Shopname;
@@ -97,6 +99,8 @@ public class SalesReportActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         }
+
+        usersharedPreferences = getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
 
         setContentView(R.layout.activity_sales_report);
@@ -124,7 +128,7 @@ public class SalesReportActivity extends AppCompatActivity {
 
         // Initialize the paymentItems list (e.g., retrieve data from the database)
         paymentItems = getPaymentItems();
-// Initialize the paymentAdapter
+        // Initialize the paymentAdapter
         paymentAdapter = new PaymentAdapter(paymentItems, this);
 
 
@@ -132,7 +136,6 @@ public class SalesReportActivity extends AppCompatActivity {
          recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setAdapter(paymentAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            Log.d("payment", paymentItems.toString());
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -196,44 +199,77 @@ public class SalesReportActivity extends AppCompatActivity {
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
-                if (id == R.id.Sales) {
-                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
+                int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's level
 
-                    // Set "roomnum" to 1
-                    editor.putInt("roomnum", 1);
-                    editor.putInt("room_id", 1);
-                    editor.putString("table_id", "0");
-                    editor.putString("table_num", "0");
-                    Intent intent = new Intent(SalesReportActivity.this, MainActivity.class);
-                    startActivity(intent);
+                if (id == R.id.Sales) {
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+
+                        // Set "roomnum" to 1
+                        editor.putInt("roomnum", 1);
+                        editor.putInt("room_id", 1);
+                        editor.putString("table_id", "0");
+                        editor.putString("table_num", "0");
+                        editor.apply(); // Commit the changes
+
+                        Intent intent = new Intent(SalesReportActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(SalesReportActivity.this, ReceiptActivity.class);
-                    startActivity(intent);
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "receipts_", levelNumber)) {
+                        Intent intent = new Intent(SalesReportActivity.this, ReceiptActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(SalesReportActivity.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent intent = new Intent(SalesReportActivity.this, SalesReportActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(SalesReportActivity.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent intent = new Intent(SalesReportActivity.this, Product.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(SalesReportActivity.this, SettingsDashboard.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent intent = new Intent(SalesReportActivity.this, SettingsDashboard.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
-                } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(SalesReportActivity.this, AdminActivity.class);
+                    Intent intent = new Intent(SalesReportActivity.this, Help.class);
                     startActivity(intent);
+                } else if (id == R.id.nav_Admin) {
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent intent = new Intent(SalesReportActivity.this, AdminActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return true;
             }
         });
+
 
         // Open your SQLite database
         database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
@@ -281,7 +317,17 @@ public class SalesReportActivity extends AppCompatActivity {
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "printReport_", levelNumber)) {
+
+                    openNewActivity();
+                }else{
+                    Toast.makeText(getApplicationContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+
+
+
+                }
             }
         });
 
@@ -289,7 +335,11 @@ public class SalesReportActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // Get the selected cashier from the spinner
-                String selectedCashier = parent.getItemAtPosition(position).toString();
+                Cashier selectedCashier = (Cashier) parent.getItemAtPosition(position);
+                String selectedCashiername = parent.getItemAtPosition(position).toString();
+
+                // Retrieve the cashier's ID instead of the name
+                String selectedCashierId = selectedCashier.getId();
 
                 // Get the current selected start and end dates
                 String startDateString = dateTextView.getText().toString();
@@ -297,6 +347,8 @@ public class SalesReportActivity extends AppCompatActivity {
 
                 // Convert the start and end dates to Date objects
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+                //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
                 Date startDate;
                 Date endDate;
                 try {
@@ -309,7 +361,7 @@ public class SalesReportActivity extends AppCompatActivity {
                 }
 
                 // Update the data based on the selected cashier and date range
-                updateDataForDateRangeAndCashier(startDate, endDate, selectedCashier);
+                updateDataForDateRangeAndCashier(startDate, endDate, selectedCashierId,selectedCashiername);
             }
 
             @Override
@@ -419,16 +471,55 @@ public class SalesReportActivity extends AppCompatActivity {
         startDatePickerDialog.show(); // Show the start date picker dialog last
     }
 
-    private void updateDataForDateRangeAndCashier(Date startDate, Date endDate, String selectedCashier) {
+    private void updateDataForDateRangeAndCashier(Date startDate, Date endDate, String selectedCashier,String cashiorname) {
         // Format the start and end dates as strings
         String startDateString = formatDateTimes(startDate);
         String endDateString = formatDateTimes(endDate);
+        List<PaymentItem> filteredPaymentItems ;
+        double totalSaleAmount;
+        if (cashiorname.equals("All Cashiers")) {
+            filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItems(startDateString, endDateString);
+            totalSaleAmount = mDatabaseHelper.getTotalSaleAmount(startDateString, endDateString);
+            // Get current date
+            Date currentDate = new Date();
 
-        // Query the database to get the filtered payment items and total sale amount for the selected cashier
-        List<PaymentItem> filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItemsByCashier(startDateString, endDateString, selectedCashier);
-        double totalSaleAmount = mDatabaseHelper.getTotalSaleAmountByCashier(startDateString, endDateString, selectedCashier);
+            // Calculate daily amount
+            double dailyAmount = getDailyAmount(currentDate);
+            dailyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " " +formatAmount(dailyAmount));
 
-        // Update the RecyclerView adapter with the filtered payment items
+            // Calculate weekly amount
+            double weeklyAmount = getWeeklyAmount(currentDate);
+            weeklyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " " +formatAmount(weeklyAmount));
+
+            // Calculate monthly amount
+            double monthlyAmount = getMonthlyAmount(currentDate);
+            monthlyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " "+formatAmount(monthlyAmount));
+
+
+        } else {
+
+
+            filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItemsByCashierCode(startDateString, endDateString, selectedCashier);
+            totalSaleAmount = mDatabaseHelper.getTotalSaleAmountpercashior(startDateString, endDateString, selectedCashier);
+            // Get current date
+            Date currentDate = new Date();
+
+            // Calculate daily amount
+            double dailyAmount = getDailyAmountPerCashior(currentDate,selectedCashier);
+            dailyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " " +formatAmount(dailyAmount));
+
+            // Calculate weekly amount
+            double weeklyAmount = getWeeklyAmountpercashior(currentDate,selectedCashier);
+            weeklyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " " +formatAmount(weeklyAmount));
+
+            // Calculate monthly amount
+            double monthlyAmount = getMonthlyAmountpercashior(currentDate,selectedCashier);
+            monthlyAmountTextView.setText(getResources().getString(R.string.currency_symbol) + " "+formatAmount(monthlyAmount));
+
+
+
+        }
+
         paymentAdapter.updateItems(filteredPaymentItems);
 
         // Set the total sale amount to the TextView
@@ -451,9 +542,24 @@ public class SalesReportActivity extends AppCompatActivity {
         if (selectedCashier.equals("All Cashiers")) {
             filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItems(startDateString, endDateString);
             totalSaleAmount = mDatabaseHelper.getTotalSaleAmount(startDateString, endDateString);
+
+            Log.d("startDateString0", String.valueOf(startDateString));
+            Log.d("endDateString0", String.valueOf(endDateString));
+            Log.d("selectedCashier0", String.valueOf(selectedCashier));
+            Log.d("filteredPaymentItems0", String.valueOf(filteredPaymentItems));
+            Log.d("totalSaleAmount0", String.valueOf(totalSaleAmount));
         } else {
+
+
             filteredPaymentItems = mDatabaseHelper.getFilteredPaymentItemsByCashier(startDateString, endDateString, selectedCashier);
             totalSaleAmount = mDatabaseHelper.getTotalSaleAmountByCashier(startDateString, endDateString, selectedCashier);
+
+            Log.d("startDateString1", String.valueOf(startDateString));
+            Log.d("endDateString1", String.valueOf(endDateString));
+            Log.d("selectedCashier1", String.valueOf(selectedCashier));
+            Log.d("filteredPaymentItems1", String.valueOf(filteredPaymentItems));
+            Log.d("totalSaleAmount1", String.valueOf(totalSaleAmount));
+
         }
 
         // Update the RecyclerView adapter with the filtered payment items
@@ -568,6 +674,104 @@ public class SalesReportActivity extends AppCompatActivity {
 
         return amount;
     }
+    private double getDailyAmountPerCashior(Date date, String cashorId) {
+        // Calculate the start and end date of the current day
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        Date endDate = calendar.getTime();
+
+        // Format startDate and endDate to 'yyyy-MM-dd' format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String formattedStartDate = dateFormat.format(startDate);
+        String formattedEndDate = dateFormat.format(endDate);
+
+        // Query the database to get the daily amount filtered by cashorId
+        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
+                new String[]{formattedStartDate, formattedEndDate, cashorId});
+
+        double amount = 0.0;
+
+        if (cursor.moveToFirst()) {
+            amount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+
+        return amount;
+    }
+    private double getWeeklyAmountpercashior(Date date, String cashorId) {
+        // Calculate the start and end date of the current week
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.WEEK_OF_YEAR, 1);
+        Date endDate = calendar.getTime();
+
+        // Format startDate and endDate to 'yyyy-MM-dd' format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String formattedStartDate = dateFormat.format(startDate);
+        String formattedEndDate = dateFormat.format(endDate);
+
+        // Query the database to get the weekly amount filtered by cashorId
+        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
+                new String[]{formattedStartDate, formattedEndDate, cashorId});
+
+        double amount = 0.0;
+
+        if (cursor.moveToFirst()) {
+            amount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+
+        return amount;
+    }
+    private double getMonthlyAmountpercashior(Date date, String cashorId) {
+        // Calculate the start and end date of the current month
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date startDate = calendar.getTime();
+
+        calendar.add(Calendar.MONTH, 1);
+        Date endDate = calendar.getTime();
+
+        // Format startDate and endDate to 'yyyy-MM-dd' format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String formattedStartDate = dateFormat.format(startDate);
+        String formattedEndDate = dateFormat.format(endDate);
+
+        // Query the database to get the monthly amount filtered by cashorId
+        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
+                new String[]{formattedStartDate, formattedEndDate, cashorId});
+
+        double amount = 0.0;
+
+        if (cursor.moveToFirst()) {
+            amount = cursor.getDouble(0);
+        }
+
+        cursor.close();
+
+        return amount;
+    }
 
     private String formatAmount(double amount) {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
@@ -583,6 +787,8 @@ public class SalesReportActivity extends AppCompatActivity {
     }
     private List<Cashier> getUsersFromDatabase() {
         List<Cashier> userList = new ArrayList<>();
+        // Add the special "All Cashiers" entry
+        userList.add(new Cashier("0", "All Cashiers"));
 
         SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
         Cursor cursor = mDatabaseHelper.getAllUsers();
@@ -702,6 +908,13 @@ public class SalesReportActivity extends AppCompatActivity {
 
 
     private void logout() {
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

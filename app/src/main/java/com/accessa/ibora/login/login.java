@@ -11,8 +11,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -27,10 +29,18 @@ import com.accessa.ibora.Constants;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.MainActivityMobile;
 import com.accessa.ibora.R;
+import com.accessa.ibora.SelectDevice;
+import com.accessa.ibora.SelectLanguage;
+import com.accessa.ibora.Settings.PrinterSetup.PrinterSetUpMethod;
+import com.accessa.ibora.Settings.PrinterSetup.PrinterSetupManager;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.salestype;
 import com.bumptech.glide.Glide;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class login extends AppCompatActivity {
     private static final int DATABASE_VERSION = 1;
@@ -70,7 +80,8 @@ public class login extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         // Create or open the SharedPreferences file
         SharedPreferences sharedPreferences = getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
-
+        String deviceType = getDeviceType();
+        storeDeviceType(deviceType);
         // Check if the key is already present
         if (!sharedPreferences.contains("selectedPriceLevel")) {
             // If not present, set the default value
@@ -114,7 +125,35 @@ public class login extends AppCompatActivity {
             }
         });
     }
+    private String getDeviceType() {
+        String deviceModel = Build.MODEL; // Get the device model
+        String deviceType;
+        Log.d("deviceModel", deviceModel );
 
+        // Determine the device type based on the device model
+        if (deviceModel.toLowerCase().contains("t2")) {
+            deviceType = "sunmit2"; // Or whatever string you want for this type
+        } else {
+            deviceType = "mobile"; // Default or other types
+        }
+
+        return deviceType;
+    }
+
+    private void storeDeviceType(String deviceType) {
+        // Define a custom name for your SharedPreferences
+        String customSharedPreferencesName = "device";
+
+        // Create the SharedPreferences instance with the custom name
+        SharedPreferences sharedPreferences = getSharedPreferences(customSharedPreferencesName, Context.MODE_PRIVATE);
+
+        // Now, you can edit and use this sharedPreferences as needed
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("device_type", deviceType);
+        editor.apply();
+
+
+    }
     private void login() {
         // Retrieve user input from EditText fields
         String enteredPIN = editTextPIN.getText().toString();
@@ -136,6 +175,35 @@ public class login extends AppCompatActivity {
 
             SQLiteDatabase db = mDatabaseHelper.getReadableDatabase(); // Assume dbHelper is an instance of your SQLiteOpenHelper
             String shopNumber = mDatabaseHelper.getShopNumber(db);
+            String prefsName = "PrinterSetupPrefs"; // Replace with your preferences name
+
+            if (doesSharedPreferencesFileExist(this, prefsName)) {
+                // The SharedPreferences file exists
+                System.out.println("PrinterSetupPrefs file exists.");
+            } else {
+                List<PrinterSetUpMethod> paymentMethods = new ArrayList<>();
+
+                paymentMethods.add(new PrinterSetUpMethod("1", "Logo", "icon1", true));
+                paymentMethods.add(new PrinterSetUpMethod("2", "Shop Info", "icon2", true));
+                paymentMethods.add(new PrinterSetUpMethod("3", "Company Info", "icon3", true));
+                paymentMethods.add(new PrinterSetUpMethod("4", "Cashior name", "icon4", true));
+                paymentMethods.add(new PrinterSetUpMethod("5", "Related Transaction Id", "icon5", true));
+                paymentMethods.add(new PrinterSetUpMethod("6", "SalesType", "icon6", true));
+                paymentMethods.add(new PrinterSetUpMethod("7", "Number Of servings", "icon7", true));
+                paymentMethods.add(new PrinterSetUpMethod("8", "Cashier Id", "icon8", true));
+                paymentMethods.add(new PrinterSetUpMethod("9", "Room Number", "icon9", true));
+                paymentMethods.add(new PrinterSetUpMethod("10", "Table Number", "icon10", true));
+                paymentMethods.add(new PrinterSetUpMethod("11", "Copy Printed", "icon11", true));
+                paymentMethods.add(new PrinterSetUpMethod("12", "See You Again", "icon12", true));
+                paymentMethods.add(new PrinterSetUpMethod("13", "Have a Nice Day", "icon13", true));
+                paymentMethods.add(new PrinterSetUpMethod("14", "Opening Hours", "icon14", true));
+
+
+
+
+                PrinterSetupManager manager = new PrinterSetupManager(this);
+                manager.savePrinterSetupMethods(paymentMethods);
+            }
 
 
             // Remove the buyer info from shared preferences
@@ -151,11 +219,13 @@ public class login extends AppCompatActivity {
 
 
 
-            Intent intent = new Intent(this, salestype.class);
+       /*     Intent intent = new Intent(this, salestype.class);
             intent.putExtra("cashorName", cashorName);
             intent.putExtra("cashorId", cashorId);
             intent.putExtra("ShopName", ShopName);
-            startActivity(intent);
+            startActivity(intent);*/
+
+            saveStatusAndNavigate(cashorName,cashorId,ShopName);
                 // Use a Handler to delay the redirection
             int posNum = mDatabaseHelper.getPosNumFromFinancialTable(db);
             if (posNum != -1) { // Check if posNum is not empty, null, or zero
@@ -227,6 +297,73 @@ public class login extends AppCompatActivity {
         cursor.close();
     }
 
+
+    private void saveStatusAndNavigate(String CashorName, String cashorId, String ShopName) {
+
+
+
+        // Inflate the custom view for the AlertDialog
+        View view = LayoutInflater.from(this).inflate(R.layout.custom_dialog_layout, null);
+        // Create and show the AlertDialog with the welcome message and cashor's name
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.welcome);
+        builder.setMessage(getString(R.string.welcomes) + " " + CashorName + "!");
+        // Get a reference to the AppCompatImageView
+        AppCompatImageView gifImageView = view.findViewById(R.id.gif_image_view);
+
+        // Preload the GIF using Glide to avoid lag
+        Glide.with(this)
+                .asGif()
+                .load(R.drawable.welcomtill)
+                .preload();
+
+        // Load the GIF into the ImageView after it's preloaded
+        Glide.with(this)
+                .asGif()
+                .load(R.drawable.welcomtill)
+                .into(gifImageView);
+        // Find the "Retry" button
+        Button retryButton = view.findViewById(R.id.button_retry);
+
+        // Set the visibility of the "Retry" button to GONE
+        retryButton.setVisibility(View.GONE);
+
+        // Remove the click listener for the "Retry" button
+        retryButton.setOnClickListener(null);
+
+        // Set the custom view to the AlertDialog
+        builder.setView(view);
+        builder.setCancelable(false);
+        alertDialog = builder.create();
+        alertDialog.show();
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("status", "Dine In");
+
+
+
+        // Pass additional data to MainActivity
+        intent.putExtra("cashorName", CashorName);
+        intent.putExtra("cashorId", cashorId);
+        intent.putExtra("ShopName", ShopName);
+
+        startActivity(intent);
+        finish(); // Optional: Close the current activity if needed
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!isFinishing()) { // Check if the activity is still running
+                    startActivity(intent);
+                    finish(); // Optional: Finish the current activity if needed
+                }
+            }
+        }, 1000);  // Delay in milliseconds (1 second
+        builder.setCancelable(false);
+    }
+    public static boolean doesSharedPreferencesFileExist(Context context, String prefsName) {
+        // Check if the shared preferences file exists
+        File sharedPrefsFile = new File(context.getFilesDir().getParent() + "/shared_prefs/" + prefsName + ".xml");
+        return sharedPrefsFile.exists();
+    }
     private void savePosNumber(String posNumber) {
         SharedPreferences sharedPreferences = this.getSharedPreferences("POSNum", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();

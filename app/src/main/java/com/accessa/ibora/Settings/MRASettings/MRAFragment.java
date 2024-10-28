@@ -10,11 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,6 +35,8 @@ import java.util.List;
 public class MRAFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences usersharedPreferences;
+
     private List<String> selectedTransactionIds = new ArrayList<>();
 
     private String cashorId,cashorName,Shopname,cashorlevel;
@@ -43,6 +47,7 @@ public class MRAFragment extends Fragment {
 
         mDatabaseHelper = new DatabaseHelper(getContext());
         sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
@@ -57,6 +62,7 @@ public class MRAFragment extends Fragment {
         ImageButton refresher = view.findViewById(R.id.refresh);
         ImageButton profileB = view.findViewById(R.id.profileB);
         Button allReceipt = view.findViewById(R.id.allreceipt);
+        Button editsettings = view.findViewById(R.id.editsettings);
         CardView SendBulk = view.findViewById(R.id.sendBulkCard);
         CardView failedreceipt = view.findViewById(R.id.failedreceipt);
         CardView sucessreceipt = view.findViewById(R.id.sucessreceipt);
@@ -66,7 +72,20 @@ public class MRAFragment extends Fragment {
 
 
         Cursor receiptCursor = mDatabaseHelper.getAllReceipt();
+        editsettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "editMraSettings_", levelNumber)) {
+
+                    showEditSettingsDialog();
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 // Initialize RecyclerView and set its adapter
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
@@ -207,6 +226,68 @@ public class MRAFragment extends Fragment {
 
         return view;
     }
+    private void showEditSettingsDialog() {
+        // Inflate the custom dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_edit_settings, null);
+
+        // Create and set up the dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setView(dialogView);
+
+        // Find views in the dialog
+        EditText editText1 = dialogView.findViewById(R.id.editText1);
+        EditText editText2 = dialogView.findViewById(R.id.editText2);
+        EditText editText3 = dialogView.findViewById(R.id.editText3);
+        EditText editText4 = dialogView.findViewById(R.id.editText4);
+        Button editButton = dialogView.findViewById(R.id.editButton);
+// Retrieve the stored values from SharedPreferences
+        SharedPreferences prefs = getActivity().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+        String userNamemra = prefs.getString("User_Name", "");
+        String ebsMraIdmra = prefs.getString("ebsMraId", "");
+        String areaCodemra = prefs.getString("Area_Code", "");
+        String passwordmra = prefs.getString("Password", "");
+
+        // Set the retrieved values into the EditText fields
+        editText1.setText(userNamemra);
+        editText2.setText(ebsMraIdmra);
+        editText3.setText(areaCodemra);
+        editText4.setText(passwordmra);
+        // Create the AlertDialog
+        AlertDialog dialog = builder.create();
+
+        // Set up the edit button
+        editButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Get input data from the EditTexts
+                String userName = editText1.getText().toString();
+                String ebsMraId = editText2.getText().toString();
+                String areaCode = editText3.getText().toString();
+                String password = editText4.getText().toString();
+
+
+                // Save data to SharedPreferences
+                SharedPreferences prefs = requireActivity().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("User_Name", userName);
+                editor.putString("ebsMraId", ebsMraId);
+                editor.putString("Area_Code", areaCode);
+                editor.putString("Password", password);
+                editor.apply();
+
+                // Show confirmation Toast
+                Toast.makeText(requireContext(), "Settings saved!", Toast.LENGTH_SHORT).show();
+
+                // Dismiss the dialog
+                dialog.dismiss();
+            }
+        });
+
+        // Show the dialog
+        dialog.show();
+    }
+
 
     private void saveSelectedTransactionIds() {
         // Convert the list to a JSON string

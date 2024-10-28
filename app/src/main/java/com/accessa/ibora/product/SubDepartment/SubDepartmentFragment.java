@@ -1,6 +1,8 @@
 package com.accessa.ibora.product.SubDepartment;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,6 +51,8 @@ public class SubDepartmentFragment extends Fragment {
     private Spinner spinner;
     private ImageView arrow;
     private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
+    String cashorlevel;
 
     final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
     final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
@@ -66,7 +71,11 @@ public class SubDepartmentFragment extends Fragment {
 
         // Spinner
         spinner = view.findViewById(R.id.spinner);
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
+
+        cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
         //arrow
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
@@ -215,22 +224,30 @@ public class SubDepartmentFragment extends Fragment {
 
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView DeptNameEditText = view.findViewById(R.id.name_text_view);
-                        TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
-                        TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
+                        int levelNumber = Integer.parseInt(cashorlevel);
 
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String name = DeptNameEditText.getText().toString();
-                        String DeptCode = DeptCodeEditText.getText().toString();
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifySubDepartment_", levelNumber)) {
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifySubDepartmentActivity.class);
-                        modifyIntent.putExtra("title", name);
-                        modifyIntent.putExtra("desc", DeptCode);
-                        modifyIntent.putExtra("id", id);
+                            TextView idTextView = view.findViewById(R.id.id_text_view);
+                            TextView DeptNameEditText = view.findViewById(R.id.name_text_view);
+                            TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
+                            TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
 
-                        startActivity(modifyIntent);
+                            String id1 = idTextView.getText().toString();
+                            String id = idTextView.getText().toString();
+                            String name = DeptNameEditText.getText().toString();
+                            String DeptCode = DeptCodeEditText.getText().toString();
+
+                            Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifySubDepartmentActivity.class);
+                            modifyIntent.putExtra("title", name);
+                            modifyIntent.putExtra("desc", DeptCode);
+                            modifyIntent.putExtra("id", id);
+
+                            startActivity(modifyIntent);
+                        }else {
+                            Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+
+                        }
                     }
 
                     @Override
@@ -243,7 +260,14 @@ public class SubDepartmentFragment extends Fragment {
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addSubDepartment_", levelNumber)) {
+
+                    openNewActivity();
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

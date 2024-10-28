@@ -1,19 +1,27 @@
 package com.accessa.ibora.Sync.MasterSync;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnectionHelper {
 
-    // Database connection parameters
-    private static final String _user = "sa";
-    private static final String _pass = "Logi2131";
-    private static final String _DB = "IboraPOS";
-    private static final String _server = "192.168.1.89";
+
 
     // Method to establish a connection to the database
-    public static Connection getConnection() throws SQLException {
+    public static Connection getConnection( Context context) throws SQLException {
+        // Get SharedPreferences where the DB parameters are stored
+        SharedPreferences preferences = context.getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+        // Retrieve values from SharedPreferences (or use defaults if not set)
+        String _user = preferences.getString("_user", null);
+        String _pass = preferences.getString("_pass", null);
+        String _DB = preferences.getString("_DB", null);
+        String _server = preferences.getString("_server", null);
+
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
             String url = "jdbc:jtds:sqlserver://" + _server + ";databaseName=" + _DB;

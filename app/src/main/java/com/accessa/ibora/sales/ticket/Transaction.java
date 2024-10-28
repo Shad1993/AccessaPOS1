@@ -17,10 +17,14 @@ public class Transaction {
     private String VAT;
     private String Nature;
     private String Currency;
+    private String famille;
 
     private String TaxCode;
+    private String comment;
     private String Discount;
     private double AmountWOVAT;
+
+    private double ItemAmountWOVAT;
     private String TotalDiscount;
     private String relatedoptionid;
 
@@ -36,12 +40,13 @@ public class Transaction {
         this.itemPrice = itemPrice;
         this.itemQuantity = itemQuantity;
         this.unitPrice = unitPrice;
-        this.item_id=item_id;
-        this.unique_id = unique_id;
+        this.item_id=itemId;
+        this.unique_id = uniqueId;
         this.relatedoptionid = relatedoptionid;
     }
 
     public Transaction() {
+        this.unique_id = unique_id;
         this.id = id;
         this.itemName = itemName;
         this.itemNumber = itemNumber;
@@ -57,9 +62,12 @@ public class Transaction {
         this.VAT = VAT;
         this.Nature = Nature;
         this.Currency = Currency;
+        this.comment=comment;
+        this.famille = famille;
         this.itemCode = itemCode;
         this.Discount = Discount;
         this.AmountWOVAT = AmountWOVAT;
+        this.ItemAmountWOVAT=ItemAmountWOVAT;
         this.TotalDiscount = TotalDiscount;
         this.TotalVatAmount = TotalVatAmount;
         this.TotalPrice = TotalPrice;
@@ -78,7 +86,7 @@ public class Transaction {
         return unique_id;
     }
     public void setunique_id(int unique_id) {
-        this.id = id;
+        this.unique_id = unique_id;
     }
 
     public int getId() {
@@ -139,6 +147,12 @@ public class Transaction {
     public void setAmountWOVAT(double AmountWOVAT) {
         this.AmountWOVAT = AmountWOVAT;
     }
+    public double getItemAmountWitoutVAT() {
+        return ItemAmountWOVAT;
+    }
+    public void setItemAmountWOVAT(double ItemAmountWOVAT) {
+        this.ItemAmountWOVAT = ItemAmountWOVAT;
+    }
     public double getTotalVatAmount() {
         return TotalVatAmount;
     }
@@ -191,6 +205,20 @@ public class Transaction {
     }
     public String getCurrency() {
         return Currency;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+    public String getComment() {
+        return comment;
+    }
+
+    public void setFamille(String famille) {
+        this.famille = famille;
+    }
+    public String getFamille() {
+        return famille;
     }
 
     public int getItemQuantity() {

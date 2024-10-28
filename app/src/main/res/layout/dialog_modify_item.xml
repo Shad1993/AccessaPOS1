@@ -31,9 +31,14 @@
 
     <EditText
         android:id="@+id/price_edit_text"
+        style="@style/modifiedEditText"
+
         android:inputType="none"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:editable="false"
+    android:textIsSelectable="true"/>
+
 
     <!-- Add EditText for Comments -->
     <TextView
@@ -419,6 +424,21 @@
             android:text="Void"
             android:drawableEnd="@drawable/bin"/>
 
+        <Button
+            android:id="@+id/ietmdiscount_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:text="Item Discount"
+            android:drawableEnd="@drawable/white_discount_24"/>
+
+        <Button
+            android:id="@+id/payperitems"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:text="Pay Per Itens"
+            android:drawableEnd="@drawable/baseline_payments_24"/>
 
     </LinearLayout>
 

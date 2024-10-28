@@ -102,7 +102,25 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
-
+                    <EditText
+                        android:visibility="gone"
+                        android:id="@+id/qrcode_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/icon"
+                        android:singleLine="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/makevisible"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/makevisible"
+                        android:checked="false"
+                        android:textSize="18sp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_gravity="center" />
 
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/draweropener"

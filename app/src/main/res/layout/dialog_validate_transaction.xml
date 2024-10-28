@@ -38,6 +38,7 @@
         android:layout_marginEnd="16dp" />
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -47,7 +48,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view1"
         android:layout_width="200dp"
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_height="250dp"
         android:layout_marginLeft="10dp"
         android:layout_below="@id/title_text_view"
@@ -325,7 +326,28 @@
     </LinearLayout>
 
 
+    <!-- Buttons Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
 
+        <!-- First Button -->
+        <Button
+            android:id="@+id/applydiscount"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Apply Discount"
+            android:textSize="18sp"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp" />
+
+
+
+    </LinearLayout>
 
 
 

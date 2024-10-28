@@ -186,6 +186,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 }
             }
         });
+        // Set up the result listener for search queries
+
 
         SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
@@ -208,7 +210,38 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         mAdapter = new ItemGridAdapter(getContext(), cursor);
         mRecyclerView.setAdapter(mAdapter);
+        getParentFragmentManager().setFragmentResultListener("searchQuery", this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
 
+
+                if (requestKey.equals("searchQuery")) {
+                    // Retrieve search criteria from the bundle
+                    String searchDescription = result.getString("description", "");
+
+
+                    // Perform the search with the provided criteria
+                    Cursor cursor;
+                     cursor = mDatabaseHelper.searchItems(searchDescription);
+
+                    if (searchDescription == null || searchDescription.isEmpty()) {
+                        cursor = mDatabaseHelper.getAllItems();  // Assuming you have a method to get all items
+                    } else {
+                        cursor = mDatabaseHelper.searchItems(searchDescription);  // Use searchItems() from DatabaseHelper
+                    }
+                    if (cursor != null) {
+                        mAdapter = new ItemGridAdapter(getContext(), cursor);
+                        mRecyclerView.setAdapter(mAdapter);
+                    } else {
+
+                    }
+
+                }
+
+
+
+            }
+        });
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
         Glide.with(this)
                 .asGif()
@@ -227,7 +260,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         mRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                Log.d("tableid",tableid  );
+
 
                 if (tableid.equals("defaultTableId")  ||  tableid .equals("0")    ){
                     // Table ID is 1, show a pop-up
@@ -282,7 +315,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                     if (transactionStatus.equals("InProgress") || transactionStatus.equals("PRF") || transactionSaved.equals("PRF") || transactionCDN.equals("CRN") || transactionDBN.equals("DRN")) {
                         if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
-                            Log.d("INSERT_Transactions1", "test1" );
+
                             transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                             // Store the transaction ID in SharedPreferences
                             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -294,9 +327,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         }
                         transactionId = transactionIdInProgress;
 
-                        Log.d("transactionId", transactionId );
+
                     } else {
-                        Log.d("INSERT_Transactions2", "test1" );
+
                         transactionId = generateNewTransactionId(); // Generate a new transaction ID
                         refreshTicketFragment();
                         refreshTotal();
@@ -352,7 +385,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
 
                         sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(Barcode,existingTransactionId));
-                        Log.d("sentToKitchen1", sentToKitchen);
+
 
                         if (sentToKitchen.equals("1")) {
 
@@ -385,7 +418,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                                             String Catnum = String.valueOf(catId);
-                                            Log.d("roomtable1", roomid + " " + tableid);
+
                                             // Insert a new transaction with IS_PAID as 0
                                             mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -395,7 +428,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                         refreshTotal();
 
                                 }else {
-                                        Log.d("sentToKitchentest1", sentToKitchen);
+
                                     // Item already selected, update the quantity and total price
                                      currentQuantity = mDatabaseHelper.getQuantity(transactionId,Barcode);
 
@@ -412,7 +445,85 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                     double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
                                     double newTotalPrice = UnitPrice * newQuantity;
                                     double newVat = newQuantity * calculateTax();
-                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                                    boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+                                        if (!isdiscounted) {
+                                            if(existingitems){
+                                                mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+
+                                            }else {
+
+                                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                                cashierId = sharedPreference.getString("cashorId", null);
+                                                newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                                    String MRAMETHOD = "Single";
+                                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                                    String Catnum = String.valueOf(catId);
+
+                                                    // Insert a new transaction with IS_PAID as 0
+                                                    mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                                }
+                                            }
+                                       }else{
+
+
+                                            if ("OPEN FOOD".equals(catname)) {
+                                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                                cashierId = sharedPreference.getString("cashorId", null);
+                                                newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                                    String MRAMETHOD = "Single";
+                                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                                    String Catnum = String.valueOf(catId);
+
+                                                    // Insert a new transaction with IS_PAID as 0
+                                                    mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                                }
+                                            }else {
+                                                if ("OPEN FOOD".equals(catname)) {
+                                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                                    cashierId = sharedPreference.getString("cashorId", null);
+                                                    newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                                        String MRAMETHOD = "Single";
+                                                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                                        String Catnum = String.valueOf(catId);
+
+                                                        // Insert a new transaction with IS_PAID as 0
+                                                        mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                                    }
+                                                }else {
+                                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                                                }
+
+                                            }
+                                       }
                                     refreshTicketFragment();
                                     refreshTotal();
                                 }
@@ -422,13 +533,10 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         // Check if the existing transaction ID matches the current transaction ID
                         else if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
-                            Log.d("sentToKitchentestupdate2", sentToKitchen);
-                            Log.d("existingTransactionId1", existingTransactionId);
-                            Log.d("transactionIdInProgress", transactionIdInProgress);
-                            Log.d("latesttransId", latesttransId);
-                            Log.d("sentToKitchentest1", sentToKitchen);
+
                             // Item already selected, update the quantity and total price
                             int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,Barcode);
+
 
                             UnitPrice = Double.parseDouble(price);
 
@@ -443,14 +551,87 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
                             double newTotalPrice = UnitPrice * newQuantity;
                             double newVat = newQuantity * calculateTax();
-                            mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                            boolean isnotdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+                            boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
+                            boolean existingdiscounteditems=mDatabaseHelper.checkDiscountedItemExists(latesttransId,tableid, String.valueOf(roomid), String.valueOf(itemId));
+                            boolean existingnondiscounteddiscounteditems=mDatabaseHelper.checkNonDidcountedItemExists(latesttransId,tableid, String.valueOf(roomid), String.valueOf(itemId));
+
+                            if (!isnotdiscounted && existingitems) {
+                                boolean updateSuccess = mDatabaseHelper.updateTransactionWithZeroDiscount(itemId, newpriceWithoutVat, newQuantity, totaltaxbeforediscount, newtotaltaxafterdiscount, latesttransId, newTotalPrice, newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
+
+                                if (!updateSuccess) {
+                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                    cashierId = sharedPreference.getString("cashorId", null);
+                                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                        String MRAMETHOD = "Single";
+                                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                        String Catnum = String.valueOf(catId);
+
+                                        // Insert a new transaction with IS_PAID as 0
+                                        mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                    }
+                                }
+
+
+                            } else if(!isnotdiscounted){
+
+                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                cashierId = sharedPreference.getString("cashorId", null);
+                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                    String MRAMETHOD = "Single";
+                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                    String Catnum = String.valueOf(catId);
+
+                                    // Insert a new transaction with IS_PAID as 0
+                                    mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                }
+                            }else{
+                                if ("OPEN FOOD".equals(catname)) {
+                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                    cashierId = sharedPreference.getString("cashorId", null);
+                                    newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                        String MRAMETHOD = "Single";
+                                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                        String Catnum = String.valueOf(catId);
+
+                                        // Insert a new transaction with IS_PAID as 0
+                                        mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                    }
+                                }else {
+                                    mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                                }
+
+                            }
                             refreshTicketFragment();
                             refreshTotal();
                         }else {
-                            Log.d("existingTransactionId", existingTransactionId);
-                            Log.d("transactionIdInProgress", transactionIdInProgress);
-                            Log.d("latesttransId", latesttransId);
-                            Log.d("sentToKitchentest1", sentToKitchen);
+
                                     // Item is paid, insert a new transaction with IS_PAID as 0
                                     item = dbManager.getItemById(String.valueOf(itemId));
                                     if (item != null) {
@@ -474,7 +655,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                                             String Catnum = String.valueOf(catId);
-                                            Log.d("roomtable2", roomid + " " + tableid);
+
                                             // Insert a new transaction with IS_PAID as 0
                                             mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -519,12 +700,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
 
                                 String Catnum= String.valueOf(catId);
-                                Log.d("roomtable3", roomid + " " + tableid);
-                                Log.d("transactionId2", transactionId );
-                    boolean hasitem =mDatabaseHelper.hasItemsForTransactionId(transactionId);
-                    if(!hasitem){
-                        showNumberOfCoversDialog(transactionId);
-                    }else if(Boolean.FALSE.equals(HasOptions) && (HasSupplements.trim().equals("1") || HasSupplements.trim().equals("true"))){
+
+                    if(Boolean.FALSE.equals(HasOptions) && (HasSupplements.trim().equals("1") || HasSupplements.trim().equals("true"))){
 
                         List<Variant> supplementList = dbManager.getSupplementListById(SupplementsItem);
 
@@ -540,9 +717,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                 NewBarcode = variant.getBarcode();
                                 String newDesc = variant.getDescription();
                                 newitemid = variant.getVariantitemid();
-                                Log.d("SupplementsItem", SupplementsItem);
-                                Log.d("newitemid", newitemid);
-                                Log.d("PopupForSupplements", "1");
+
                             }
                             showOptionPopupForSupplements(newitemid, RelatedItem, RelatedItem2, RelatedItem3, RelatedItem4, RelatedItem5, SupplementsItem, itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -575,7 +750,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         Barcode=item.getBarcode();
                         Weight=item.getWeight();
                         catname=item.getCategory();
-                        Log.d("SendToHeader1", "SendToHeader" );
+
 
                         SendToHeader(unitprice, calculateTax());
 
@@ -598,51 +773,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         return view;
 
     }
+
+    // Public method to be called by the MainActivity for searching items
+
     // Method to show popup dialog for number of covers
-    private void showNumberOfCoversDialog(String transactionid) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Enter Number of Covers");
 
-        final EditText input = new EditText(getContext());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        builder.setView(input);
-
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String numberOfCoversStr = input.getText().toString().trim();
-                if (!numberOfCoversStr.isEmpty()) {
-                    try {
-                        int numberOfCovers = Integer.parseInt(numberOfCoversStr);
-                        // Use numberOfCovers variable as needed
-                        processNumberOfCovers(transactionid,numberOfCovers);
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Number of covers cannot be empty", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
-    // Method to process the number of covers entered
-    private void processNumberOfCovers(String trsansactionid,int numberOfCovers) {
-        // Use the numberOfCovers variable as needed in your code
-        // For example, store it as a class member or pass it to another method
-        Log.d("NumberOfCovers", "Number of covers entered: " + numberOfCovers);
-mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
-        // Continue with your application logic after setting numberOfCovers
-    }
 
     private boolean isRoomTableInProgress(String roomid, String tableid) {
         Cursor cursor = mDatabaseHelper.getInProgressRecord(roomid, tableid);
@@ -695,8 +830,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound6", "No variants found for ID " + id);
-                        Log.d("relatedoptionid", "relatedoptionid: " + relatedoptionid);
+
 
                         insertsupplementdata(relatedoptionid, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
                         mDatabaseHelper.updateRelatedOptionId(transactionId, relatedoptionid, String.valueOf(itemId));
@@ -718,7 +852,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("supplements", "No supplements found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.SupplementsButtonsLayout).setVisibility(View.GONE);
         }
@@ -775,7 +909,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setTag(variant.getBarcode()); // Set a tag to identify the variant (you can use barcode or variantId)
                 String NewBarcode = variant.getBarcode();
 
-                Log.d("NewBarcode", String.valueOf(NewBarcode));
+
 
                 String newDesc = variant.getDescription();
                 String newitemid = variant.getVariantitemid();
@@ -801,7 +935,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound1", "No variants found for ID " + id);
+
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
 // Make the button visible when the variant button is clicked
                         if( (HasSupplements.trim().equals("1") || HasSupplements.trim().equals("true"))) {
@@ -811,7 +945,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 @Override
                                 public void onClick(View v) {
                                     // Handle the Next button click
-                                    Toast.makeText(getContext(), "Next button clicked", Toast.LENGTH_SHORT).show();
                                     showOptionPopupForSupplements(newitemid,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     alertDialog.dismiss(); // Dismiss the dialog when a variant button is clicked
                                 }
@@ -836,7 +969,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("relateditems", "No variants found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.variantButtonsLayout).setVisibility(View.GONE);
             dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
@@ -882,7 +1015,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound2", "No variants found for ID " + id);
+
 
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
                         // Make the button visible when the variant button is clicked
@@ -894,7 +1027,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 @Override
                                 public void onClick(View v) {
                                     // Handle the Next button click
-                                    Toast.makeText(getContext(), "Next button clicked", Toast.LENGTH_SHORT).show();
                                     showOptionPopupForSupplements(newitemid,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     alertDialog.dismiss(); // Dismiss the dialog when a variant button is clicked
                                 }
@@ -919,7 +1051,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("relateditems", "No variants found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.variantButtonsLayout2).setVisibility(View.GONE);
             dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
@@ -965,7 +1097,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound3", "No variants found for ID " + id);
+
 
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
                         if( (HasSupplements.trim().equals("1") || HasSupplements.trim().equals("true"))) {
@@ -975,7 +1107,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 @Override
                                 public void onClick(View v) {
                                     // Handle the Next button click
-                                    Toast.makeText(getContext(), "Next button clicked", Toast.LENGTH_SHORT).show();
                                     showOptionPopupForSupplements(newitemid,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     alertDialog.dismiss(); // Dismiss the dialog when a variant button is clicked
                                 }
@@ -1000,7 +1131,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("relateditems", "No variants found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.variantButtonsLayout3).setVisibility(View.GONE);
             dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
@@ -1046,7 +1177,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound4", "No variants found for ID " + id);
+
 
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
                         // Make the button visible when the variant button is clicked
@@ -1057,7 +1188,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 @Override
                                 public void onClick(View v) {
                                     // Handle the Next button click
-                                    Toast.makeText(getContext(), "Next button clicked", Toast.LENGTH_SHORT).show();
                                     showOptionPopupForSupplements(newitemid,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     alertDialog.dismiss(); // Dismiss the dialog when a variant button is clicked
                                 }
@@ -1082,7 +1212,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("relateditems", "No variants found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.variantButtonsLayout4).setVisibility(View.GONE);
             dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
@@ -1128,7 +1258,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("relateditemsfound5", "No variants found for ID " + id);
+
 
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
                         if( (HasSupplements.trim().equals("1") || HasSupplements.trim().equals("true"))) {
@@ -1138,7 +1268,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 @Override
                                 public void onClick(View v) {
                                     // Handle the Next button click
-                                    Toast.makeText(getContext(), "Next button clicked", Toast.LENGTH_SHORT).show();
                                     showOptionPopupForSupplements(newitemid,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, vat, longDescription, UnitPrice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                     alertDialog.dismiss(); // Dismiss the dialog when a variant button is clicked
                                 }
@@ -1163,7 +1292,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 variantButtonsLayout.addView(variantButton);
             }
         } else {
-            Log.d("relateditems", "No variants found for ID " + id);
+
             // Hide the layout containing buttons and option names if no data is available
             dialogView.findViewById(R.id.variantButtonsLayout5).setVisibility(View.GONE);
             dialogView.findViewById(R.id.OptionNametextView).setVisibility(View.GONE);
@@ -1181,8 +1310,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
 
     public void insertdata(String relatedoptionid,String SupplementsItem,String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String NewBarcode, String newdesc,double newprice,String newitemid) {
         Item item = dbManager.getItemById(id);
-        Log.d("newbarcode", NewBarcode);
-        Log.d("newitemid", newitemid);
+
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
@@ -1198,10 +1326,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
             sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(NewBarcode,existingTransactionId));
 
-            Log.d("sentToKitchen4", sentToKitchen);
+
             // Check if the existing transaction ID matches the current transaction ID
             if (sentToKitchen.equals("1")) {
-                Log.d("sentToKitchentest2", sentToKitchen);
+
 
                 boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
                 if(existingitems )
@@ -1228,9 +1356,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             // Calculate the VAT amount
                              vatAmount = newTotalPrice - priceExcludingVAT;
 
-                            // Logging the calculated values
-                            Log.d("PriceExcludingVAT5", String.valueOf(priceExcludingVAT));
-                            Log.d("VATAmount5", String.valueOf(vatAmount));
+
                         }
                         SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
                         cashierId = sharedPreference.getString("cashorId", null);
@@ -1245,7 +1371,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                             String Catnum = String.valueOf(catId);
-                            Log.d("roomtable4", roomid + " " + tableid);
+
                             // Insert a new transaction with IS_PAID as 0
                             mDatabaseHelper.insertTransaction(null,Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -1254,7 +1380,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         refreshTotal();
 
                     }else {
-                        Log.d("sentToKitchentest", sentToKitchen);
+
                         // Item already selected, update the quantity and total price
                         int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
                         double unitprice = item.getPrice();
@@ -1280,12 +1406,65 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             // Calculate the VAT amount
                             vatAmount = newTotalPrice - priceExcludingVAT;
 
-                            // Logging the calculated values
-                            Log.d("PriceExcludingVAT6", String.valueOf(priceExcludingVAT));
-                            Log.d("VATAmount6", String.valueOf(vatAmount));
+
                         }
                         double newVat =  vatAmount;
-                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                        boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+
+
+                        if(!isdiscounted && existingitems ){
+                            mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+
+                        } else if(!isdiscounted){
+
+                            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                            cashierId = sharedPreference.getString("cashorId", null);
+                            newpriceWithoutVat= pricewithoutVat / newQuantity;
+                            String ShopName = sharedPreference.getString("ShopName", null);
+
+                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                String MRAMETHOD = "Single";
+                                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                String Catnum = String.valueOf(catId);
+
+                                // Insert a new transaction with IS_PAID as 0
+                                mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                            }
+                        }else{
+
+                            if ("OPEN FOOD".equals(catname)) {
+                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                cashierId = sharedPreference.getString("cashorId", null);
+                                newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                    String MRAMETHOD = "Single";
+                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                    String Catnum = String.valueOf(catId);
+
+                                    // Insert a new transaction with IS_PAID as 0
+                                    mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                }
+                            }else {
+                                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                            }
+
+                        }
                         refreshTicketFragment();
                         refreshTotal();
                     }
@@ -1296,14 +1475,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             // Check if the existing transaction ID matches the current transaction ID
             else if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
 
-                Log.d("existingTransactionId2", existingTransactionId);
-                Log.d("transactionIdInProgress", transactionIdInProgress);
-                Log.d("latesttransId", latesttransId);
-                Log.d("sentToKitchentest1", sentToKitchen);
-                Log.d("NewBarcode", NewBarcode);
+
                 // Item already selected, update the quantity and total price
                 int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
-                Log.d("currentQuantity", String.valueOf(currentQuantity));
+
                 UnitPrice = newprice;
                 double unitprice = item.getPrice();
 
@@ -1325,25 +1500,71 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                     // Calculate the VAT amount
                     vatAmount = newTotalPrice - priceExcludingVAT;
 
-                    // Logging the calculated values
-                    Log.d("PriceExcludingVAT2", String.valueOf(priceExcludingVAT));
-                    Log.d("VATAmount2", String.valueOf(vatAmount));
+
                 }
                 double newVat =  vatAmount;
 
 
                 double newtotaltaxafterdiscount= newVat ;
-                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
-                Log.d("newQuantity", String.valueOf(newQuantity));
+                boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+                boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
+
+                if(!isdiscounted && existingitems ){
+                    mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                } else if(!isdiscounted){
+                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                    cashierId = sharedPreference.getString("cashorId", null);
+                    newpriceWithoutVat= pricewithoutVat / newQuantity;
+                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                        String MRAMETHOD = "Single";
+                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                        String Catnum = String.valueOf(catId);
+
+                        // Insert a new transaction with IS_PAID as 0
+                        mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                    }
+                }else{
+
+                    if ("OPEN FOOD".equals(catname)) {
+                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                        cashierId = sharedPreference.getString("cashorId", null);
+                        newpriceWithoutVat = pricewithoutVat / newQuantity;
+                        String ShopName = sharedPreference.getString("ShopName", null);
+
+                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                            String MRAMETHOD = "Single";
+                            String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                            String Catnum = String.valueOf(catId);
+
+                            // Insert a new transaction with IS_PAID as 0
+                            mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                        }
+                    }else {
+                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                    }
+
+                }
+
                 refreshTicketFragment();
                 refreshTotal();
             } else {
 
-                Log.d("existingTransactionId3", existingTransactionId);
-                Log.d("transactionIdInProgress", transactionIdInProgress);
-                Log.d("latesttransId", latesttransId);
-                Log.d("sentToKitchentest3", sentToKitchen);
-                Log.d("NewBarcode3", NewBarcode);
                 if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
                     if (sentToKitchen.equals("1")) {
 
@@ -1371,7 +1592,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum = String.valueOf(catId);
-                                Log.d("roomtable5", roomid + " " + tableid);
+
                                 double vatAmount=0;
                                 if (VatType.equals("VAT 15%")) {
                                     double vatRate = 0.15; // 15% VAT rate
@@ -1382,9 +1603,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                     // Calculate the VAT amount
                                     vatAmount = newTotalPrice - priceExcludingVAT;
 
-                                    // Logging the calculated values
-                                    Log.d("PriceExcludingVAT3", String.valueOf(priceExcludingVAT));
-                                    Log.d("VATAmount3", String.valueOf(vatAmount));
                                 }
 
                                 // Insert a new transaction with IS_PAID as 0
@@ -1417,9 +1635,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 // Calculate the VAT amount
                 vatAmount = newTotalPrice - priceExcludingVAT;
 
-                // Logging the calculated values
-                Log.d("PriceExcludingVAT4", String.valueOf(priceExcludingVAT));
-                Log.d("VATAmount4", String.valueOf(vatAmount));
+
             }
 
             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -1435,12 +1651,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                 String Catnum= String.valueOf(catId);
-                Log.d("INSERT_Transaction", "4");
-                Log.d("roomtable6", roomid + " " + tableid);
-                boolean hasitem =mDatabaseHelper.hasItemsForTransactionId(transactionId);
-                if(!hasitem){
-                    showNumberOfCoversDialog(transactionId);
-                }
+
 
                 // Item not selected, insert a new transaction with quantity 1 and total price
                 mDatabaseHelper.insertTransaction(null,Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
@@ -1459,7 +1670,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             VatVall = item.getVAT();
 
             double unitprice = item.getPrice();
-            Log.d("SendToHeader2", unitprice +" " + calculateTax());
+
 
             SendToHeader(unitprice, calculateTax());
         }
@@ -1471,8 +1682,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
     }
     public void insertsupplementdata(String relatedoptionid,String SupplementsItem,String id,int itemId,String transactionId, String transactionDate,double vat, String longDescription,double priceWithoutVat,String NewBarcode, String newdesc,double newprice,String newitemid) {
         Item item = dbManager.getItemById(id);
-        Log.d("newbarcode", NewBarcode);
-        Log.d("newitemid", newitemid);
+
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
@@ -1488,10 +1698,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
             sentToKitchen = String.valueOf(mDatabaseHelper.getLatestSentToKitchen(NewBarcode,existingTransactionId));
 
-            Log.d("sentToKitchen4", sentToKitchen);
+
             // Check if the existing transaction ID matches the current transaction ID
             if (sentToKitchen.equals("1")) {
-                Log.d("sentToKitchentest2", sentToKitchen);
+
 
                 boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
                 if(existingitems )
@@ -1518,9 +1728,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             // Calculate the VAT amount
                             vatAmount = newTotalPrice - priceExcludingVAT;
 
-                            // Logging the calculated values
-                            Log.d("PriceExcludingVAT5", String.valueOf(priceExcludingVAT));
-                            Log.d("VATAmount5", String.valueOf(vatAmount));
                         }
                         SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
                         cashierId = sharedPreference.getString("cashorId", null);
@@ -1535,7 +1742,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                             String Catnum = String.valueOf(catId);
-                            Log.d("roomtable4", roomid + " " + tableid);
+
                             // Insert a new transaction with IS_PAID as 0
                             mDatabaseHelper.insertTransaction(relatedoptionid,Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -1545,7 +1752,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         refreshTotal();
 
                     }else {
-                        Log.d("sentToKitchentest", sentToKitchen);
+
                         // Item already selected, update the quantity and total price
                         int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
                         double unitprice = item.getPrice();
@@ -1571,12 +1778,65 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             // Calculate the VAT amount
                             vatAmount = newTotalPrice - priceExcludingVAT;
 
-                            // Logging the calculated values
-                            Log.d("PriceExcludingVAT6", String.valueOf(priceExcludingVAT));
-                            Log.d("VATAmount6", String.valueOf(vatAmount));
+
                         }
                         double newVat =  vatAmount;
-                        mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                        boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+
+
+                        if(!isdiscounted && existingitems ){
+                            mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+
+                        } else if (!isdiscounted) {
+
+
+                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                            cashierId = sharedPreference.getString("cashorId", null);
+                            newpriceWithoutVat= pricewithoutVat / newQuantity;
+                            String ShopName = sharedPreference.getString("ShopName", null);
+
+                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                String MRAMETHOD = "Single";
+                                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                String Catnum = String.valueOf(catId);
+                                // Insert a new transaction with IS_PAID as 0
+                                mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                            }
+                        }else{
+
+                            if ("OPEN FOOD".equals(catname)) {
+                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                cashierId = sharedPreference.getString("cashorId", null);
+                                newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                    String MRAMETHOD = "Single";
+                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                    String Catnum = String.valueOf(catId);
+
+                                    // Insert a new transaction with IS_PAID as 0
+                                    mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                }
+                            }else {
+                                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                            }
+
+                        }
                         refreshTicketFragment();
                         refreshTotal();
                     }
@@ -1587,14 +1847,9 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             // Check if the existing transaction ID matches the current transaction ID
             else if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
 
-                Log.d("existingTransactionId2", existingTransactionId);
-                Log.d("transactionIdInProgress", transactionIdInProgress);
-                Log.d("latesttransId", latesttransId);
-                Log.d("sentToKitchentest1", sentToKitchen);
-                Log.d("NewBarcode", NewBarcode);
                 // Item already selected, update the quantity and total price
                 int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
-                Log.d("currentQuantity", String.valueOf(currentQuantity));
+
                 UnitPrice = newprice;
                 double unitprice = item.getPrice();
 
@@ -1616,25 +1871,72 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                     // Calculate the VAT amount
                     vatAmount = newTotalPrice - priceExcludingVAT;
 
-                    // Logging the calculated values
-                    Log.d("PriceExcludingVAT2", String.valueOf(priceExcludingVAT));
-                    Log.d("VATAmount2", String.valueOf(vatAmount));
                 }
                 double newVat =  vatAmount;
 
 
                 double newtotaltaxafterdiscount= newVat ;
-                mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
-                Log.d("newQuantity", String.valueOf(newQuantity));
+                boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+
+            boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
+
+            if(!isdiscounted && existingitems ){
+                mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+            } else if (!isdiscounted){
+                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                    cashierId = sharedPreference.getString("cashorId", null);
+
+                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                        String MRAMETHOD = "Single";
+                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                        String Catnum = String.valueOf(catId);
+
+                        // Insert a new transaction with IS_PAID as 0
+                        mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                    }
+                }else{
+
+                if ("OPEN FOOD".equals(catname)) {
+                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                    cashierId = sharedPreference.getString("cashorId", null);
+                    newpriceWithoutVat = pricewithoutVat / newQuantity;
+                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                        String MRAMETHOD = "Single";
+                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                        String Catnum = String.valueOf(catId);
+
+                        // Insert a new transaction with IS_PAID as 0
+                        mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                    }
+                }else {
+                    mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
+
+                }
+
+                }
+
                 refreshTicketFragment();
                 refreshTotal();
             } else {
 
-                Log.d("existingTransactionId3", existingTransactionId);
-                Log.d("transactionIdInProgress", transactionIdInProgress);
-                Log.d("latesttransId", latesttransId);
-                Log.d("sentToKitchentest3", sentToKitchen);
-                Log.d("NewBarcode3", NewBarcode);
+
                 if (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.IS_PAID)) == 1) {
                     if (sentToKitchen.equals("1")) {
 
@@ -1662,7 +1964,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum = String.valueOf(catId);
-                                Log.d("roomtable5", roomid + " " + tableid);
+
                                 double vatAmount=0;
                                 if (VatType.equals("VAT 15%")) {
                                     double vatRate = 0.15; // 15% VAT rate
@@ -1673,9 +1975,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                     // Calculate the VAT amount
                                     vatAmount = newTotalPrice - priceExcludingVAT;
 
-                                    // Logging the calculated values
-                                    Log.d("PriceExcludingVAT3", String.valueOf(priceExcludingVAT));
-                                    Log.d("VATAmount3", String.valueOf(vatAmount));
                                 }
 
                                 // Insert a new transaction with IS_PAID as 0
@@ -1708,9 +2007,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 // Calculate the VAT amount
                 vatAmount = newTotalPrice - priceExcludingVAT;
 
-                // Logging the calculated values
-                Log.d("PriceExcludingVAT4", String.valueOf(priceExcludingVAT));
-                Log.d("VATAmount4", String.valueOf(vatAmount));
+
             }
 
             SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -1726,13 +2023,9 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                 String Catnum= String.valueOf(catId);
-                Log.d("INSERT_Transaction", "4");
-                Log.d("roomtable6", roomid + " " + tableid);
-                boolean hasitem =mDatabaseHelper.hasItemsForTransactionId(transactionId);
-                if(!hasitem){
-                    showNumberOfCoversDialog(transactionId);
-                }
-                Log.d("relatedoptionid", relatedoptionid);
+
+
+
                 // Item not selected, insert a new transaction with quantity 1 and total price
                 mDatabaseHelper.insertTransaction(relatedoptionid,Integer.parseInt(newitemid), NewBarcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, vatAmount, longDescription, unitprice, priceWithoutVat, VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
@@ -1749,7 +2042,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             VatVall = item.getVAT();
 
             double unitprice = item.getPrice();
-            Log.d("SendToHeader2", unitprice +" " + calculateTax());
 
             SendToHeader(unitprice, calculateTax());
         }
@@ -1796,7 +2088,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 if (Available4sale != null && Available4sale.equalsIgnoreCase("true")) {
                     if (transactionStatus.equals("InProgress") || transactionSaved.equals("PRF")|| transactionCDN.equals("CRN")|| transactionDBN.equals("DRN")) {
                         if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
-                            Log.d("INSERT_Transactions3", "test1" );
+
                             transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                             // Store the transaction ID in SharedPreferences
                             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1809,7 +2101,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         transactionId = transactionIdInProgress;
 
                     } else {
-                        Log.d("INSERT_Transaction4", "test1" );
+
                         transactionId = generateNewTransactionId(); // Generate a new transaction ID
                         refreshTicketFragment();
                         refreshTotal();
@@ -1842,13 +2134,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         // Retrieve the existing transaction ID for the item
                         existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
                         sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-                        Log.d("sentToKitchen2", sentToKitchen);
+
                         // Check if the existing transaction ID matches the current transaction ID
                         if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
-                            Log.d("existingTransactionId3", existingTransactionId);
-                            Log.d("transactionIdInProgress", transactionIdInProgress);
-                            Log.d("latesttransId", latesttransId);
-                            Log.d("sentToKitchentest1", sentToKitchen);
+
                             // Item already selected, update the quantity and total price
                             int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -1865,7 +2154,37 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             double newVat = newQuantity * calculateTax();
                             double taxafterdiscount= calculateTax();
                             double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                            mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+                            boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+
+                            boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
+
+                            if(!isdiscounted && existingitems ){
+                                mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                            } else if (!isdiscounted){
+                                SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                cashierId = sharedPreference.getString("cashorId", null);
+
+                                String ShopName = sharedPreference.getString("ShopName", null);
+
+                                Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                    int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                    String MRAMETHOD = "Single";
+                                    String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                    int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                    String Catnum = String.valueOf(catId);
+
+                                    // Insert a new transaction with IS_PAID as 0
+                                    mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                }
+                            }else{
+                                mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                            }
                             refreshTicketFragment();
                             refreshTotal();
                         } else {
@@ -1902,10 +2221,6 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                             CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                             int catId = mDatabaseHelper.getCatIdFromName(catname);
                                             String Catnum = String.valueOf(catId);
-                                            Log.d("INSERT_Transaction", "5");
-                                            // Item has a different transaction ID, insert a new transaction
-                                            Log.d("roomtable7", roomid + " " + tableid);
-                                            Log.d("PopupForSupplements", "5");
 
                                             mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                            // showOptionPopupForSupplements(String.valueOf(itemId),RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
@@ -1948,11 +2263,11 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                 String Catnum= String.valueOf(catId);
-                                Log.d("INSERT_Transaction", "6");
-                                Log.d("roomtable8", roomid + " " + tableid);
+
+
                                 // Item not selected, insert a new transaction with quantity 1 and total price
                                 mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
-                                Log.d("PopupForSupplements", "6");
+
 
                                // showOptionPopupForSupplements(String.valueOf(itemId),RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                             }
@@ -1976,7 +2291,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         Currency=item.getCurrency();
                         ItemCode=item.getItemCode();
                         Barcode=item.getBarcode();
-                        Log.d("SendToHeader3", "SendToHeader" );
+
 
                         SendToHeader(unitprice, calculateTax());
                     }
@@ -1995,7 +2310,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
 
         }
     }
-    private void refreshTicketFragment() {
+    public void refreshTicketFragment() {
         TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
 
         if (ticketFragment != null) {
@@ -2064,7 +2379,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
 
                         if (status.equals("InProgress") || status.equals("PRF") || status.equals("DRN") || status.equals("CRN")  ) {
                             if (!isRoomTableInProgress(String.valueOf(roomid), tableid)) {
-                                Log.d("INSERT_Transactions5", "test1" );
+
                                 transactionIdInProgress = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
                                 // Store the transaction ID in SharedPreferences
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2078,7 +2393,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             transactionId = transactionIdInProgress;
 
                         } else {
-                            Log.d("INSERT_Transactions6", "test1" );
+
                             transactionId = generateNewTransactionId(); // Generate a new transaction ID
                             refreshTicketFragment();
                             refreshTotal();
@@ -2112,13 +2427,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                         if (cursor != null && cursor.moveToFirst()) {
                             existingTransactionId = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_ID));
                             sentToKitchen = cursor.getString(cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-                            Log.d("sentToKitchen3", sentToKitchen);
+
                             // Check if the existing transaction ID matches the current transaction ID
                             if (existingTransactionId != null && existingTransactionId.equals(latesttransId) && sentToKitchen.equals("0")) {
-                                Log.d("existingTransactionId4", existingTransactionId);
-                                Log.d("transactionIdInProgress", transactionIdInProgress);
-                                Log.d("latesttransId", latesttransId);
-                                Log.d("sentToKitchentest1", sentToKitchen);
+
                                 // Item already selected, update the quantity and total price
                                 int currentQuantity = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.QUANTITY));
 
@@ -2138,7 +2450,79 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                 double newVat= newQuantity * calculateTax();
                                 double taxafterdiscount= calculateTax();
                                 double newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
-                                mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount,newVat,VatType, String.valueOf(roomid),tableid);
+                                boolean isdiscounted=mDatabaseHelper.isItemDiscountZero(latesttransId,itemId);
+
+                                boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
+
+                                if(!isdiscounted && existingitems ){
+                                    mDatabaseHelper.updateTransactionWithZeroDiscount(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
+
+                                } else if (!isdiscounted){
+                                    SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                    cashierId = sharedPreference.getString("cashorId", null);
+
+                                    String ShopName = sharedPreference.getString("ShopName", null);
+
+                                    Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                    if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                        int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                        String MRAMETHOD = "Single";
+                                        String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                        int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                        String Catnum = String.valueOf(catId);
+                                        // Insert a new transaction with IS_PAID as 0
+                                        mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                    }
+                                }else{
+                                    if ("OPEN FOOD".equals(catname)) {
+                                        SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                        cashierId = sharedPreference.getString("cashorId", null);
+                                        newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                        String ShopName = sharedPreference.getString("ShopName", null);
+
+                                        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                            int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                            String MRAMETHOD = "Single";
+                                            String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                            int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                            String Catnum = String.valueOf(catId);
+                                            // Insert a new transaction with IS_PAID as 0
+                                            mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                        }
+                                    }else {
+                                        if ("OPEN FOOD".equals(catname)) {
+                                            SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                                            cashierId = sharedPreference.getString("cashorId", null);
+                                            newpriceWithoutVat = pricewithoutVat / newQuantity;
+                                            String ShopName = sharedPreference.getString("ShopName", null);
+
+                                            Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+                                            if (cursorCompany != null && cursorCompany.moveToFirst()) {
+                                                int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
+
+                                                String MRAMETHOD = "Single";
+                                                String CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
+                                                int catId = mDatabaseHelper.getCatIdFromName(catname);
+                                                String Catnum = String.valueOf(catId);
+                                                // Insert a new transaction with IS_PAID as 0
+                                                mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, pricewithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+
+                                            }
+                                        }else {
+                                            mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount,newVat,VatType, String.valueOf(roomid),tableid);
+                                        }
+
+                                    }
+
+                                }
                                 refreshTicketFragment();
                                 refreshTotal();
                             } else {
@@ -2174,11 +2558,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                                                 CompanyShopNumber = cursorCompany.getString(columnCompanyShopNumber);
                                                 int catId = mDatabaseHelper.getCatIdFromName(catname);
                                                 String Catnum = String.valueOf(catId);
-                                                Log.d("INSERT_Transaction", "7 ");
-                                                Log.d("roomtable9", roomid + " " + tableid);
+
                                                 // Item has a different transaction ID, insert a new transaction
                                                 mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
-                                                Log.d("PopupForSupplements", "7");
+
 
                                                 showOptionPopupForSupplements(String.valueOf(itemId),RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                             }
@@ -2219,11 +2602,10 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
 
                                     int catId = mDatabaseHelper.getCatIdFromName(catname);
                                     String Catnum= String.valueOf(catId);
-                                    Log.d("INSERT_Transaction", "8 ");
-                                    Log.d("roomtable10", roomid + " " + tableid);
+
                                     // Item not selected, insert a new transaction with quantity 1 and total price
                                     mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight,taxbeforediscount,currentpriceWithoutVat, CompanyShopNumber,Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
-                                    Log.d("PopupForSupplements", "8");
+
 
                                     showOptionPopupForSupplements(String.valueOf(itemId),RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                                 }refreshTicketFragment();
@@ -2239,7 +2621,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                             VatVall = item.getVAT();
                             priceAfterDiscount=item.getPriceAfterDiscount();
                             double unitprice=item.getPrice();
-                            Log.d("SendToHeader4", "SendToHeader" );
+
 
                             SendToHeader(unitprice, calculateTax());
                             Barcode=item.getBarcode();
@@ -2411,7 +2793,7 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
             cashierId = sharedPreference.getString("cashorId", null);
 
             String ShopName = sharedPreference.getString("ShopName", null);
-
+            int covernumber=mDatabaseHelper.getCoverCount(tableid,roomid);
             Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
             if (cursorCompany != null && cursorCompany.moveToFirst()) {
                 int columnCompanyShopNumber = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_SHOPNUMBER);
@@ -2442,6 +2824,8 @@ mDatabaseHelper.updateNumberOfCovers(trsansactionid,numberOfCovers);
                 );
 
             }
+            mDatabaseHelper.updateNumberOfCovers(transactionIdInProgress,covernumber);
+
         }
     }
 

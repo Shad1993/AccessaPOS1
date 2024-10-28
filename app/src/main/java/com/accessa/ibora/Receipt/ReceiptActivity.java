@@ -23,12 +23,16 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.MainActivity;
+import com.accessa.ibora.MainActivityMobile;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.Settings.SettingsMenuFragment.OnMenufragListener;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.login.login;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.BodyActivity;
 import com.accessa.ibora.product.menu.BodyFragment;
 import com.accessa.ibora.product.menu.Product;
@@ -48,11 +52,16 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
     private ReceiptAdapter receiptAdapter;
     private SearchView searchView;
     private Spinner dateFilterSpinner;
+    private SharedPreferences usersharedPreferences;
+    private DatabaseHelper mDatabaseHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.receipt_dashboard);
+        mDatabaseHelper = new DatabaseHelper(this);
+        usersharedPreferences = this.getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -101,41 +110,76 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
+                int levelNumber = Integer.parseInt(cashorlevel); // Retrieve user's level
+
                 if (id == R.id.Sales) {
-                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    // Set "roomnum" to 1
-                    editor.putInt("roomnum", 1);
-                    editor.putInt("room_id", 1);
-                    editor.putString("table_id", "0");
-                    editor.putString("table_num", "0");
-                    // Commit the changes
-                    editor.apply();
-                    Intent intent = new Intent(ReceiptActivity.this, MainActivity.class);
-                    startActivity(intent);
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        // Set "roomnum" to 1
+                        editor.putInt("roomnum", 1);
+                        editor.putInt("room_id", 1);
+                        editor.putString("table_id", "0");
+                        editor.putString("table_num", "0");
+                        // Commit the changes
+                        editor.apply();
+                        Intent intent = new Intent(ReceiptActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(ReceiptActivity.this, ReceiptActivity.class);
-                    startActivity(intent);
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "receipts_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, ReceiptActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(ReceiptActivity.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, SalesReportActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(ReceiptActivity.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, Product.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(ReceiptActivity.this, SettingsDashboard.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, SettingsDashboard.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                    // Check permission for Help
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, Help.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(ReceiptActivity.this, AdminActivity.class);
-                    startActivity(intent);
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent intent = new Intent(ReceiptActivity.this, AdminActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return true;
             }
@@ -144,10 +188,18 @@ public class ReceiptActivity extends AppCompatActivity implements OnMenufragList
 
 
 
+
     }
 
 
     private void logout() {
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

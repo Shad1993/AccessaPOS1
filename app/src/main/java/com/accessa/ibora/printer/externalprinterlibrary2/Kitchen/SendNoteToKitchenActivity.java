@@ -179,6 +179,8 @@ public class SendNoteToKitchenActivity extends AppCompatActivity implements Prin
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
         Cursor cursor1 = mDatabaseHelper.getTransactionsForNetPrinting(latesttransId,String.valueOf(roomid), tableid);
+        Log.d("transactionIdInProgress", latesttransId);
+
         if (cursor1 != null && cursor1.moveToFirst()) {
             do {
                 String id = cursor1.getString(cursor1.getColumnIndex(DatabaseHelper.ITEM_ID));

@@ -30,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -40,6 +41,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -51,6 +53,8 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
+import com.accessa.ibora.Functions.FunctionFragment;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.POP.CancelPaymentPOPDialogFragment;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
@@ -58,6 +62,7 @@ import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.product.category.CategoryFragment;
@@ -66,6 +71,7 @@ import com.accessa.ibora.product.items.ItemAdapter;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.RoomsAndTable.RoomsFragment;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.Sales.SearchDialogFragment;
 import com.accessa.ibora.sales.Tables.TablesFragment;
 import com.accessa.ibora.sales.ticket.Checkout.validateticketDialogFragment;
 import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
@@ -90,7 +96,7 @@ import java.util.List;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener, QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener , RoomsFragment.OnRoomUpdateListener,TablesFragment.OnTableClickListener, TablesFragment.OnReloadFragmentListener {
+public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener,ModifyItemDialogFragment.DiscountAppliedListener,  QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener , RoomsFragment.OnRoomUpdateListener, FunctionFragment.OnTableClickListener,TablesFragment.OnTableClickListener, TablesFragment.OnReloadFragmentListener, SearchDialogFragment.OnSearchListener , TicketFragment.CoverAmountListener{
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
     private String tableid;
@@ -114,6 +120,7 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
     private static final String POSNumber="posNumber";
     private static MainActivity instance;
     private SharedPreferences sharedPreferences;
+    private SharedPreferences usersharedPreferences;
     private String transactionIdInProgress; // Transaction ID for "InProgress" status
     private TicketFragment ticketFragment;
     private CustomerLcdFragment customerLcdFragment;
@@ -174,11 +181,48 @@ public class MainActivity extends AppCompatActivity  implements SalesFragment.It
         // Handle other menu items as needed
         return super.onOptionsItemSelected(item);
     }
+    // Remove the incorrect @Override annotation
+    @Override
+    public void onSearch(String query) {
+        // Handle the search query
+        SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
+        if (salesFragment != null) {
+            Bundle result = new Bundle();
+            result.putString("description", query);
+            getSupportFragmentManager().setFragmentResult("searchQuery", result);
+
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.navigation_menu, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+
+        searchItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                // Hide the keyboard
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                View view = getCurrentFocus();
+                if (view != null) {
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
+
+                // Open your custom search dialog fragment
+                SearchDialogFragment searchDialog = new SearchDialogFragment();
+                searchDialog.show(getSupportFragmentManager(), "searchDialog");
+
+                return true;
+            }
+        });
+
         return true;
     }
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -282,7 +326,15 @@ if (cashReturn != 0.0) {
 
         // Get the header view from the NavigationView
         View headerView = navigationView.getHeaderView(0);
+// Get cashier name from SharedPreferences
+        SharedPreferences sharedPreference = this.getSharedPreferences("Login", Context.MODE_PRIVATE);
+         usersharedPreferences = this.getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
+        String cashorName = sharedPreference.getString("cashorName", null);
+
+
+        // Set the toolbar title to include the cashier name
+        toolbar.setTitle("Sales - " + cashorName + "  " +"Till No - " + PosNum);
 
         // Find the TextView within the header view
         name = headerView.findViewById(R.id.name);
@@ -316,8 +368,6 @@ if (cashReturn != 0.0) {
 
             replaceFragment(newFragment);
         }
-
-
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @SuppressLint("NonConstantResourceId")
             @Override
@@ -325,36 +375,76 @@ if (cashReturn != 0.0) {
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
+                // Assuming you have a way to determine the user's access level
+                int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's level
+
                 if (id == R.id.Sales) {
-                    // Already in the sales screen, do nothing
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        // Already in the sales screen, do nothing
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(MainActivity.this, ReceiptActivity.class);
-                    startActivity(intent);
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Receipts_", levelNumber)) {
+                        Intent receiptIntent = new Intent(MainActivity.this, ReceiptActivity.class);
+                        startActivity(receiptIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(MainActivity.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent shiftIntent = new Intent(MainActivity.this, SalesReportActivity.class);
+                        startActivity(shiftIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(MainActivity.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent itemsIntent = new Intent(MainActivity.this, Product.class);
+                        startActivity(itemsIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(MainActivity.this, SettingsDashboard.class);
-                    startActivity(intent);
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent settingsIntent = new Intent(MainActivity.this, SettingsDashboard.class);
+                        startActivity(settingsIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Intent intent = new Intent(MainActivity.this, SendNoteToKitchenActivity.class);
-                    startActivity(intent);
+                    // Check permission for Help
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) {
+                        Intent helpIntent = new Intent(MainActivity.this, Help.class);
+                        startActivity(helpIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(MainActivity.this, AdminActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent adminIntent = new Intent(MainActivity.this, AdminActivity.class);
+                        startActivity(adminIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
-                return true;
+
+                return true; // Indicate that the event was handled
             }
         });
+
+
+
+
 
     }
 
@@ -419,7 +509,13 @@ if (cashReturn != 0.0) {
         return instance;
     }
     public void logout() {
-
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor1 = sharedPrefs.edit();
         editor1.clear();
@@ -466,7 +562,7 @@ if (cashReturn != 0.0) {
                 } else {
                     if (!isFinishing()) {
                         // Permission not granted, handle the situation or show an error message
-                        Toast.makeText(instance, "No Second screen", Toast.LENGTH_SHORT).show();
+                       // Toast.makeText(instance, "No Second screen", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -481,7 +577,7 @@ if (cashReturn != 0.0) {
 
         this.doubleBackToExitPressedOnce = true;
         if (!isFinishing()) {
-            Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
         }
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -511,7 +607,6 @@ if (cashReturn != 0.0) {
 
     @Override
     public void onItemAdded(String roomid, String tableid) {
-        Log.d("onItemAdded", "onItemAdded called with roomid: " + roomid + ", tableid: " + tableid);
 
         // Refresh the TicketFragment when an item is added in the SalesFragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
@@ -574,7 +669,9 @@ if (cashReturn != 0.0) {
     }
 
     public void onItemDeleted() {
-
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
         double totalPriceSum = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid), tableid);
         double totalVATSum = mDatabaseHelper.calculateTotalAmounts(String.valueOf(roomid), tableid);
 
@@ -594,7 +691,9 @@ if (cashReturn != 0.0) {
 
     @Override
     public void onAmountModified() {
-
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
         double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
         double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
 
@@ -898,5 +997,31 @@ if (cashReturn != 0.0) {
         if (salesFragment != null) {
             salesFragment.reload(tableId,roomnum); // Define a method like this in YourOtherFragment to handle the reload
         }
+    }
+
+    @Override
+    public void onDiscountApplied() {
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = Integer.parseInt(String.valueOf(preferences.getInt("roomnum", 0)));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
+        refreshTicketFragment(tableid,String.valueOf(roomid)); // Refresh the ticket fragment after discount is applied
+
+    }
+    private void refreshTicketFragments() {
+        // Your logic to refresh the ticket fragment
+        // For example, replacing the fragment:
+        TicketFragment ticketFragment = new TicketFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.right_container, ticketFragment)
+                .commit();
+    }
+
+    @Override
+    public void onAmountCoverModified() {
+        // For example, replacing the fragment:
+        TablesFragment tablefragment = new TablesFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.TableFragment, tablefragment)
+                .commit();
     }
 }

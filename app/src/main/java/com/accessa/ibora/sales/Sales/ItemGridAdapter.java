@@ -179,10 +179,12 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         if (isWebLink(productImageName)) {
             // Load image from web link
             Glide.with(mContext)
-                    .load(productImageName)
-                    .placeholder(R.drawable.emptybasket) // Placeholder image while loading
+                    .load(new File(productImageName))
+                    .override(100, 100) // Set desired width and height
+                    .placeholder(R.drawable.emptybasket)
                     .error(R.drawable.emptybasket)
                     .into(holder.productImage);
+
         } else {
             // Load image from local storage
             if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

@@ -295,6 +295,7 @@
     <string name="itemavailable">\"Item Available For Sale\"</string>
     <string name="itemnotavailable">\"Item Not Available For Sale\"</string>
     <string name="AllCategory">All Categories</string>
+    <string name="AllSubCategory">All Sub Categories</string>
     <string name="wrongPin">Wrong Pin</string>
     <string name="wrongpinget">Wrong PIN, Please Retry!</string>
     <string name="pinfailed">Login failed</string>
@@ -538,6 +539,29 @@
     <string name="choix">Choose an Option</string>
     <string name="choixsup">Choose a supplement</string>
     <string name="itemsinsplitbil">Item In Split Bill.</string>
+    <string name="PrinterSettings">Printer Settings</string>
+    <string name="Allprintersetup">All Printer settings</string>
+    <string name="printallowed">Allow Printing</string>
+    <string name="printeropener">Do you want to allow Printing.</string>
+    <string name="SectionName">Section Name</string>
+    <string name="notallowprinting">Printing not allowed.</string>
+    <string name="applydiscount">Apply Discount</string>
+    <string name="Language">Languages</string>
+    <string name="editsettings">Edit Settings</string>
+    <string name="edit">Edit</string>
+    <string name="CancelledOrder">Cancelled Order</string>
+    <string name="Openclose">Open/Close</string>
+    <string name="selectroomtable">Select Table</string>
+    <string name="makevisible">Do you want to make This payment method Visible?</string>
+    <string name="makevisibletext">Payment Method set as Visible.</string>
+    <string name="makeinvisible">PaymentMethodin</string>
+    <string name="pleaseclosetransacts">Please Finish Transaction before closing shift.</string>
+    <string name="SubCategory">Sub Category</string>
+    <string name="addsubcat">Add Sub Category</string>
+    <string name="default_category_option">No category selected</string>
+    <string name="ServerSettings">Server Settings</string>
+    <string name="AllLevels">All Levels</string>
+    <string name="DefaultToolbarTitle">Permissions</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

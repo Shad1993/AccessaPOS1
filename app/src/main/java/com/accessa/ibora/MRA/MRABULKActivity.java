@@ -15,6 +15,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_PREVIOUS_HASH;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TAX_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT;
@@ -24,6 +25,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PR
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -35,10 +37,12 @@ import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Transaction;
 
@@ -80,6 +84,10 @@ public class MRABULKActivity extends AppCompatActivity {
     private String cashorlevel,ShopName,LogoPath,CompanyName;
     private String cashierName,cashierId,BuyerName,BuyerCompany,BuyerTan,BuyerBRN,BuyerNIC , BuyerAddress,BuyerType;;
     private double totalAmount,TaxtotalAmount,TotalHT;
+    String userNamemra ;
+    String ebsMraIdmra ;
+    String areaCodemra ;
+    String passwordmra ;
 private String   concatenatedJson;
     private static final long SPLASH_DURATION = 1000; // Splash screen duration in milliseconds
 
@@ -109,7 +117,16 @@ private List<ItemData> selectedItems;
             String encryptedPayload = params[0];
 
             try {
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+                userNamemra = prefs.getString("User_Name", "");
+                ebsMraIdmra = prefs.getString("ebsMraId", "");
+                areaCodemra = prefs.getString("Area_Code", "");
+                passwordmra = prefs.getString("Password", "");
 
+                Log.d("userNamemra", userNamemra);
+                Log.d("ebsMraIdmra", ebsMraIdmra);
+                Log.d("areaCodemra", areaCodemra);
+                Log.d("passwordmra", passwordmra);
 
                 // Get the current date and time
                 Date currentDate = new Date();
@@ -134,8 +151,8 @@ private List<ItemData> selectedItems;
                 Request request = new Request.Builder()
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
-                        .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
+                        .addHeader("username", userNamemra)
+                        .addHeader("ebsMraId", ebsMraIdmra)
                         .post(body)
                         .build();
                 SharedPreferences shardPreference = getApplicationContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
@@ -190,6 +207,9 @@ private List<ItemData> selectedItems;
                                 double totalAmount = cursor.getDouble(columnIndexTotalAmount);
                                 double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                                 double TotalHT = cursor.getDouble(columnIndexTotalTaxAmount);
+                                String previoushashnote= mDatabaseHelper.getPreviousTransactionHash(String.valueOf(transactionId));
+
+
                                 Status = cursor.getString(columnIndexstatus);
                                 BuyerName = cursor.getString(columnIndexBuyerName);
                                 BuyerCompany = cursor.getString(columnIndexBuyerComp);
@@ -198,10 +218,8 @@ private List<ItemData> selectedItems;
                                 BuyerTan = cursor.getString(columnIndexBuyerVAT);
                                 String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                                 // Step 2: Increment the counter value
-                                int newCounter = currentCounter + 1;
+                                int newCounter = currentCounter;
 
-                                // Step 3: Update the counter value in the transactionheader table
-                                mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
 
                                 // Convert the doubles to formatted strings with 2 decimal places
                                 String formattedTotalAmount = String.format("%.2f", totalAmount);
@@ -220,8 +238,8 @@ private List<ItemData> selectedItems;
                                     jsondetailedtransacs.put("currency", "MUR");
                                     jsondetailedtransacs.put("invoiceIdentifier", transactionId);
                                     jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
-                                    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-                                    jsondetailedtransacs.put("reasonStated", "test");
+                                    jsondetailedtransacs.put("previousNoteHash", previoushashnote);
+                                    jsondetailedtransacs.put("reasonStated", "bulk");
                                     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
                                     jsondetailedtransacs.put("totalAmtWoVatCur", formattedTotalHT);
                                     jsondetailedtransacs.put("totalAmtPaid", formattedTotalAmount);
@@ -287,8 +305,8 @@ private List<ItemData> selectedItems;
                                         transaction.put("quantity", itemFromDatabase.getItemQuantity());
                                         transaction.put("unitPrice", itemFromDatabase.getUnitPrice());
                                         transaction.put("discount", itemFromDatabase.getDiscount());
-                                        transaction.put("amtWoVatCur", itemFromDatabase.getTotalAmountWitoutVAT());
-                                        transaction.put("amtWoVat", itemFromDatabase.getTotalAmountWitoutVAT());
+                                        transaction.put("amtWoVatCur", itemFromDatabase.getItemAmountWitoutVAT());
+                                        transaction.put("amtWoVat", itemFromDatabase.getItemAmountWitoutVAT());
                                         transaction.put("tds", itemFromDatabase.getTotalDiscount());
                                         transaction.put("vatAmt", itemFromDatabase.getTotalVatAmount());
                                         transaction.put("totalPrice", itemFromDatabase.getTotalPrice());
@@ -352,18 +370,19 @@ private List<ItemData> selectedItems;
                                 RequestBody body1 = RequestBody.create(mediaTypes, requestBodyMRAQR.toString());
                                 System.out.println("requestbody: " + requestBodyMRAQR);
 
-                                Request requests = new Request.Builder()
-                                        .url("https://vfisc.mra.mu/realtime/invoice/transmit")
-                                        .addHeader("Content-Type", "application/json")
+                    Request requests = new Request.Builder()
+                            .url("https://vfisc.mra.mu/realtime/invoice/transmit")
+                            .addHeader("Content-Type", "application/json")
 
-                                        .addHeader("token", encryptedtokenBase64)
-                                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
-                                        .addHeader("username", "LBatour")
-                                        .addHeader("areaCode", "734")
-                                        .post(body1)
-                                        .build();
+                            .addHeader("token", encryptedtokenBase64)
+                            .addHeader("ebsMraId", ebsMraIdmra)
+                            .addHeader("username", userNamemra)
+                            .addHeader("areaCode", areaCodemra)
+                            .post(body1)
+                            .build();
 
-                                Response responsesQRMRA = clients.newCall(requests).execute();
+
+                    Response responsesQRMRA = clients.newCall(requests).execute();
                                 if (responsesQRMRA.isSuccessful()) {
                                     String responseBody1 = responsesQRMRA.body().string();
                                     System.out.println("response: " + responseBody1);
@@ -437,6 +456,13 @@ private List<ItemData> selectedItems;
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
         ShopName = sharedPreference.getString("ShopName", null);
+
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+        userNamemra = prefs.getString("User_Name", "");
+        ebsMraIdmra = prefs.getString("ebsMraId", "");
+        areaCodemra = prefs.getString("Area_Code", "");
+        passwordmra = prefs.getString("Password", "");
+        checkAndPromptForSetup();
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
         // Retrieve the stored transaction IDs from SharedPreferences
@@ -466,8 +492,8 @@ private List<ItemData> selectedItems;
 
 
             String payload = "{\n" +
-                    " \"username\": \"LBatour\",\n" +
-                    " \"password\": \"Logi159753@\",\n" +
+                    " \"username\": \""+ userNamemra +"\",\n" +
+                    " \"password\": \""+ passwordmra +"\",\n" +
                     " \"encryptKey\": \""+ aesKey +"\",\n" +
                     " \"refreshToken\": \"false\"\n" +
                     "}";
@@ -504,7 +530,44 @@ private List<ItemData> selectedItems;
 
     }
 
+    private void checkAndPromptForSetup() {
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
 
+        // Retrieve the values from SharedPreferences
+        userNamemra = prefs.getString("User_Name", "");
+        ebsMraIdmra = prefs.getString("ebsMraId", "");
+        areaCodemra = prefs.getString("Area_Code", "");
+        passwordmra = prefs.getString("Password", "");
+
+        // Check if any value is missing or empty
+        if (userNamemra.isEmpty() || ebsMraIdmra.isEmpty() || areaCodemra.isEmpty() || passwordmra.isEmpty()) {
+            // Show a dialog to prompt the user to set up the parameters
+            showSetupDialog();
+        } else {
+            // Proceed with the app logic if all parameters are set
+            // proceedWithAppLogic();
+        }
+    }
+
+    private void showSetupDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Setup Required")
+                .setMessage("Please set up the required parameters before proceeding.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Open the setup activity or fragment
+                        openSetupActivity();
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
+
+    private void openSetupActivity() {
+        Intent intent = new Intent(this, SettingsDashboard.class);  // Replace with your setup activity
+        startActivity(intent);
+    }
     public void insertCashReturnForMultipleTransactions(List<String> transactionIds,  String MRAMETHOD,String irn,String Qr) {
         for (String transactionId : transactionIds) {
             mDatabaseHelper.insertmramethod( transactionId,  MRAMETHOD,irn,Qr);
@@ -664,8 +727,8 @@ private List<ItemData> selectedItems;
                 transaction.setItemQuantity(Integer.parseInt(quantity));
                 transaction.setUnitPrice(UnitPrice);
                 transaction.setDiscount(discount);
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVATCur));
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVAT));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVATCur));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVAT));
                 transaction.setTotalDiscount(tds);
                 transaction.setTotalVatAmount(Double.parseDouble(VatAmount));
                 transaction.setTotalPrice(Double.parseDouble(totalPrice));

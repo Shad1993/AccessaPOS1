@@ -102,12 +102,12 @@
                 app:layout_constraintStart_toStartOf="parent" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/editProfileB"
+                android:id="@+id/editsettings"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="EDIT Settings"
+                android:text="@string/editsettings"
                 android:textColor="@color/BleuAccessaText"
                 app:layout_constraintBottom_toBottomOf="@+id/allreceipt"
                 app:layout_constraintStart_toEndOf="@+id/allreceipt" />

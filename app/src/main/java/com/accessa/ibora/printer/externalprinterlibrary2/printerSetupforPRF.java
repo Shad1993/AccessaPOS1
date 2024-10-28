@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.printer.PrintSplit;
+import com.accessa.ibora.printer.PrinterSetupPrefs;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
@@ -65,6 +66,8 @@ public class printerSetupforPRF extends AppCompatActivity {
     private String cashorlevel,ShopName,LogoPath;
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
+    private boolean printable ;
+    private String printerpartname ;
 
     private String    OpeningHours;
     private   String      TelNum,compTelNum,compFaxNum;
@@ -140,6 +143,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                     Log.d("table", tableid);
                 Log.d("trans11", item.toString());
                     try {
+                        List<PrinterSetupPrefs> printerSetups = mDatabaseHelper.getPrinterSetups(getApplicationContext());
 
 
 
@@ -181,8 +185,16 @@ public class printerSetupforPRF extends AppCompatActivity {
                             compFaxNum= cursorCompany.getString(columncompFaxIndex);
 
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
+                                if( printerpartname.equals("Logo") && printable) {
+
+                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+
+                                }
+                            }
 
                             if (invoicetype.equals("PRF")) {
                                 TransactionTypename = "Proforma";
@@ -230,19 +242,35 @@ public class printerSetupforPRF extends AppCompatActivity {
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
-                            // Print the formatted company name line
-                            service.printText(CompAdd1andAdd2, null);
-                            service.printText(CompAdd3, null);
-                            service.printText(compTel + "\n", null);
-                            service.printText(compFax + "\n\n", null);
-                            // Print the formatted company name line
-                            service.printText(shopname, null);
-                            service.printText(Add1andAdd2, null);
-                            service.printText(shopAdress3, null);
-                            service.printText(Tel + "\n", null);
-                            service.printText(Fax + "\n", null);
-                            service.printText(CompVatNo, null);
-                            service.printText(CompBRNNo, null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Company Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(CompAdd1andAdd2, null);
+                                    service.printText(CompAdd3, null);
+                                    service.printText(compTel + "\n", null);
+                                    service.printText(compFax + "\n\n", null);
+                                }
+                            }
+                             for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Shop Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(shopname, null);
+                                    service.printText(Add1andAdd2, null);
+                                    service.printText(shopAdress3, null);
+                                    service.printText(Tel + "\n", null);
+                                    service.printText(Fax + "\n", null);
+                                    service.printText(CompVatNo, null);
+                                    service.printText(CompBRNNo, null);
+                                }
+                            }
 
                             service.setAlignment(0, null);
 
@@ -251,7 +279,6 @@ public class printerSetupforPRF extends AppCompatActivity {
                         }
 
                         // Print the custom layout
-                        service.printText(titleTextView.getText().toString(), null);
                         int actualcopyprinted= mDatabaseHelper.getCopyPrinted(newtransactionid);
                         mDatabaseHelper.updateCopyPrinted(newtransactionid,actualcopyprinted);
                         int newactualcopyprinted= mDatabaseHelper.getCopyPrinted(newtransactionid);
@@ -259,7 +286,8 @@ public class printerSetupforPRF extends AppCompatActivity {
                         String status = preferences.getString(STATUS_KEY, "default_value");
                         int covers=mDatabaseHelper.getNumberOfCovers(newtransactionid);
                         String relatedtransid= mDatabaseHelper.getRelatedTransactionId(newtransactionid);
-                        String RelTrID= "Related Trans Id: " + relatedtransid ;
+                        String RelTrID= "Related Trans Id: " + relatedtransid  + "\n";
+                        String cashiorname = "Cashier Name: " + cashierName + "\n";
                         String cashierid= "Cashier Id: " + cashierId ;
                         String Posnum = "POS Number: " + PosNum;
                         String room= "Room Number: " + roomid + "\n";
@@ -268,15 +296,80 @@ public class printerSetupforPRF extends AppCompatActivity {
                         String SalesType= "Sales Type -" + status +"\n";
                         String coversnum= "Number Of Servings: " + covers + "\n";
 
-                        service.printText(RelTrID + "\n", null);
-                        service.printText(SalesType + "\n", null);
-                        service.printText(coversnum, null);
-                        service.printText(cashierid + "\n", null);
-                        service.printText(contentTextView.getText().toString(), null);
-                        service.printText(Posnum + "\n", null);
-                        service.printText(room , null);
-                        service.printText(table, null);
-                        service.printText(Printed, null);
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Cashior name") && printable) {
+                                service.printText(cashiorname, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Related Transaction Id") && printable) {
+                                service.printText(RelTrID, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("SalesType") && printable) {
+                                service.printText(SalesType, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Number Of servings") && printable) {
+                                service.printText(coversnum, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            if (printerpartname.equals("Cashier Id") && printable) {
+                                service.printText(cashierid + "\n", null);
+
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("POS NUM") && printable) {
+                                service.printText(Posnum, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Room Number") && printable) {
+
+                                service.printText(room, null);
+                            }
+                        }
+
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Table Number") && printable) {
+
+                                service.printText(table, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Copy Printed") && printable) {
+
+                                service.printText(Printed, null);
+                            }
+                        }
                         // Print a line separator
 
                         String lineSeparator = "=".repeat(lineWidth);
@@ -510,18 +603,37 @@ public class printerSetupforPRF extends AppCompatActivity {
 
 
 
-                        // Print the centered footer text
-                        service.printText(FooterText + "\n", null);
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("See You Again") && printable) {
+
+                                service.printText(FooterText + "\n", null);
+                            }
+                        }
+                        // Print the centered footer text
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Have a Nice Day") && printable) {
+
+                                service.printText(Footer1Text + "\n", null);
+                            }
+                        }
 
                         // Print the centered footer1 text
-                        service.printText(Footer1Text + "\n", null);
 
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("Opening Hours") && printable) {
 
-
-                        // Print the centered footer2 text
-                        service.printText(Openinghours + "\n", null);
+                                service.printText(Openinghours + "\n", null);
+                            }
+                        }
 
                         service.setAlignment(0, null); // Align left
                         // Concatenate the formatted date and time
@@ -567,10 +679,13 @@ public class printerSetupforPRF extends AppCompatActivity {
                                     List<String> tableIds = extractTableIds(tableid);
                                     for (String tableId : tableIds) {
                                         Log.d("extractTableIds", "Table ID: " + tableId);
+                                         areNOItemsSelected=  mDatabaseHelper.newareAllItemsNotSelected(roomid,tableId);
+                                        Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
+                                        if (areNOItemsSelected) {
 
-                                        mDatabaseHelper.resetMergedStatusToDefault(db,roomid,tableId);
+                                            mDatabaseHelper.resetMergedStatusToDefault( roomid, tableId);
 
-
+                                        }
                                     }
 
 
@@ -604,6 +719,8 @@ public class printerSetupforPRF extends AppCompatActivity {
 
 
                         if(!"PRF".equals(invoicetype)) {
+                            mDatabaseHelper.updateCoverCount(0,tableid, Integer.parseInt(roomid));
+
                             updateTransactionStatus();
                         }
 

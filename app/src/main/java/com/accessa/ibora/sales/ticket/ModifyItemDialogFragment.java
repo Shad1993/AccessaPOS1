@@ -24,6 +24,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.MainActivity;
@@ -33,6 +35,7 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.sales.ticket.Checkout.DiscountAdapter;
 import com.google.android.gms.vision.barcode.Barcode;
 
 import java.text.SimpleDateFormat;
@@ -43,11 +46,15 @@ import java.util.Locale;
 
 public class ModifyItemDialogFragment extends DialogFragment {
     private DBManager Xdatabasemanager;
-    private ItemClearedListener itemclearedListener;
 
+    private DiscountAppliedListener discountAppliedListener;
+
+    private ItemClearedListener itemclearedListener;
+EditText pinEditText;
     private SalesFragment.ItemAddedListener itemAddedListener;
     private String tableid;
     private int roomid;
+    private String  CatName;
     private EditText editTextOption1,quantityEditText,priceEditText,longDescEditText;
 
     private static final String ARG_QUANTITY = "quantity";
@@ -80,9 +87,6 @@ public class ModifyItemDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_modify_item, null);
 
-
-
-
         // Find the EditText field in the custom layout
         editTextOption1 = view.findViewById(R.id.editTextOption1);
         editTextOption1.setInputType(InputType.TYPE_NULL);
@@ -107,16 +111,72 @@ public class ModifyItemDialogFragment extends DialogFragment {
                 return false;
             }
         });
-
-        // Find the EditText field in the custom layout
-        priceEditText = view.findViewById(R.id.price_edit_text);
-        priceEditText.setInputType(InputType.TYPE_NULL);
-        priceEditText.setTextIsSelectable(true);
-
         // Find the EditText field in the custom layout
         longDescEditText = view.findViewById(R.id.long_desc_edit_text);
         longDescEditText.setInputType(InputType.TYPE_NULL);
         longDescEditText.setTextIsSelectable(true);
+
+        priceEditText = view.findViewById(R.id.price_edit_text);
+
+        Xdatabasemanager = new DBManager(getContext());
+        Xdatabasemanager.open();
+
+        // Initialize the DatabaseHelper
+        mDatabaseHelper = new DatabaseHelper(getContext());
+
+        // Get the arguments passed to the dialog fragment
+        Bundle args = getArguments();
+        if (args != null) {
+            String quantity = args.getString(ARG_QUANTITY);
+            String price = args.getString(ARG_PRICE);
+            String longDesc = args.getString(ARG_LONG_DESC);
+            Unique_ITEM_ID = args.getString(ARG_uniqueitem_id);
+            ITEM_ID=  args.getString(ARG_item_id);
+            Barcode= args.getString(ARG_Barcode);
+            String famille= mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(Unique_ITEM_ID));
+            CatName=mDatabaseHelper.getCatNameById(famille);
+            Log.d("Unique_ITEM_ID", String.valueOf(Unique_ITEM_ID));
+            Log.d("famille", String.valueOf(famille));
+            Log.d("CatName", String.valueOf(CatName));
+
+            // Remove the "x " prefix from the quantity
+            if (quantity != null && quantity.startsWith("x ")) {
+                quantity = quantity.substring(2);
+            }
+
+            // Remove the "Rs " prefix from the quantity
+            if (price != null && price.startsWith("Rs ")) {
+                price = price.substring(3);
+            }
+
+
+// Set the selected item in the spinner
+            if (quantity != null) {
+                quantity = quantity.trim();
+                int quantityInt = Integer.parseInt(quantity);
+                int spinnerPosition = adapter.getPosition(quantityInt);
+                quantitySpinner.setSelection(spinnerPosition);
+            }
+         String  comment=  mDatabaseHelper.getTransactionCommentById(Integer.parseInt(Unique_ITEM_ID));
+            // Set the values in the edit texts
+            editTextOption1.setText(comment);
+            priceEditText.setText(price);
+            longDescEditText.setText(longDesc);
+        }
+        if ("OPEN FOOD".equals(CatName)) {
+            // Make the EditText editable
+            priceEditText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            priceEditText.setTextIsSelectable(false); // Disable text selection if needed
+            priceEditText.setFocusable(true);
+            priceEditText.setFocusableInTouchMode(true);
+        } else {
+            // Make the EditText non-editable
+            priceEditText.setInputType(InputType.TYPE_NULL);
+            priceEditText.setTextIsSelectable(true); // Enable text selection
+            priceEditText.setFocusable(false);
+            priceEditText.setFocusableInTouchMode(false);
+        }
+
         // Find the number buttons and set OnClickListener
         Button button1 = view.findViewById(R.id.button1);
         Button button2 = view.findViewById(R.id.button2);
@@ -420,118 +480,238 @@ public class ModifyItemDialogFragment extends DialogFragment {
         roomid = preferences.getInt("roomnum", 0);
         tableid = preferences.getString("table_id", "");
 
-        Xdatabasemanager = new DBManager(getContext());
-        Xdatabasemanager.open();
-
-        // Initialize the DatabaseHelper
-        mDatabaseHelper = new DatabaseHelper(getContext());
-
-        // Get the arguments passed to the dialog fragment
-        Bundle args = getArguments();
-        if (args != null) {
-            String quantity = args.getString(ARG_QUANTITY);
-            String price = args.getString(ARG_PRICE);
-            String longDesc = args.getString(ARG_LONG_DESC);
-            Unique_ITEM_ID = args.getString(ARG_uniqueitem_id);
-            ITEM_ID=  args.getString(ARG_item_id);
-            Barcode= args.getString(ARG_Barcode);
+        Button itemdiscountButton = view.findViewById(R.id.ietmdiscount_button);
 
 
-        // Remove the "x " prefix from the quantity
-            if (quantity != null && quantity.startsWith("x ")) {
-                quantity = quantity.substring(2);
+        itemdiscountButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Inflate the PIN dialog layout
+                LayoutInflater inflater = getLayoutInflater();
+                View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+                pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+                // Find the number buttons and set OnClickListener
+                Button button1 = pinDialogView.findViewById(R.id.button1);
+                Button button2 = pinDialogView.findViewById(R.id.button2);
+                Button button3 = pinDialogView.findViewById(R.id.button3);
+                Button button4 = pinDialogView.findViewById(R.id.button4);
+                Button button5 = pinDialogView.findViewById(R.id.button5);
+                Button button6 = pinDialogView.findViewById(R.id.button6);
+                Button button7 = pinDialogView.findViewById(R.id.button7);
+                Button button8 = pinDialogView.findViewById(R.id.button8);
+                Button button9 = pinDialogView.findViewById(R.id.button9);
+                Button button0 = pinDialogView.findViewById(R.id.button0);
+                Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+                Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+                // Set up button click listeners in the dialog
+                setPinButtonClickListeners(pinDialogView, pinEditText);
+
+                // Create the PIN dialog without positive and negative buttons
+                AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+                pinBuilder.setTitle("Enter PIN")
+                        .setView(pinDialogView);
+
+                AlertDialog pinDialog = pinBuilder.create();
+                pinDialog.show();
+
+                // Set click listener for the Clear button
+                buttonClear.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onClearButtonClick(pinEditText);
+                    }
+                });
+                button1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (pinEditText != null) {
+                            onPinNumberButtonClick(v,"1");
+                        } else {
+                            // Handle the case where clickedEditText is null
+
+                            // Alternatively, perform another action to handle this case
+                        }
+                    }
+                });
+
+
+                button2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(getContext(), "No EditText selected", Toast.LENGTH_SHORT).show();
+                        onPinNumberButtonClick(v,"2");
+                    }
+                });
+
+                button3.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"3");
+                    }
+                });
+
+                button4.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"4");
+                    }
+                });
+
+                button5.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"5");
+                    }
+                });
+
+                button6.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"6");
+                    }
+                });
+
+                button7.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"7");
+                    }
+                });
+
+                button8.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"8");
+                    }
+                });
+
+                button9.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"9");
+                    }
+                });
+
+                button0.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onPinNumberButtonClick(v,"0");
+                    }
+                });
+
+
+
+
+                // Set click listener for the Login button
+                buttonLogin.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String enteredPIN = pinEditText.getText().toString();
+
+                        // Validate the entered PIN
+                        int cashorLevel = validatePIN(enteredPIN);
+                        if (cashorLevel != -1) {
+                            // PIN is valid, now show the discount dialog
+                            showDiscountDialog(cashorLevel,Unique_ITEM_ID);
+
+                            // Dismiss the dialog
+                            dismiss();
+                            pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                        } else {
+                            // PIN is invalid, show an error message
+                            Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
-
-            // Remove the "Rs " prefix from the quantity
-            if (price != null && price.startsWith("Rs ")) {
-                price = price.substring(3);
-            }
-
-
-// Set the selected item in the spinner
-            if (quantity != null) {
-                quantity = quantity.trim();
-                int quantityInt = Integer.parseInt(quantity);
-                int spinnerPosition = adapter.getPosition(quantityInt);
-                quantitySpinner.setSelection(spinnerPosition);
-            }
-
-            // Set the values in the edit texts
-
-            priceEditText.setText(price);
-            longDescEditText.setText(longDesc);
-        }
-        // Retrieve the delete button and set its click listener
+        });
+// Retrieve the delete button and set its click listener
         Button deleteButton = view.findViewById(R.id.delete_button);
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
                 String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-                    int distinctitemcount= mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
+                int distinctitemcount= mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
 
-                    Log.d("distinctitemcount", String.valueOf(distinctitemcount));
-                    if(distinctitemcount==1){
+                Log.d("distinctitemcount", String.valueOf(distinctitemcount));
+                if(distinctitemcount==1){
 // Show a pop-up dialog
-                        new AlertDialog.Builder(getActivity())
-                                .setTitle("Confirm Action")
-                                .setMessage("There is only one item left in this transaction. Do you want to void the item or clear the entire transaction?")
-                                .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        deleteItem(Unique_ITEM_ID,latesttransId);
-                                        // Perform the delete operation here
-                                        if (Xdatabasemanager != null) {
-                                            Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
-                                            if (itemclearedListener != null) {
-                                                itemclearedListener.onItemDeleted();
-                                            }
-
-                                            refreshTicketFragment();
-                                            dismiss(); // Close the dialog after deleting the item
-
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle("Confirm Action")
+                            .setMessage("There is only one item left in this transaction. Do you want to void the item or clear the entire transaction?")
+                            .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    deleteItem(Unique_ITEM_ID,latesttransId);
+                                    // Perform the delete operation here
+                                    if (Xdatabasemanager != null) {
+                                        Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
+                                        if (itemclearedListener != null) {
+                                            itemclearedListener.onItemDeleted();
                                         }
+
+                                        refreshTicketFragment();
+                                        dismiss(); // Close the dialog after deleting the item
+
                                     }
-                                })
-                                .setNegativeButton("Clear Transaction", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
-                                        clearTransact();
-                                        returnHome();
-                                    }
-                                })
-                                .setCancelable(false)
-                                .show();
+                                }
+                            })
+                            .setNegativeButton("Clear Transaction", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
+                                    clearTransact();
+                                    returnHome();
+                                }
+                            })
+                            .setCancelable(false)
+                            .show();
 
                 }else{
-                        new AlertDialog.Builder(getActivity())
-                                .setTitle("Confirm Action")
-                                .setMessage(" Do you want to void this Item?")
-                                .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        deleteItem(Unique_ITEM_ID,latesttransId);
-                                        // Perform the delete operation here
-                                        if (Xdatabasemanager != null) {
-                                            Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
-                                            if (itemclearedListener != null) {
-                                                itemclearedListener.onItemDeleted();
-                                            }
-
-                                            refreshTicketFragment();
-                                            dismiss(); // Close the dialog after deleting the item
-
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle("Confirm Action")
+                            .setMessage(" Do you want to void this Item?")
+                            .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    deleteItem(Unique_ITEM_ID,latesttransId);
+                                    // Perform the delete operation here
+                                    if (Xdatabasemanager != null) {
+                                        Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
+                                        if (itemclearedListener != null) {
+                                            itemclearedListener.onItemDeleted();
                                         }
-                                    }
-                                })
 
-                                .setCancelable(false)
-                                .show();
-                    }
+                                        refreshTicketFragment();
+                                        dismiss(); // Close the dialog after deleting the item
+
+                                    }
+                                }
+                            })
+
+                            .setCancelable(false)
+                            .show();
+                }
 
             }
         });
+        // Retrieve the delete button and set its click listener
+        Button ppiButton = view.findViewById(R.id.payperitems);
+        ppiButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Create and show the dialog for editing quantity
+                showEditQuantityDialog();
+
+
+            }
+        });
+
+
+
 
         return new AlertDialog.Builder(getActivity())
                 .setTitle(getString(R.string.modItem))
@@ -557,9 +737,6 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             ModifyItemDialogListener listener = (ModifyItemDialogListener) getTargetFragment();
                             listener.onItemModified(quantity, price, longDesc);
                         }
-                        Log.d("ITEM_ID", String.valueOf(Unique_ITEM_ID));
-                        double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
-                        double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
 
                         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
                         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
@@ -574,14 +751,15 @@ public class ModifyItemDialogFragment extends DialogFragment {
 
                            }
                        }
-                        String VatType=mDatabaseHelper.getVatTypeById(itemid);
+
+                        //String VatType=mDatabaseHelper.getVatTypeById(itemid);
                         double Quantity= Double.parseDouble(quantity);
                        double  totalPrice= Quantity * currentprice;
-                        Log.d("Quantity", String.valueOf(Quantity));
-                        Log.d("totalPrice", String.valueOf(totalPrice));
-                        Log.d("taxcode", String.valueOf(taxcode));
-                        Log.d("ITEM_ID", String.valueOf(itemid));
-                        Log.d("Unique_ITEM_ID", String.valueOf(Uniqueid));
+                        if ("OPEN FOOD".equals(CatName)) {
+                            totalPrice = Quantity * Double.parseDouble(price);
+
+                        }
+
                         double vatAmount=0;
                         if (taxcode.equals("TC01")) {
                             double vatRate = 0.15; // 15% VAT rate
@@ -592,45 +770,96 @@ public class ModifyItemDialogFragment extends DialogFragment {
                             // Calculate the VAT amount
                              vatAmount = totalPrice - priceExcludingVAT;
 
-                            // Logging the calculated values
-                            Log.d("PriceExcludingVAT", String.valueOf(priceExcludingVAT));
-                            Log.d("VATAmount", String.valueOf(vatAmount));
+
                         }
-                        double totaltax = totalVATSum;
-                      
-                        Log.d("currentvat", String.valueOf(totaltax));
-                        boolean isUpdated = Xdatabasemanager.updateTransItem(latesttransId,Long.parseLong(Uniqueid), quantity, String.valueOf(totalPrice), String.valueOf(vatAmount), longDesc,lastmodified);
+
+                        Xdatabasemanager.updateTransItem(latesttransId,Long.parseLong(Uniqueid), quantity, String.valueOf(totalPrice), String.valueOf(vatAmount), longDesc,lastmodified);
                         if (itemclearedListener != null) {
                             itemclearedListener.onAmountModified();
                         }
                         String option1Text = editTextOption1.getText().toString();
-                        Log.d("DialogFragment", "Option1 Text: " + option1Text);
                         updateCommentForTransaction(latesttransId,option1Text,Uniqueid );
-                        if (!TextUtils.isEmpty(option1Text)) {
-                            Log.d("DialogFragment", "Starting SendNoteToKitchenActivity");
+                        if ("OPEN FOOD".equals(CatName) && !TextUtils.isEmpty(option1Text)) {
+                            if (itemclearedListener != null) {
+                                itemclearedListener.onAmountModified();
+                            }
+
+
+                        }else if (!TextUtils.isEmpty(option1Text)) {
 
                             // Create an Intent to launch SendNoteToKitchenActivity
                             Intent intent = new Intent(getActivity(), SendNoteToKitchenActivity.class);
                             // Put the text as an extra in the Intent
                             intent.putExtra("note_text", option1Text);
                             intent.putExtra("barcode", Barcodes);
-                            Log.d("barcode", Barcodes);
+
                             // Start the activity
                             startActivity(intent);
                         } else {
                             // Show a toast or alert indicating that the EditText is empty
-                            Toast.makeText(getContext(), "Please enter a note", Toast.LENGTH_SHORT).show();
-                            returnHome();
+
+                           // returnHome();
+                            refreshTicketFragment();
+                            if (itemclearedListener != null) {
+                                itemclearedListener.onAmountModified();
+                            }
+
                         }
 
-                        // Check if the EditText is not null and not empty
-
-                       //
 
                     }
                 })
                 .setNegativeButton(getString(R.string.cancel), null)
                 .create();
+    }
+
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    // Helper method to provide quantity options for the spinner
+    private List<Integer> getQuantityOptions() {
+        List<Integer> quantities = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            quantities.add(i); // Add numbers from 1 to 10 as options
+        }
+        return quantities;
+    }
+
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+        }
     }
     public double calculateTax(String price,String VatVall) {
         double taxAmount = 0.0;
@@ -663,14 +892,265 @@ public class ModifyItemDialogFragment extends DialogFragment {
                 itemclearedListener.onItemDeleted();
             }
             if (deleted) {
-                Toast.makeText(getActivity(), getString(R.string.item_deleted), Toast.LENGTH_SHORT).show();
-                returnHome();
+                //returnHome();
+                refreshTicketFragment();
+                if (itemAddedListener != null) {
+                    itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+                }
             } else {
-                Toast.makeText(getActivity(), getString(R.string.delete_failed), Toast.LENGTH_SHORT).show();
             }
         }
     }
+    private void showDiscountDialog(int cashorLevel,String unique_ITEM_ID) {
+        LayoutInflater inflater = getLayoutInflater();
+        View discountDialogView = inflater.inflate(R.layout.discount_dialog, null);
 
+        RecyclerView recyclerView = discountDialogView.findViewById(R.id.discount_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        Cursor discountsCursor = mDatabaseHelper.getAllDiscounts(); // Fetch all discounts
+
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Discount")
+                .setView(discountDialogView)
+                .setNegativeButton("Cancel", null);
+
+        // Show the dialog and keep a reference to it
+        AlertDialog discountDialog = builder.create();
+        discountDialog.show();
+
+        // Set up the adapter for the RecyclerView
+        DiscountAdapter adapter = new DiscountAdapter(discountsCursor, discountValue -> {
+            // Check if cashor level is less than 3 and the discount exceeds 10%
+            if (cashorLevel < 3 && discountValue > 10) {
+                Toast.makeText(getContext(), "You cannot apply more than 10% discount", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Apply the discount
+            applyDiscount(discountValue,unique_ITEM_ID);
+
+
+            // Dismiss the dialog after the discount is applied
+            discountDialog.dismiss();
+        });
+
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void showEditQuantityDialog() {
+        // Create a dialog
+        Dialog dialog = new Dialog(getContext());
+        dialog.setContentView(R.layout.dialog_edit_quantity); // Set the custom layout for the dialog
+
+        // Get references to the views in the dialog
+        Spinner quantitySpinner = dialog.findViewById(R.id.quantity_spinner);
+        Button payButton = dialog.findViewById(R.id.pay_button);
+
+        // Populate the spinner with quantity options (example: 1 to 10)
+        ArrayAdapter<Integer> adapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item,
+                getQuantityOptions());
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        quantitySpinner.setAdapter(adapter);
+
+        // Retrieve passed arguments and set initial values
+        Bundle args = getArguments();
+        if (args != null) {
+            String quantity = args.getString(ARG_QUANTITY);
+            String price = args.getString(ARG_PRICE);
+            String longDesc = args.getString(ARG_LONG_DESC);
+            Unique_ITEM_ID = args.getString(ARG_uniqueitem_id);
+            ITEM_ID = args.getString(ARG_item_id);
+            Barcode = args.getString(ARG_Barcode);
+            String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(Unique_ITEM_ID));
+            CatName = mDatabaseHelper.getCatNameById(famille);
+
+            Log.d("Unique_ITEM_ID", String.valueOf(Unique_ITEM_ID));
+            Log.d("famille", String.valueOf(famille));
+            Log.d("CatName", String.valueOf(CatName));
+
+            // Remove the "x " prefix from the quantity if present
+            if (quantity != null && quantity.startsWith("x ")) {
+                quantity = quantity.substring(2);
+            }
+
+            // Set the selected item in the spinner
+            if (quantity != null) {
+                int quantityInt = Integer.parseInt(quantity.trim());
+                int spinnerPosition = adapter.getPosition(quantityInt);
+                quantitySpinner.setSelection(spinnerPosition);
+            }
+        }
+
+        // Set the click listener for the Pay button
+        payButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Get the selected quantity from the spinner
+                int selectedQuantity = (int) quantitySpinner.getSelectedItem();
+
+                // Do something with the selected quantity, like updating the database, etc.
+                Log.d("Selected Quantity", String.valueOf(selectedQuantity));
+                // Retrieve passed arguments and set initial values
+                Bundle args = getArguments();
+                if (args != null) {
+                    String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+                    String latestTransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+
+                    String quantity = args.getString(ARG_QUANTITY);
+                    String price = args.getString(ARG_PRICE);
+                    String longDesc = args.getString(ARG_LONG_DESC);
+                    Unique_ITEM_ID = args.getString(ARG_uniqueitem_id);
+                    ITEM_ID = args.getString(ARG_item_id);
+                    Barcode = args.getString(ARG_Barcode);
+                    String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(Unique_ITEM_ID));
+                    CatName = mDatabaseHelper.getCatNameById(famille);
+                    String lastmodified = getCurrentDateTime();
+                    String Uniqueid= Unique_ITEM_ID;
+                    String itemid= ITEM_ID;
+                    String Barcodes= Barcode;
+                    Log.d("Unique_ITEM_ID", String.valueOf(Unique_ITEM_ID));
+                    Log.d("famille", String.valueOf(famille));
+                    Log.d("CatName", String.valueOf(CatName));
+
+                    // Remove the "x " prefix from the quantity if present
+                    if (quantity != null && quantity.startsWith("x ")) {
+                        quantity = quantity.substring(2);
+                    }
+                    quantity = quantity.trim();
+                    int quant= Integer.parseInt(quantity);
+                int newquantity= quant- selectedQuantity;
+                    // Set the selected item in the spinner
+                    if (quantity != null) {
+                        int quantityInt = Integer.parseInt(quantity.trim());
+                        int spinnerPosition = adapter.getPosition(quantityInt);
+                        quantitySpinner.setSelection(spinnerPosition);
+                    }
+                    // Pass the modified values back to the listener
+                    if (getTargetFragment() instanceof ModifyItemDialogListener) {
+                        ModifyItemDialogListener listener = (ModifyItemDialogListener) getTargetFragment();
+                        listener.onItemModified(quantity, price, longDesc);
+                    }
+
+                     statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                    String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                    String taxcode=mDatabaseHelper.getTransactionTaxCode(latesttransId,Uniqueid);
+
+                    double currentprice= mDatabaseHelper.getItemPrice(itemid);
+
+                    if (currentprice==0.0){
+                        currentprice=mDatabaseHelper.getVariantPriceByItemId(itemid);
+                        if (currentprice==0.0){
+                            currentprice=mDatabaseHelper.getSupplementPrice(itemid);
+
+                        }
+                    }
+
+                    //String VatType=mDatabaseHelper.getVatTypeById(itemid);
+                    double Quantity= Double.parseDouble(quantity);
+                    double  totalPrice= newquantity * currentprice;
+                    double  newtotalPrice= selectedQuantity * currentprice;
+                    if ("OPEN FOOD".equals(CatName)) {
+                        totalPrice = newquantity * Double.parseDouble(price);
+
+                    }
+
+                    double vatAmount=0;
+                    if (taxcode.equals("TC01")) {
+                        double vatRate = 0.15; // 15% VAT rate
+
+                        // Calculate the price without VAT
+                        double priceExcludingVAT = totalPrice / (1 + vatRate);
+
+                        // Calculate the VAT amount
+                        vatAmount = totalPrice - priceExcludingVAT;
+
+
+                    }
+
+                    double newvatAmount=0;
+                    if (taxcode.equals("TC01")) {
+                        double vatRate = 0.15; // 15% VAT rate
+
+                        // Calculate the price without VAT
+                        double priceExcludingVAT = newtotalPrice / (1 + vatRate);
+
+                        // Calculate the VAT amount
+                        newvatAmount = newtotalPrice - priceExcludingVAT;
+
+
+                    }
+                    long newId = mDatabaseHelper.duplicateTransactionById(Integer.parseInt(Uniqueid));
+                    Log.d("newId" , String.valueOf(newId));
+
+                    Xdatabasemanager.updateTransItem(latestTransId,newId, String.valueOf(selectedQuantity), String.valueOf(newtotalPrice), String.valueOf(newvatAmount), longDesc,lastmodified);
+
+                    Xdatabasemanager.updateTransItem(latestTransId,Long.parseLong(Uniqueid), String.valueOf(newquantity), String.valueOf(totalPrice), String.valueOf(vatAmount), longDesc,lastmodified);
+                    if (itemclearedListener != null) {
+                        itemclearedListener.onAmountModified();
+                    }
+                }
+
+                // Dismiss the dialog after paying
+                dialog.dismiss();
+                dismiss(); // Close the dialog after deleting the item
+            }
+        });
+
+        // Show the dialog
+        dialog.show();
+    }
+
+    private void applyDiscount(double discountPercentage,String unique_ITEM_ID) {
+        // Retrieve the latest transaction details
+        String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+        String latestTransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+
+        // Calculate the total amount and tax total amount
+        double totalAmount = mDatabaseHelper.calculateTotalAmountsBySelectedId(latestTransId, String.valueOf(roomid), tableid,unique_ITEM_ID);
+        double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmountsBySelectedId(latestTransId, String.valueOf(roomid), tableid,unique_ITEM_ID);
+
+        // Calculate the discount amount
+        double discountAmount = totalAmount * (discountPercentage / 100);
+        double discounttaxAmount = taxTotalAmount * (discountPercentage / 100);
+        // Calculate the new total amount after applying the discount
+        double newTotalAmount = totalAmount - discountAmount;
+
+        // Ensure the new total amount is not negative
+        if (newTotalAmount < 0) {
+            newTotalAmount = 0;
+        }
+
+
+        mDatabaseHelper.applyDiscountToTransactionItemsById(latestTransId,discountPercentage, Long.parseLong(unique_ITEM_ID));
+
+
+        // Calculate the total amount and tax total amount
+         totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(latestTransId, String.valueOf(roomid), tableid);
+         taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(latestTransId, String.valueOf(roomid), tableid);
+
+        // Calculate the discount amount
+         discountAmount = totalAmount * (discountPercentage / 100);
+         discounttaxAmount = taxTotalAmount * (discountPercentage / 100);
+        // Calculate the new total amount after applying the discount
+         newTotalAmount = totalAmount - discountAmount;
+
+        // Ensure the new total amount is not negative
+        if (newTotalAmount < 0) {
+            newTotalAmount = 0;
+        }
+
+        // Update the database with the new total amount and discount amount
+        mDatabaseHelper.updateDiscountByTransactionId(newTotalAmount, discountAmount,discounttaxAmount, latestTransId);
+
+        // After applying the discount, trigger the DiscountAppliedListener
+        if (discountAppliedListener != null) {
+            discountAppliedListener.onDiscountApplied();
+        }
+
+    }
     public  void clearTransact(){
 
 
@@ -694,18 +1174,21 @@ public class ModifyItemDialogFragment extends DialogFragment {
 
 
     }
-    private void refreshTicketFragment() {
 
+
+    public void refreshTicketFragment() {
+
+
+        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
         double totalPriceSum = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
         double totalVATSum = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
 
-        TicketFragment ticketFragment = (TicketFragment) getChildFragmentManager().findFragmentById(R.id.right_container);
+        Log.d("totalPriceSum", totalPriceSum + " " + totalVATSum);
+
         if (ticketFragment != null) {
             ticketFragment.refreshData(totalPriceSum,totalVATSum,"movetobottom");
         }
     }
-
-
     public void returnHome() {
         Intent home_intent1 = new Intent(getContext(), MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -716,6 +1199,18 @@ public class ModifyItemDialogFragment extends DialogFragment {
 
     public interface ModifyItemDialogListener {
         void onItemModified(String quantity, String price, String longDesc);
+    }
+    public void onPinNumberButtonClick(View view, String number) {
+
+        if (pinEditText != null) {
+            // Insert the letter into the EditText
+            pinEditText.append(number);
+            //ReceivedEditText.append(letter);
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+
     }
     private void onBackspaceButtonClick() {
         // Get the current text from editTextOption1
@@ -739,6 +1234,13 @@ public class ModifyItemDialogFragment extends DialogFragment {
     private void onclearButtonClick() {
         editTextOption1.setText(""); // Set the text of editTextOption1 to an empty string
     }
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
 
     public void oncommentButtonClick(View view, String letter) {
         if (editTextOption1 != null) {
@@ -752,6 +1254,9 @@ public class ModifyItemDialogFragment extends DialogFragment {
         if (context instanceof ItemClearedListener) {
             itemclearedListener = (ItemClearedListener) context;
         }
+        if (context instanceof DiscountAppliedListener) {
+            discountAppliedListener = (DiscountAppliedListener) context;
+        }
 
     }
     public interface ItemClearedListener {
@@ -760,6 +1265,11 @@ public class ModifyItemDialogFragment extends DialogFragment {
         void onItemDeleted();
         void onAmountModified();
     }
+
+    public interface DiscountAppliedListener {
+        void onDiscountApplied();
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();

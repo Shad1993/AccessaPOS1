@@ -1,12 +1,7 @@
 package com.accessa.ibora.product.items;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.OPTIONS_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_NAME;
-
 import android.Manifest;
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,8 +18,8 @@ import android.provider.MediaStore;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spanned;
+import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -33,7 +28,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -49,7 +43,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.accessa.ibora.R;
-import com.accessa.ibora.Sync.MasterSync.MSSQLDataInserter;
 import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
@@ -80,7 +73,7 @@ public class AddItemActivity extends Activity {
     private Spinner Nature,Currency;
     private EditText descEditText;
     private EditText priceEditText,price2EditText,price3EditText;
-    private Spinner categorySpinner, departmentSpinner, subDepartmentSpinner;
+    private Spinner categorySpinner,SubcategorySpinner, departmentSpinner, subDepartmentSpinner;
     private EditText barcodeEditText;
     private EditText longDescEditText;
     private EditText weightEditText;
@@ -154,6 +147,7 @@ public class AddItemActivity extends Activity {
                 new DecimalDigitsInputFilter(maxDigitsAfterDecimal)
         });
         categorySpinner = findViewById(R.id.category_spinner);
+        SubcategorySpinner=findViewById(R.id.Subcategory_spinner);
         barcodeEditText = findViewById(R.id.IdBarcode_edittext);
         departmentSpinner = findViewById(R.id.Dept_spinner);
         subDepartmentSpinner = findViewById(R.id.SubDept_spinner);
@@ -348,10 +342,18 @@ public class AddItemActivity extends Activity {
 
 
         Cursor categoryCursor = catDatabaseHelper.getAllCategory();
+        Cursor SubcategoryCursor = mDatabaseHelper.getAllSubCategory();
         Cursor departmentCursor = mDatabaseHelper.getAllDepartment();
         Cursor subDepartmentCursor = mDatabaseHelper.getAllSubDepartmentby();
 
-
+        List<String> Subcategories = new ArrayList<>();
+        Subcategories.add(getString(R.string.AllSubCategory));
+        if (SubcategoryCursor.moveToFirst()) {
+            do {
+                String subcategory = SubcategoryCursor.getString(SubcategoryCursor.getColumnIndex(mDatabaseHelper.SUBCatName));
+                Subcategories.add(subcategory);
+            } while (SubcategoryCursor.moveToNext());
+        }
         List<String> categories = new ArrayList<>();
         categories.add(getString(R.string.AllCategory));
         if (categoryCursor.moveToFirst()) {
@@ -381,16 +383,18 @@ public class AddItemActivity extends Activity {
             } while (subDepartmentCursor.moveToNext());
         }
         subDepartmentCursor.close();
-
+        ArrayAdapter<String> SubCatspinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, Subcategories);
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
         ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
         ArrayAdapter<String> spinnerAdapterSubDept = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subDepartments);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        SubcategorySpinner.setAdapter(SubCatspinnerAdapter);
         categorySpinner.setAdapter(spinnerAdapter);
         departmentSpinner.setAdapter(spinnerAdapterDept);
         subDepartmentSpinner.setAdapter(spinnerAdapterSubDept);
 
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+        SubcategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedItem = parent.getItemAtPosition(position).toString();
@@ -402,6 +406,62 @@ public class AddItemActivity extends Activity {
                 // Handle the case when nothing is selected
             }
         });
+
+        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedCategory = parent.getItemAtPosition(position).toString();
+
+                // Check if a valid category has been selected (optional: avoid default "select" option)
+                if (selectedCategory == null || selectedCategory.isEmpty() || selectedCategory.equals(getString(R.string.default_category_option))) {
+                    // If no valid category is selected, clear the Subcategory spinner and disable it
+                    SubcategorySpinner.setAdapter(null);
+                    SubcategorySpinner.setEnabled(false);
+                    return;  // Exit early
+                }
+
+                // Get the category ID based on the selected category name
+                Integer catId = mDatabaseHelper.getCategoryIdByName(selectedCategory);
+
+                if (catId != null) {
+                    // If a valid category ID is found, enable the Subcategory spinner
+                    SubcategorySpinner.setEnabled(true);
+
+                    // Get the filtered subcategories based on the selected category
+                    Cursor SubcategoryCursor = mDatabaseHelper.getSubCategoriesByCategory(String.valueOf(catId));
+
+                    // Clear and update the subcategories list
+                    List<String> Subcategories = new ArrayList<>();
+                    Subcategories.add(getString(R.string.AllSubCategory)); // Optional: Add default "All Subcategories" option
+                    if (SubcategoryCursor.moveToFirst()) {
+                        do {
+                            String subcategory = SubcategoryCursor.getString(SubcategoryCursor.getColumnIndex(mDatabaseHelper.SUBCatName));
+                            Subcategories.add(subcategory);
+                        } while (SubcategoryCursor.moveToNext());
+                    }
+                    SubcategoryCursor.close();
+
+                    // Update the Subcategory spinner with the new list
+                    ArrayAdapter<String> SubCatspinnerAdapter = new ArrayAdapter<>(AddItemActivity.this, android.R.layout.simple_spinner_item, Subcategories);
+                    SubCatspinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    SubcategorySpinner.setAdapter(SubCatspinnerAdapter);
+                } else {
+                    // If no category ID is found, clear the Subcategory spinner and disable it
+                    Log.e("Category Error", "No matching category ID found for category: " + selectedCategory);
+                    SubcategorySpinner.setAdapter(null);
+                    SubcategorySpinner.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Clear the Subcategory spinner and disable it if no category is selected
+                SubcategorySpinner.setAdapter(null);
+                SubcategorySpinner.setEnabled(false);
+            }
+        });
+
+
 
         departmentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -790,6 +850,7 @@ public class AddItemActivity extends Activity {
         String desc = descEditText.getText().toString().trim();
         String itemCode = generateItemCode();
         String category = categorySpinner.getSelectedItem().toString().trim();
+        String Subcategory = SubcategorySpinner.getSelectedItem().toString().trim();
         String quantity = quantityEditText.getText().toString().trim();
 
         if (quantity.isEmpty()) {
@@ -908,7 +969,7 @@ public class AddItemActivity extends Activity {
 
         // Check if all required fields are filled
         if (name.isEmpty() || desc.isEmpty() || price.isEmpty() || price2.isEmpty() || price3.isEmpty() || barcode.isEmpty()
-                || department.isEmpty() || subDepartment.isEmpty() || category.isEmpty() || commentrequired.isEmpty()
+                || department.isEmpty() || subDepartment.isEmpty() || Subcategory.isEmpty() || category.isEmpty() || commentrequired.isEmpty()
                 || availableForSale.isEmpty() || longDescription.isEmpty()
                 || variant.isEmpty() ) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
@@ -925,7 +986,7 @@ public class AddItemActivity extends Activity {
 // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
-        dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, Float.parseFloat(weight), department,
+        dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category,Subcategory, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale,optionStatus,commentrequired, String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2), String.valueOf(optionId3), String.valueOf(optionId4), String.valueOf(optionId5),soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode,VatCode,  String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice,currentPrice2,currentPrice3,"Offline");
@@ -936,7 +997,7 @@ public class AddItemActivity extends Activity {
         Intent intent = new Intent(AddItemActivity.this, Product.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
-       /* showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category, barcode, Float.parseFloat(weight), department,
+       /* showUpdateConfirmationDialog(name, desc, selectedDiscounts, price, price2, price3, category,Subcategory, barcode, Float.parseFloat(weight), department,
                 subDepartment, longDescription, quantity, expiryDate, vat,
                 availableForSale,optionStatus, String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2),String.valueOf(optionId3),String.valueOf(optionId4),String.valueOf(optionId5),  commentrequired,soldBy, image, variant, sku, cost, UserId, DateCreated, LastModified,
                 selectedNature, selectedCurrency, itemCode, VatCode, String.valueOf(discountedAmount), String.valueOf(discountedAmount2), String.valueOf(discountedAmount3), currentPrice, currentPrice2, currentPrice3);
@@ -973,7 +1034,7 @@ public class AddItemActivity extends Activity {
     }
 
 
-    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String options,String commentrequired,String supplemetid,String optionIds,String optionId2, String optionId3,String optionId4,String optionId5, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
+    private void showUpdateConfirmationDialog(String name, String desc, int selectedDiscounts,String price,String price2,String price3, String category,String subcategory, String barcode, float parseFloat, String department, String subDepartment, String longDescription, String quantity, String expiryDate, String vat, String availableForSale, String options,String commentrequired,String supplemetid,String optionIds,String optionId2, String optionId3,String optionId4,String optionId5, String soldBy, String image, String variant, String sku, String cost, String userId, String dateCreated, String lastModified, String selectedNature, String selectedCurrency, String itemCode, String vatCode, String valueOf,String discountedamount2,String discountedamount3, double currentPrice,double currentPrice2,double currentPrice3) {
         if (isFinishing()) {
             // Activity is finishing, do not show the dialog
             return;
@@ -1001,6 +1062,7 @@ public class AddItemActivity extends Activity {
                 String Price2 = price2;
                 String Price3 = price3;
                 String Category = category;
+                String SubCategory = subcategory;
                 String Barcode = barcode;
                 float Weight = parseFloat;
                 String Department = department;
@@ -1038,14 +1100,14 @@ public class AddItemActivity extends Activity {
                 double CurrentPrice2 = currentPrice2;
                 double CurrentPrice3 = currentPrice3;
 
-                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
+                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category,subcategory, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
                         availableForSale,options,commentrequired,supplemetid,optionIds,optionId2,optionId3,optionId4,optionId5,soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Online");
 
 
 // Trigger the service to insert data
-                SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript,discountrate, Price,Price2,Price3, Category, Barcode, Weight, Department,
+                SyncAddToMssql.startSync(AddItemActivity.this, Name, Descript,discountrate, Price,Price2,Price3, Category,SubCategory, Barcode, Weight, Department,
                         SubDepartment, LongDescription, Quantity, ExpiryDate, VAT,
                         AvailableForSale,Options,hascomment,Optionselectedid,Optionselectedid2,Optionselectedid3,Optionselectedid4,Optionselectedid5, SoldBy, Image, Variant, SKU, Cost, UserId, DateCreated, LastModified,
                         SelectedNature, SelectedCurrency, ItemCode,VATCode, ValueOf,Discountedamount2,Discountedamount3, CurrentPrice,CurrentPrice2,CurrentPrice3);
@@ -1063,7 +1125,7 @@ public class AddItemActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category, barcode, parseFloat, department,
+                dbManager.insert(name, desc,selectedDiscounts, price,price2,price3, category,subcategory, barcode, parseFloat, department,
                         subDepartment, longDescription, quantity, expiryDate, vat,
                         availableForSale,options,commentrequired,supplemetid,optionIds,optionId2,optionId3,optionId4,optionId5, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,
                         selectedNature, selectedCurrency, itemCode,vatCode, valueOf,discountedamount2,discountedamount3, currentPrice,currentPrice2,currentPrice3,"Offline");

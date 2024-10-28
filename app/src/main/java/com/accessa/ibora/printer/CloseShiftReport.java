@@ -54,7 +54,7 @@ public class CloseShiftReport extends AppCompatActivity {
     private TextView CompanyName;
     private String Shopname;
 
-    private List<DataModel> newDataList;
+    private List<DataModel> newDataList,EventList;
 
     private List<CatDataModel> CatDataList;
     private PaymentMethodAdapter paymentAdapter;
@@ -77,7 +77,8 @@ public class CloseShiftReport extends AppCompatActivity {
    private String localeString ;
     private String reportType ;
     private  int actualshift;
-
+    private boolean printable ;
+    private String printerpartname ;
     private String totalTax ;
     private String totalAmountWOVat;
     private   String      TelNum,compTelNum,compFaxNum,TransactionTypename;
@@ -106,6 +107,7 @@ public class CloseShiftReport extends AppCompatActivity {
 
 
                     try {
+                        List<PrinterSetupPrefs> printerSetups = mDatabaseHelper.getPrinterSetups(getApplicationContext());
 
                         dbManager = new DBManager(getApplicationContext());
                         dbManager.open();
@@ -133,9 +135,17 @@ public class CloseShiftReport extends AppCompatActivity {
 
                             LogoPath = company.getImage();
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
 
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
 
+                                if( printerpartname.equals("Logo") && printable) {
+
+                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+
+                                }
+                            }
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
                             // Create the formatted companyAddress1Line  line
@@ -169,26 +179,43 @@ public class CloseShiftReport extends AppCompatActivity {
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
-                            // Print the formatted company name line
-                            service.printText(CompAdd1andAdd2, null);
-                            service.printText(CompAdd3, null);
-                            service.printText(compTel + "\n", null);
-                            service.printText(compFax + "\n\n", null);
-                            // Print the formatted company name line
-                            service.printText(shopname, null);
-                            service.printText(Add1andAdd2, null);
-                            service.printText(shopAdress3, null);
-                            service.printText(Tel + "\n", null);
-                            service.printText(Fax + "\n", null);
-                            service.printText(CompVatNo, null);
-                            service.printText(CompBRNNo, null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Company Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(CompAdd1andAdd2, null);
+                                    service.printText(CompAdd3, null);
+                                    service.printText(compTel + "\n", null);
+                                    service.printText(compFax + "\n\n", null);
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Shop Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(shopname, null);
+                                    service.printText(Add1andAdd2, null);
+                                    service.printText(shopAdress3, null);
+                                    service.printText(Tel + "\n", null);
+                                    service.printText(Fax + "\n", null);
+                                    service.printText(CompVatNo, null);
+                                    service.printText(CompBRNNo, null);
+                                }
+                            }
 
                             service.setAlignment(0, null);
 
 
                         }
                         reportType="Daily";
-                         actualshift=mDatabaseHelper.getactualShiftNumber();
+                       //  actualshift=mDatabaseHelper.getactualShiftNumber();
+                         actualshift= mDatabaseHelper.getLastSetShiftNumber();
                         Log.d("actualshift ", String.valueOf(actualshift));
                         Cursor itemCursor = mDatabaseHelper.getUserById(Integer.parseInt(cashorId));
                         if (itemCursor != null && itemCursor.moveToFirst()) {
@@ -211,10 +238,36 @@ public class CloseShiftReport extends AppCompatActivity {
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
                             service.printText(lastshift + "\n\n", null);
-                            service.printText(cashiename + "\n", null);
-                            service.printText(cashierid + "\n", null);
-                            service.printText(Posnum + "\n", null);
-                            service.printText(numberofcovers + "\n", null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Cashior name") && printable) {
+                                    service.printText(cashiename + "\n", null);
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                if (printerpartname.equals("Cashier Id") && printable) {
+                                    service.printText(cashierid + "\n", null);
+
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("POS NUM") && printable) {
+                                    service.printText(Posnum + "\n", null);
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Number Of servings") && printable) {
+                                    service.printText(numberofcovers + "\n", null);
+                                }
+                            }
                         }
 
 
@@ -236,10 +289,13 @@ public class CloseShiftReport extends AppCompatActivity {
                         }else if (reportType.equals("Yearly")) {
                             frequencytoday="This Year";
                         }
+
+
+
+
+
+
                         String TotalDaily= "All Items sold " + frequencytoday ;
-
-
-
                         String DailyLine = TotalDaily ;
                         // Enable bold text
                         byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -249,7 +305,7 @@ public class CloseShiftReport extends AppCompatActivity {
                         service.printText(DailyLine + "\n", null);
 
                         // Disable bold text
-                        byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
+                        byte[]   boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         // Initialize the paymentItems list (e.g., retrieve data from the database)
@@ -259,8 +315,22 @@ public class CloseShiftReport extends AppCompatActivity {
                         int lineWidths= 48;
                         for (DataModel item : newDataList) {
                             String paymentName = item.getLongDescription();
-                            double totalAmount = item.getTotalPrice();
-                                    int quantity= item.getQuantity();
+
+
+                            String comment = item.getComment();
+
+                            String transactionid = item.getTransactionid();
+                             double totalAmount = item.getTotalPrice();
+                            int quantity= item.getQuantity();
+                            if (transactionid != null && transactionid.startsWith("CRN")) {
+                                // Transaction ID starts with "CRN"
+                                totalAmount=-totalAmount;
+                                // Implement your logic here
+                            } else {
+                                // Transaction ID does not start with "CRN"
+                                totalAmount=totalAmount;
+                            }
+
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
 
 
@@ -273,6 +343,28 @@ public class CloseShiftReport extends AppCompatActivity {
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
+                            if ("EVENTS".equals(paymentName) && comment != null) {
+
+                                EventList=mDatabaseHelper.getDataForEvents(reportType,actualshift);
+                                for (DataModel items : EventList) {
+
+                                    String commentsname = items.getComment();
+                                    double totalAmounts = items.getTotalPrice();
+                                    int quantitys= items.getQuantity();
+                                     formattedTotalAmount = String.format("%.2f", totalAmounts);
+
+
+                                     formattedPaymentInfo =  commentsname + " X " + quantitys ;
+                                     formattedam="("+" Rs " + formattedTotalAmount+ ")";
+                                    formattedPaymentInfo = "--->" + formattedPaymentInfo;
+                                     remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
+
+                                     paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                                    // Print the payment information for the current item
+                                    service.printText(paddedPaymentInfo + "\n", null);
+                                }
+                            }
                         }
                         service.printText(lineSeparator + "\n", null);
 
@@ -301,7 +393,16 @@ public class CloseShiftReport extends AppCompatActivity {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
                             int quantity= item.getTotalQuantity();
+                            String transactionid = item.getTransactionid();
 
+                            if (transactionid != null && transactionid.startsWith("CRN")) {
+                                // Transaction ID starts with "CRN"
+                                totalAmount=-totalAmount;
+                                // Implement your logic here
+                            } else {
+                                // Transaction ID does not start with "CRN"
+                                totalAmount=totalAmount;
+                            }
                             Log.d("categorycode" , String.valueOf(categorycode));
                             Log.d("quantity" , String.valueOf(quantity));
                             String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
@@ -438,7 +539,9 @@ public class CloseShiftReport extends AppCompatActivity {
                             double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportTypePerShift(reportType, actualshift);
                             double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportTypeperShift(reportType, actualshift);
                             double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportTypepershift(reportType, actualshift);
-                            double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
+                        double creditnotetotal= mDatabaseHelper.getSumOfTransactionTotalTTCForCRN(reportType,actualshift);
+
+                        double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval)-creditnotetotal;
                             double cashnetval = tenderval - cashret;
 
                             // Format values to 2 decimal places
@@ -450,9 +553,11 @@ public class CloseShiftReport extends AppCompatActivity {
                             String formattedCashinval = String.format("%.2f", cashinval);
                             String formattedAmountindrawerval = String.format("%.2f", amountindrawerval);
                             String formattedCashnetval = String.format("%.2f", cashnetval);
+                             String formattedCreditnote = String.format("%.2f", creditnotetotal);
 
                             // Prepare the strings for printing
                             String cash = "CASH: Rs " + formattedTenderval;
+                            String creditnote = "Refund: -Rs " + formattedCreditnote;
                             String cashreturn = "Change Returned: Rs " + formattedCashret;
                             String cashback = "CASHBACK: Rs " + formattedCashbackval;
                             String cashin = "Cash In: Rs " + formattedCashinval;
@@ -468,6 +573,7 @@ public class CloseShiftReport extends AppCompatActivity {
                             service.printText(cashin + "\n", null);
                             service.printText(loan + "\n", null);
                             service.printText(pickup + "\n", null);
+                        service.printText(creditnote + "\n", null);
                             service.printText(amountindrawer + "\n\n\n", null);
                             // Enable bold text and set font size to 30
                             boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -483,37 +589,36 @@ public class CloseShiftReport extends AppCompatActivity {
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
 
-                            double debitCardTotal = mDatabaseHelper.getSumOfTotalForDebitCardTransactionsByReportTypePerShift(reportType, actualshift);
-                            double creditCardTotal = mDatabaseHelper.getSumOfTotalForCreditCardTransactionsByReportTypePerShift(reportType, actualshift);
-                            double chequeTotal = mDatabaseHelper.getSumOfTotalForChequesTransactionsByReportTypePerShift(reportType, actualshift);
-                            double popTotal = mDatabaseHelper.getSumOfTotalForPOPTransactionsByReportTypePerShift(reportType, actualshift);
-                            double couponCodeTotal = mDatabaseHelper.getSumOfTotalForCouponCodeTransactionsByReportTypePerShift(reportType, actualshift);
+
+                        List<PaymentMethodDataModel> SettlementDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShiftNumber(reportType,  actualshift);
+                        for (PaymentMethodDataModel item : SettlementDataLists) {
+                            String paymentName = item.getPaymentName();
+                            double totalAmount = item.getTotalAmount();
+                            int quantity = item.getPaymentCount();
+
+                            Log.d("paymentname", String.valueOf(paymentName));
+                            Log.d("quantity", String.valueOf(quantity));
+                                if(paymentName.equals("Cash")){
+
+                                    totalAmount=totalAmount- cashret;
+                                }
+                                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                            String formattedPaymentInfo = paymentName ;
+                            String formattedAmount = " Rs " + formattedTotalAmount;
 
 
-                            String formattedcreditcard = String.format("%.2f", creditCardTotal);
-                            String formatteddebitcard = String.format("%.2f", debitCardTotal);
-                            String formattedchequeTotal = String.format("%.2f", chequeTotal);
-                            String formattedpopTotal = String.format("%.2f", popTotal);
-                            String formatteddcouponCodeTotal = String.format("%.2f", couponCodeTotal);
+                            String payment= formattedPaymentInfo + formattedAmount;
+                            service.printText(payment + "\n", null);
 
-                            String creditcard = "Credit card: Rs " + formattedcreditcard;
-                            String debitcard = "Debit card: Rs " + formatteddebitcard;
-                            String mcbjuice = "MCB Juice: Rs 0.00";
-                            String cheque = "CHEQUES: Rs " + formattedchequeTotal;
-                            String pop = "POP: Rs " + formattedpopTotal;
-                            String couponcode = "Coupon Code: Rs " + formatteddcouponCodeTotal;
+                        }
 
-                            service.printText(creditcard + "\n", null);
-                            service.printText(debitcard + "\n", null);
-                            service.printText(cheque + "\n", null);
-                            service.printText(mcbjuice + "\n", null);
-                            service.printText(pop + "\n", null);
-                            service.printText(couponcode + "\n", null);
 
                         service.printText(lineSeparator + "\n", null);
                         // Retrieve the total amount and total tax amount from the transactionheader table
-                        Log.d("cashnetval",  "cashnetval: " + cashnetval + "debitCardTotal: " +debitCardTotal+  "creditCardTotal: " +creditCardTotal+  "chequeTotal: " +chequeTotal);
-                        double doubleval= cashnetval + debitCardTotal+ creditCardTotal+ chequeTotal +popTotal+ couponCodeTotal;
+                        double grandTotal = mDatabaseHelper.getSumOfTransactionTotalTTCPerShiftwocashior(reportType, actualshift);
+
+                        double doubleval= grandTotal;
                         int covernumber= mDatabaseHelper.getSumNumberOfCoversByReportTypePerShift(reportType, actualshift);
                         double average= doubleval/covernumber;
                         String formatedtotalval = String.format("%.2f", doubleval);
@@ -528,14 +633,17 @@ public class CloseShiftReport extends AppCompatActivity {
                         String Total= "Total";
                         String TVA= getString(R.string.Vat);
                         String amountWoVat= "Amount W/0 VAT";
-                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
+                        String formattedTamountWOVat = String.format("%.2f", totalAmountWOVatval);
+
+                        String TotalValueWoVat= "Rs " + formattedTamountWOVat;
+
                         String TotalVAT= "Rs " + totalTax;
                          lineWidths= 38;
                         int lineWidth = 48;
                         // Calculate the padding for the item name
                         double tax = Double.parseDouble(totalTax);
                         double amountWOVat = Double.parseDouble(totalAmountWOVat);
-                        double grandTotal = tax + amountWOVat;
+                         grandTotal = tax + amountWOVat;
                         String formattedTotalAmount = String.format("%.2f", grandTotal);
 
                         String TotalValue= "Rs " + formattedTotalAmount;
@@ -750,11 +858,25 @@ public class CloseShiftReport extends AppCompatActivity {
         return paymentMethodDataList;
     }
 
+    private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportTypeAndShiftNumber(String reportType,int shiftnumber) {
+        // Implement the logic to fetch payment method data based on the report type and cashier ID
 
+
+        List<PaymentMethodDataModel> paymentMethodDataList = new ArrayList<>();
+
+        // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
+        // Replace the method and parameters with your actual database queries
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndShift(reportType,shiftnumber);
+        Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
+
+        return paymentMethodDataList;
+    }
     private  List<DataModel> fetchDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
         // Fetch data based on the selected report type and shift number
         return mDatabaseHelper.getDataBasedOnReportTypeAndShift(reportType, shiftNumber);
     }
+
+
     private List<CatDataModel> fetchCatDataBasedOnReportTypeByShift(String reportType,int shiftnum) {
         // Implement your logic to fetch data based on the selected report type
         // For now, return a dummy list

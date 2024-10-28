@@ -1,7 +1,9 @@
 package com.accessa.ibora.product.category;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,6 +16,8 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import android.graphics.Color;
+import android.widget.Toast;
+
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
@@ -23,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -38,7 +43,9 @@ public class CategoryFragment  extends Fragment   {
     private SimpleCursorAdapter Catadapter;
 
     private CategoryDatabaseHelper CatDatabaseHelper;
-
+    private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
+    String cashorlevel;
     final String[] from = new String[] { CategoryDatabaseHelper._ID,CategoryDatabaseHelper.CAT_PRINTER_OPTION,
             CategoryDatabaseHelper.CatName, CategoryDatabaseHelper.Color };
 
@@ -66,14 +73,18 @@ public class CategoryFragment  extends Fragment   {
         View view = inflater.inflate(R.layout.cat_fragment,container,false);
 
 
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
+
+        cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
         //RecyclerView
         CatRecyclerView = view.findViewById(R.id.recycler_view);
 
         CatRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         CatDatabaseHelper = new CategoryDatabaseHelper(getContext());
-
+        mDatabaseHelper = new DatabaseHelper(getContext());
         Cursor cursor = CatDatabaseHelper.getAllCategory();
 
         CatRecyclerView.setAdapter(CatAdapter);
@@ -145,28 +156,32 @@ public class CategoryFragment  extends Fragment   {
         CatRecyclerView.addOnItemTouchListener(
                 new RecyclerCategoryClickListener(getContext(), CatRecyclerView ,new RecyclerCategoryClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
-                        TextView idTextView = (TextView) view.findViewById(R.id.id_text_view);
-                        TextView CatName_edittext = (TextView) view.findViewById(R.id.Catname_text_view);
-                        TextView Color_edittext = (TextView) view.findViewById(R.id.Color_text_view);
-                        TextView printing_status_edittext = (TextView) view.findViewById(R.id.printingstatus_view);
+                        int levelNumber = Integer.parseInt(cashorlevel);
+
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyCategory_", levelNumber)) {
+
+                            TextView idTextView = (TextView) view.findViewById(R.id.id_text_view);
+                            TextView CatName_edittext = (TextView) view.findViewById(R.id.Catname_text_view);
+                            TextView Color_edittext = (TextView) view.findViewById(R.id.Color_text_view);
+                            TextView printing_status_edittext = (TextView) view.findViewById(R.id.printingstatus_view);
 
 
+                            String id1 = idTextView.getText().toString();
 
-                        String id1 = idTextView.getText().toString();
+                            String id = idTextView.getText().toString();
+                            String CatName = CatName_edittext.getText().toString();
+                            String Color = Color_edittext.getText().toString();
+                            String printingstatus = printing_status_edittext.getText().toString();
 
-                        String id = idTextView.getText().toString();
-                        String CatName = CatName_edittext.getText().toString();
-                        String Color =Color_edittext .getText().toString();
-                        String printingstatus =printing_status_edittext .getText().toString();
+                            Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyCategoryActivity.class);
+                            modify_intent.putExtra("CatName", CatName);
+                            modify_intent.putExtra("Color", Color);
+                            modify_intent.putExtra("id", id);
+                            modify_intent.putExtra("printingstatus", printingstatus);
 
-                        Intent modify_intent = new Intent(getActivity().getApplicationContext(), ModifyCategoryActivity.class);
-                        modify_intent.putExtra("CatName", CatName);
-                        modify_intent.putExtra("Color", Color);
-                        modify_intent.putExtra("id", id);
-                        modify_intent.putExtra("printingstatus", printingstatus);
-
-                        startActivity(modify_intent);
-
+                            startActivity(modify_intent);
+                        }
+                        Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override public void onLongItemClick(View view, int position) {
@@ -184,7 +199,14 @@ public class CategoryFragment  extends Fragment   {
         CatAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v1) {
-                openNewActivity();
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addCategory_", levelNumber)) {
+
+                    openNewActivity();
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
             }
         });
         return view;

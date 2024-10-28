@@ -2,6 +2,7 @@ package com.accessa.ibora.product.items;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -23,28 +24,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.DeviceInfo;
-import com.accessa.ibora.Sync.MasterSync.MSSQLDataInserter;
 import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
-import com.accessa.ibora.Sync.SyncAddToMssql;
 import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.Sync.Syncforold;
-import com.accessa.ibora.product.items.AddItemActivity;
-import com.accessa.ibora.product.items.DBManager;
-import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.ItemAdapter;
-import com.accessa.ibora.product.items.ModifyItemActivity;
-import com.accessa.ibora.product.items.RecyclerItemClickListener;
 import com.bumptech.glide.Glide;
 import com.accessa.ibora.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -58,6 +49,8 @@ private  EditText searchEditText;
     private ItemAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
+    String cashorlevel;
     private Spinner spinner;
     private ImageView arrow;
     private DatabaseHelper mDatabaseHelper;
@@ -81,6 +74,13 @@ private  EditText searchEditText;
 
         // Spinner
         spinner = view.findViewById(R.id.spinner);
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        // Retrieve the shared preferences
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+
+         cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
 
         //arrow
         arrow=view.findViewById(R.id.spinner_icon);
@@ -233,22 +233,32 @@ private  EditText searchEditText;
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                        TextView priceTextView = view.findViewById(R.id.price_text_view);
+                        int levelNumber = Integer.parseInt(cashorlevel);
 
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyItems_", levelNumber)) {
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
-                        modifyIntent.putExtra("title", title);
-                        modifyIntent.putExtra("desc", longDescription);
-                        modifyIntent.putExtra("id", id);
+                            TextView idTextView = view.findViewById(R.id.id_text_view);
+                            TextView subjectEditText = view.findViewById(R.id.name_text_view);
+                            TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
+                            TextView priceTextView = view.findViewById(R.id.price_text_view);
 
-                        startActivity(modifyIntent);
+                            String id1 = idTextView.getText().toString();
+                            String id = idTextView.getText().toString();
+                            String title = subjectEditText.getText().toString();
+                            String longDescription = longDescriptionEditText.getText().toString();
+
+                            Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
+                            modifyIntent.putExtra("title", title);
+                            modifyIntent.putExtra("desc", longDescription);
+                            modifyIntent.putExtra("id", id);
+
+                            startActivity(modifyIntent);
+                        }else{
+
+                                Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+
+
+                        }
                     }
 
                     @Override
@@ -259,46 +269,70 @@ private  EditText searchEditText;
         );
 
         mAddFab.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
-                openNewActivity();
+
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addItems_", levelNumber)) {
+                    openNewActivity();
+                }else {
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+
+                }
             }
         });
 
         mSyncFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //clear table
-                // Create an instance of MssqlDataSync
-                MssqlDataSync mssqlDataSync = new MssqlDataSync();
+                int levelNumber = Integer.parseInt(cashorlevel);
 
-                // Call the synchronization method
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "syncDatabase_", levelNumber)) {
+
+                    //clear table
+                    // Create an instance of MssqlDataSync
+                    MssqlDataSync mssqlDataSync = new MssqlDataSync();
+
+                    // Call the synchronization method
 
                     //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
-                //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
-               // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
-              //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
-              //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
-              //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
-                mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                    //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
+                    // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
+                    //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
+                    //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
+                    //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
+
+        /*        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
                 mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
                 mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
-                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
-                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
-                mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
-                mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
-               // dbManager.deleteItemsWithSyncStatusNotOffline();
-                String androidVersion = DeviceInfo.getAndroidVersion();
-                Log.d("DeviceInfo", "Android Version: " + androidVersion);
-                // Trim the strings to avoid any leading or trailing whitespace issues
-                if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
-                    Log.d("SyncService", "Starting Syncforold");
-                    Syncforold.startSync(requireContext());
-                } else {
-                    Log.d("SyncService", "Starting SyncService");
-                    SyncService.startSync(requireContext());
-                }
+                mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
 
+               */
+                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
+                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+                    mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                    mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
+                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
+                    // dbManager.deleteItemsWithSyncStatusNotOffline();
+                    String androidVersion = DeviceInfo.getAndroidVersion();
+                    Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                    // Trim the strings to avoid any leading or trailing whitespace issues
+                    if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                        Log.d("SyncService", "Starting Syncforold");
+                        Syncforold.startSync(requireContext());
+                    } else {
+                        Log.d("SyncService", "Starting SyncService");
+                        SyncService.startSync(requireContext());
+                    }
+
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+
+                }
             }
         });
 

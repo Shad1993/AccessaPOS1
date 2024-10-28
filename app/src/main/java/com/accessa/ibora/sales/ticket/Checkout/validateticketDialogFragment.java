@@ -66,6 +66,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.Functions.FunctionFragment;
@@ -80,6 +81,7 @@ import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.Settings.Rooms.Rooms;
 import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitchenActivity;
 import com.accessa.ibora.printer.printerSetup;
+
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
@@ -153,7 +155,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private static final String BuyerProfile="BuyerProfile";
     private static final String BuyerCompName="BuyerCompName";
     private static final String BuyerBusinessAddress="BuyerBusinessAdress";
-    EditText amountReceivedEditText;
+    EditText amountReceivedEditText,pinEditText;
     private static final String BuyerbRN="BuyerBRN";
     private StringBuilder enteredPIN;
     private View view; // Declare the view variable
@@ -289,7 +291,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
 
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor3 = mDatabaseHelper.getAllPaymentMethod();
+        Cursor cursor3 = mDatabaseHelper.getVisiblePaymentMethods();
 
         mAdapter = new CheckoutGridAdapter(getContext(), cursor3);
         mRecyclerView.setAdapter(mAdapter);
@@ -323,7 +325,12 @@ public class validateticketDialogFragment extends DialogFragment  {
                  id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
                 String name = nameTextView.getText().toString();
-                if (name.equals("Cash") || name.equals("Cheque")){
+                double amountReceived = 0.0;
+                if (!amountReceivedEditText.getText().toString().isEmpty()) {
+                    amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
+                }
+
+                if ((name.equals("Cash") || name.equals("Cheque")) && amountReceived!=0){
 
 
 
@@ -410,7 +417,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                     gridLayout.setVisibility(View.VISIBLE);
                     containerLayout.setVisibility(View.VISIBLE);
                     gifImageView.setVisibility(View.GONE);
-                    mRecyclerView.setVisibility(View.GONE);
+                    mRecyclerView.setVisibility(View.VISIBLE);
                     amountReceivedEditText.setVisibility(View.VISIBLE);
                     button1.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -564,7 +571,6 @@ public class validateticketDialogFragment extends DialogFragment  {
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                 int columnIndexSplitType = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
-                boolean allItemsSelected =  mDatabaseHelper.areAllItemsSelected(roomid,tableid);
 
                 String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
                 Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid,String.valueOf(roomid),tableid);
@@ -573,9 +579,7 @@ public class validateticketDialogFragment extends DialogFragment  {
                 boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
                 boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionid);
                 boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(transactionid);
-                Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
-                Log.e("areAllItemsNotSelectedNotPaid" , String.valueOf(areAllItemsNotSelectedNotPaid));
-                Log.e("areNoItemsSelectedNorPaid" , String.valueOf(areNoItemsSelectedNorPaid));
+
                 if(areAllItemsNotSelectedNotPaid) {
                     if (cursor1 != null && cursor1.moveToFirst()) {
 
@@ -1039,12 +1043,172 @@ if(isAtLeastOneItemSelected){
 
         Button splitPaymentButton = view.findViewById(R.id.Splitpayment);
         Button fullPaymentButton = view.findViewById(R.id.full_payment);
-
+        Button applydiscount = view.findViewById(R.id.applydiscount);
+        String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+        String latestTransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+        if (latestTransId == null) {
+            //applydiscount.setVisibility(View.INVISIBLE); // This will make the button invisible but it will still take up space.
+            applydiscount.setVisibility(View.GONE); // Alternatively, use this to make the button disappear completely, not taking up any space.
+        }
         // Retrieve the selected payment type from SharedPreferences
         String selectedPaymentType = getSelectedPaymentType();
 
         // Set button colors based on the selected payment type
         updateButtonColors(selectedPaymentType, splitPaymentButton, fullPaymentButton);
+        applydiscount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int levelNumber= Integer.parseInt(cashorlevel);
+                SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "applyDiscount_", levelNumber)) {
+                    // Inflate the PIN dialog layout
+                    LayoutInflater inflater = getLayoutInflater();
+                    View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+                    pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+                    // Find the number buttons and set OnClickListener
+                    Button button1 = pinDialogView.findViewById(R.id.button1);
+                    Button button2 = pinDialogView.findViewById(R.id.button2);
+                    Button button3 = pinDialogView.findViewById(R.id.button3);
+                    Button button4 = pinDialogView.findViewById(R.id.button4);
+                    Button button5 = pinDialogView.findViewById(R.id.button5);
+                    Button button6 = pinDialogView.findViewById(R.id.button6);
+                    Button button7 = pinDialogView.findViewById(R.id.button7);
+                    Button button8 = pinDialogView.findViewById(R.id.button8);
+                    Button button9 = pinDialogView.findViewById(R.id.button9);
+                    Button button0 = pinDialogView.findViewById(R.id.button0);
+                    Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+                    Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+                    // Set up button click listeners in the dialog
+                    setPinButtonClickListeners(pinDialogView, pinEditText);
+
+                    // Create the PIN dialog without positive and negative buttons
+                    AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+                    pinBuilder.setTitle("Enter PIN")
+                            .setView(pinDialogView);
+
+                    AlertDialog pinDialog = pinBuilder.create();
+                    pinDialog.show();
+
+                    // Set click listener for the Clear button
+                    buttonClear.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onpinClearButtonClick(pinEditText);
+                        }
+                    });
+                    button1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (pinEditText != null) {
+                                onPinNumberButtonClick(v, "1");
+                            } else {
+                                // Handle the case where clickedEditText is null
+                                Toast.makeText(getContext(), "No EditText selected", Toast.LENGTH_SHORT).show();
+                                // Alternatively, perform another action to handle this case
+                            }
+                        }
+                    });
+
+
+                    button2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            onPinNumberButtonClick(v, "2");
+                        }
+                    });
+
+                    button3.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "3");
+                        }
+                    });
+
+                    button4.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "4");
+                        }
+                    });
+
+                    button5.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "5");
+                        }
+                    });
+
+                    button6.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "6");
+                        }
+                    });
+
+                    button7.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "7");
+                        }
+                    });
+
+                    button8.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "8");
+                        }
+                    });
+
+                    button9.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "9");
+                        }
+                    });
+
+                    button0.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onPinNumberButtonClick(v, "0");
+                        }
+                    });
+
+
+                    // Set click listener for the Login button
+                    buttonLogin.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String enteredPIN = pinEditText.getText().toString();
+
+                            // Validate the entered PIN
+                            int cashorLevel = validatePIN(enteredPIN);
+                            if (cashorLevel != -1) {
+                                // PIN is valid, now show the discount dialog
+                                showDiscountDialog(cashorLevel);
+                                // Dismiss the dialog
+                                dismiss();
+                                pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                            } else {
+                                // PIN is invalid, show an error message
+                                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }else{
+                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+
+                }
+            }
+
+        });
+
+
+
+
 
         splitPaymentButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1056,7 +1220,7 @@ if(isAtLeastOneItemSelected){
                 containerLayout.setVisibility(View.GONE);
                 validateButton.setVisibility(View.GONE);
                 amountReceivedEditText.setVisibility(View.VISIBLE);
-                mRecyclerView.setVisibility(View.GONE);
+                mRecyclerView.setVisibility(View.VISIBLE);
                 // Update button colors
                 updateButtonColors("splitted", splitPaymentButton, fullPaymentButton);
 
@@ -1101,6 +1265,105 @@ if(isAtLeastOneItemSelected){
 
     }
 
+    public void onNumberButtonClick(View view) {
+         pinEditText = view.findViewById(R.id.editTextPIN);
+        String currentText = pinEditText.getText().toString();
+
+        // Get the number from the button text
+        String number = ((Button) view).getText().toString();
+
+        // Append the number if length is less than 4
+        if (currentText.length() < 4) {
+            pinEditText.setText(currentText + number);
+        }
+    }
+
+    public void onClearButtonClick(View view) {
+        EditText pinEditText = view.findViewById(R.id.editTextPIN);
+        pinEditText.setText("");
+    }
+
+    // Method to validate the PIN
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+
+    // Method to show the discount dialog
+    private void showDiscountDialog(int cashorLevel) {
+        LayoutInflater inflater = getLayoutInflater();
+        View discountDialogView = inflater.inflate(R.layout.discount_dialog, null);
+
+        RecyclerView recyclerView = discountDialogView.findViewById(R.id.discount_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        Cursor discountsCursor = mDatabaseHelper.getAllDiscounts(); // Fetch all discounts
+
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Discount")
+                .setView(discountDialogView)
+                .setNegativeButton("Cancel", null);
+
+        // Show the dialog and keep a reference to it
+        AlertDialog discountDialog = builder.create();
+        discountDialog.show();
+
+        // Set up the adapter for the RecyclerView
+        DiscountAdapter adapter = new DiscountAdapter(discountsCursor, discountValue -> {
+            // Check if cashor level is less than 3 and the discount exceeds 10%
+            if (cashorLevel < 3 && discountValue > 10) {
+                Toast.makeText(getContext(), "You cannot apply more than 10% discount", Toast.LENGTH_SHORT).show();
+                return;
+            }else{
+                // Apply the discount
+                applyDiscount(discountValue);
+            }
+
+
+
+            // Notify the listener that an item is added
+            if (itemAddedListener != null) {
+                itemAddedListener.onItemAdded(String.valueOf(roomid), tableid);
+            }
+
+            // Dismiss the dialog after the discount is applied
+            discountDialog.dismiss();
+        });
+
+        recyclerView.setAdapter(adapter);
+    }
+
+
+
+
+    private void applyDiscount(double discountPercentage) {
+        // Retrieve the latest transaction details
+        String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+        String latestTransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+
+        // Calculate the total amount and tax total amount
+        double totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
+        double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
+
+        // Calculate the discount amount
+        double discountAmount = totalAmount * (discountPercentage / 100);
+        double discounttaxAmount = taxTotalAmount * (discountPercentage / 100);
+        // Calculate the new total amount after applying the discount
+        double newTotalAmount = totalAmount - discountAmount;
+
+        // Ensure the new total amount is not negative
+        if (newTotalAmount < 0) {
+            newTotalAmount = 0;
+        }
+
+        // Update the database with the new total amount and discount amount
+        mDatabaseHelper.updateDiscountByTransactionId(newTotalAmount, discountAmount,discounttaxAmount, latestTransId);
+        mDatabaseHelper.applyDiscountToTransactionItems(latestTransId,discountPercentage);
+    }
 
 
 
@@ -1111,6 +1374,15 @@ if(isAtLeastOneItemSelected){
         double amountReceived = 0.0;
         if (!amountReceivedEditText.getText().toString().isEmpty()) {
             amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
+        } else {
+            Toast.makeText(getContext(), "Please Insert an amount", Toast.LENGTH_SHORT).show();
+            return; // Stop further execution
+        }
+
+        // Check if the amount received is zero
+        if (amountReceived == 0) {
+            Toast.makeText(getContext(), "Amount received cannot be zero", Toast.LENGTH_SHORT).show();
+            return; // Stop further execution
         }
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
@@ -1285,7 +1557,8 @@ if(isAtLeastOneItemSelected){
             Log.d("total", "= " + totalsplit);
             Log.d("sum", "= " + sum);
             Log.d("totalAmountinserted", "= " + totalAmountinserted);
-            Log.d("cashReturn", "= " + cashReturn);
+            Log.d(" " +
+                    "", "= " + cashReturn);
 
             if( cashReturn>=0){
                 String newtransid=  generateNewTransactionId();
@@ -1293,8 +1566,14 @@ if(isAtLeastOneItemSelected){
                 Log.d("newtransiditemsel", String.valueOf(newtransid));
                 mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
                 // Update the transaction ID in the header table for transactions with status "InProgress"
-                SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),newtransid);
-
+                SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalsplit,"VAT 15%"),newtransid);
+                double newamoubt;
+                if(totalAmount != 0) {
+                     newamoubt = totalAmount - totalsplit;
+                }else{
+                     newamoubt=totalsplit;
+                }
+                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),transactionIdInProgress);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
                 intent.putExtra("amount_received", String.valueOf(totalsplit));
@@ -1330,8 +1609,7 @@ if(isAtLeastOneItemSelected){
 
                 // Update the transaction ID in the header table for transactions with status "InProgress"
                 SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
-
-                mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
+                     mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
                 intent.putExtra("amount_received", String.valueOf(totalsplit));
                 intent.putExtra("cash_return", String.valueOf(cashReturn));
@@ -1354,7 +1632,38 @@ if(isAtLeastOneItemSelected){
         }
 
     }
+    public void updateheader(double totalAmount, double TaxtotalAmount,String transactionid) {
 
+        // Get the current date and time
+        String currentDate = mDatabaseHelper.getCurrentDate();
+        String currentTime = mDatabaseHelper.getCurrentTime();
+
+        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+
+        double totalTTC = totalAmount;
+        double totaltax = TaxtotalAmount;
+        double totalHT_A = totalTTC - totaltax;
+
+
+        // Get the total quantity of items in the transaction
+        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionid);
+
+
+        boolean success = mDatabaseHelper.updateTransactionHeaderWhenPayPerItem(
+                totalAmount,
+                currentDate,
+                currentTime,
+                totalHT_A,
+                totalTTC,
+                quantityItem,
+                totaltax,
+                cashierId,
+                transactionid
+        );
+
+
+
+    }
     private void SendToHeader(double totalAmount, double taxtotalAmount,String newtransid) {
 
             transactionIdInProgress=newtransid;
@@ -1415,40 +1724,7 @@ if(isAtLeastOneItemSelected){
             }
         }
     }
-    private void showNumberOfCoversDialog(final OnCoversInputListener listener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Enter Number of Covers");
 
-        final EditText input = new EditText(getContext());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        builder.setView(input);
-
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String numberOfCoversStr = input.getText().toString().trim();
-                if (!numberOfCoversStr.isEmpty()) {
-                    try {
-                        int numberOfCovers = Integer.parseInt(numberOfCoversStr);
-                        listener.onCoversInput(numberOfCovers);
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Number of covers cannot be empty", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
 
     // Listener interface to handle the input
     interface OnCoversInputListener {
@@ -1626,6 +1902,12 @@ if (totalAmount==0){
             // Update the transaction ID in the header table for transactions with status "InProgress"
             SendToHeader(remainingAmount, mDatabaseHelper.calculateTax(remainingAmount,"VAT 15%"),newtransid);
 
+                totalAmount= mDatabaseHelper.calculateTotalAmountbyid(roomid,tableid,latesttransId);
+
+            Log.d("remainingAmount", String.valueOf(remainingAmount));
+            Log.d("totalAmount", String.valueOf(totalAmount));
+
+            updateheader(totalAmount,mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
             mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
             Intent intent = new Intent(getActivity(), Mra.class);
             intent.putExtra("amount_received", String.valueOf(remainingAmount));
@@ -1831,7 +2113,23 @@ if (totalAmount==0){
         String formattedCharCount = String.format("%02d", charCount);
         return formattedCharCount + input;
     }
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
 
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
     private void setButtonClickListeners() {
         int[] buttonIds = new int[] {
                 R.id.button0, R.id.button1, R.id.button2, R.id.button3,
@@ -1850,7 +2148,29 @@ if (totalAmount==0){
             });
         }
     }
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
 
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "EditText is not initialized", Toast.LENGTH_SHORT).show();
+        }
+    }
     public void onNumberButtonClick(Button button) {
         if (amountReceivedEditText != null) {
             String buttonText = button.getText().toString();
@@ -2226,14 +2546,24 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
 
 
 
-    public void onClearButtonClick(EditText ReceivedEditText) {
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
 
-        onclearButtonClick(amountReceivedEditText);
-       // onclearButtonClick(ReceivedEditText);
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
 
 
     }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
 
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
     private void onclearButtonClick(EditText ReceivedEditText) {
 
         if (amountReceivedEditText != null) {
@@ -2270,6 +2600,19 @@ public void  insertCashReturn(String cashReturn, String totalAmountinserted, Str
         if (amountReceivedEditText != null) {
             // Insert the letter into the EditText
             amountReceivedEditText.append(number);
+            //ReceivedEditText.append(letter);
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    public void onPinNumberButtonClick(View view, String number) {
+
+        if (pinEditText != null) {
+            // Insert the letter into the EditText
+            pinEditText.append(number);
             //ReceivedEditText.append(letter);
         } else {
             // Show a toast message if EditText is null

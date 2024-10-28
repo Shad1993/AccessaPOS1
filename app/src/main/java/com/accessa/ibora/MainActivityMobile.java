@@ -49,6 +49,7 @@ import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.CustomerLcd.CustomerLcd;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.CustomerLcd.TextDisplay;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.POP.CancelPaymentPOPDialogFragment;
 import com.accessa.ibora.QR.QRFragment;
 import com.accessa.ibora.Receipt.ReceiptActivity;
@@ -110,6 +111,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     private int transactionCounter = 1;
     private String actualdate;
     private String tableid;
+    private SharedPreferences usersharedPreferences;
     private int roomid;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private BroadcastReceiver cancelReceiver = new BroadcastReceiver() {
@@ -178,6 +180,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         roomid = preferences.getInt("roomnum", 0);
         tableid = preferences.getString("table_id", "");
+         usersharedPreferences = this.getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         SharedPreferences sharedPreferences = this.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
@@ -282,7 +285,6 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
             replaceFragment(newFragment);
         }
 
-
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @SuppressLint("NonConstantResourceId")
             @Override
@@ -290,36 +292,74 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
+                // Assuming you have a way to determine the user's access level
+                int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's actual level
+
                 if (id == R.id.Sales) {
-                    // Already in the sales screen, do nothing
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        // Already in the sales screen, do nothing
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(MainActivityMobile.this, ReceiptActivity.class);
-                    startActivity(intent);
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Receipts_", levelNumber)) {
+                        Intent receiptIntent = new Intent(MainActivityMobile.this, ReceiptActivity.class);
+                        startActivity(receiptIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(MainActivityMobile.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent shiftIntent = new Intent(MainActivityMobile.this, SalesReportActivity.class);
+                        startActivity(shiftIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(MainActivityMobile.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent itemsIntent = new Intent(MainActivityMobile.this, Product.class);
+                        startActivity(itemsIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(MainActivityMobile.this, SettingsDashboard.class);
-                    startActivity(intent);
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent settingsIntent = new Intent(MainActivityMobile.this, SettingsDashboard.class);
+                        startActivity(settingsIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Intent intent = new Intent(MainActivityMobile.this, SyncService.class);
-                    startActivity(intent);
+                    // Check permission for Help
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) {
+                        Intent helpIntent = new Intent(MainActivityMobile.this, Help.class);
+                        startActivity(helpIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(MainActivityMobile.this, AdminActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent adminIntent = new Intent(MainActivityMobile.this, AdminActivity.class);
+                        startActivity(adminIntent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
-                return true;
+
+                return true; // Indicate that the event was handled
             }
         });
+
+
     }
 
     private void showSecondaryScreen() {

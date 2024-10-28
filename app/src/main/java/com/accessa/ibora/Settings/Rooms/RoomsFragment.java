@@ -1,6 +1,8 @@
 package com.accessa.ibora.Settings.Rooms;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,9 +18,11 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -26,7 +30,12 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.accessa.ibora.DeviceInfo;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Sync.SyncService;
+import com.accessa.ibora.Sync.SyncServiceroomstable;
+import com.accessa.ibora.Sync.Syncforold;
+import com.accessa.ibora.Sync.Syncforoldroomstable;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
@@ -40,6 +49,7 @@ import java.util.Locale;
 public class RoomsFragment extends Fragment {
     private  EditText searchEditText;
     FloatingActionButton mAddFab;
+    FloatingActionButton mSyncFab;
     private SearchView mSearchView;
     private DBManager dbManager;
     private RoomsAdapter mAdapter;
@@ -48,7 +58,8 @@ public class RoomsFragment extends Fragment {
     private Spinner spinner;
     private ImageView arrow;
     private DatabaseHelper mDatabaseHelper;
-
+    private SharedPreferences sharedPreferences,usersharedPreferences;
+    String cashorlevel;
     private int tableNumber;
     private int seatCount;
     private String status;
@@ -77,6 +88,12 @@ public class RoomsFragment extends Fragment {
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the rooms from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+
+        cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
         Cursor cursor = mDatabaseHelper.getAllRooms();
 
         List<String> items = new ArrayList<>();
@@ -228,7 +245,7 @@ public class RoomsFragment extends Fragment {
         dbManager.open();
         Cursor cursor1 = dbManager.fetch();
         mAddFab = view.findViewById(R.id.add_fab);
-
+        mSyncFab = view.findViewById(R.id.sync_fab);
 
         adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, froms, tos, 0);
         adapter.notifyDataSetChanged();
@@ -237,36 +254,40 @@ public class RoomsFragment extends Fragment {
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.Buyerid);
-                        TextView subjectEditText = view.findViewById(R.id.BuyerAdapter);
-                        TextView longDescriptionEditText = view.findViewById(R.id.textViewTAN);
-                        TextView priceTextView = view.findViewById(R.id.textViewBRN);
+                        int levelNumber = Integer.parseInt(cashorlevel);
+
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyRoomsAndTables_", levelNumber)) {
+
+                            TextView idTextView = view.findViewById(R.id.id);
+                            TextView subjectEditText = view.findViewById(R.id.name);
+                            TextView longDescriptionEditText = view.findViewById(R.id.textViewseatcount);
+                            TextView priceTextView = view.findViewById(R.id.textViewBRN);
 
 
+                            String id = idTextView.getText().toString();
+                            String title = subjectEditText.getText().toString();
+                            String longDescription = longDescriptionEditText.getText().toString();
 
 
-                        String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+                            // Pass the room ID to the TableDetailsActivity
+                            Intent tableDetailsIntent = new Intent(requireActivity().getApplicationContext(), TableDetailsActivity.class);
+                            tableDetailsIntent.putExtra("roomId", id);
+                            tableDetailsIntent.putExtra("roomName", title);
+                            startActivity(tableDetailsIntent);
+                        }else{
+                            Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                        }
 
-
-                        // Pass the room ID to the TableDetailsActivity
-                        Intent tableDetailsIntent = new Intent(requireActivity().getApplicationContext(), TableDetailsActivity.class);
-                        tableDetailsIntent.putExtra("roomId", id);
-                        tableDetailsIntent.putExtra("roomName", title);
-                        startActivity(tableDetailsIntent);
-                       // Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyRoomsActivity.class);
-                      //  modifyIntent.putExtra("title", title);
-                       // modifyIntent.putExtra("desc", longDescription);
-                       // modifyIntent.putExtra("id", id);
-
-                       // startActivity(modifyIntent);
                     }
 
                     @Override
                     public void onLongItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.Buyerid);
-                        TextView subjectEditText = view.findViewById(R.id.BuyerAdapter);
+                        int levelNumber = Integer.parseInt(cashorlevel);
+
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyRoomsAndTables_", levelNumber)) {
+
+                            TextView idTextView = view.findViewById(R.id.id);
+                        TextView subjectEditText = view.findViewById(R.id.name);
 
                         String roomId = idTextView.getText().toString();
                         String roomName = subjectEditText.getText().toString();
@@ -274,8 +295,30 @@ public class RoomsFragment extends Fragment {
                         Log.d("LongItemClick", "RoomId: " + roomId + ", RoomName: " + roomName);
 
                         // Show the edit room dialog
-                        EditRoomDialogFragment dialogFragment = EditRoomDialogFragment.newInstance(roomId);
-                        dialogFragment.show(getChildFragmentManager(), "EditRoomDialog");
+                       // EditRoomDialogFragment dialogFragment = EditRoomDialogFragment.newInstance(roomId);
+                       // dialogFragment.show(getChildFragmentManager(), "EditRoomDialog");
+                        // Create an AlertDialog
+                        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                        builder.setTitle("Room Options")
+                                .setMessage("What would you like to do with the selected room?")
+                                .setPositiveButton("Edit", (dialog, which) -> {
+                                    // Handle the Edit option
+                                    Intent intent = new Intent(requireContext(), EditRoomActivity.class);
+                                    intent.putExtra("ROOM_ID", roomId); // Pass the room ID to the new activity
+                                    startActivity(intent);
+                                })
+                                .setNegativeButton("Delete", (dialog, which) -> {
+                                    // Handle the Delete option
+                                    mDatabaseHelper.deleteRoom(roomId);
+                                    mDatabaseHelper.deleteRoomById(Integer.parseInt(roomId));
+                                    mAdapter.swapCursor(mDatabaseHelper.getAllRooms()); // Refresh the list after deletion
+                                    dialog.dismiss();
+                                })
+                                .setNeutralButton("Cancel", (dialog, which) -> dialog.dismiss()); // Dismiss the dialog
+                        builder.create().show();
+                        }else{
+                            Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                        }
                     }
 
 
@@ -285,10 +328,43 @@ public class RoomsFragment extends Fragment {
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addRoomsAndTables_", levelNumber)) {
+
+                    openNewActivity();
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
+        mSyncFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int levelNumber = Integer.parseInt(cashorlevel);
 
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "SyncRoomsAndTables_", levelNumber)) {
+
+                    mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
+                String androidVersion = DeviceInfo.getAndroidVersion();
+                Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                // Trim the strings to avoid any leading or trailing whitespace issues
+                if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                    Log.d("SyncService", "Starting Syncforoldroomstable");
+                    Syncforoldroomstable.startSync(requireContext());
+                } else {
+                    Log.d("SyncService", "Starting SyncServiceroomstable");
+                    SyncServiceroomstable.startSync(requireContext());
+                }
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+
+        });
         return view;
     }
     // Filter the RecyclerView based on the selected item

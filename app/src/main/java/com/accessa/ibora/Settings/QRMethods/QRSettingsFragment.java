@@ -1,6 +1,8 @@
 package com.accessa.ibora.Settings.QRMethods;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,6 +49,8 @@ private  EditText searchEditText;
     private Spinner spinner;
     private ImageView arrow;
     private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences sharedPreferences,usersharedPreferences;
+    String cashorlevel;
 
     final String[] froms = new String[]{DatabaseHelper._ID, DatabaseHelper.Name, DatabaseHelper.LongDescription, DatabaseHelper.Price};
     final int[] tos = new int[]{R.id.id, R.id.name, R.id.LongDescription, R.id.price};
@@ -71,6 +76,12 @@ private  EditText searchEditText;
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+
+        cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
         Cursor cursor = mDatabaseHelper.getAllQR();
 
         List<String> cashier = new ArrayList<>();
@@ -217,7 +228,11 @@ private  EditText searchEditText;
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
+                        int levelNumber = Integer.parseInt(cashorlevel);
+
+                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyQr_", levelNumber)) {
+
+                            TextView idTextView = view.findViewById(R.id.id_text_view);
                         TextView NameEditText = view.findViewById(R.id.name_text_view);
 
 
@@ -237,6 +252,9 @@ private  EditText searchEditText;
                         modifyIntent.putExtra("id", id);
 
                         startActivity(modifyIntent);
+                        }else{
+                            Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                        }
                     }
 
                     @Override
@@ -249,7 +267,14 @@ private  EditText searchEditText;
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openNewActivity();
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addQr_", levelNumber)) {
+
+                    openNewActivity();
+                }else{
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

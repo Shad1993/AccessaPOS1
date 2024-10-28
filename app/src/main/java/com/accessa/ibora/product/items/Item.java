@@ -13,6 +13,7 @@ public class Item {
     private String department;
     private String subDepartment;
     private String category;
+    private String Subcategory;
     private String Nature;
 
     private String Discount;
@@ -289,9 +290,15 @@ public class Item {
     public String getCategory() {
         return category;
     }
+    public String getSubCategory() {
+        return Subcategory;
+    }
 
     public void setCategory(String category) {
         this.category = category;
+    }
+    public void setSubCategory(String Subcategory) {
+        this.Subcategory = Subcategory;
     }
 
     public float getPrice() {
@@ -425,6 +432,7 @@ public class Item {
     public void setCost(float cost) {
         this.cost = cost;
     }
+
 
 
 }

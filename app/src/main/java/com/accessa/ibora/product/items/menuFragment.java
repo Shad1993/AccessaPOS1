@@ -2,6 +2,7 @@ package com.accessa.ibora.product.items;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.sales.Sales.ItemGridAdapter;
 import com.accessa.ibora.sales.Sales.SalesFragment;
+import com.accessa.ibora.product.category.Category;
+
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,13 +28,10 @@ import java.util.Set;
 public class menuFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private List<String> categories;
+    private List<Category> categories;
     private DatabaseHelper dbHelper;
 
-
     private ItemGridAdapter itemGridAdapter; // Add this variable
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,50 +50,61 @@ public class menuFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         recyclerView.setLayoutManager(layoutManager);
 
+        // Pass List<Category> to CategoryAdapter
         CategoryAdapter categoryAdapter = new CategoryAdapter(categories);
         recyclerView.setAdapter(categoryAdapter);
 
         // Initialize the ItemGridAdapter
         itemGridAdapter = new ItemGridAdapter(requireContext(), null); // Pass null initially
-        recyclerView.setAdapter(categoryAdapter);
 
         // Handle item click events
         categoryAdapter.setOnItemClickListener((position, category) -> {
-            if (category.equals("All Categories")) {
+            if (category.getCatName().equals("All Categories")) {
                 // Display all items
                 ItemGridAdapter itemGridAdapter = new ItemGridAdapter(requireContext(), getAllItemsCursor());
                 // Set the adapter to your RecyclerView
-                 SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+                SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
             } else {
                 // Update the ItemGridAdapter with the selected category
-                updateItemGridAdapter(category);
+                updateItemGridAdapter(category.getCatName());
                 // Set the category filter in the ItemGridAdapter
-                itemGridAdapter.setCategoryFilter(category);
+                itemGridAdapter.setCategoryFilter(category.getCatName());
             }
-
+        });
+        categoryAdapter.setOnSubcategoryClickListener(subcategory -> {
+            // Call updateItemGridAdapter with the selected subcategory
+            Log.d("menu Clicked", "Clicked on: " + subcategory);
+            updateItemGridAdapterWithSubcategory(subcategory);
+        });
+        // Handle long click events
+        categoryAdapter.setOnItemLongClickListener((position, category) -> {
+            // Handle long click here, for example, show a pop-up to delete the category or some other action
+            Toast.makeText(requireContext(), "Long clicked on: " , Toast.LENGTH_SHORT).show();
+            return true; // Return true to indicate the event has been handled
         });
     }
 
     private Cursor getAllItemsCursor() {
-        // Implement logic to fetch all items from the database
-        // For example:
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         return db.query(DatabaseHelper.TABLE_NAME, null, null, null, null, null, null);
     }
-
-    private Cursor getItemsForCategoryCursor(String category) {
-        // Implement logic to fetch items for the specified category from the database
-        // For example:
+    private void updateItemGridAdapterWithSubcategory(String selectedSubcategory) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String selection = DatabaseHelper.Category + "=?";
-        String[] selectionArgs = {category};
-        return db.query(DatabaseHelper.TABLE_NAME, null, selection, selectionArgs, null, null, null);
+        Cursor newCursor = db.query(DatabaseHelper.TABLE_NAME,
+                null,
+                DatabaseHelper.SubCategory + " = ?",
+                new String[]{selectedSubcategory},
+                null,
+                null,
+                null);
+
+        if (getActivity() != null) {
+            ItemGridAdapter itemGridAdapter = new ItemGridAdapter(getActivity(), newCursor);
+            SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+        }
     }
     private void updateItemGridAdapter(String selectedCategory) {
-        // Assuming dbHelper is a member variable in your menuFragment
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        // Fetch items for the selected category
         Cursor newCursor = db.query(DatabaseHelper.TABLE_NAME,
                 null,
                 DatabaseHelper.Category + " = ?",
@@ -102,41 +113,56 @@ public class menuFragment extends Fragment {
                 null,
                 null);
 
-        // Update the ItemGridAdapter with the new cursor
         if (getActivity() != null) {
             ItemGridAdapter itemGridAdapter = new ItemGridAdapter(getActivity(), newCursor);
             SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
-
         }
     }
 
-    private List<String> fetchCategories() {
+    // Update this method to return a List<Category>
+    private List<Category> fetchCategories() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.query(true, DatabaseHelper.TABLE_NAME, new String[]{DatabaseHelper.Category}, null, null, null, null, null, null);
+
+        // Ensure column name is correct
+        String query = "SELECT DISTINCT " + DatabaseHelper.Category + " FROM " + DatabaseHelper.TABLE_NAME;
+        Cursor cursor = db.rawQuery(query, null);
 
         Set<String> uniqueCategories = new HashSet<>();
 
         if (cursor != null) {
-            while (cursor.moveToNext()) {
-                String category = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Category));
-                uniqueCategories.add(category);
+            int columnIndex = cursor.getColumnIndex(DatabaseHelper.Category);
+            if (columnIndex == -1) {
+                Log.e("fetchCategories", "Column " + DatabaseHelper.Category + " not found in table " + DatabaseHelper.TABLE_NAME);
+            } else {
+                while (cursor.moveToNext()) {
+                    String category = cursor.getString(columnIndex);
+
+                    if (category != null) {
+                        uniqueCategories.add(category); // Add only non-null categories
+                    } else {
+                        Log.w("fetchCategories", "Null category found. Skipping.");
+                    }
+                }
             }
             cursor.close();
+        } else {
+            Log.e("fetchCategories", "Cursor is null. Failed to retrieve categories.");
         }
 
         db.close();
 
-        // Convert set to list
-        List<String> categories = new ArrayList<>(uniqueCategories);
+        List<Category> categoryList = new ArrayList<>();
 
         // Ensure "All Categories" is at the top
-        categories.add(0, "All Categories");
+        categoryList.add(new Category(0, "All Categories", "#000000"));
 
-        return categories;
+        // Convert set to list of Category objects
+        for (String categoryName : uniqueCategories) {
+            categoryList.add(new Category(1, categoryName, "#FF0000")); // Example: Assign a default color
+        }
+
+        return categoryList;
     }
 
-
-
 }
-
 

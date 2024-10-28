@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:screenOrientation="landscape"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".Report.SalesReportActivity" >
+
+   <androidx.constraintlayout.widget.ConstraintLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/topAppBar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/BleuAccessaText"
+                app:titleTextColor="@color/white"
+                app:navigationIcon="@drawable/baseline_menu_24"
+
+                />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+
+            app:layout_constraintBottom_toBottomOf="parent">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:paddingLeft="200dp"
+            android:paddingRight="200dp"
+            android:paddingBottom="50dp"
+            android:paddingTop="60dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <RelativeLayout
+                android:id="@+id/headerLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/welcome_background"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingBottom="20dp"
+                android:paddingTop="60dp">
+
+
+
+                <TextView
+                    android:id="@+id/salesHeaderTextView"
+                    android:text="Please Contact Accessa on"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="30dp"
+                    style="@style/reportContentText" />
+
+                <TextView
+                    android:id="@+id/totalSaleAmountTextView"
+                    style="@style/viewParent.headerText"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:layout_below="@id/salesHeaderTextView"
+                    android:text="+230696 4000 "
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="70dp"/>
+
+
+            </RelativeLayout>
+
+
+
+
+        </RelativeLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+   </androidx.constraintlayout.widget.ConstraintLayout>
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigation_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/my_navigation_items"
+        android:visibility="visible"/>
+
+
+</androidx.drawerlayout.widget.DrawerLayout>

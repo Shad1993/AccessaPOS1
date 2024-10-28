@@ -285,7 +285,11 @@ public class ReceiptMenuFragment extends Fragment {
                     displayedStatus = getString(R.string.CRN);
                 } else if (originalStatus.equals("Completed")) {
                     displayedStatus = getString(R.string.completed);
-                } else {
+                 } else if (originalStatus.equals("OLDPRF")) {
+                displayedStatus = getString(R.string.Proforma);
+               } else if (originalStatus.equals("CancelledOrder")) {
+                displayedStatus = getString(R.string.CancelledOrder);
+            } else {
                     displayedStatus = originalStatus;
                 }
 
@@ -317,6 +321,10 @@ public class ReceiptMenuFragment extends Fragment {
                     displayedStatus = getString(R.string.CRN);
                 } else if (originalStatus.equals("Completed")) {
                     displayedStatus = getString(R.string.completed);
+             } else if (originalStatus.equals("OLDPRF")) {
+                displayedStatus = getString(R.string.Proforma);
+            } else if (originalStatus.equals("CancelledOrder")) {
+                    displayedStatus = getString(R.string.CancelledOrder);
                 } else {
                     displayedStatus = originalStatus;
                 }

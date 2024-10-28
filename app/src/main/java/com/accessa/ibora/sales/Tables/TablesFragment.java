@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -299,26 +300,42 @@ String transactionIdInProgress;
                         String roomnum = roomnumTextView.getText().toString();
                           String statusType= mDatabaseHelper.getLatestTransactionStatus(roomnum,tableNum);
                           String latesttransId= mDatabaseHelper.getLatestTransactionId(roomnum,tableNum,statusType);
-
-                       //   if(latesttransId== null) {
-                         //     showNumberOfCoversDialog(tableNum, roomnum);
-
-                        //  }else{
-                              updateTableId1(tableNum, roomnum);
-                         // }
-                            // Call the interface method to notify the MainActivity about the table click
-                            notifyTableClicked(tableNum,roomnum);
+                        updateTableId1(tableNum, roomnum);
+                          if(latesttransId== null) {
+                              showNumberOfCoversDialog(tableNum, roomnum);
+                              // Call the interface method to notify the MainActivity about the table click
+                              notifyTableClicked(tableNum,roomnum);
+                              refreshsales(roomnum,tableNum);
 
 
-                            refreshsales(roomnum,tableNum);
+                              // Update the selected table ID in the adapter
+                              mAdapter.setSelectedTableId(id,tableNum);
+
+                              mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
+
+                              showSecondaryScreen(data);
 
 
-                            // Update the selected table ID in the adapter
-                            mAdapter.setSelectedTableId(id,tableNum);
 
-                            mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
 
-                            showSecondaryScreen(data);
+                          }else{
+                              notifyTableClicked(tableNum,roomnum);
+                              refreshsales(roomnum,tableNum);
+
+
+                              // Update the selected table ID in the adapter
+                              mAdapter.setSelectedTableId(id,tableNum);
+
+                              mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
+
+                              showSecondaryScreen(data);
+                          }
+
+
+
+
+
+
 
                             // Notify the adapter that the data has changed, triggering a rebind of items
                             mAdapter.notifyDataSetChanged();
@@ -357,23 +374,98 @@ String transactionIdInProgress;
         return view;
     }
     // Method to show popup dialog for number of covers
-    private void showNumberOfCoversDialog(String  tablenum, String roomnum) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Enter Number of Covers");
 
-        final EditText input = new EditText(getActivity());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        builder.setView(input);
+
+    // Method to process the number of covers entered
+    private void processNumberOfCovers(int numberOfCovers,String roomnum, String tableNum) {
+        // Use the numberOfCovers variable as needed in your code
+        // For example, store it as a class member or pass it to another method
+        Log.d("NumberOfCovers", "Number of covers entered: " + numberOfCovers);
+
+        // Continue with your application logic after setting numberOfCovers
+        // Update the room ID in SharedPreferences
+
+
+        mDatabaseHelper.updateCoverCount(numberOfCovers,tableNum,Integer.parseInt(roomnum));
+        mAdapter.notifyDataSetChanged();
+        Cursor  filteredCursor = mDatabaseHelper.getTablesFilteredByMerged(roomId);
+
+        mAdapter.swapCursor(filteredCursor);
+    }
+
+    private void showNumberOfCoversDialog(String tablenum,String roomnum) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+
+        // Inflate the custom layout
+        View dialogView = inflater.inflate(R.layout.number_of_covers_dialog, null);
+        builder.setView(dialogView);
+
+        // Get references to the EditText and buttons
+        final EditText numberEditText = dialogView.findViewById(R.id.numberEditText);
+        Button button0 = dialogView.findViewById(R.id.button0);
+        Button button1 = dialogView.findViewById(R.id.button1);
+        Button button2 = dialogView.findViewById(R.id.button2);
+        Button button3 = dialogView.findViewById(R.id.button3);
+        Button button4 = dialogView.findViewById(R.id.button4);
+        Button button5 = dialogView.findViewById(R.id.button5);
+        Button button6 = dialogView.findViewById(R.id.button6);
+        Button button7 = dialogView.findViewById(R.id.button7);
+        Button button8 = dialogView.findViewById(R.id.button8);
+        Button button9 = dialogView.findViewById(R.id.button9);
+        Button buttonClear = dialogView.findViewById(R.id.buttonClear);
+        Button buttonDelete= dialogView.findViewById(R.id.buttonDelete);
+
+        // Set button click listeners to append number to the EditText
+        View.OnClickListener numberClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Button button = (Button) v;
+                String currentText = numberEditText.getText().toString();
+                numberEditText.setText(currentText + button.getText().toString());
+            }
+        };
+
+        button0.setOnClickListener(numberClickListener);
+        button1.setOnClickListener(numberClickListener);
+        button2.setOnClickListener(numberClickListener);
+        button3.setOnClickListener(numberClickListener);
+        button4.setOnClickListener(numberClickListener);
+        button5.setOnClickListener(numberClickListener);
+        button6.setOnClickListener(numberClickListener);
+        button7.setOnClickListener(numberClickListener);
+        button8.setOnClickListener(numberClickListener);
+        button9.setOnClickListener(numberClickListener);
+
+
+
+        // Set the same listener for all other buttons...
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                numberEditText.setText("");
+            }
+        });
+
+        buttonDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String currentText = numberEditText.getText().toString();
+                if (!currentText.isEmpty()) {
+                    numberEditText.setText(currentText.substring(0, currentText.length() - 1));
+                }
+            }
+        });
 
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String numberOfCoversStr = input.getText().toString().trim();
+                String numberOfCoversStr = numberEditText.getText().toString().trim();
                 if (!numberOfCoversStr.isEmpty()) {
                     try {
                         int numberOfCovers = Integer.parseInt(numberOfCoversStr);
-                        // Use numberOfCovers variable as needed
-                        processNumberOfCovers(numberOfCovers,roomnum, tablenum);
+                        processNumberOfCovers( numberOfCovers,roomnum,tablenum);
                     } catch (NumberFormatException e) {
                         Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
                     }
@@ -390,19 +482,10 @@ String transactionIdInProgress;
             }
         });
 
-        builder.show();
+        // Show the dialog
+        builder.create().show();
     }
 
-    // Method to process the number of covers entered
-    private void processNumberOfCovers(int numberOfCovers,String roomnum, String tableNum) {
-        // Use the numberOfCovers variable as needed in your code
-        // For example, store it as a class member or pass it to another method
-        Log.d("NumberOfCovers", "Number of covers entered: " + numberOfCovers);
-
-        // Continue with your application logic after setting numberOfCovers
-        // Update the room ID in SharedPreferences
-        updateTableId(tableNum,roomnum,numberOfCovers);
-    }
     public void showSecondaryScreen(List<String> data) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -465,25 +548,7 @@ String transactionIdInProgress;
         }
     }
 
-    private void updateTableId(String newTableId,String roomId,int numbercover) {
 
-
-        // Update the table ID in SharedPreferences
-        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("table_id", newTableId);
-        editor.putString("table_num", newTableId);
-        editor.putInt("servings", numbercover);
-        editor.putInt("roomnum", Integer.parseInt(roomId));
-        editor.putInt("room_id", Integer.parseInt(roomId));
-
-        Log.d("roomtables", roomId + " " + newTableId);
-        editor.apply();
-
-        // Now the table ID in SharedPreferences is updated and can be accessed elsewhere in your app
-        // Notify the adapter or update UI to reflect the selection change
-        mAdapter.notifyDataSetChanged();
-    }
 
     private void updateTableId1(String newTableId,String roomId) {
         // Update the table ID in SharedPreferences
@@ -746,12 +811,12 @@ String transactionIdInProgress;
             if (selectedTableNum.startsWith("T T")) {
                 selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
                 unmergeTable(selectedTableNum);
-                Log.d("startwithTT", "startwithT");
+
             } else if (selectedTableNum.startsWith("T")) {
                 unmergeTable(selectedTableNum);
-                Log.d("startwithT", "startwithT");
+
             }
-            Log.d("updateTableId", "Skipping update since latesttransId is null");
+
         }
 
         //mDatabaseHelper.deleteTransactionsByConditions(db,roomId,selectedTableNum,latesttransId);
@@ -786,7 +851,7 @@ String transactionIdInProgress;
 
         Log.d("totalcovers", String.valueOf(totalcovers));
 
-        mDatabaseHelper.updateTableIdInTransactions(db,cashierId,roomnum, selectedTableNum, newTableNumber,totalcovers);
+        mDatabaseHelper.updateTableIdInTransactions(cashierId,roomnum, selectedTableNum, newTableNumber,totalcovers);
 
 
         Log.d("test", selectedTableNum + " " + selectedTableToMerge );
@@ -865,6 +930,9 @@ String transactionIdInProgress;
             emptyFrameLayout.setVisibility(View.GONE);
         }
     }
+
+
+
 
 
 

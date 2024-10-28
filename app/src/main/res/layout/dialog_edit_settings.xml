@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+    <TextView
+        android:id="@+id/usernametextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Additional Info"
+        android:textSize="18sp"
+        android:paddingTop="8dp"/>
+    <EditText
+        android:id="@+id/editText1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="User Name" />
+    <TextView
+        android:id="@+id/ebsMraIdtextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ebsMraId"
+        android:textSize="18sp"
+        android:paddingTop="8dp"/>
+    <EditText
+        android:id="@+id/editText2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ebsMraId" />
+    <TextView
+        android:id="@+id/areaCodeIdtextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="areaCode"
+        android:textSize="18sp"
+        android:paddingTop="8dp"/>
+    <EditText
+        android:id="@+id/editText3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="areaCode" />
+    <TextView
+        android:id="@+id/passwordIdtextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Password"
+        android:textSize="18sp"
+        android:paddingTop="8dp"/>
+    <EditText
+        android:id="@+id/editText4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Password" />
+
+
+
+    <Button
+        android:id="@+id/editButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/edit"
+        android:layout_gravity="end"
+        android:paddingTop="16dp" />
+</LinearLayout>

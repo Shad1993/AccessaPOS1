@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -28,8 +29,8 @@ import java.util.Date;
 public class ModifypaymentActivity extends Activity {
     private Button buttonUpdate;
     private Button buttonDelete;
-    private SwitchCompat Draweropen;
-    private boolean isDrawerOpen;
+    private SwitchCompat Draweropen,MakeVisible;
+    private boolean isDrawerOpen,IsVisible;
 
     private DBManager dbManager;
     private EditText QRName_Edittext;
@@ -47,7 +48,7 @@ public class ModifypaymentActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("Modify QR");
+        setTitle("Modify Payment Method");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.modify_payment_activity);
 
@@ -69,8 +70,21 @@ public class ModifypaymentActivity extends Activity {
         Userid_Edittext = findViewById(R.id.userid_edittext);
         QRcode_Edittext = findViewById(R.id.qrcode_edittext);
         Draweropen = findViewById(R.id.draweropener);
+        MakeVisible=findViewById(R.id.makevisible);
+        MakeVisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                IsVisible = isChecked;
 
-
+                if (isChecked) {
+                    // Switch is checked
+                    Toast.makeText(ModifypaymentActivity.this, R.string.makevisibletext, Toast.LENGTH_SHORT).show();
+                } else {
+                    // Switch is unchecked
+                    Toast.makeText(ModifypaymentActivity.this, R.string.makeinvisible, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         Draweropen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -88,17 +102,27 @@ public class ModifypaymentActivity extends Activity {
 
         Intent intent = getIntent();
          id = intent.getStringExtra("id");
+        String name = intent.getStringExtra("name");
         _id = Long.parseLong(id);
         payment payments = dbManager.getpaymentById(id);
         if (payments != null) {
             // set switch as true if available for sale
             Boolean isConditionMet = payments.getOpenDrawer();
+            int isactuallyvisible = payments.getVisibility();
+            String visi= String.valueOf(isactuallyvisible);
+            Log.d("visi", "= " + visi);
+            Log.d("isactuallyvisible", "= " + isactuallyvisible);
 
             if (Boolean.TRUE.equals(isConditionMet)) {
                 Draweropen.setChecked(true);
-                QRName_Edittext.setText(payments.getPaymentName());
-                QRcode_Edittext.setText(payments.getPaymentMethodIcon());
+
             }
+            if (payments.getVisibility()==1 || visi.equals("true")) {
+                MakeVisible.setChecked(true);
+
+            }
+            QRName_Edittext.setText(payments.getPaymentName());
+            QRcode_Edittext.setText(payments.getPaymentMethodIcon());
         }
 
         Userid_Edittext.setText(String.valueOf(cashorId));
@@ -135,9 +159,10 @@ public class ModifypaymentActivity extends Activity {
         String UserId = cashorId;
         String icon = QRcode_Edittext.getText().toString().trim();
         String drawer =String.valueOf(isDrawerOpen);
+        String visible =String.valueOf(IsVisible);
 
 
-        if (paymentName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || icon.isEmpty() ) {
+        if (paymentName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  ) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -150,8 +175,8 @@ public class ModifypaymentActivity extends Activity {
             Toast.makeText(this, getString(R.string.paymentnameexists), Toast.LENGTH_SHORT).show();
             return;
         }
-
-        boolean isUpdated = dbManager.updatePayment( _id,paymentName, lastmodified, UserId, icon,drawer);
+        Log.d("visible", "= " + visible);
+        boolean isUpdated = dbManager.updatePayment( _id,paymentName, lastmodified, UserId, icon,drawer,visible);
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, getString(R.string.updatQR), Toast.LENGTH_SHORT).show();

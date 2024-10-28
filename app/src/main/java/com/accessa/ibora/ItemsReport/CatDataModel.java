@@ -7,11 +7,13 @@ public class CatDataModel {
     private double totalPrice;
     private int quantity;
     private String famille;
+    private String Transactionid;
 
-    public CatDataModel(String Categorycode, double totalPrice, int quantity) {
+    public CatDataModel(String Categorycode, double totalPrice, int quantity,String Transactionid) {
         this.Categorycode = Categorycode;
         this.totalPrice = totalPrice;
         this.quantity = quantity;
+        this.Transactionid = Transactionid;
     }
 
     public String getCategorycode() {
@@ -34,5 +36,12 @@ public class CatDataModel {
         return quantity;
     }
     public String getFamilleName(){return famille;}
+    public String getTransactionid() {
+        return Transactionid;
+    }
+
+    public void setTransactionid(String Transactionid) {
+        this.Transactionid = Transactionid;
+    }
 }
 

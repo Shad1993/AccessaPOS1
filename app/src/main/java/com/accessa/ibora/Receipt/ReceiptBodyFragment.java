@@ -42,6 +42,8 @@ public class ReceiptBodyFragment extends Fragment {
 
     private boolean doubleBackToExitPressedOnce = false;
     private RecyclerView mRecyclerView,mSplittedRecyclerView;
+    private SharedPreferences usersharedPreferences;
+
     private CompletedTransactionsAdapter mAdapter;
     private CompletedSplittedTransactionsAdapter mSplittedAdapter;
     private DatabaseHelper mDatabaseHelper;
@@ -77,6 +79,7 @@ public class ReceiptBodyFragment extends Fragment {
         transactionId = getArguments().getString("id");
 
 
+        usersharedPreferences = getActivity().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         mRecyclerView = view.findViewById(R.id.recycler_view);
         separationline=view.findViewById(R.id.sep);
@@ -114,7 +117,6 @@ public class ReceiptBodyFragment extends Fragment {
         View ReturnCashline=view.findViewById(R.id.cash_return_line);
         ImageView qrCodeImageView = view.findViewById(R.id.qrCodeImageView);
         FloatingActionButton floatingButtonprint = view.findViewById(R.id.floating_button);
-        FloatingActionButton floatingButtonedit = view.findViewById(R.id.floating_button2);
 
         LinearLayout CashReturnLayout=view.findViewById(R.id.cash_return_layout);
 
@@ -124,21 +126,23 @@ public class ReceiptBodyFragment extends Fragment {
         floatingButtonprint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), PrintDuplicata.class);
-                intent.putExtra("transactionId", transactionId);
-                intent.putExtra("transactionType", TransactionType);
-                startActivity(intent);
+                int levelNumber = Integer.parseInt(cashorlevel);
+
+                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "printReceiptDuplicata_", levelNumber)) {
+
+                    Intent intent = new Intent(getActivity(), PrintDuplicata.class);
+                    intent.putExtra("transactionId", transactionId);
+                    intent.putExtra("transactionType", TransactionType);
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+
+                }
+
             }
         });
 
-        floatingButtonedit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Handle the button click event here
-                // For example, you can open a new activity or perform some action
-                // when the button is clicked.
-            }
-        });
+
 
         // Initialize the database helper
         mDatabaseHelper = new DatabaseHelper(getContext());
@@ -305,6 +309,10 @@ if(!TransactionType.equals("InProgress") ) {
         transactionTypeTextView.setText("Duplicata");
     }else if (TransactionType.equals("InProgress")) {
         transactionTypeTextView.setText("Duplicata");
+    }else if (TransactionType.equals("CancelledOrder")) {
+        transactionTypeTextView.setText("Cancelled Order");
+    }else if (TransactionType.equals("OLDPRF")) {
+        transactionTypeTextView.setText("Proforma");
     }
 
             totalPriceTextView.setText(TotalValue);
@@ -404,12 +412,29 @@ if(!TransactionType.equals("InProgress") ) {
         mDatabaseHelper = new DatabaseHelper(getContext());
         Cursor cursor2 = mDatabaseHelper.getValidTransactions(transactionId);
         Cursor cursor3 = mDatabaseHelper.getSplittedTransactions(transactionId);
-        mAdapter = new CompletedTransactionsAdapter(getContext(), cursor2);
+
+        Cursor cursorcancelledorder=mDatabaseHelper.getClearedTransactions(transactionId);
+
+      if (TransactionType.equals("CancelledOrder")) {
+          mAdapter = new CompletedTransactionsAdapter(getContext(), cursorcancelledorder);
+      }else{
+          mAdapter = new CompletedTransactionsAdapter(getContext(), cursor2);
+      }
+
         mSplittedAdapter=new CompletedSplittedTransactionsAdapter(getContext(),cursor3);
         mRecyclerView.setAdapter(mAdapter);
         mSplittedRecyclerView.setAdapter(mSplittedAdapter);
+
+        if (cursorcancelledorder != null && cursorcancelledorder.getCount() > 0 ) {
+
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mSplittedRecyclerView.setVisibility(View.GONE);
+
+            separationline.setVisibility(View.GONE);
+
+        }
         // Show or hide the RecyclerView and empty view based on the cursor count
-        if (cursor2 != null && cursor2.getCount() > 0 && (cursor3 == null || cursor3.getCount() <= 0)) {
+       else if (cursor2 != null && cursor2.getCount() > 0 && (cursor3 == null || cursor3.getCount() <= 0)) {
             // Case 2: Only cursor has data, cursorsplitted is null or empty
             Log.d("condition", "2");
             mRecyclerView.setVisibility(View.VISIBLE);

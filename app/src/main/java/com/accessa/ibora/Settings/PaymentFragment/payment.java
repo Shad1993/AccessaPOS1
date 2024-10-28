@@ -4,6 +4,7 @@ public class payment {
     private int id;
     private String PaymentMethodName;
     private String PaymentMethodIcon;
+    private int visibility;
     private boolean OpenDrawer;
 
 
@@ -33,7 +34,12 @@ public class payment {
     public void setId(int id) {
         this.id = id;
     }
-
+    public int getVisibility() {
+        return visibility;
+    }
+    public void setVisibility(int visibility) {
+        this.visibility = visibility;
+    }
     public String getPaymentName() {
         return PaymentMethodName;
     }

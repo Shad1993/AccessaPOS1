@@ -82,6 +82,8 @@ public class printerSetup extends AppCompatActivity {
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress;
     private String tableid;
+    private String printerpartname ;
+    private boolean printable ;
     private SharedPreferences sharedPreferences;
     private String roomid;
     private String      splittype;
@@ -152,8 +154,10 @@ public class printerSetup extends AppCompatActivity {
                     try {
 
 
+                        List<PrinterSetupPrefs> printerSetups = mDatabaseHelper.getPrinterSetups(getApplicationContext());
 
-                        // Retrieve the total amount and total tax amount from the transactionheader table
+
+                            // Retrieve the total amount and total tax amount from the transactionheader table
                         Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
 
                         if (cursorCompany != null && cursorCompany.moveToFirst()) {
@@ -175,21 +179,21 @@ public class printerSetup extends AppCompatActivity {
                             int columnFaxIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_FAX_NO);
 
                             String companyName = cursorCompany.getString(columnCompanyNameIndex);
-                            String CompanyAdress1= cursorCompany.getString(columnCompanyAddressIndex);
-                            String CompanyAdress2= cursorCompany.getString(columnCompanyAddress2Index);
-                            String CompanyAdress3= cursorCompany.getString(columnCompanyAddress3Index);
+                            String CompanyAdress1 = cursorCompany.getString(columnCompanyAddressIndex);
+                            String CompanyAdress2 = cursorCompany.getString(columnCompanyAddress2Index);
+                            String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
                             String shopName = cursorCompany.getString(columnShopNameIndex);
-                            String ShopAdress= cursorCompany.getString(columnShopAddressIndex);
-                            String ShopAdress2= cursorCompany.getString(columnShopAddress2Index);
-                            String ShopAdress3= cursorCompany.getString(columnShopAddress3Index);
-                            String CompanyVatNo= cursorCompany.getString(columnCompanyVATIndex);
-                            String CompanyBRNNo= cursorCompany.getString(columnCompanyBRNIndex);
-                            String inv= "Invoice" + "\n";
-                             OpeningHours= cursorCompany.getString(columnOpeningHoursIndex);
-                             TelNum= cursorCompany.getString(columnTelNumIndex);
-                             FaxNum= cursorCompany.getString(columnFaxIndex);
-                            compTelNum= cursorCompany.getString(columncompTelNumIndex);
-                            compFaxNum= cursorCompany.getString(columncompFaxIndex);
+                            String ShopAdress = cursorCompany.getString(columnShopAddressIndex);
+                            String ShopAdress2 = cursorCompany.getString(columnShopAddress2Index);
+                            String ShopAdress3 = cursorCompany.getString(columnShopAddress3Index);
+                            String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
+                            String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
+                            String inv = "Invoice" + "\n";
+                            OpeningHours = cursorCompany.getString(columnOpeningHoursIndex);
+                            TelNum = cursorCompany.getString(columnTelNumIndex);
+                            FaxNum = cursorCompany.getString(columnFaxIndex);
+                            compTelNum = cursorCompany.getString(columncompTelNumIndex);
+                            compFaxNum = cursorCompany.getString(columncompFaxIndex);
                             service.setFontSize(24, null);
                             service.setAlignment(1, null);
                             // Print the formatted company name line
@@ -197,7 +201,16 @@ public class printerSetup extends AppCompatActivity {
 
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if( printerpartname.equals("Logo") && printable) {
+
+                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+
+                                }
+                            }
 
 
                             // Create the formatted company name line
@@ -207,14 +220,14 @@ public class printerSetup extends AppCompatActivity {
                             String CompAdd1andAdd2 = CompanyAdress1 + ", " + CompanyAdress2 + "\n";
                             String CompAdd3 = CompanyAdress3 + "\n";
                             String Add1andAdd2 = ShopAdress + ", " + ShopAdress2 + "\n";
-                            String shopAdress3 = ShopAdress3+ "\n";
-                            String CompVatNo= getString(R.string.Vat) + "  : " + CompanyVatNo + "\n";
-                            String CompBRNNo= getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n\n";
-                            String shopname=  shopName + "\n";
-                            String Tel= "Tel : " + TelNum ;
-                            String Fax= "Fax : " + FaxNum ;
-                            String compTel= "Tel : " + compTelNum ;
-                            String compFax= "Fax : " + compFaxNum ;
+                            String shopAdress3 = ShopAdress3 + "\n";
+                            String CompVatNo = getString(R.string.Vat) + "  : " + CompanyVatNo + "\n";
+                            String CompBRNNo = getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n\n";
+                            String shopname = shopName + "\n";
+                            String Tel = "Tel : " + TelNum;
+                            String Fax = "Fax : " + FaxNum;
+                            String compTel = "Tel : " + compTelNum;
+                            String compFax = "Fax : " + compFaxNum;
 
                             // Enable bold text
                             byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -229,81 +242,159 @@ public class printerSetup extends AppCompatActivity {
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
-                            // Print the formatted company name line
-                            service.printText(CompAdd1andAdd2, null);
-                            service.printText(CompAdd3, null);
-                            service.printText(compTel + "\n", null);
-                            service.printText(compFax + "\n\n", null);
-                            // Print the formatted company name line
-                            service.printText(shopname, null);
-                            service.printText(Add1andAdd2, null);
-                            service.printText(shopAdress3, null);
-                            service.printText(Tel + "\n", null);
-                            service.printText(Fax + "\n", null);
-                            service.printText(CompVatNo, null);
-                            service.printText(CompBRNNo, null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
 
+                                if (printerpartname.equals("Company Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(CompAdd1andAdd2, null);
+                                    service.printText(CompAdd3, null);
+                                    service.printText(compTel + "\n", null);
+                                    service.printText(compFax + "\n\n", null);
+                                }
+                            }
+                             for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Shop Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(shopname, null);
+                                    service.printText(Add1andAdd2, null);
+                                    service.printText(shopAdress3, null);
+                                    service.printText(Tel + "\n", null);
+                                    service.printText(Fax + "\n", null);
+                                    service.printText(CompVatNo, null);
+                                    service.printText(CompBRNNo, null);
+                                }
+                            }
                             service.setAlignment(0, null);
-
 
 
                         }
 
                         // Print the custom layout
-                        service.printText(titleTextView.getText().toString(), null);
-                        int actualcopyprinted= mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
-                        mDatabaseHelper.updateCopyPrinted(transactionIdInProgress,actualcopyprinted);
-                        int newactualcopyprinted= mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
-                        int covers=mDatabaseHelper.getNumberOfCovers(transactionIdInProgress);
+
+                        int actualcopyprinted = mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
+                        mDatabaseHelper.updateCopyPrinted(transactionIdInProgress, actualcopyprinted);
+                        int newactualcopyprinted = mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
+                        int covers = mDatabaseHelper.getNumberOfCovers(transactionIdInProgress);
                         SharedPreferences preferences = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
                         String status = preferences.getString(STATUS_KEY, "default_value");
-                        String relatedtransid= mDatabaseHelper.getRelatedTransactionId(transactionIdInProgress);
-                        String RelTrID= "Related Trans Id: " + relatedtransid + "\n";
-                        String cashierid= "Cashier Id: " + cashierId + "\n";
-                        String room= "Room Number: " + roomid + "\n";
-                        String table= "Table Number: " + tableid +"\n";
-                        String Printed= "Copy Printed: " + newactualcopyprinted +"\n";
-                        String SalesType= "Sales Type -" + status +"\n";
-                        String coversnum= "Number Of Servings: " + covers + "\n";
-                        service.printText(RelTrID, null);
-                        service.printText(SalesType, null);
-                        service.printText(coversnum, null);
-                        service.printText(cashierid + "\n", null);
+                        String relatedtransid = mDatabaseHelper.getRelatedTransactionId(transactionIdInProgress);
+                        String cashiorname = "Cashier Name: " + cashierName + "\n";
+                        String Tillids  = "Pos Num: " + PosNum + "\n";
+                        String RelTrID = "Related Trans Id: " + relatedtransid + "\n";
+                        String cashierid = "Cashier Id: " + cashierId + "\n";
+                        String room = "Room Number: " + roomid + "\n";
+                        String table = "Table Number: " + tableid + "\n";
+                        String Printed = "Copy Printed: " + newactualcopyprinted + "\n";
+                        String SalesType = "Sales Type -" + status + "\n";
+                        String coversnum = "Number Of Servings: " + covers + "\n";
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
-                        service.printText(contentTextView.getText().toString(), null);
-                        service.printText(room , null);
-                        service.printText(table, null);
-                        service.printText(Printed, null);
+                            if (printerpartname.equals("Cashior name") && printable) {
+                                service.printText(cashiorname, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("Related Transaction Id") && printable) {
+                                service.printText(RelTrID, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("SalesType") && printable) {
+                                service.printText(SalesType, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Number Of servings") && printable) {
+                                service.printText(coversnum, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            if (printerpartname.equals("Cashier Id") && printable) {
+                                service.printText(cashierid + "\n", null);
+
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("POS NUM") && printable) {
+                                service.printText(Tillids, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Room Number") && printable) {
+
+                                service.printText(room, null);
+                            }
+                        }
+
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Table Number") && printable) {
+
+                                service.printText(table, null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Copy Printed") && printable) {
+
+                                service.printText(Printed, null);
+                            }
+                        }
                         // Print a line separator
 
                         String lineSeparator = "=".repeat(lineWidth);
                         String singlelineSeparator = "-".repeat(lineWidth);
                         service.printText(lineSeparator + "\n", null);
                         // Retrieve the total amount and total tax amount from the transactionheader table
-                        Cursor cursorsplit = mDatabaseHelper.getTransactionHeaderTotal(roomid,tableid);
+                        Cursor cursorsplit = mDatabaseHelper.getTransactionHeaderTotal(roomid, tableid);
                         if (cursorsplit != null && cursorsplit.moveToFirst()) {
                             int columnIndexSplitType = cursorsplit.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
-                            String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
-                            Log.e("transactionid" , String.valueOf(transactionid));
-                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
-
-                              splittype = cursorsplit.getString(columnIndexSplitType);
-                            Log.e("splittype" , splittype );
-                            if(areNOItemsSelected) {
-                              //  String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-                              //  String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-                                Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(transactionIdInProgress,String.valueOf(roomid), tableid);
-                                Cursor cursorsplitted= mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(transactionIdInProgress,roomid,tableid);
-
+                            String transactionid = mDatabaseHelper.getTransactionTicketNo(roomid, tableid);
+                            Log.e("transactionid", String.valueOf(transactionid));
+                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                            Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
+                            splittype = cursorsplit.getString(columnIndexSplitType);
+                            Log.e("splittype", splittype);
+                            if (areNOItemsSelected) {
+                                //  String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                                //  String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                                Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(transactionid, String.valueOf(roomid), tableid);
+                                Cursor cursorsplitted = mDatabaseHelper.RestoreViewAllInSplittedProgressTransactionsbytable(transactionid, roomid, tableid);
 
 
                                 adapter = new TicketAdapter(printerSetup.this, cursor1);
                                 mSplittedAdapter = new SplittedTicketAdapter(printerSetup.this, cursorsplitted);
                                 recyclerView.setAdapter(adapter);
                                 splittedrecyclerView.setAdapter(mSplittedAdapter);
-
 
 
                                 List<Transaction> item = adapter.getData();
@@ -317,21 +408,23 @@ public class printerSetup extends AppCompatActivity {
                                 for (Transaction items : item) {
                                     String itemName = items.getItemName();
                                     int itemQuantity = items.getItemQuantity();
+                                    String family = items.getFamille();
+
                                     int itemid = items.getitem_id();
-                                    String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
-                                    double totalprice=items.getItemPrice();
-                                    double unitprice= totalprice/itemQuantity;
+                                    String itemprice = "Rs " + String.format("%.2f", items.getItemPrice());
+                                    double totalprice = items.getItemPrice();
+                                    double unitprice = totalprice / itemQuantity;
                                     // Calculate the padding for the item name
                                     int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
 
-                                    Log.e("splittype" , splittype );
+                                    Log.e("splittype", splittype);
                                     // Inside the for loop where you print the data from the RecyclerView
                                     // Inside the for loop where you print the data from the RecyclerView
-                                    String newid= String.valueOf(items.getId());
-                                    Log.e("newid1" , String.valueOf(itemid));
-                                    Log.e("itemName" , itemName );
-                                    double currentprice= mDatabaseHelper.getItemPrice(String.valueOf(itemid));
-                                    Log.e("currentprice1" , String.valueOf(currentprice));
+                                    String newid = String.valueOf(items.getunique_id());
+                                    Log.e("newid1", String.valueOf(newid));
+                                    Log.e("itemName", itemName);
+                                    double currentprice = mDatabaseHelper.getItemPrice(String.valueOf(itemid));
+                                    Log.e("currentprice1", String.valueOf(currentprice));
                                     double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
                                     String formattedUnitPrice = "Rs " + String.format("%.2f", unitprice);
 
@@ -339,20 +432,68 @@ public class printerSetup extends AppCompatActivity {
                                     // Create the formatted item line
 
 
-                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice;
                                     String ItemsInSplitBill = itemQuantity + " X " + formattedUnitPrice;
                                     // Create the formatted item price line
                                     String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
 
-                                    service.printText(itemPriceLine + "\n" , null);
+                                    service.printText(itemPriceLine + "\n", null);
+
+                                    String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
+                                    String CatName = mDatabaseHelper.getCatNameById(famille);
+                                    String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
+                                    Log.d("famille", String.valueOf(famille));
+                                    Log.d("CatName", String.valueOf(CatName));
+                                    Log.d("items.getunique_id()", String.valueOf(newid));
+
+                                    if ("OPEN FOOD".equals(CatName) && comment != null) {
+
+                                        String openfoodText = "--->" + comment;
+
+                                        service.printText(openfoodText + "\n", null);
+
+                                    }
                                     service.printText(QuantityLine + "\n", null);
+                                    double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                    double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
+
+                                    Log.d("discount", String.valueOf(discount));
+                                    Log.d("discountvalue", String.valueOf(discountvalue));
+                                    Log.d("items.getunique_id()", String.valueOf(newid));
+                                    if (discount != 0 && discountvalue != 0) {
+                                        String UNITPRICEText = "--->Unit Price";
+                                        String DiscountText = "--->Discount";
+                                        String DiscountRateText = "--->Discount Rate";
+
+                                        String formattedDiscountAmount = String.format("Rs %.2f", discount); // Add "Rs" before the discount amount
+                                        String formattedunitPrice = String.format("Rs %.2f", numericUnitPrice);
+                                        // Calculate the discount rate
+
+                                        String formattedDiscountRate = String.format("%.2f%%", discountvalue); // Format as percentage
+                                        // Calculate padding for Discount Rate line
+                                        int unitRatePadding = lineWidth - UNITPRICEText.length() - formattedunitPrice.length();
+                                        String unitpriceRateLine = UNITPRICEText + " ".repeat(Math.max(0, unitRatePadding)) + formattedunitPrice;
+
+                                        // Calculate padding for Discount line
+                                        int discountTypesPadding = lineWidth - DiscountText.length() - formattedDiscountAmount.length();
+                                        String discountTypesLine = DiscountText + " ".repeat(Math.max(0, discountTypesPadding)) + formattedDiscountAmount;
+
+                                        // Calculate padding for Discount Rate line
+                                        int discountRatePadding = lineWidth - DiscountRateText.length() - formattedDiscountRate.length();
+                                        String discountRateLine = DiscountRateText + " ".repeat(Math.max(0, discountRatePadding)) + formattedDiscountRate;
+
+                                        // Print Discount amount and Discount Rate
+                                        service.printText(unitpriceRateLine + "\n", null);
+                                        service.printText(discountTypesLine + "\n", null);
+                                        service.printText(discountRateLine + "\n", null);
+                                    }
                                 } // Print the data from the RecyclerView
                                 if (cursorsplitted != null && cursorsplitted.moveToFirst()) {
                                     List<Transaction> splitteditem = mSplittedAdapter.getData();
                                     Log.d("trans12", splitteditem.toString());
                                     service.printText(lineSeparator + "\n", null);
-                                    String itemsinsplbill=getString(R.string.itemsinsplitbil);
-                                    String styleitem="*** " +itemsinsplbill + "  ***";
+                                    String itemsinsplbill = getString(R.string.itemsinsplitbil);
+                                    String styleitem = "*** " + itemsinsplbill + "  ***";
                                     service.setAlignment(1, null);
                                     service.printText(styleitem + "\n", null);
                                     service.setAlignment(0, null);
@@ -369,8 +510,8 @@ public class printerSetup extends AppCompatActivity {
                                         Log.e("splittype", splittype);
                                         // Inside the for loop where you print the data from the RecyclerView
                                         // Inside the for loop where you print the data from the RecyclerView
-                                        String newid = String.valueOf(items.getId());
-                                        Log.e("newid1", String.valueOf(itemid));
+                                        String newid = String.valueOf(items.getunique_id());
+                                        Log.e("newid1", String.valueOf(newid));
                                         Log.e("itemName", itemName);
                                         double currentprice = mDatabaseHelper.getItemPrice(String.valueOf(itemid));
                                         Log.e("currentprice1", String.valueOf(currentprice));
@@ -386,14 +527,62 @@ public class printerSetup extends AppCompatActivity {
                                         String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
 
                                         service.printText(itemPriceLine + "\n", null);
+
+
+                                        String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
+                                        String CatName = mDatabaseHelper.getCatNameById(famille);
+                                        String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
+                                        Log.d("famille", String.valueOf(famille));
+                                        Log.d("CatName", String.valueOf(CatName));
+                                        Log.d("items.getunique_id()", String.valueOf(newid));
+
+                                        if ("OPEN FOOD".equals(CatName) && comment != null) {
+
+                                            String openfoodText = "--->" + comment;
+
+                                            service.printText(openfoodText + "\n", null);
+
+                                        }
                                         service.printText(QuantityLine + "\n", null);
+                                        double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                        double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
+                                        Log.d("discount", String.valueOf(discount));
+                                        Log.d("discountvalue", String.valueOf(discountvalue));
+                                        Log.d("items.getunique_id()", String.valueOf(newid));
+                                        if (discount != 0 && discountvalue != 0) {
+                                            String UNITPRICEText = "--->Unit Price";
+                                            String DiscountText = "--->Discount";
+                                            String DiscountRateText = "--->Discount Rate";
+
+                                            String formattedDiscountAmount = String.format("Rs %.2f", discount); // Add "Rs" before the discount amount
+                                            String formattedunitPrice = String.format("Rs %.2f", numericUnitPrice);
+                                            // Calculate the discount rate
+
+                                            String formattedDiscountRate = String.format("%.2f%%", discountvalue); // Format as percentage
+                                            // Calculate padding for Discount Rate line
+                                            int unitRatePadding = lineWidth - UNITPRICEText.length() - formattedunitPrice.length();
+                                            String unitpriceRateLine = UNITPRICEText + " ".repeat(Math.max(0, unitRatePadding)) + formattedunitPrice;
+
+                                            // Calculate padding for Discount line
+                                            int discountTypesPadding = lineWidth - DiscountText.length() - formattedDiscountAmount.length();
+                                            String discountTypesLine = DiscountText + " ".repeat(Math.max(0, discountTypesPadding)) + formattedDiscountAmount;
+
+                                            // Calculate padding for Discount Rate line
+                                            int discountRatePadding = lineWidth - DiscountRateText.length() - formattedDiscountRate.length();
+                                            String discountRateLine = DiscountRateText + " ".repeat(Math.max(0, discountRatePadding)) + formattedDiscountRate;
+
+                                            // Print Discount amount and Discount Rate
+                                            service.printText(unitpriceRateLine + "\n", null);
+                                            service.printText(discountTypesLine + "\n", null);
+                                            service.printText(discountRateLine + "\n", null);
+                                        }
                                     }
                                     //service.printText(lineSeparator + "\n", null);
                                 }
-                            }else{
+                            } else {
 
 
-                                Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
+                                Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid), tableid);
                                 adapter = new TicketAdapter(printerSetup.this, cursor2);
                                 recyclerView.setAdapter(adapter);
 
@@ -403,63 +592,119 @@ public class printerSetup extends AppCompatActivity {
                                 for (Transaction items : itemsplitted) {
                                     String itemName = items.getItemName();
                                     int itemQuantity = items.getItemQuantity();
-                                    String itemprice ="Rs " + String.format("%.2f", items.getItemPrice());
-                                    double totalprice=items.getItemPrice();
-                                    double unitprice= totalprice/itemQuantity;
+
+
+                                    String itemprice = "Rs " + String.format("%.2f", items.getItemPrice());
+                                    int itemid = items.getitem_id();
+                                    double totalprice = items.getItemPrice();
+                                    double unitprice = totalprice / itemQuantity;
                                     // Calculate the padding for the item name
                                     int itemNamePadding = lineWidth - itemprice.length() - itemName.length();
 
 
-                                    String newid= String.valueOf(items.getId());
-                                    Log.e("newid" , newid );
-                                    double currentprice= mDatabaseHelper.getItemPrice(newid);
-                                    Log.e("currentprice" , String.valueOf(currentprice));
+                                    String newid = String.valueOf(items.getunique_id());
+                                    Log.e("newid", newid);
+                                    double currentprice = mDatabaseHelper.getItemPrice(newid);
+                                    Log.e("currentprice", String.valueOf(currentprice));
                                     double numericUnitPrice = Double.parseDouble(items.getUnitPrice());
                                     String formattedUnitPrice = "Rs " + String.format("%.2f", unitprice);
 
 
                                     // Create the formatted item line
-                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice ;
+                                    String QuantityLine = itemQuantity + " X " + formattedUnitPrice;
 
                                     // Create the formatted item price line
                                     String itemPriceLine = itemName + " ".repeat(Math.max(0, itemNamePadding)) + itemprice;
 
-                                    service.printText(itemPriceLine + "\n" , null);
+
+                                    service.printText(itemPriceLine + "\n", null);
+
+
+                                    String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
+                                    Log.d("famille", String.valueOf(famille));
+                                    String CatName = mDatabaseHelper.getCatNameById(famille);
+                                    Log.d("CatName", String.valueOf(CatName));
+
+                                    String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
+                                    Log.d("items.getunique_id()", String.valueOf(newid));
+
+
+                                    if ("OPEN FOOD".equals(CatName) && comment != null) {
+
+                                        String openfoodText = "--->" + comment;
+
+                                        service.printText(openfoodText + "\n", null);
+
+                                    }
                                     service.printText(QuantityLine + "\n", null);
+                                    double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                    double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
+                                    Log.d("discount", String.valueOf(discount));
+                                    Log.d("discountvalue", String.valueOf(discountvalue));
+                                    Log.d("items.getunique_id()", String.valueOf(newid));
+                                    if (discount != 0 && discountvalue != 0) {
+                                        String UNITPRICEText = "--->Unit Price";
+                                        String DiscountText = "--->Discount";
+                                        String DiscountRateText = "--->Discount Rate";
+
+                                        String formattedDiscountAmount = String.format("Rs %.2f", discount); // Add "Rs" before the discount amount
+                                        String formattedunitPrice = String.format("Rs %.2f", numericUnitPrice);
+                                        // Calculate the discount rate
+
+                                        String formattedDiscountRate = String.format("%.2f%%", discountvalue); // Format as percentage
+                                        // Calculate padding for Discount Rate line
+                                        int unitRatePadding = lineWidth - UNITPRICEText.length() - formattedunitPrice.length();
+                                        String unitpriceRateLine = UNITPRICEText + " ".repeat(Math.max(0, unitRatePadding)) + formattedunitPrice;
+
+                                        // Calculate padding for Discount line
+                                        int discountTypesPadding = lineWidth - DiscountText.length() - formattedDiscountAmount.length();
+                                        String discountTypesLine = DiscountText + " ".repeat(Math.max(0, discountTypesPadding)) + formattedDiscountAmount;
+
+                                        // Calculate padding for Discount Rate line
+                                        int discountRatePadding = lineWidth - DiscountRateText.length() - formattedDiscountRate.length();
+                                        String discountRateLine = DiscountRateText + " ".repeat(Math.max(0, discountRatePadding)) + formattedDiscountRate;
+
+                                        // Print Discount amount and Discount Rate
+                                        service.printText(unitpriceRateLine + "\n", null);
+                                        service.printText(discountTypesLine + "\n", null);
+                                        service.printText(discountRateLine + "\n", null);
+                                    }
                                 }
 
 
                             }
-                            }
+                        }
 
                         // Print a line separator
 
                         service.printText(lineSeparator + "\n", null);
                         // Retrieve the total amount and total tax amount from the transactionheader table
-
+                        String transactionid = mDatabaseHelper.getTransactionTicketNo(roomid, tableid);
+                        Log.e("transactionid1", String.valueOf(transactionid));
 
                         // Retrieve the total amount and total tax amount from the transactionheader table
-                        Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
+                        Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid, tableid);
                         int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
                         int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                         int columnIndexTimeCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
                         int columnIndexDateCreated = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
                         if (cursor != null && cursor.moveToFirst()) {
 
-                           // String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-                          //  String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                            // String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                            //  String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
-                            Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionIdInProgress,String.valueOf(roomid),tableid);
-                            Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
+                            Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid, String.valueOf(roomid), tableid);
+                            Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid), tableid);
 
-                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
-                            boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
-                            boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(transactionIdInProgress);
-                            if(areAllItemsNotSelectedNotPaid) {
+                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                            boolean areAllItemsNotSelectedNotPaid = mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
+                            boolean areNoItemsSelectedNorPaid = mDatabaseHelper.areNoItemsSelectedNorPaid(transactionIdInProgress);
+                            if (areAllItemsNotSelectedNotPaid) {
                                 if (cursor1 != null && cursor1.moveToFirst()) {
 
-                                    totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionIdInProgress,roomid,tableid);
-                                    TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionIdInProgress,roomid,tableid);
+                                    totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
+                                    TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
+                                    Log.e("totalAmountpt11", String.valueOf(totalAmount));
                                 }
                                 DateCreated = cursor.getString(columnIndexDateCreated);
                                 timeCreated = cursor.getString(columnIndexTimeCreated);
@@ -468,63 +713,121 @@ public class printerSetup extends AppCompatActivity {
                                 TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                                 DateCreated = cursor.getString(columnIndexDateCreated);
                                 timeCreated = cursor.getString(columnIndexTimeCreated);
+                                Log.e("totalAmountpt0", String.valueOf(totalAmount));
                             } else if
                             (areNOItemsSelected) {
                                 if (cursor1 != null && cursor1.moveToFirst()) {
 
-                                    totalAmount =mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionIdInProgress,roomid,tableid);
-                                    TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionIdInProgress,roomid,tableid);
+                                    totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
+                                    TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
+                                    Log.e("totalAmountpt1", String.valueOf(totalAmount));
                                 }
-                                //totalAmount = cursor.getDouble(columnIndexTotalAmount);
-                                //TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
                                 DateCreated = cursor.getString(columnIndexDateCreated);
                                 timeCreated = cursor.getString(columnIndexTimeCreated);
 
-                            }else {
+                            } else {
 
                                 if (cursor2 != null && cursor2.moveToFirst()) {
 
-                                totalAmount =mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
-                                TaxtotalAmount=mDatabaseHelper.calculateTotalTaxAmounts(roomid,tableid);
+                                    totalAmount = mDatabaseHelper.calculateTotalAmounts(roomid, tableid);
+                                    TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmounts(roomid, tableid);
+
+                                    Log.e("totalAmountpt2", String.valueOf(totalAmount));
+                                } else {
+                                    totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                                    TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                                 }
                                 DateCreated = cursor.getString(columnIndexDateCreated);
                                 timeCreated = cursor.getString(columnIndexTimeCreated);
                             }
+                            if (cashorlevel.equals("1")) {
 
-                            String Total= getString(R.string.Total);
-                            String TVA= getString(R.string.Vat);
-                            String AmountWitoutVat= "Amount Excluding Vat  " ;
+                                if (areAllItemsNotSelectedNotPaid) {
+                                    Log.d("areAllItemsNotSelectedNotPaid", String.valueOf(areAllItemsNotSelectedNotPaid));
+                                    if (cursor1 != null && cursor1.moveToFirst()) {
+
+                                        totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid, roomid, tableid);
+                                        TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid, roomid, tableid);
+                                        Log.d("totalAmountpt11", String.valueOf(totalAmount));
+                                    }
+                                    Log.d("transactionid", String.valueOf(transactionid));
+                                    Log.d("transactionIdInProgress", String.valueOf(transactionIdInProgress));
+                                    totalAmount = mDatabaseHelper.getTransactionTotalTTC(transactionid);
+                                    TaxtotalAmount = mDatabaseHelper.getTransactionTotalTX1(transactionid);
+                                    Log.d("totalAmountpt11", String.valueOf(totalAmount));
+                                    DateCreated = cursor.getString(columnIndexDateCreated);
+                                    timeCreated = cursor.getString(columnIndexTimeCreated);
+                                } else if (areNoItemsSelectedNorPaid) {
+                                    Log.d("areNoItemsSelectedNorPaid", String.valueOf(areNoItemsSelectedNorPaid));
+                                    totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                                    TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                                    DateCreated = cursor.getString(columnIndexDateCreated);
+                                    timeCreated = cursor.getString(columnIndexTimeCreated);
+                                    Log.e("totalAmountpt0", String.valueOf(totalAmount));
+                                } else if
+                                (areNOItemsSelected) {
+                                    Log.d("areNOItemsSelected", String.valueOf(areNOItemsSelected));
+                                    if (cursor1 != null && cursor1.moveToFirst()) {
+
+                                        totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionid, roomid, tableid);
+                                        TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionid, roomid, tableid);
+                                        Log.e("totalAmountpt1", String.valueOf(totalAmount));
+                                    }
+
+                                    DateCreated = cursor.getString(columnIndexDateCreated);
+                                    timeCreated = cursor.getString(columnIndexTimeCreated);
+
+                                } else {
+
+                                    if (cursor2 != null && cursor2.moveToFirst()) {
+
+                                        totalAmount = mDatabaseHelper.calculateTotalAmounts(roomid, tableid);
+                                        TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmounts(roomid, tableid);
+                                        Log.e("totalAmountpt2", String.valueOf(totalAmount));
+                                    } else {
+                                        totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                                        TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+                                    }
+                                    DateCreated = cursor.getString(columnIndexDateCreated);
+                                    timeCreated = cursor.getString(columnIndexTimeCreated);
+                                }
+                            }
+                            Log.e("totalAmountval", String.valueOf(totalAmount));
+                            String Total = getString(R.string.Total);
+                            String TVA = getString(R.string.Vat);
+                            String AmountWitoutVat = "Amount Excluding Vat  ";
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
                             String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
-                            double amountwvat= totalAmount - TaxtotalAmount;
+                            double amountwvat = totalAmount - TaxtotalAmount;
                             String formattedamountwvat = String.format("%.2f", amountwvat);
-                            String TotalValue= "Rs " + formattedTotalAmount;
-                            String TotalVAT= "Rs " + formattedTotalTAXAmount;
-                            String TotalAmounTWOVAT="Rs " +formattedamountwvat;
-                            int lineWidths= 38;
+                            String TotalValue = "Rs " + formattedTotalAmount;
+                            String TotalVAT = "Rs " + formattedTotalTAXAmount;
+                            String TotalAmounTWOVAT = "Rs " + formattedamountwvat;
+                            int lineWidths = 38;
                             // Calculate the padding for the item name
                             int TotalValuePadding = lineWidths - TotalValue.length() - Total.length();
                             int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
                             int AmountWVatValuePadding = lineWidth - TotalAmounTWOVAT.length() - AmountWitoutVat.length();
 
 
-                    // Enable bold text and set font size to 30
+                            // Enable bold text and set font size to 30
                             byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
                             service.sendRAWData(boldOnBytes, null);
                             service.setFontSize(30, null);
 
-                // Print the "Total" and its value with the calculated padding
+                            // Print the "Total" and its value with the calculated padding
                             String totalLine = Total + " ".repeat(Math.max(0, TotalValuePadding)) + TotalValue;
                             service.printText(totalLine + "\n", null);
 
-                        // Disable bold text and reset font size
+                            // Disable bold text and reset font size
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
 
 
                             // Query the transaction table to get distinct VAT types
-                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress, String.valueOf(roomid),tableid);
+                            Cursor vatCursor = mDatabaseHelper.getDistinctVATTypes(transactionIdInProgress, String.valueOf(roomid), tableid);
                             if (vatCursor != null && vatCursor.moveToFirst()) {
                                 StringBuilder vatTypesBuilder = new StringBuilder();
                                 do {
@@ -552,19 +855,17 @@ public class printerSetup extends AppCompatActivity {
                         String formattedTotalReturn = String.format("%.2f", cashReturn);
 
 
-
-                        String TenderTotalAmount= "Total Amount Paid "  ;
-                        String CashReturn = "Cash Return  "  ;
-                        String formattedtender= "Rs "  + formattedTotalTender;
-                        String formattedReturn="Rs " + formattedTotalReturn;
-
+                        String TenderTotalAmount = "Total Amount Paid ";
+                        String CashReturn = "Cash Return  ";
+                        String formattedtender = "Rs " + formattedTotalTender;
+                        String formattedReturn = "Rs " + formattedTotalReturn;
 
 
                         String formattedTotalTenderpop = String.format("%.2f", totalAmount);
-                        String formattedtenderpop= "Rs "  + formattedTotalTenderpop;
+                        String formattedtenderpop = "Rs " + formattedTotalTenderpop;
 
 
-                        int lineWidths= 41;
+                        int lineWidths = 41;
                         int TenderTypesPadding = lineWidths - formattedtender.length() - TenderTotalAmount.length();
                         int TenderTypesPaddingpop = lineWidths - formattedtenderpop.length() - TenderTotalAmount.length();
                         service.printText(singlelineSeparator + "\n", null);
@@ -586,24 +887,24 @@ public class printerSetup extends AppCompatActivity {
                             // You can iterate over the list and access the payment name and settlement amount for each item
                             for (SettlementItem items : settlementItems) {
                                 String TenderAmount;
-                                        paymentName = items.getPaymentName();
+                                paymentName = items.getPaymentName();
                                 settlementAmount = items.getSettlementAmount();
 
-                                if(paymentName.equals("Subtotal")){
-                                     TenderAmount=  paymentName ;
+                                if (paymentName.equals("Subtotal")) {
+                                    TenderAmount = paymentName;
 
 
-                                        settlementAmount=0;
+                                    settlementAmount = 0;
 
-                                }else{
-                                     TenderAmount= "Amount Paid in  " + paymentName ;
+                                } else {
+                                    TenderAmount = "Amount Paid in  " + paymentName;
                                 }
-                                if(settlementAmount==0) {
-                                    settlementAmount=totalAmount;
+                                if (settlementAmount == 0) {
+                                    settlementAmount = totalAmount;
                                 }
 
                                 String formattedSettlementAmount = String.format("%.2f", settlementAmount);
-                                String formatteditemtender= "Rs "  + formattedSettlementAmount;
+                                String formatteditemtender = "Rs " + formattedSettlementAmount;
                                 int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
                                 String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
 
@@ -614,27 +915,26 @@ public class printerSetup extends AppCompatActivity {
                             paymentName = "POP";
                             settlementAmount = totalAmount;
                             String formattedSettlementAmount = String.format("%.2f", settlementAmount);
-                            String TenderAmount= "Amount Paid with  " + paymentName ;
-                            String formatteditemtender= "Rs "  + formattedSettlementAmount;
+                            String TenderAmount = "Amount Paid with  " + paymentName;
+                            String formatteditemtender = "Rs " + formattedSettlementAmount;
                             int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
                             String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
                             service.printText(TenderItemsTypesLine + "\n", null);
                             // Update the table with settlement details
 
-                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                                String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
                             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
                             String currentTime = timeFormat.format(new Date());
-                               mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate,currentTime, String.valueOf(roomid),tableid);
+                            mDatabaseHelper.insertSettlementAmount(paymentName, settlementAmount, transactionIdInProgress, PosNum, transactionDate, currentTime, String.valueOf(roomid), tableid);
 
-                            } else if( paymentName.equals("Cheque")){
+                        } else if (paymentName.equals("Cheque")) {
 
                             service.openDrawer(null);
                         }
 
 
-
-                        if(cashReturn >0) {
+                        if (cashReturn > 0) {
                             service.printText(singlelineSeparator + "\n", null);
                             int ReturnTypesPadding = lineWidth - formattedReturn.length() - CashReturn.length();
                             String ReturnTypesLine = CashReturn + " ".repeat(Math.max(0, ReturnTypesPadding)) + formattedReturn;
@@ -647,22 +947,23 @@ public class printerSetup extends AppCompatActivity {
                         String FooterText = getString(R.string.Footer_See_You);
                         String Footer1Text = getString(R.string.Footer_Have);
                         String Footer2Text = getString(R.string.Footer_OpenHours);
-                        String Openinghours= Footer2Text + OpeningHours ;
+                        String Openinghours = Footer2Text + OpeningHours;
 
                         if (mraqr != null && !mraqr.startsWith("Request Failed")) {
                             // Log the received QR code string
                             Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
-                            String MraFiscalised="MRA Fiscalised";
-                            String MRATransid=transactionIdInProgress;
+                            String MraFiscalised = "MRA Fiscalised";
+                            String MRATransid = transactionIdInProgress;
                             service.printText(MraFiscalised + "\n", null);
                             service.setFontSize(22, null);
-                            service.printText("MRA Transaction Id: "+ MRATransid + "\n", null);
+                            service.printText("MRA Transaction Id: " + MRATransid + "\n", null);
                             service.setFontSize(24, null);
 
 
                             // Decode Base64 string to byte array
                             byte[] imageBytes;
                             try {
+                                Log.d("Base64String", mraqr);  // Log the Base64 string
                                 imageBytes = android.util.Base64.decode(mraqr, android.util.Base64.DEFAULT);
                             } catch (IllegalArgumentException e) {
                                 // Handle decoding errors
@@ -686,26 +987,44 @@ public class printerSetup extends AppCompatActivity {
                             }
                         }
 
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("See You Again") && printable) {
 
+                                service.printText(FooterText + "\n", null);
+                            }
+                        }
                         // Print the centered footer text
-                        service.printText(FooterText + "\n", null);
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("Have a Nice Day") && printable) {
+
+                                service.printText(Footer1Text + "\n", null);
+                            }
+                        }
 
                         // Print the centered footer1 text
-                        service.printText(Footer1Text + "\n", null);
 
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("Opening Hours") && printable) {
 
-
+                                service.printText(Openinghours + "\n", null);
+                            }
+                        }
                         // Print the centered footer2 text
-                        service.printText(Openinghours + "\n", null);
 
                         service.setAlignment(0, null); // Align left
                         // Concatenate the formatted date and time
                         String dateTime = DateCreated + " " + timeCreated;
-                        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-                        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+                        String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+                        String latesttransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
 
                         // Calculate the padding for the item name
                         int DateIDPadding = lineWidth - dateTime.length() - transactionIdInProgress.length();
@@ -743,20 +1062,12 @@ public class printerSetup extends AppCompatActivity {
                                     sharedPreferences.edit().putString("table_id", "0").apply();
                                     sharedPreferences.edit().putString("table_num", "0").apply();
 
-                                    List<String> tableIds = extractTableIds(tableid);
-                                    for (String tableId : tableIds) {
-                                        Log.d("extractTableIds", "Table ID: " + tableId);
 
-                                        mDatabaseHelper.resetMergedStatusToDefault(db,roomid,tableId);
-
-
-                                    }
 
                                 }
 
                             }
                         }
-
 
 
                         // Cut the paper
@@ -767,96 +1078,105 @@ public class printerSetup extends AppCompatActivity {
                         service.sendRAWData(openDrawerBytes, null);
                         // Open the cash drawer
 
-                        if(cashReturn > 0) {
+                        if (cashReturn > 0) {
                             service.openDrawer(null);
 
                         }
 
-                       String transactionType;
+                        String transactionType;
+                        mDatabaseHelper.updateCoverCount(0,tableid,Integer.parseInt(roomid));
 
                         mDatabaseHelper.updatePaidStatusForSelectedRowsById(transactionIdInProgress);
-                        if(cashorlevel.equals("1")) {
+                        if (cashorlevel.equals("1")) {
 
 
-
-                            boolean areAllItemsPaid =  mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
-                            Log.e("areAllItemsPaid" , String.valueOf(areAllItemsPaid));
-                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
-                            Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
-                            boolean isAtLeastOneItemSelected=mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
-                            Log.e("isAtLeastOneItemSelected" , String.valueOf(isAtLeastOneItemSelected));
+                            boolean areAllItemsPaid = mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
+                            Log.e("areAllItemsPaid", String.valueOf(areAllItemsPaid));
+                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                            Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
+                            boolean isAtLeastOneItemSelected = mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
+                            Log.e("isAtLeastOneItemSelected", String.valueOf(isAtLeastOneItemSelected));
                             if (areNOItemsSelected) {
                                 mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN,transactionIdInProgress,roomid,tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
                             }
-                            if (areAllItemsPaid ) {
+                            if (areAllItemsPaid) {
                                 // All items with the specified roomId, tableId, and status are selected
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN,transactionIdInProgress,roomid,tableid);
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
 
                             } else if (isAtLeastOneItemSelected) {
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN,transactionIdInProgress,roomid,tableid);
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
                             } else {
                                 // Some items are not selected
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
-                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid,tableid);
-                                Log.e("paid" , String.valueOf(paid));
-                                if(paid)
-                                {
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid, tableid);
+                                Log.e("paid", String.valueOf(paid));
+                                if (paid) {
 
-                                    mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid),tableid);
+                                    mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid), tableid);
 
                                 }
                             }
 
 
-                        }else{
+                        } else {
 
 
-                            boolean areAllItemsPaid =  mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
-                            Log.e("areAllItemsPaid" , String.valueOf(areAllItemsPaid));
-                            boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
-                            Log.e("areNOItemsSelected" , String.valueOf(areNOItemsSelected));
-                            boolean isAtLeastOneItemSelected=mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
-                            Log.e("isAtLeastOneItemSelected" , String.valueOf(isAtLeastOneItemSelected));
+                            boolean areAllItemsPaid = mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
+                            Log.e("areAllItemsPaid", String.valueOf(areAllItemsPaid));
+                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                            Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
+                            boolean isAtLeastOneItemSelected = mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
+                            Log.e("isAtLeastOneItemSelected", String.valueOf(isAtLeastOneItemSelected));
 
                             if (areNOItemsSelected) {
                                 mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED,transactionIdInProgress,roomid,tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
                             }
-                             if (areAllItemsPaid ) {
+                            if (areAllItemsPaid) {
                                 // All items with the specified roomId, tableId, and status are selected
-                                 mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED,transactionIdInProgress,roomid,tableid);
-                                 mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
 
-                            }else if (isAtLeastOneItemSelected) {
-                                 mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
-                                 mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED,transactionIdInProgress,roomid,tableid);
-                             } else {
+                            } else if (isAtLeastOneItemSelected) {
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                            } else {
                                 // Some items are not selected
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress,roomid,tableid);
-                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid,tableid);
-                                Log.e("paid" , String.valueOf(paid));
-                                if(paid)
-                                {
+                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid, tableid);
+                                Log.e("paid", String.valueOf(paid));
+                                if (paid) {
 
-                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED,transactionIdInProgress,roomid,tableid);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
                                 }
                             }
-                            boolean isprf=  startsWithPRF(transactionIdInProgress);
+                            boolean isprf = startsWithPRF(transactionIdInProgress);
 
-                            if(isprf) {
+                            if (isprf) {
 
                                 Log.d("isprf", String.valueOf(isprf));
 
 
-
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED,transactionIdInProgress,roomid,tableid);
-
+                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
 
 
+                            }
 
+                            List<String> tableIds = extractTableIds(tableid);
+                            for (String tableId : tableIds) {
+                                Log.d("extractTableIds", "Table ID: " + tableId);
+
+
+                                boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid, tableid);
+                                Log.e("paid", String.valueOf(paid));
+                                if (paid) {
+
+                                    mDatabaseHelper.resetMergedStatusToDefault( roomid, tableId);
+
+                                }
                             }
 
                         }
@@ -881,6 +1201,7 @@ public class printerSetup extends AppCompatActivity {
                                 startActivity(intent);
                             }
                         });
+
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -947,6 +1268,7 @@ public class printerSetup extends AppCompatActivity {
             mDatabaseHelper.updateTransactionTransactionIdInProgress(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             // Update the transaction ID in the header table for transactions with status "InProgress"
             mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
+
             transactionIdInProgress=newtransactionIdInProgress;
 
         }else{

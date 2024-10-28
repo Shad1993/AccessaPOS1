@@ -27,7 +27,7 @@ public class CostAdapter extends RecyclerView.Adapter<CostAdapter.ItemViewHolder
 
         public TextView nameTextView;
         public TextView DeptcodeTextView;
-        public TextView idTextView;
+        public TextView idTextView,Cost_text_view;
         public TextView LastModifiedTextView;
 
 
@@ -36,7 +36,7 @@ public class CostAdapter extends RecyclerView.Adapter<CostAdapter.ItemViewHolder
             idTextView = itemView.findViewById(R.id.id_text_view);
             nameTextView = itemView.findViewById(R.id.name_text_view);
             LastModifiedTextView = itemView.findViewById(R.id.LastModified_edittex);
-
+            Cost_text_view = itemView.findViewById(R.id.cost_text_view);
         }
     }
 
@@ -60,8 +60,10 @@ public class CostAdapter extends RecyclerView.Adapter<CostAdapter.ItemViewHolder
         String Barcode = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Barcode));
         String lastModified = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LastModified));
         String UserID = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.UserId));
+        String cost = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Cost));
+        String NewCost="Rs " + cost;
 
-
+        holder.Cost_text_view.setText(NewCost);
         holder.idTextView.setText(id);
         holder.nameTextView.setText(Barcode);
         holder.LastModifiedTextView.setText(lastModified);

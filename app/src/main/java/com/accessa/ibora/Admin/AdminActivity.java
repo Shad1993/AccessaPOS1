@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.MRA.Mra;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
@@ -29,11 +30,13 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.Discount.DiscountFragment;
 import com.accessa.ibora.product.SubDepartment.SubDepartmentFragment;
 import com.accessa.ibora.product.Vendor.VendorFragment;
 import com.accessa.ibora.product.category.CategoryFragment;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.product.options.OptionsFragment;
 import com.accessa.ibora.product.supplements.SupplementsFragment;
@@ -49,13 +52,14 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
     private TextView CashorId;
     private TextView CompanyName;
     private SharedPreferences sharedPreferences;
-
+    private DatabaseHelper mDatabaseHelper;
+    private SharedPreferences usersharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.admin_layout);
-
+        mDatabaseHelper = new DatabaseHelper(this);
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -68,8 +72,6 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
         toolbar = findViewById(R.id.topAppBar);
         toolbar.setTitle(R.string.Admin);
         setSupportActionBar(toolbar);
-
-
 
 
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
@@ -118,11 +120,11 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
             Fragment newFragment = new DiscountFragment();
             setToolbarTitle(getString(R.string.discount)); // Set the toolbar title
             replaceFragment(newFragment);
-        }else if (fragmentKey != null && fragmentKey.equals("Option_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("Option_fragment")) {
             Fragment newFragment = new OptionsFragment();
             setToolbarTitle(getString(R.string.options)); // Set the toolbar title
             replaceFragment(newFragment);
-        }else if (fragmentKey != null && fragmentKey.equals("Supplement_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("Supplement_fragment")) {
             Fragment newFragment = new SupplementsFragment();
             setToolbarTitle(getString(R.string.Supplements)); // Set the toolbar title
             replaceFragment(newFragment);
@@ -142,49 +144,89 @@ public class AdminActivity extends AppCompatActivity implements AdminMenuFragmen
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
+                // Initialize SharedPreferences
+
+
+                 usersharedPreferences = getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's level
+
                 if (id == R.id.Sales) {
-                    // Initialize SharedPreferences
-                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    // Set "roomnum" to 1
-                    editor.putInt("roomnum", 1);
-                    editor.putInt("room_id", 1);
-                    editor.putString("table_id", "0");
-                    editor.putString("table_num", "0");
-                    // Commit the changes
-                    editor.apply();
-                    Intent intent = new Intent(AdminActivity.this, MainActivity.class);
-                    startActivity(intent);
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        // Set room details
+                        SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putInt("roomnum", 1);
+                        editor.putInt("room_id", 1);
+                        editor.putString("table_id", "0");
+                        editor.putString("table_num", "0");
+                        editor.apply();
+
+                        Intent intent = new Intent(AdminActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(AdminActivity.this, ReceiptActivity.class);
-                    startActivity(intent);
-                    return true;
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Receipts_", levelNumber)) { // Corrected key
+                        Intent intent = new Intent(AdminActivity.this, ReceiptActivity.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) { // Corrected key
+                        Toast.makeText(getApplicationContext(), "Shift is Clicked", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(AdminActivity.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) { // Corrected key
+                        Intent intent = new Intent(AdminActivity.this, Product.class);
+                        startActivity(intent);
+                        return true;
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(AdminActivity.this, SettingsDashboard.class);
-                    startActivity(intent);
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) { // Corrected key
+                        Intent intent = new Intent(AdminActivity.this, SettingsDashboard.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-
-                    Intent intent = new Intent(AdminActivity.this, Mra.class);
-                    startActivity(intent);
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) { // Corrected key
+                        Intent intent = new Intent(AdminActivity.this, Help.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(AdminActivity.this, AdminActivity.class);
-                    startActivity(intent);
+                    if (mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "admin_", levelNumber)) { // Corrected key
+                        Intent intent = new Intent(AdminActivity.this, AdminActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return true;
             }
         });
-    }
 
-    private void logout() {
+
+    }
+        private void logout() {
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

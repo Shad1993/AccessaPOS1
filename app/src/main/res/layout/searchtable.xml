@@ -4,14 +4,17 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="@color/white"
     android:padding="16dp">
 
     <EditText
-        android:id="@+id/popup_searchEditText"
+        android:id="@+id/popup_tableEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter table name"/>
-
+        android:inputType="none"
+    android:focusable="false"
+    android:clickable="false"
+    android:hint="Select table" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,4 +34,154 @@
             android:layout_height="wrap_content"
             android:text="Cancel"/>
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="650dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button1"
+            android:text="1"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick"
+            android:tag="1"/>
+
+
+
+        <Button
+            android:id="@+id/button2"
+            android:text="2"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button3"
+            android:text="3"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button4"
+            android:text="4"
+            android:textSize="24sp" android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button5"
+            android:text="5"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button6"
+            android:text="6"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button7"
+            android:text="7"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button8"
+            android:text="8"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button9"
+            android:text="9"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+        <Button
+            android:id="@+id/button0"
+            android:text="0"
+            android:textSize="24sp"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="100dp"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/buttonbackspace"
+            android:text="BS"
+            android:textSize="10sp"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+        <Button
+            android:id="@+id/buttonClear"
+            android:text="@string/CL"
+            android:textSize="10sp"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:backgroundTint="@color/textviewextColor"
+            android:onClick="onNumberButtonClick" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
 </LinearLayout>

@@ -30,15 +30,15 @@ public class RoomsAdapter extends RecyclerView.Adapter<RoomsAdapter.ItemViewHold
 
         public TextView nameTextView;
         public TextView idTextView;
-        public TextView Tan;
+        public TextView seatcount;
         public TextView brn;
         public TextView addresse;
 
         public ItemViewHolder(View itemView) {
             super(itemView);
-            idTextView = itemView.findViewById(R.id.Buyerid);
-            nameTextView = itemView.findViewById(R.id.BuyerAdapter);
-            Tan = itemView.findViewById(R.id.textViewTAN);
+            idTextView = itemView.findViewById(R.id.id);
+            nameTextView = itemView.findViewById(R.id.name);
+            seatcount = itemView.findViewById(R.id.textViewseatcount);
             brn = itemView.findViewById(R.id.textViewBRN);
             addresse = itemView.findViewById(R.id.textViewAdress);
         }
@@ -51,7 +51,7 @@ public class RoomsAdapter extends RecyclerView.Adapter<RoomsAdapter.ItemViewHold
         View view = inflater.inflate(R.layout.room, parent, false);
 
         // Set a blue background for each item
-        view.setBackgroundResource(R.drawable.restaurant);
+        view.setBackgroundResource(R.drawable.restaurantnew);
 
         // Calculate the width and height of each item to achieve a grid layout
         int screenWidth = mContext.getResources().getDisplayMetrics().widthPixels;
@@ -85,7 +85,7 @@ public class RoomsAdapter extends RecyclerView.Adapter<RoomsAdapter.ItemViewHold
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
-        holder.Tan.setText(longDescription);
+        holder.seatcount.setText(longDescription);
 
         holder.itemView.setTag(id);
     }

@@ -39,7 +39,7 @@ import java.util.List;
 
 public class CostFragment extends Fragment {
 
-    FloatingActionButton mAddFab;
+
     private SearchView mSearchView;
     private DBManager dbManager;
     private CostAdapter mAdapter;
@@ -206,7 +206,7 @@ public class CostFragment extends Fragment {
         dbManager = new DBManager(getContext());
         dbManager.open();
         Cursor cursor1 = dbManager.fetch();
-        mAddFab = view.findViewById(R.id.add_fab);
+
 
 
         adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, froms, tos, 0);
@@ -222,17 +222,7 @@ public class CostFragment extends Fragment {
                         TextView DeptCodeEditText = view.findViewById(R.id.deptcode_text_view);
                         TextView LastModifiedTextView = view.findViewById(R.id.LastModified_edittex);
 
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String name = DeptNameEditText.getText().toString();
-                        String DeptCode = DeptCodeEditText.getText().toString();
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyCostActivity.class);
-                        modifyIntent.putExtra("title", name);
-                        modifyIntent.putExtra("desc", DeptCode);
-                        modifyIntent.putExtra("id", id);
-
-                        startActivity(modifyIntent);
                     }
 
                     @Override
@@ -242,12 +232,7 @@ public class CostFragment extends Fragment {
                 })
         );
 
-        mAddFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openNewActivity();
-            }
-        });
+
 
         return view;
     }
@@ -280,8 +265,5 @@ public class CostFragment extends Fragment {
             emptyFrameLayout.setVisibility(View.GONE);
         }
     }
-    public void openNewActivity() {
-        Intent intent = new Intent(requireContext(), AddSubDepartmentActivity.class);
-        startActivity(intent);
-    }
+
 }

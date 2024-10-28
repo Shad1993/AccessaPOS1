@@ -3,15 +3,20 @@ package com.accessa.ibora.MRA;
 
 import static android.app.PendingIntent.getActivity;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.LongDescription;
 import static com.accessa.ibora.product.items.DatabaseHelper.QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_COMMENT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CURRENCY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DISCOUNT;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_FAMILLE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_PREVIOUS_HASH;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TAX_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT;
@@ -20,10 +25,12 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_T
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_UNIT_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 import static com.accessa.ibora.product.items.DatabaseHelper.VAT_Type;
+import static com.accessa.ibora.product.items.DatabaseHelper._ID;
 
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -35,6 +42,8 @@ import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.AsyncTask;
 import android.widget.Toast;
@@ -42,6 +51,7 @@ import android.widget.Toast;
 import com.accessa.ibora.Admin.AdminActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.printer.printerSetup;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
@@ -93,6 +103,11 @@ public class Mra extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private String cashorlevel,ShopName,LogoPath,CompanyName;
     private String cashierName,cashierId;
+String CompanyBRNNo;
+    String userNamemra ;
+    String ebsMraIdmra ;
+    String areaCodemra ;
+    String passwordmra ;
     private double totalAmount,TaxtotalAmount,TotalHT;
     private String aesKey;
     String transactionType;
@@ -121,7 +136,16 @@ public class Mra extends AppCompatActivity {
             String encryptedPayload = params[0];
 
             try {
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+                userNamemra = prefs.getString("User_Name", "");
+                ebsMraIdmra = prefs.getString("ebsMraId", "");
+                areaCodemra = prefs.getString("Area_Code", "");
+                passwordmra = prefs.getString("Password", "");
 
+                Log.d("userNamemra", userNamemra);
+                Log.d("ebsMraIdmra", ebsMraIdmra);
+                Log.d("areaCodemra", areaCodemra);
+                Log.d("passwordmra", passwordmra);
 
                 // Get the current date and time
                 Date currentDate = new Date();
@@ -149,8 +173,8 @@ public class Mra extends AppCompatActivity {
                 Request request = new Request.Builder()
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
-                        .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
+                        .addHeader("username", userNamemra)
+                        .addHeader("ebsMraId", ebsMraIdmra)
                         .post(body)
                         .build();
 
@@ -171,12 +195,15 @@ public class Mra extends AppCompatActivity {
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
                     System.out.println("roomid: " + roomid);
                     System.out.println("tableid: " + tableid);
+                    String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+                    String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
                     // Retrieve the total amount and total tax amount from the transactionheader table
-                    Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
+                    Cursor cursor = mDatabaseHelper.getTransactionHeaderByTransactionId(latesttransId);
                     int currentCounter = 1; // Default value if no data is present in the table
 
                     if (cursor != null && cursor.moveToFirst()) {
                         int columnIndexTotalAmount = cursor.getColumnIndex(TRANSACTION_TOTAL_TTC);
+                        int columnIndexPreviousHash = cursor.getColumnIndex(TRANSACTION_PREVIOUS_HASH);
                         int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                         int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                         int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
@@ -184,20 +211,22 @@ public class Mra extends AppCompatActivity {
                         int transid=cursor.getColumnIndex(TRANSACTION_TICKET_NO);
                         currentCounter = cursor.getInt(columnIndexCounter);
                         double totaldiscount = mDatabaseHelper.getTotalDiscountSumForInProgressTransaction(roomid,tableid);
-                        System.out.println("totaldiscount: " + totaldiscount);
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+
                         double TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                         double TotalHT = cursor.getDouble(columnIndexTotalHT);
                         String transactionid= cursor.getString(transid);
                         double Totalinvoice= totalAmount + totaldiscount;
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
 
-                        // Step 2: Increment the counter value
-                        int newCounter = currentCounter + 1;
+                        String previoushashnote= mDatabaseHelper.getPreviousTransactionHash(transactionid);
 
-                        // Step 3: Update the counter value in the transactionheader table
-                        mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
+                        // Step 2: Increment the counter value
+                        int newCounter = currentCounter ;
+
+
+
 
 
                         // Convert the doubles to formatted strings with 2 decimal places
@@ -206,12 +235,28 @@ public class Mra extends AppCompatActivity {
                         String formattedTaxtotalAmount = String.format("%.2f", TaxtotalAmount);
                         String formattedTotalHT = String.format("%.2f", TotalHT);
                         transactionIdInProgress=mDatabaseHelper.getInProgressTransactionIdnew(roomid,tableid);
+
                         // Construct the JSON request body
                         JSONObject jsondetailedtransacs = new JSONObject();
                         Log.d("cashier", cashorlevel);
 if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
     if(cashorlevel.equals("1")) {
         transactionType = "TRN";
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+        int latestTransactionTRNCounter = sharedPreferences.getInt("transaction_counter_TRN", 0);
+        // Increment the transaction counter
+        latestTransactionTRNCounter++;
+        // Generate the transaction ID with the format "MEMO-integer"
+        String newTransactionId = transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
+        // Update the transaction ID in the transaction table for transactions with status "InProgress"
+        mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,3);
+        // Update the transaction ID in the header table for transactions with status "InProgress"
+        mDatabaseHelper.updateHeaderTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+        transactionid=newTransactionId;
+        // Update the transaction counter in SharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("transaction_counter_TRN", latestTransactionTRNCounter);
+        editor.apply();
     }else{
         transactionType = "STD";
     }
@@ -224,8 +269,8 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         jsondetailedtransacs.put("currency", "MUR");
         jsondetailedtransacs.put("invoiceIdentifier", transactionid);
         jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
-        jsondetailedtransacs.put("previousNoteHash", "prevNote");
-        jsondetailedtransacs.put("reasonStated", "test");
+        jsondetailedtransacs.put("previousNoteHash", previoushashnote);
+        jsondetailedtransacs.put("reasonStated", "transacs");
     jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
     jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
         jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -236,9 +281,27 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
 }  else {
     if(cashorlevel.equals("1")) {
         transactionType = "TRN";
+
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
+        int latestTransactionTRNCounter = sharedPreferences.getInt("transaction_counter_TRN", 0);
+        // Increment the transaction counter
+        latestTransactionTRNCounter++;
+        // Generate the transaction ID with the format "MEMO-integer"
+        String newTransactionId = transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
+        // Update the transaction ID in the transaction table for transactions with status "InProgress"
+        mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,3);
+        // Update the transaction ID in the header table for transactions with status "InProgress"
+        mDatabaseHelper.updateHeaderTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid);
+        transactionid=newTransactionId;
+        // Update the transaction counter in SharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("transaction_counter_TRN", latestTransactionTRNCounter);
+        editor.apply();
     }else{
         transactionType = "STD";
     }
+
+
     jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
     jsondetailedtransacs.put("transactionType", SelectedBuyerProfile);
     jsondetailedtransacs.put("personType", selectedBuyerType);
@@ -246,8 +309,8 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
     jsondetailedtransacs.put("currency", "MUR");
     jsondetailedtransacs.put("invoiceIdentifier", transactionid);
     jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
-    jsondetailedtransacs.put("previousNoteHash", "prevNote");
-    jsondetailedtransacs.put("reasonStated", "test");
+    jsondetailedtransacs.put("previousNoteHash", previoushashnote);
+    jsondetailedtransacs.put("reasonStated", "transacs");
     jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
     jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
     jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -275,7 +338,7 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         String CompanyAdress3 = cursorCompany.getString(columnCompanyAddress3Index);
         String Addresse = CompanyAdress1 + "," + CompanyAdress2 + "," + CompanyAdress3;
         String CompanyVatNo = cursorCompany.getString(columnCompanyVATIndex);
-        String CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
+         CompanyBRNNo = cursorCompany.getString(columnCompanyBRNIndex);
         String TelNum = cursorCompany.getString(columnTelNumIndex);
         // Construct the "seller" JSON object
         JSONObject seller = new JSONObject();
@@ -301,12 +364,41 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
 
                         // Assuming you have retrieved the list of items from your database
                         List<Transaction> itemListFromDatabase = getItemsFromDatabase(); // Replace with your method to fetch items
-
+// Create a DecimalFormat instance to format numbers to 2 decimal places
+                        DecimalFormat decimalFormat = new DecimalFormat("#.00");
                         // Construct the "itemList" JSON array
                         JSONArray itemList = new JSONArray();
 
                         for (Transaction itemFromDatabase : itemListFromDatabase) {
                             JSONObject transaction = new JSONObject();
+                            String discountrate= itemFromDatabase.getDiscount();
+                            if(discountrate==null)
+                            {
+                                discountrate="0";
+                            }
+// Ensure these values are checked against null and then set to 0.0 if null
+                            Double unitPriceObj = Double.valueOf(itemFromDatabase.getUnitPrice()); // Wrapper class
+                            Double amountWOVATObj = itemFromDatabase.getItemAmountWitoutVAT();
+                            Double totalVatAmountObj = itemFromDatabase.getTotalVatAmount();
+                            Double itemPriceObj = itemFromDatabase.getItemPrice();
+                            // Set values to 0.0 if they are null, otherwise use the original value
+                            double unitPrice = unitPriceObj != null ? unitPriceObj : 0.0;
+                            double amountWOVAT = amountWOVATObj != null ? amountWOVATObj : 0.0;
+                            double totalVatAmount = totalVatAmountObj != null ? totalVatAmountObj : 0.0;
+                            double itemPrice = itemPriceObj != null ? itemPriceObj : 0.0;
+
+                            // Use BigDecimal to round values to 2 decimal places
+                            BigDecimal unitPriceRounded = new BigDecimal(unitPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
+                            BigDecimal amountWOVATRounded = new BigDecimal(amountWOVAT).setScale(2, BigDecimal.ROUND_HALF_UP);
+                            BigDecimal totalVatAmountRounded = new BigDecimal(totalVatAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+                            BigDecimal itemPriceRounded = new BigDecimal(itemPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
+
+                            // Format the rounded values to 2 decimal places and convert to String
+                            String roundedUnitPrice = unitPriceRounded.toPlainString();
+                            String roundedAmountWOVAT = amountWOVATRounded.toPlainString();
+                            String roundedTotalVatAmount = totalVatAmountRounded.toPlainString();
+                            String roundedItemPrice = itemPriceRounded.toPlainString();
+
                             transaction.put("itemNo", itemFromDatabase.getId());
                             transaction.put("taxCode", itemFromDatabase.getTaxCode());
                             transaction.put("nature", itemFromDatabase.getNature());
@@ -314,13 +406,13 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                             transaction.put("itemCode", itemFromDatabase.getItemcode());
                             transaction.put("itemDesc", itemFromDatabase.getLongDescription());
                             transaction.put("quantity", itemFromDatabase.getItemQuantity());
-                            transaction.put("unitPrice", itemFromDatabase.getUnitPrice());
-                            transaction.put("discount", itemFromDatabase.getDiscount());
-                            transaction.put("amtWoVatCur", itemFromDatabase.getTotalAmountWitoutVAT());
-                            transaction.put("amtWoVat", itemFromDatabase.getTotalAmountWitoutVAT());
+                            transaction.put("unitPrice", roundedUnitPrice);
+                            transaction.put("discount", discountrate);
+                            transaction.put("amtWoVatCur", roundedAmountWOVAT);
+                            transaction.put("amtWoVat",roundedAmountWOVAT); // Assuming this is correct
                             transaction.put("tds", itemFromDatabase.getTotalDiscount());
-                            transaction.put("vatAmt", itemFromDatabase.getTotalVatAmount());
-                            transaction.put("totalPrice", itemFromDatabase.getTotalPrice());
+                            transaction.put("vatAmt", roundedTotalVatAmount);
+                            transaction.put("totalPrice", roundedItemPrice);
                             itemList.put(transaction);
                         }
 
@@ -370,9 +462,9 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                                 .addHeader("Content-Type", "application/json")
 
                                 .addHeader("token", encryptedtokenBase64)
-                                .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
-                                .addHeader("username", "LBatour")
-                                .addHeader("areaCode", "734")
+                                .addHeader("ebsMraId", ebsMraIdmra)
+                                .addHeader("username", userNamemra)
+                                .addHeader("areaCode", areaCodemra)
                                 .post(body1)
                                 .build();
 
@@ -418,7 +510,11 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
                         Log.d("qrcode", result); // Log the QR code string
                         Log.d("result1", result); // Log the QR code string
-                        unmergeTable(tableid);
+                        boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
+if(!areAllItemsNotSelectedNotPaid){
+    unmergeTable(tableid);
+                        }
+
                         Intent intent = new Intent(getApplication(), printerSetup.class);
                         intent.putExtra("amount_received", totalAmountinserted);
                         intent.putExtra("cash_return", cashReturn);
@@ -429,6 +525,7 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
                         System.out.println("tr: " + transactionIdInProgress);
+                        System.out.println("tableid: " + tableid);
                         System.out.println("selectedBuyerTAN: " + selectedBuyerTAN);
                         System.out.println("settlementItems: " + settlementItems);
                         String MRAMETHOD="Single";
@@ -440,7 +537,10 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                         // Show "MRA Request Failed" message
                         Log.d("qrcode", resulta); // Log the QR code string
                         Log.d("result2", result);
-                        unmergeTable(tableid);
+                        boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
+                        if(!areAllItemsNotSelectedNotPaid){
+                            unmergeTable(tableid);
+                        }
                         Intent intent = new Intent(getApplication(), printerSetup.class);
                         intent.putExtra("amount_received", totalAmountinserted);
                         intent.putExtra("cash_return", cashReturn);
@@ -451,6 +551,7 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                         intent.putExtra("tableid", tableid);
 
                         System.out.println("tr: " + transactionIdInProgress);
+                        System.out.println("tableid: " + tableid);
 
 
                         String MRAMETHOD="Single";
@@ -476,6 +577,14 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
         ShopName = sharedPreference.getString("ShopName", null);
+
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+         userNamemra = prefs.getString("User_Name", "");
+         ebsMraIdmra = prefs.getString("ebsMraId", "");
+         areaCodemra = prefs.getString("Area_Code", "");
+         passwordmra = prefs.getString("Password", "");
+        checkAndPromptForSetup();
+
         // Retrieve the passed buyer information from the intent
         Intent intent = getIntent();
         if (intent != null) {
@@ -503,8 +612,8 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
 
 
             String payload = "{\n" +
-                    " \"username\": \"LBatour\",\n" +
-                    " \"password\": \"Logi159753@\",\n" +
+                    " \"username\": \""+ userNamemra +"\",\n" +
+                    " \"password\": \""+ passwordmra +"\",\n" +
                     " \"encryptKey\": \""+ aesKey +"\",\n" +
                     " \"refreshToken\": \"false\"\n" +
                     "}";
@@ -540,10 +649,47 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         }
     }
 
+    private void checkAndPromptForSetup() {
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+
+        // Retrieve the values from SharedPreferences
+         userNamemra = prefs.getString("User_Name", "");
+         ebsMraIdmra = prefs.getString("ebsMraId", "");
+         areaCodemra = prefs.getString("Area_Code", "");
+         passwordmra = prefs.getString("Password", "");
+
+        // Check if any value is missing or empty
+        if (userNamemra.isEmpty() || ebsMraIdmra.isEmpty() || areaCodemra.isEmpty() || passwordmra.isEmpty()) {
+            // Show a dialog to prompt the user to set up the parameters
+            showSetupDialog();
+        } else {
+            // Proceed with the app logic if all parameters are set
+           // proceedWithAppLogic();
+        }
+    }
+
+    private void showSetupDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Setup Required")
+                .setMessage("Please set up the required parameters before proceeding.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Open the setup activity or fragment
+                        openSetupActivity();
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
+
+    private void openSetupActivity() {
+        Intent intent = new Intent(this, SettingsDashboard.class);  // Replace with your setup activity
+        startActivity(intent);
+    }
 
     public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD,String Transactiontype,String selectedBuyerName,String selectedBuyerTAN,String selectedBuyerBRN,String selectedBuyerNIC){
         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
-        Log.d("tr2", String.valueOf(transactionIdInProgress));
         SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
         double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
@@ -678,6 +824,7 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 // Extract column indices
+                int columnIndexuniqueId = cursor.getColumnIndex(_ID);
                 int columnIndexItemNo = cursor.getColumnIndex(ITEM_ID); // Replace with the actual column name
                 int columnIndexTaxCode = cursor.getColumnIndex(TRANSACTION_TAX_CODE); // Replace with the actual column name
                 int columnIndexNature = cursor.getColumnIndex(TRANSACTION_NATURE);
@@ -686,14 +833,17 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                 int columnIndexitemDesc = cursor.getColumnIndex(LongDescription);
                 int columnIndexquantity = cursor.getColumnIndex(QUANTITY);
                 int columnIndexunitPrice = cursor.getColumnIndex(TRANSACTION_UNIT_PRICE);
-                int columnIndexdiscount = cursor.getColumnIndex(TRANSACTION_DISCOUNT);
+                int columnIndexdiscount = cursor.getColumnIndex(TRANSACTION_TOTAL_DISCOUNT);
                 int columnIndexamtWoVatCur = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                 int columnIndexamtWoVat = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                 int columnIndextds = cursor.getColumnIndex(TRANSACTION_TOTAL_DISCOUNT);
                 int columnIndexvatAmt = cursor.getColumnIndex(VAT);
                 int columnIndextotalPrice = cursor.getColumnIndex(TRANSACTION_TOTAL_TTC);
+                int columnIndexfamille = cursor.getColumnIndex(TRANSACTION_FAMILLE);
+                int columnIndexcomment = cursor.getColumnIndex(TRANSACTION_COMMENT);
 
                 // Retrieve data from the cursor
+                String unikid= cursor.getString(columnIndexuniqueId);
                 String itemNo = cursor.getString(columnIndexItemNo);
                 String taxCode = cursor.getString(columnIndexTaxCode);
                 String nature = cursor.getString(columnIndexNature);
@@ -708,9 +858,11 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                 String tds = cursor.getString(columnIndextds);
                 String VatAmount = cursor.getString(columnIndexvatAmt);
                 String totalPrice = cursor.getString(columnIndextotalPrice);
-
+                String famillecode= cursor.getString(columnIndexfamille);
+                String comment= cursor.getString(columnIndexcomment);
                 // Create an Item object and add it to the list
                 Transaction transaction = new Transaction();
+                transaction.setunique_id(Integer.parseInt(unikid));
                 transaction.setId(Integer.parseInt(itemNo));
                 transaction.setTaxCode(taxCode);
                 transaction.setNature(nature);
@@ -718,13 +870,15 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
                 transaction.setItemCode(itemcode);
                 transaction.setLongDescription(descryption);
                 transaction.setItemQuantity(Integer.parseInt(quantity));
+                transaction.setFamille(famillecode);
                 transaction.setUnitPrice(UnitPrice);
                 transaction.setDiscount(discount);
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVATCur));
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVAT));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVATCur));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVAT));
                 transaction.setTotalDiscount(tds);
                 transaction.setTotalVatAmount(Double.parseDouble(VatAmount));
-                transaction.setTotalPrice(Double.parseDouble(totalPrice));
+                transaction.setItemPrice(Double.parseDouble(totalPrice));
+                transaction.setComment(comment);
 
                 // ... Set other properties
 

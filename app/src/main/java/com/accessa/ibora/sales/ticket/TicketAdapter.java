@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHolder> {
-
+    private DatabaseHelper mDatabaseHelper;
     private Context mContext;
     private Cursor mCursor;
     private List<String> data;
@@ -71,8 +71,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public TextView nameTextView;
         public TextView PriceTextView;
         public TextView QuantityTextView;
-        private TextView ItemIdTextView;
-        public ImageView relatedOptionIcon; // Add this line
+        private TextView ItemIdTextView,CommentTextView;
+        public ImageView relatedOptionIcon, commenticon; // Add this line
 
         CheckBox checkBox;
 
@@ -84,7 +84,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             PriceTextView = itemView.findViewById(R.id.price_text_view);
             QuantityTextView = itemView.findViewById(R.id.quantity_text_view);
             relatedOptionIcon = itemView.findViewById(R.id.related_option_icon); // Initialize the ImageView
-
+            commenticon=itemView.findViewById(R.id.comment_icon);
+            CommentTextView=itemView.findViewById(R.id.comment_text_view);
             // Initialize other views...
             checkBox = itemView.findViewById(R.id.checkbox);
             checkBox.setVisibility(isCheckBoxVisible ? View.VISIBLE : View.GONE);
@@ -111,10 +112,13 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.ticket_item, parent, false);
         return new ItemViewHolder(view);
+
+
     }
 
     @Override
     public void onBindViewHolder(@NonNull TicketAdapter.ItemViewHolder holder, int position) {
+        mDatabaseHelper = new DatabaseHelper(mContext);
         // Check if the Cursor is null or if it has not been moved to the current position.
         if (mCursor == null || !mCursor.moveToPosition(position)) {
             return;
@@ -127,7 +131,8 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
         String comment=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_COMMENT));
         String senttoKitchen=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
-
+        String famille= mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(uniques));
+         String CatName=mDatabaseHelper.getCatNameById(famille);
         // Limit the description length to a certain number of characters
         int maxDescriptionLength = 20; // Change this value to your desired length
         if (description.length() > maxDescriptionLength) {
@@ -172,7 +177,14 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         } else {
             holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.textviewextColor)); // Default color
         }
-
+        if ("OPEN FOOD".equals(CatName) && comment != null) {
+            holder.commenticon.setVisibility(View.VISIBLE);
+            holder.CommentTextView.setVisibility(View.VISIBLE); // Show comment
+            holder.CommentTextView.setText(comment); // Set the comment text
+        }else{
+            holder.commenticon.setVisibility(View.GONE);
+            holder.CommentTextView.setVisibility(View.GONE); // Show comment
+        }
         // Update item view based on relatedOptionId and description
         if (description.startsWith("Sup")) {
             holder.relatedOptionIcon.setVisibility(View.VISIBLE);

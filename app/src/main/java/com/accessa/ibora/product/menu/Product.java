@@ -13,10 +13,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.Help.Help;
 import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
+import com.accessa.ibora.product.SubCategory.SubCategoryFragment;
 import com.accessa.ibora.product.couponcode.CouponFragment;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 
 import androidx.annotation.NonNull;
@@ -49,14 +53,17 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
     private TextView name;
     private TextView CashorId;
     private SharedPreferences sharedPreferences;
+    private SharedPreferences usersharedPreferences;
     private TextView shopName;
     private String ShopName;
-
+    private DatabaseHelper mDatabaseHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.ac_main);
+        mDatabaseHelper = new DatabaseHelper(this);
+        usersharedPreferences = this.getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
@@ -70,8 +77,6 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         toolbar = findViewById(R.id.topAppBar);
         toolbar.setTitle(R.string.Items);
         setSupportActionBar(toolbar);
-
-
 
 
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
@@ -120,17 +125,21 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
             Fragment newFragment = new DiscountFragment();
             setToolbarTitle(getString(R.string.discount)); // Set the toolbar title
             replaceFragment(newFragment);
-        } else if (fragmentKey != null && fragmentKey.equals("Options_fragment")) {
-        Fragment newFragment = new OptionsFragment();
-        setToolbarTitle(getString(R.string.Options)); // Set the toolbar title
-        replaceFragment(newFragment);
-    }else if (fragmentKey != null && fragmentKey.equals("coupon_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("Option_fragment")) {
+            Fragment newFragment = new OptionsFragment();
+            setToolbarTitle(getString(R.string.Options)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("coupon_fragment")) {
             Fragment newFragment = new CouponFragment();
             setToolbarTitle(getString(R.string.couponcode)); // Set the toolbar title
             replaceFragment(newFragment);
-        }else if (fragmentKey != null && fragmentKey.equals("Supplement_fragment")) {
+        } else if (fragmentKey != null && fragmentKey.equals("Supplement_fragment")) {
             Fragment newFragment = new SupplementsFragment();
             setToolbarTitle(getString(R.string.Supplements)); // Set the toolbar title
+            replaceFragment(newFragment);
+        } else if (fragmentKey != null && fragmentKey.equals("SuB_Category_fragment")) {
+            Fragment newFragment = new SubCategoryFragment();
+            setToolbarTitle(getString(R.string.SubCategory)); // Set the toolbar title
             replaceFragment(newFragment);
         }
 
@@ -148,50 +157,93 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
-                if (id == R.id.Sales) {
-                    SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
+                int levelNumber = Integer.parseInt(cashorlevel); // Get the user's level
 
-                    // Set "roomnum" to 1
-                    editor.putInt("roomnum", 1);
-                    editor.putInt("room_id", 1);
-                    editor.putString("table_id", "0");
-                    editor.putString("table_num", "0");
-                    // Commit the changes
-                    editor.apply();
-                    Intent intent = new Intent(Product.this, MainActivity.class);
-                    startActivity(intent);
+                if (id == R.id.Sales) {
+                    // Check permission for Sales
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                        SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+
+                        // Set "roomnum" to 1
+                        editor.putInt("roomnum", 1);
+                        editor.putInt("room_id", 1);
+                        editor.putString("table_id", "0");
+                        editor.putString("table_num", "0");
+                        editor.apply();
+
+                        Intent intent = new Intent(Product.this, MainActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Receipts) {
-                    Intent intent = new Intent(Product.this, ReceiptActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Receipts
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "receipts_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, ReceiptActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Shift) {
-                    Intent intent = new Intent(Product.this, SalesReportActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Shift
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, SalesReportActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Items) {
-                    Intent intent = new Intent(Product.this, Product.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Items
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, Product.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.Settings) {
-                    Intent intent = new Intent(Product.this, SettingsDashboard.class);
-                    startActivity(intent);
+                    // Check permission for Settings
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, SettingsDashboard.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
                 } else if (id == R.id.Help) {
-                    Toast.makeText(getApplicationContext(), "Help is Clicked", Toast.LENGTH_SHORT).show();
+                    // Check permission for Help
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "help_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, Help.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Help", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (id == R.id.nav_Admin) {
-                    Intent intent = new Intent(Product.this, AdminActivity.class);
-                    startActivity(intent);
-                    return true;
+                    // Check permission for Admin
+                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                        Intent intent = new Intent(Product.this, AdminActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
+                    }
                 }
-                return true;
+
+                return true; // Indicate that the event was handled
             }
         });
-    }
 
-    public void logout() {
+
+    }
+        public void logout() {
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
         // Perform any necessary cleanup or logout actions here
         // For example, you can clear session data, close database connections, etc.
         // Create an editor to modify the preferences

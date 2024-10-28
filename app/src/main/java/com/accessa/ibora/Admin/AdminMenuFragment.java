@@ -12,6 +12,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -34,9 +35,12 @@ import androidx.fragment.app.FragmentTransaction;
 import com.accessa.ibora.Admin.CompanyInfo.CompanyInfoFragment;
 import com.accessa.ibora.Admin.People.PeopleFragment;
 import com.accessa.ibora.Admin.RightAccess.RightAccessFragment;
+import com.accessa.ibora.DeviceInfo;
 import com.accessa.ibora.R;
 
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.Sync.SyncService;
+import com.accessa.ibora.Sync.Syncforold;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.CustomAdapter;
 
@@ -46,8 +50,8 @@ import java.util.Locale;
 
 // extended from compatibility Fragment for pre-HC fragment support
 public class AdminMenuFragment extends Fragment {
-
-
+    private static final String POSNumber="posNumber";
+    private String Shopname,PosNum;
     private String toolbarTitle;
     private ListView simpleList;
     private String[] menuList;
@@ -95,9 +99,9 @@ public class AdminMenuFragment extends Fragment {
                 getString(R.string.POSINFO)
         };
         icons = new int[]{
-                R.drawable.cashier,
+                R.drawable.usericon,
                 R.drawable.key,
-                R.drawable.comp,
+                R.drawable.companyicon,
                 R.drawable.sync,
                 R.drawable.pos
         };
@@ -144,115 +148,157 @@ public class AdminMenuFragment extends Fragment {
         CustomAdapter customAdapter = new CustomAdapter(getContext(), menuList, icons);
         simpleList.setAdapter(customAdapter);
 
+        String toolbarTitle = getString(R.string.Admin); // Provide a default title
 
-        simpleList.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
+        simpleList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View  view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // Retrieve the shared preferences
+                sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+                String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+
+                // Assuming you have a way to get the levelNumber
+                int levelNumber = Integer.parseInt(cashorlevel); // Get the user level
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Permission checks
+                boolean canAccessCompanyInfo = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "companyInfo_", levelNumber);
+                boolean canAccessRightAccess = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "rightAccess_", levelNumber);
+                boolean canAccessPeopleManagement = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "peopleManagement_", levelNumber);
+                boolean canAccessPOSNumber = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "posNumber_", levelNumber);
+                boolean canAccessSyncDatabase = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "syncDatabase_", levelNumber);
 
 
-                if (position == 0) {
-
-                    toolbarTitle = getString(R.string.People);
-                    // Create new fragment and transaction
-                    Fragment newFragment = new PeopleFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-
-                } else if (position == 1) {
-                    toolbarTitle = getString(R.string.Rights);
-                    Fragment newFragment = new RightAccessFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-
-                } else if (position == 2) {
-                    toolbarTitle = getString(R.string.CompanyInfo);
-                    Fragment newFragment = new CompanyInfoFragment();
-                    // create a FragmentManager
-                    FragmentManager fm = getFragmentManager();
-                    // create a FragmentTransaction to begin the transaction and replace the Fragment
-                    FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                    // replace the FrameLayout with new Fragment
-                    fragmentTransaction.replace(R.id.bodyFragment, newFragment);
-                    fragmentTransaction.addToBackStack(newFragment.toString());
-                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    fragmentTransaction.commit();
-                } else if (position== 3) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    builder.setView(R.layout.dialog_layout_offline_online);
-
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-
-                    Button buttonWorkOffline = dialog.findViewById(R.id.buttonWorkOffline);
-                    Button buttonSynchronize = dialog.findViewById(R.id.buttonSynchronize);
-
-                    buttonWorkOffline.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            dialog.dismiss(); // Close the dialog
+                switch (position) {
+                    case 0:
+                        if (canAccessPeopleManagement) {
+                           String toolbarTitle = getString(R.string.People);
+                            Fragment newFragment = new PeopleFragment();
+                            FragmentManager fm = getFragmentManager();
+                            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                            fragmentTransaction.addToBackStack(newFragment.toString());
+                            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            fragmentTransaction.commit();
+                        } else {
+                            showPermissionDeniedDialog(); // Method to show a message to the user
                         }
-                    });
+                        break;
 
-                    buttonSynchronize.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            Intent serviceIntent = new Intent(getContext(), SyncService.class);
-                            getContext().startService(serviceIntent);
-
+                    case 1:
+                        if (canAccessRightAccess) {
+                            String toolbarTitle = getString(R.string.Rights);
+                            Fragment newFragment = new RightAccessFragment();
+                            FragmentManager fm = getFragmentManager();
+                            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                            fragmentTransaction.addToBackStack(newFragment.toString());
+                            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            fragmentTransaction.commit();
+                        } else {
+                            showPermissionDeniedDialog();
                         }
-                    });
+                        break;
 
+                    case 2:
+                        if (canAccessCompanyInfo) {
+                            String  toolbarTitle = getString(R.string.CompanyInfo);
+                            Fragment newFragment = new CompanyInfoFragment();
+                            FragmentManager fm = getFragmentManager();
+                            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                            fragmentTransaction.replace(R.id.bodyFragment, newFragment);
+                            fragmentTransaction.addToBackStack(newFragment.toString());
+                            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            fragmentTransaction.commit();
+                        } else {
+                            showPermissionDeniedDialog();
+                        }
+                        break;
 
-            }else if (position== 4) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    builder.setView(R.layout.popup_insert_pos_access);
+                    case 3:
+                        if (canAccessSyncDatabase) {
+                            // Create and show sync dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setView(R.layout.dialog_layout_sync);
 
-                    // Set up the dialog
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
 
-                    // Get references to the views in the popup layout
-                    EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
-                    EditText editCompanyName = dialog.findViewById(R.id.editCompanyName);
-                    Button btnInsert = dialog.findViewById(R.id.btnInsert);
+                            Button buttonSynchronize = dialog.findViewById(R.id.buttonSynchronize);
+                            if (buttonSynchronize != null) {
+                                buttonSynchronize.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        // Sync data with MSSQL
+                                        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+                                        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                                        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
+                                        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
+                                        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
+                                        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
+                                        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
 
-                    // Set up button click listener
-                    btnInsert.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // Get the entered data from the views
-                            String terminalNo = editTerminalNo.getText().toString();
-                            String shopName = ShopName;
-                            String cashOrId = cashorId;
+                                        // Check Android version and start appropriate sync service
+                                        String androidVersion = DeviceInfo.getAndroidVersion();
+                                        Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                                        if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1")) {
+                                            Log.d("SyncService", "Starting Syncforold");
+                                            Syncforold.startSync(requireContext());
+                                        } else {
+                                            Log.d("SyncService", "Starting SyncService");
+                                            SyncService.startSync(requireContext());
+                                        }
 
-                            // Perform validation and data insertion into the database
-                            if (validateData(terminalNo)) {
-                                insertDataIntoPosAccessTable(terminalNo, shopName, cashOrId);
-                                dialog.dismiss(); // Close the popup
+                                        dialog.dismiss(); // Close the dialog after synchronization
+                                    }
+                                });
                             }
+                        } else {
+                            showPermissionDeniedDialog();
                         }
-                    });
+                        break;
 
+                    case 4:
+                        if (canAccessPOSNumber) {
+                            // Create and show POS number dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setView(R.layout.popup_insert_pos_access);
 
-                }else {
-                    toolbarTitle = getString(R.string.Admin); // Set a default value if needed
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
+
+                             sharedPreferences = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                            PosNum = sharedPreferences.getString(POSNumber, null);
+
+                            EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
+                            if (editTerminalNo != null) {
+                                editTerminalNo.setText(PosNum);
+                            }
+
+                            Button btnInsert = dialog.findViewById(R.id.btnInsert);
+                            if (btnInsert != null) {
+                                btnInsert.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String terminalNo = editTerminalNo.getText().toString();
+                                        String shopName = ShopName;
+                                        String cashOrId = cashorId;
+
+                                        if (validateData(terminalNo)) {
+                                            insertOrUpdatePosAccess(terminalNo, shopName, cashOrId);
+                                            dialog.dismiss(); // Close the dialog after inserting/updating
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            showPermissionDeniedDialog();
+                        }
+                        break;
+
+                    default:
+                        String toolbarTitle = getString(R.string.Admin); // Default title if needed
+                        break;
                 }
 
                 // Set the toolbar title
@@ -260,14 +306,12 @@ public class AdminMenuFragment extends Fragment {
             }
         });
 
-
-
-
-
-
-
         return view;
     }
+
+    // Method to get permission with default logic
+
+
     private boolean validateData(String terminalNo) {
         // Perform validation checks
         if (TextUtils.isEmpty(terminalNo)) {
@@ -280,49 +324,87 @@ public class AdminMenuFragment extends Fragment {
         // All data is valid
         return true;
     }
-
-    private void insertDataIntoPosAccessTable(String terminalNo, String ShopName, String cashOrId) {
+    // Method to show a dialog indicating permission denial
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+    private void insertOrUpdatePosAccess(String terminalNo, String shopName, String cashOrId) {
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
 
         // Get the current date and time
         String dateTime = getCurrentDateTime();
 
+        // Prepare the new values to insert or update
         ContentValues values = new ContentValues();
         values.put(COLUMN_TerminalNo, terminalNo);
-        values.put(COLUMN_SHOPNAME, ShopName);
+        values.put(COLUMN_SHOPNAME, shopName);
         values.put(COLUMN_CASHOR_id, cashOrId);
         values.put(DatabaseHelper.LastModified, dateTime);
-        values.put(DatabaseHelper.DateCreated, dateTime);
 
-        long result = db.insert(TABLE_NAME_POS_ACCESS, null, values);
-        if (result != -1) {
-            // Data inserted successfully
-            savePosNumber(terminalNo); // Save POS number to SharedPreferences
-            Toast.makeText(getContext(), "POS Number saved", Toast.LENGTH_SHORT).show();
-            Log.d("update1","POS Number saved");
-            // Now, update all rows in the std table with the same pos_num
-            ContentValues updateValues = new ContentValues();
-            updateValues.put(COLUMN_POS_Num, terminalNo); // Update the pos_num column
+        // Step 1: Check if the table is empty
+        String countQuery = "SELECT COUNT(*) FROM " + TABLE_NAME_POS_ACCESS;
+        Cursor cursor = db.rawQuery(countQuery, null);
+        cursor.moveToFirst();
+        int rowCount = cursor.getInt(0);
 
-            // Perform the update operation without a WHERE clause (update all rows)
-            int rowsUpdated = db.update(TABLE_NAME_STD_ACCESS, updateValues, null, null);
+        if (rowCount == 0) {
+            // Step 2: Table is empty, insert a new row
+            values.put(DatabaseHelper.DateCreated, dateTime); // Include DateCreated for new inserts
+            long result = db.insert(TABLE_NAME_POS_ACCESS, null, values);
 
-            if (rowsUpdated > 0) {
-                // Rows in std table updated successfully
-                Log.d("update","update");
-                Toast.makeText(getContext(), "std table updated", Toast.LENGTH_SHORT).show();
+            if (result != -1) {
+                // Data inserted successfully
+                savePosNumber(terminalNo); // Save POS number to SharedPreferences
+                Toast.makeText(getContext(), "POS Number inserted", Toast.LENGTH_SHORT).show();
+                Log.d("insert", "POS Number inserted");
             } else {
-                // No rows were updated
-                Toast.makeText(getContext(), "std table not updated", Toast.LENGTH_SHORT).show();
-                Log.d("not update","not update");
+                // Failed to insert data
+                Toast.makeText(getContext(), "Failed to insert POS data", Toast.LENGTH_SHORT).show();
             }
         } else {
-            // Failed to insert data
-            Toast.makeText(getContext(), "Failed to insert data", Toast.LENGTH_SHORT).show();
+            // Step 3: Table is not empty, update the existing row
+            int rowsAffected = db.update(TABLE_NAME_POS_ACCESS, values, null, null);
+            if (rowsAffected > 0) {
+                // Row was updated successfully
+                savePosNumber(terminalNo); // Save POS number to SharedPreferences
+                Toast.makeText(getContext(), "POS Number updated", Toast.LENGTH_SHORT).show();
+                Log.d("update", "POS Number updated");
+            } else {
+                // Failed to update
+                Toast.makeText(getContext(), "Failed to update POS data", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        // Now, update all rows in the std table with the same pos_num
+        ContentValues updateValues = new ContentValues();
+        updateValues.put(COLUMN_POS_Num, terminalNo); // Update the pos_num column
+
+        // Perform the update operation on the std table without a WHERE clause (update all rows)
+        int rowsUpdated = db.update(TABLE_NAME_STD_ACCESS, updateValues, null, null);
+
+        if (rowsUpdated > 0) {
+            // Rows in std table updated successfully
+            Log.d("update", "std table updated");
+            Toast.makeText(getContext(), "std table updated", Toast.LENGTH_SHORT).show();
+        } else {
+            // No rows were updated
+            Toast.makeText(getContext(), "std table not updated", Toast.LENGTH_SHORT).show();
+            Log.d("not update", "std table not updated");
         }
 
         db.close();
     }
+
+
+
     private String getCurrentDateTime() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         Date date = new Date();

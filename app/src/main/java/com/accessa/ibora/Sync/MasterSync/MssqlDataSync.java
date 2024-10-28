@@ -4,7 +4,14 @@ import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 import static com.accessa.ibora.product.items.DatabaseHelper.AmountDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.AvailableForSale;
 import static com.accessa.ibora.product.items.DatabaseHelper.Barcode;
+import static com.accessa.ibora.product.items.DatabaseHelper.CASH_REPORT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COST_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_CASHIER_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_DATETIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_DIFFERENCE;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_TOTALIZER_TOTAL;
+import static com.accessa.ibora.product.items.DatabaseHelper.COUNTING_REPORT_TOTAL_VALUE;
 import static com.accessa.ibora.product.items.DatabaseHelper.Category;
 import static com.accessa.ibora.product.items.DatabaseHelper.CodeFournisseur;
 import static com.accessa.ibora.product.items.DatabaseHelper.Cost;
@@ -12,6 +19,17 @@ import static com.accessa.ibora.product.items.DatabaseHelper.Currency;
 import static com.accessa.ibora.product.items.DatabaseHelper.DESC;
 import static com.accessa.ibora.product.items.DatabaseHelper.DateCreated;
 import static com.accessa.ibora.product.items.DatabaseHelper.Department;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CASHOR_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_CURRENT_TIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_DATETIME;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_PAYMENT;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_POSNUM;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_QUANTITY;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_SHOP_NUMBER;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTAL;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TOTALIZER;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_COLUMN_TRANSACTION_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.Image;
 import static com.accessa.ibora.product.items.DatabaseHelper.ItemCode;
@@ -43,7 +61,11 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_COUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_SHIFT_NUMBER;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TaxCode;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount2;
@@ -72,6 +94,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.related_item5;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
@@ -98,19 +121,24 @@ import java.util.Date;
 
 public class MssqlDataSync {
     private DatabaseHelper mDatabaseHelper;
-    private static final String _user = "sa";
-    private static final String _pass = "Logi2131";
-    private static final String _DB = "IboraResto";
-    private static final String _server = "192.168.1.89";
+
     // Constructor
     public MssqlDataSync() {
     }
-    public  Connection start() {
+    public  Connection start(Context context) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
         Connection conn = null;
         String ConnURL = null;
+        // Get SharedPreferences where the DB parameters are stored
+        SharedPreferences preferences = context.getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+        // Retrieve values from SharedPreferences (or use defaults if not set)
+        String _user = preferences.getString("_user", null);
+        String _pass = preferences.getString("_pass", null);
+        String _DB = preferences.getString("_DB", null);
+        String _server = preferences.getString("_server", null);
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
              ConnURL = "jdbc:jtds:sqlserver://" + _server + ";"
@@ -135,14 +163,19 @@ public class MssqlDataSync {
 
     }
     public void syncTransactionsFromSQLiteToMSSQL(Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
             SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
             // Query SQLite database to retrieve relevant data
-            Cursor cursor = db.rawQuery("SELECT * FROM " + TRANSACTION_TABLE_NAME, null);
+            Cursor cursor = db.rawQuery(
+                    "SELECT t.* FROM " + TRANSACTION_TABLE_NAME + " t " +
+                            "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " h " +
+                            "ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
+                            "WHERE h." + TRANSACTION_STATUS + " = 'Completed'",
+                    null);
 
             // Check if cursor has data
             if (cursor != null && cursor.moveToFirst()) {
@@ -193,7 +226,7 @@ public class MssqlDataSync {
                     String idSalesD = cursor.getString(cursor.getColumnIndex("IDSalesD"));
                     String totalizer = cursor.getString(cursor.getColumnIndex("Totalizer"));
                     String comment = cursor.getString(cursor.getColumnIndex("Comment"));
-
+                    Log.d("select", "transaction selected");
                     // Insert data into MSSQL
                     insertTransactionIntoMSSQL(conn, _id,tableid, roomid,paidstatus, transcationId, itemId, transactionDate, quantity, totalPrice, vat, vatType, longDescription, nature, taxCode, currency, itemCode, totaldisc, shopNo, terminalNo, datecreated, dateModified, timeCreated, timeModified, code, unitPrice, qte, discount, vatBeforeDisc, vatAfterDisc, totalHT_A, totalTTC, isTaxable, dateTransaction, timeTransaction, barcode, weights, totalHT_B, typeTax, rayon, currentPrice, famille, idSalesD, totalizer, comment);
 
@@ -362,14 +395,15 @@ public class MssqlDataSync {
     }
 
     public void syncTransactionHeaderFromMSSQLToSQLite(Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
             SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
             // Query SQLite database to retrieve relevant data
-            Cursor cursor = db.rawQuery("SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME, null);
+            Cursor cursor = db.rawQuery("SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                    " WHERE " + TRANSACTION_STATUS + " = 'Completed'", null);
 
             // Check if cursor has data
             if (cursor != null && cursor.moveToFirst()) {
@@ -594,7 +628,7 @@ public class MssqlDataSync {
 
 
     public void syncInvoiceSettlementFromMSSQLToSQLite(Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
@@ -718,7 +752,7 @@ public class MssqlDataSync {
 
     // Method to synchronize all data from SQLite to MSSQL
     public  void syncAllDataFromSQLiteToMSSQL(Context context) {
-        Connection conn = start();
+        Connection conn = start(context);
         if (conn != null) {
             try {
                 // Fetch all data from the local SQLite database
@@ -871,8 +905,42 @@ public class MssqlDataSync {
             Log.e("INSERT_ERROR_AllItems", e.getMessage());
         }
     }
+
+    public void syncCountingReportDataFromSQLiteToMSSQL(Context context) {
+        Connection conn = start(context); // Start the MSSQL connection
+        if (conn != null) {
+            try {
+                // Open SQLite database
+                mDatabaseHelper = new DatabaseHelper(context);
+                SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+
+                // Query data from SQLite CountingReport table
+                Cursor cursor = db.rawQuery("SELECT * FROM " + COUNTING_REPORT_TABLE_NAME, null);
+
+                // Iterate through the cursor
+                while (cursor.moveToNext()) {
+                    // Retrieve data from the cursor
+                    int shiftNumber = cursor.getInt(cursor.getColumnIndex(TRANSACTION_SHIFT_NUMBER));
+                    double totalizerTotal = cursor.getDouble(cursor.getColumnIndex(COUNTING_REPORT_TOTALIZER_TOTAL));
+                    double totalValue = cursor.getDouble(cursor.getColumnIndex(COUNTING_REPORT_TOTAL_VALUE));
+                    double difference = cursor.getDouble(cursor.getColumnIndex(COUNTING_REPORT_DIFFERENCE));
+                    int cashierId = cursor.getInt(cursor.getColumnIndex(COUNTING_REPORT_CASHIER_ID));
+                    String datetime = cursor.getString(cursor.getColumnIndex(COUNTING_REPORT_DATETIME));
+
+                    // Insert the retrieved data into MSSQL CountReport table
+                    insertCountingReportDataIntoMSSQL(conn, shiftNumber, totalizerTotal, totalValue, difference, cashierId, datetime);
+                }
+
+                // Close the cursor
+                cursor.close();
+            } catch (Exception e) {
+                Log.e("SYNC_ERROR", e.getMessage());
+            }
+        }
+    }
+
     public void syncCostDataFromSQLiteToMSSQL(Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         if (conn != null) {
             try {
                 // Open SQLite database
@@ -906,7 +974,7 @@ public class MssqlDataSync {
     }
 
     public void syncSupplementsOptionsFromSQLiteToMSSQL( Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
@@ -937,8 +1005,82 @@ public class MssqlDataSync {
             Log.e("SYNC_ERROR_SupplementName", e.getMessage());
         }
     }
+
+    public void syncCashReportDataFromSQLiteToMSSQL(Context context) {
+        Connection conn = start(context); // Start the MSSQL connection
+        if (conn != null) {
+            try {
+                // Open SQLite database
+                mDatabaseHelper = new DatabaseHelper(context);
+                SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+
+                // Query data from SQLite CashReports table
+                Cursor cursor = db.rawQuery("SELECT * FROM " + CASH_REPORT_TABLE_NAME, null);
+
+                // Iterate through the cursor
+                while (cursor.moveToNext()) {
+                    // Retrieve data from the cursor
+                    int shiftNumber = cursor.getInt(cursor.getColumnIndex("ShiftNumber"));
+                    String date = cursor.getString(cursor.getColumnIndex("date"));
+                    int cashierId = cursor.getInt(cursor.getColumnIndex("cashiorid"));
+                    int quantity = cursor.getInt(cursor.getColumnIndex("quantity"));
+                    double total = cursor.getDouble(cursor.getColumnIndex("total"));
+                    int tillNum = cursor.getInt(cursor.getColumnIndex("TillNum"));
+                    String transId = cursor.getString(cursor.getColumnIndex("Transid"));
+                    String cashReturn = cursor.getString(cursor.getColumnIndex("CashReturn"));
+
+                    // Insert the retrieved data into MSSQL CashReports table
+                    insertCashReportDataIntoMSSQL(conn, shiftNumber, date, cashierId, quantity, total, tillNum, transId, cashReturn);
+                }
+
+                // Close the cursor
+                cursor.close();
+            } catch (Exception e) {
+                Log.e("SYNC_ERROR", e.getMessage());
+            }
+        }
+    }
+    public void syncFinancialReportDataFromSQLiteToMSSQL(Context context) {
+        Connection conn = start(context); // Start the MSSQL connection
+        if (conn != null) {
+            try {
+                // Open SQLite database
+                mDatabaseHelper = new DatabaseHelper(context);
+                SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
+
+                // Query data from SQLite Financial table
+                Cursor cursor = db.rawQuery("SELECT * FROM " + FINANCIAL_TABLE_NAME, null);
+
+                // Iterate through the cursor
+                while (cursor.moveToNext()) {
+                    // Retrieve data from the cursor
+                    int shiftNumber = cursor.getInt(cursor.getColumnIndex("ShiftNumber"));
+                    String date = cursor.getString(cursor.getColumnIndex("date")); // Should match your SQLite schema
+                    String time = cursor.getString(cursor.getColumnIndex("time")); // Check this
+                    int cashierId = cursor.getInt(cursor.getColumnIndex("cashiorid"));
+                    String transactionType = cursor.getString(cursor.getColumnIndex("TransactionType")); // New field
+                    int quantity = cursor.getInt(cursor.getColumnIndex("quantity"));
+                    double total = cursor.getDouble(cursor.getColumnIndex("total"));
+                    double totalizer = cursor.getDouble(cursor.getColumnIndex("Totalizer")); // New field
+                    int tillNum = cursor.getInt(cursor.getColumnIndex("TillNum"));
+                    int shopNumber = cursor.getInt(cursor.getColumnIndex("ShopNumber")); // New field
+                    String payment = cursor.getString(cursor.getColumnIndex("Payment")); // New field
+
+
+                    // Insert the retrieved data into MSSQL FinancialReportTable
+                    insertFinancialReportDataIntoMSSQL(conn, shiftNumber, date, time, cashierId, transactionType, quantity, total, totalizer, tillNum, shopNumber, payment);
+                }
+
+                // Close the cursor
+                cursor.close();
+            } catch (Exception e) {
+                Log.e("SYNC_ERROR_FinancialReport", e.getMessage());
+            }
+        }
+    }
+
     public void syncTablesFromSQLiteToMSSQL( Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
@@ -974,6 +1116,98 @@ public class MssqlDataSync {
             Log.e("SYNC_ERROR", e.getMessage());
         }
     }
+    public void insertCashReportDataIntoMSSQL(Connection conn, int shiftNumber, String date, int cashierId, int quantity, double total, int tillNum, String transId, String cashReturn) {
+        try {
+            // Check if the input date includes time; if not, use just the date format
+            SimpleDateFormat sdfSource;
+            if (date.contains(" ")) {
+                sdfSource = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            } else {
+                sdfSource = new SimpleDateFormat("yyyy-MM-dd"); // Only date format
+            }
+
+            // Parse the date from SQLite format to a Date object
+            Date parsedDate = sdfSource.parse(date);
+
+            // Format the date into MSSQL format (if needed, usually just storing as is works)
+            SimpleDateFormat sdfTarget = new SimpleDateFormat("yyyy-MM-dd"); // Format to match MSSQL's date type
+            String formattedDate = sdfTarget.format(parsedDate);
+
+            // Prepare the SQL statement for insertion
+            String sql = "INSERT INTO CashReports (ShiftNumber, date, cashiorid, quantity, total, TillNum, Transid, CashReturn) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            // Create a PreparedStatement
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+
+            // Set parameters for the PreparedStatement
+            preparedStatement.setInt(1, shiftNumber);
+            preparedStatement.setString(2, formattedDate);
+            preparedStatement.setInt(3, cashierId);
+            preparedStatement.setInt(4, quantity);
+            preparedStatement.setBigDecimal(5, BigDecimal.valueOf(total)); // Use BigDecimal for precision with numeric
+            preparedStatement.setInt(6, tillNum);
+            preparedStatement.setString(7, transId);
+            preparedStatement.setString(8, cashReturn);
+
+            // Execute the insertion query
+            preparedStatement.executeUpdate();
+
+            // Close the PreparedStatement
+            preparedStatement.close();
+        } catch (SQLException e) {
+            Log.e("INSERT_ERROR_CashReport", e.getMessage());
+        } catch (ParseException e) {
+            Log.e("PARSE_ERROR", e.getMessage());
+        }
+    }
+
+
+    public void insertFinancialReportDataIntoMSSQL(Connection conn, int shiftNumber, String date, String time, int cashierId, String transactionType, int quantity, double total, double totalizer, int tillNum, int shopNumber, String payment) {
+        try {
+            // Parse the date and time from SQLite format to a Date object
+            SimpleDateFormat sdfSource = new SimpleDateFormat("yyyy-MM-dd");
+            Date parsedDate = sdfSource.parse(date);
+
+            SimpleDateFormat sdfTimeSource = new SimpleDateFormat("HH:mm:ss");
+            Date parsedTime = sdfTimeSource.parse(time);
+
+            // Format the date and time into MSSQL format
+            SimpleDateFormat sdfTarget = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDateTime = sdfTarget.format(parsedDate) + " " + sdfTimeSource.format(parsedTime);
+
+            // Prepare the SQL statement for insertion
+            String sql = "INSERT INTO FinancialReportTable (ShiftNumber, date, time, cashiorid, TransactionType, quantity, total, Totalizer, TillNum, ShopNumber, Payment) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            // Create a PreparedStatement
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+
+            // Set parameters for the PreparedStatement
+            preparedStatement.setInt(1, shiftNumber);
+            // Set date and time, ensuring they are correctly formatted
+            preparedStatement.setDate(2, java.sql.Date.valueOf(date)); // Convert to SQL Date
+            preparedStatement.setTime(3, java.sql.Time.valueOf(time)); // Convert to SQL Time
+            preparedStatement.setInt(4, cashierId);
+            preparedStatement.setString(5, transactionType);
+            preparedStatement.setBigDecimal(6, BigDecimal.valueOf(quantity)); // Use BigDecimal for precision with numeric
+            preparedStatement.setBigDecimal(7, BigDecimal.valueOf(total)); // Use BigDecimal for precision with numeric
+            preparedStatement.setBigDecimal(8, BigDecimal.valueOf(totalizer)); // Use BigDecimal for precision with numeric
+            preparedStatement.setInt(9, tillNum);
+            preparedStatement.setInt(10, shopNumber);
+            preparedStatement.setString(11, payment);
+
+            // Execute the insertion query
+            preparedStatement.executeUpdate();
+
+            // Close the PreparedStatement
+            preparedStatement.close();
+        } catch (SQLException e) {
+            Log.e("INSERT_ERROR_FinancialReport", e.getMessage());
+        } catch (ParseException e) {
+            Log.e("PARSE_ERROR_FinancialReport", e.getMessage());
+        }
+    }
 
     private void insertTableIntoMSSQL(Connection conn,int tableid, int roomId, int tableNumber, int seatCount, String waiterName, String status, int merged, int mergedSetId) {
         try {
@@ -1003,7 +1237,7 @@ public class MssqlDataSync {
         }
     }
     public void syncRoomsFromSQLiteToMSSQL( Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         try {
             // Start database connection
             mDatabaseHelper = new DatabaseHelper(context);
@@ -1082,7 +1316,7 @@ public class MssqlDataSync {
 
 
     public void syncDataOptionsFromSQLiteToMSSQL(Context context) {
-        Connection conn = start(); // Start the MSSQL connection
+        Connection conn = start(context); // Start the MSSQL connection
         if (conn != null) {
             try {
                 // Open SQLite database
@@ -1127,6 +1361,44 @@ public class MssqlDataSync {
             }
         }
     }
+
+    public void insertCountingReportDataIntoMSSQL(Connection conn, int shiftNumber, double totalizerTotal, double totalValue, double difference, int cashierId, String datetime) {
+        try {
+            // Parse the date from SQLite format to a Date object
+            SimpleDateFormat sdfSource = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = sdfSource.parse(datetime);
+
+            // Format the date into MSSQL format
+            SimpleDateFormat sdfTarget = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDatetime = sdfTarget.format(date);
+
+            // Prepare the SQL statement for insertion
+            String sql = "INSERT INTO CountReport (ShiftNumber, totalizer_total, total_value, difference, cashier_id, datetime) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)";
+
+            // Create a PreparedStatement
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+
+            // Set parameters for the PreparedStatement
+            preparedStatement.setInt(1, shiftNumber);
+            preparedStatement.setDouble(2, totalizerTotal);
+            preparedStatement.setDouble(3, totalValue);
+            preparedStatement.setDouble(4, difference);
+            preparedStatement.setInt(5, cashierId);
+            preparedStatement.setString(6, formattedDatetime);
+
+            // Execute the insertion query
+            preparedStatement.executeUpdate();
+
+            // Close the PreparedStatement
+            preparedStatement.close();
+        } catch (SQLException e) {
+            Log.e("INSERT_ERROR_CountReport", e.getMessage());
+        } catch (ParseException e) {
+            Log.e("PARSE_ERROR", e.getMessage());
+        }
+    }
+
     public void insertCostDataIntoMSSQL(Connection conn, String barcode, String sku, double cost, String lastModified, int userId, String codeFournisseur) {
         try {
             // Parse the date from SQLite format to a Date object

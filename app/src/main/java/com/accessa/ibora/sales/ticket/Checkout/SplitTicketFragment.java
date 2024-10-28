@@ -133,7 +133,7 @@ private TextView textViewVATs,textViewTotals;
 
         mDatabaseHelper = new DatabaseHelper(getContext());
     transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid),tableid);
-        Log.d("transactionIdInProgress1", transactionIdInProgress);
+
         if ("sunmit2".equalsIgnoreCase(deviceType)) {
            // showSecondaryScreen(data);
         }  else {

@@ -46,7 +46,8 @@ import nl.dionsegijn.konfetti.models.Size;
 public class printerSetupForPickUp extends AppCompatActivity {
     private SunmiPrinterService sunmiPrinterService;
     private static final String TRANSACTION_ID_KEY = "transaction_id";
-
+    private boolean printable ;
+    private String printerpartname ;
     private String tableid;
     private SharedPreferences sharedPreferences;
     String shopnum ,type;
@@ -120,6 +121,7 @@ public class printerSetupForPickUp extends AppCompatActivity {
                     try {
 
 
+                        List<PrinterSetupPrefs> printerSetups = mDatabaseHelper.getPrinterSetups(getApplicationContext());
 
                         // Retrieve the total amount and total tax amount from the transactionheader table
                         Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
@@ -164,10 +166,16 @@ public class printerSetupForPickUp extends AppCompatActivity {
                             service.printText(inv, null);
 
                             LogoPath = cursorCompany.getString(columnLogoPathIndex);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
+                                if( printerpartname.equals("Logo") && printable) {
 
+                                    printLogoAndReceipt(service, LogoPath, 100, 100);
 
+                                }
+                            }
                             // Create the formatted company name line
                             String companyNameLine = companyName + "\n";
                             // Create the formatted companyAddress1Line  line
@@ -197,19 +205,35 @@ public class printerSetupForPickUp extends AppCompatActivity {
                             byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                             service.sendRAWData(boldOffBytes, null);
                             service.setFontSize(24, null);
-                            // Print the formatted company name line
-                            service.printText(CompAdd1andAdd2, null);
-                            service.printText(CompAdd3, null);
-                            service.printText(compTel + "\n", null);
-                            service.printText(compFax + "\n\n", null);
-                            // Print the formatted company name line
-                            service.printText(shopname, null);
-                            service.printText(Add1andAdd2, null);
-                            service.printText(shopAdress3, null);
-                            service.printText(Tel + "\n", null);
-                            service.printText(Fax + "\n", null);
-                            service.printText(CompVatNo, null);
-                            service.printText(CompBRNNo, null);
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Company Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(CompAdd1andAdd2, null);
+                                    service.printText(CompAdd3, null);
+                                    service.printText(compTel + "\n", null);
+                                    service.printText(compFax + "\n\n", null);
+                                }
+                            }
+                            for (PrinterSetupPrefs setup : printerSetups) {
+                                printerpartname = setup.getName();
+                                printable = setup.isDrawerOpens();
+
+                                if (printerpartname.equals("Shop Info") && printable) {
+
+                                    // Print the formatted company name line
+                                    service.printText(shopname, null);
+                                    service.printText(Add1andAdd2, null);
+                                    service.printText(shopAdress3, null);
+                                    service.printText(Tel + "\n", null);
+                                    service.printText(Fax + "\n", null);
+                                    service.printText(CompVatNo, null);
+                                    service.printText(CompBRNNo, null);
+                                }
+                            }
 
                             service.setAlignment(0, null);
 
@@ -217,13 +241,30 @@ public class printerSetupForPickUp extends AppCompatActivity {
 
                         }
 
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Cashior name") && printable) {
+                                service.printText(titleTextView.getText().toString(), null);
+                            }
+                        }
                         // Print the custom layout
-                        service.printText(titleTextView.getText().toString(), null);
                         String cashierid= "Cashier Id: " + cashierId ;
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            if (printerpartname.equals("Cashier Id") && printable) {
+                                service.printText(cashierid + "\n", null);
 
-                        service.printText(cashierid + "\n", null);
+                            }
+                        }
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
-                        service.printText(contentTextView.getText().toString(), null);
+                            if (printerpartname.equals("POS NUM") && printable) {
+                                service.printText(contentTextView.getText().toString(), null);
+                            }
+                        }
 
                         // Print a line separator
 
@@ -290,18 +331,37 @@ public class printerSetupForPickUp extends AppCompatActivity {
 
 
 
-                        // Print the centered footer text
-                        service.printText(FooterText + "\n", null);
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("See You Again") && printable) {
+
+                                service.printText(FooterText + "\n", null);
+                            }
+                        }
+                        // Print the centered footer text
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
+
+                            if (printerpartname.equals("Have a Nice Day") && printable) {
+
+                                service.printText(Footer1Text + "\n", null);
+                            }
+                        }
 
                         // Print the centered footer1 text
-                        service.printText(Footer1Text + "\n", null);
 
+                        for (PrinterSetupPrefs setup : printerSetups) {
+                            printerpartname = setup.getName();
+                            printable = setup.isDrawerOpens();
 
+                            if (printerpartname.equals("Opening Hours") && printable) {
 
-
-                        // Print the centered footer2 text
-                        service.printText(Openinghours + "\n", null);
+                                service.printText(Openinghours + "\n", null);
+                            }
+                        }
 
                         service.setAlignment(0, null); // Align left
                         // Concatenate the formatted date and time

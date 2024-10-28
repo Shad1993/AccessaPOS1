@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@drawable/welcome_background">
+
+        <Button
+            android:id="@+id/onspot"
+            android:text="Dine In"
+            android:drawableRight="@drawable/onspot"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="32dp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"/>
+
+        <Button
+            android:id="@+id/delivery"
+            android:text="Delivery"
+            android:drawableRight="@drawable/delivery"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/onspot"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"/>
+
+        <Button
+            android:id="@+id/FreeSales"
+            android:text="Free Sales"
+            android:visibility="gone"
+            android:drawableRight="@drawable/drivethru"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/delivery"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"/>
+    </RelativeLayout>
+</ScrollView>

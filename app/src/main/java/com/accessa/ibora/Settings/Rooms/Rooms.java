@@ -7,6 +7,7 @@ public class Rooms {
     private String cashorId; // Declare the missing fields
     private String lastmodified;
     private String lastmodified1;
+    private int seatCount;    // Use this field for seat count
 
     private String Status;
 
@@ -22,14 +23,13 @@ public class Rooms {
         // Assuming counter is a string, if it's an integer, you might need to convert it
         this.tableCount = Integer.parseInt(counter);
         // Initialize other fields similarly
-         this.cashorId = cashorId;
+
+        this.cashorId = cashorId;
          this.lastmodified = lastmodified;
          this.lastmodified1 = lastmodified1;
     }
 
-    public Rooms( int seatCount, String status) {
-        this.tableCount = seatCount;
-    }
+
 
 
     // Getter and Setter for id
@@ -65,6 +65,14 @@ public class Rooms {
 
     public void setStatus(String Status) {
         this.Status = Status;
+    }
+    // Getters and Setters for seatCount
+    public int getSeatCount() {
+        return seatCount;
+    }
+
+    public void setSeatCount(int seatCount) {
+        this.seatCount = seatCount;
     }
 
 }

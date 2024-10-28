@@ -8,23 +8,26 @@
 
     <!-- Your TextViews or other UI elements here -->
 <TextView
-android:id="@+id/Buyerid"
+android:id="@+id/id"
 android:layout_width="match_parent"
 android:layout_height="wrap_content"
+    android:textColor="@color/white"
 android:text="ID"/>
 
 <TextView
-android:id="@+id/BuyerAdapter"
+android:id="@+id/name"
 android:layout_width="match_parent"
 android:layout_height="wrap_content"
+    android:textColor="@color/white"
 android:text="Name"/>
 
 <TextView
-android:id="@+id/textViewTAN"
+android:id="@+id/textViewseatcount"
 android:layout_width="match_parent"
 android:layout_height="wrap_content"
+    android:textColor="@color/white"
 android:text="TAN"/>
 
 
 
-    </LinearLayout>
+</LinearLayout>

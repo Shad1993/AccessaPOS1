@@ -14,6 +14,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_ITEM_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_MRA_Invoice_Counter;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_NATURE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_PREVIOUS_HASH;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TAX_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_HT_A;
@@ -23,6 +24,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.VAT;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -33,12 +35,14 @@ import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.printer.PrintDuplicata;
 import com.accessa.ibora.printer.PrintSave;
 import com.accessa.ibora.printer.externalprinterlibrary2.printerSetupforPRF;
@@ -85,14 +89,17 @@ public class MRADBN extends AppCompatActivity {
     private String cashierName,cashierId;
     private String   irn;
     private double totalAmount,TaxtotalAmount,TotalHT;
-
+    String userNamemra ;
+    String ebsMraIdmra ;
+    String areaCodemra ;
+    String passwordmra ;
     private static final long SPLASH_DURATION = 1000; // Splash screen duration in milliseconds
 
     private Handler handler;
     private Runnable navigateToNextScreenRunnable;
 
     private String aesKey;
-    String selectedBuyerName,newtransactionid,selectinvoiceTypeDesc,TransactionType,invoiceRefIdentifier ;
+    String selectedBuyerName,newtransactionid,selectinvoiceTypeDesc,TransactionType,invoiceRefIdentifier,reasonstated ;
     String selectedBuyerTAN ,SelectedBuyerProfile;
     String selectedBuyerCompanyName ;
     String transactionType;
@@ -112,7 +119,16 @@ public class MRADBN extends AppCompatActivity {
 
             try {
 
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+                userNamemra = prefs.getString("User_Name", "");
+                ebsMraIdmra = prefs.getString("ebsMraId", "");
+                areaCodemra = prefs.getString("Area_Code", "");
+                passwordmra = prefs.getString("Password", "");
 
+                Log.d("userNamemra", userNamemra);
+                Log.d("ebsMraIdmra", ebsMraIdmra);
+                Log.d("areaCodemra", areaCodemra);
+                Log.d("passwordmra", passwordmra);
                 // Get the current date and time
                 Date currentDate = new Date();
 
@@ -140,8 +156,8 @@ public class MRADBN extends AppCompatActivity {
                 Request request = new Request.Builder()
                         .url("https://vfisc.mra.mu/einvoice-token-service/token-api/generate-token")
                         .addHeader("Content-Type", "application/json")
-                        .addHeader("username", "LBatour")
-                        .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
+                        .addHeader("username", userNamemra)
+                        .addHeader("ebsMraId", ebsMraIdmra)
                         .post(body)
                         .build();
 
@@ -155,7 +171,6 @@ public class MRADBN extends AppCompatActivity {
 
                     }
                 }
-                String previousNoteHash;
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
@@ -171,8 +186,11 @@ public class MRADBN extends AppCompatActivity {
                         int columnIndexTotalHT = cursor.getColumnIndex(TRANSACTION_TOTAL_HT_A);
                         int columnIndexCounter = cursor.getColumnIndex(TRANSACTION_MRA_Invoice_Counter);
                         int columnIndexInvoiceRef = cursor.getColumnIndex(TRANSACTION_INVOICE_REF);
+                        int  columnIndexPreviousHash = cursor.getColumnIndex(TRANSACTION_PREVIOUS_HASH);
                         currentCounter = cursor.getInt(columnIndexCounter);
                         double totaldiscount = mDatabaseHelper.getTotalDiscountSumForInProgressTransaction(roomid,tableid);
+                     String previoushashnote= mDatabaseHelper.getPreviousTransactionHash(newtransactionid);
+
 
                         // Assuming you have retrieved the double values as you mentioned
                         double totalAmount = cursor.getDouble(columnIndexTotalAmount);
@@ -181,12 +199,11 @@ public class MRADBN extends AppCompatActivity {
                         String InvoiceRefIdentifyer = cursor.getString(columnIndexInvoiceRef);
                         double Totalinvoice= totalAmount + totaldiscount;
                         // Step 2: Increment the counter value
-                        int newCounter = currentCounter + 1;
+                        int newCounter = currentCounter ;
 
 
 
 // Step 3: Update the counter value in the transactionheader table
-                        mDatabaseHelper.updateCounter(newCounter); // Implement the updateCounter method in your DatabaseHelper
 
 
 // Convert the doubles to formatted strings with 2 decimal places
@@ -218,8 +235,8 @@ public class MRADBN extends AppCompatActivity {
                                 jsondetailedtransacs.put("currency", "MUR");
                                 jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
                                 jsondetailedtransacs.put("invoiceRefIdentifier", InvoiceRefIdentifyer);
-                                jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
-                                jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("previousNoteHash", previoushashnote);
+                                jsondetailedtransacs.put("reasonStated", reasonstated);
                                 jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
                                 jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
                                 jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -240,8 +257,8 @@ public class MRADBN extends AppCompatActivity {
                                 jsondetailedtransacs.put("currency", "MUR");
                                 jsondetailedtransacs.put("invoiceIdentifier", newtransactionid);
                                 jsondetailedtransacs.put("invoiceRefIdentifier", invoiceRefIdentifier);
-                                jsondetailedtransacs.put("previousNoteHash", "previousNoteHash");
-                                jsondetailedtransacs.put("reasonStated", "test");
+                                jsondetailedtransacs.put("previousNoteHash", previoushashnote);
+                                jsondetailedtransacs.put("reasonStated", reasonstated);
                                 jsondetailedtransacs.put("invoiceTotal", formattedTotalInvoice);
                                 jsondetailedtransacs.put("discountTotalAmount", totaldiscount);
                                 jsondetailedtransacs.put("totalVatAmount", formattedTaxtotalAmount);
@@ -310,8 +327,8 @@ public class MRADBN extends AppCompatActivity {
                             transaction.put("quantity", itemFromDatabase.getItemQuantity());
                             transaction.put("unitPrice", itemFromDatabase.getUnitPrice());
                             transaction.put("discount", itemFromDatabase.getDiscount());
-                            transaction.put("amtWoVatCur", itemFromDatabase.getTotalAmountWitoutVAT());
-                            transaction.put("amtWoVat", itemFromDatabase.getTotalAmountWitoutVAT());
+                            transaction.put("amtWoVatCur", itemFromDatabase.getItemAmountWitoutVAT());
+                            transaction.put("amtWoVat", itemFromDatabase.getItemAmountWitoutVAT());
                             transaction.put("tds", itemFromDatabase.getTotalDiscount());
                             transaction.put("vatAmt", itemFromDatabase.getTotalVatAmount());
                             transaction.put("totalPrice", itemFromDatabase.getTotalPrice());
@@ -365,9 +382,9 @@ public class MRADBN extends AppCompatActivity {
                                 .addHeader("Content-Type", "application/json")
 
                                 .addHeader("token", encryptedtokenBase64)
-                                .addHeader("ebsMraId", "16887137012292S4IDFGH10H")
-                                .addHeader("username", "LBatour")
-                                .addHeader("areaCode", "734")
+                                .addHeader("ebsMraId", ebsMraIdmra)
+                                .addHeader("username", userNamemra)
+                                .addHeader("areaCode", areaCodemra)
                                 .post(body1)
                                 .build();
 
@@ -476,6 +493,7 @@ public class MRADBN extends AppCompatActivity {
             TransactionType= intent.getStringExtra("TransactionType");
             selectinvoiceTypeDesc = intent.getStringExtra("selectinvoiceTypeDesc");
             newtransactionid = intent.getStringExtra("newtransactionid");
+            reasonstated=intent.getStringExtra("creditNoteReason");
             invoiceRefIdentifier = intent.getStringExtra("invoiceRefIdentifier");
             selectedBuyerName = intent.getStringExtra("selectedBuyerName");
             selectedBuyerTAN = intent.getStringExtra("selectedBuyerTAN");
@@ -503,7 +521,12 @@ public class MRADBN extends AppCompatActivity {
         cashorlevel = sharedPreference.getString("cashorlevel", null);
         CompanyName=sharedPreference.getString("CompanyName",null);
         ShopName = sharedPreference.getString("ShopName", null);
-
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
+        userNamemra = prefs.getString("User_Name", "");
+        ebsMraIdmra = prefs.getString("ebsMraId", "");
+        areaCodemra = prefs.getString("Area_Code", "");
+        passwordmra = prefs.getString("Password", "");
+        checkAndPromptForSetup();
 
         try {
 
@@ -511,12 +534,11 @@ public class MRADBN extends AppCompatActivity {
 
 
             String payload = "{\n" +
-                    " \"username\": \"LBatour\",\n" +
-                    " \"password\": \"Logi159753@\",\n" +
+                    " \"username\": \""+ userNamemra +"\",\n" +
+                    " \"password\": \""+ passwordmra +"\",\n" +
                     " \"encryptKey\": \""+ aesKey +"\",\n" +
                     " \"refreshToken\": \"false\"\n" +
                     "}";
-
 
             Resources res = getResources();
             InputStream certificateInputStream = res.openRawResource(R.raw.ibora_pos_mra_pub_key);  // Replace with your cert filename
@@ -776,8 +798,8 @@ public class MRADBN extends AppCompatActivity {
                 transaction.setItemQuantity(Integer.parseInt(quantity));
                 transaction.setUnitPrice(UnitPrice);
                 transaction.setDiscount(discount);
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVATCur));
-                transaction.setAmountWOVAT(Double.parseDouble(amountWOVAT));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVATCur));
+                transaction.setItemAmountWOVAT(Double.parseDouble(amountWOVAT));
                 transaction.setTotalDiscount(tds);
                 transaction.setTotalVatAmount(Double.parseDouble(VatAmount));
                 transaction.setTotalPrice(Double.parseDouble(totalPrice));
@@ -793,5 +815,41 @@ public class MRADBN extends AppCompatActivity {
         return itemList;
     }
 
+    private void checkAndPromptForSetup() {
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
 
+        // Retrieve the values from SharedPreferences
+        userNamemra = prefs.getString("User_Name", "");
+        ebsMraIdmra = prefs.getString("ebsMraId", "");
+        areaCodemra = prefs.getString("Area_Code", "");
+        passwordmra = prefs.getString("Password", "");
+
+        // Check if any value is missing or empty
+        if (userNamemra.isEmpty() || ebsMraIdmra.isEmpty() || areaCodemra.isEmpty() || passwordmra.isEmpty()) {
+            // Show a dialog to prompt the user to set up the parameters
+            showSetupDialog();
+        } else {
+            // Proceed with the app logic if all parameters are set
+            // proceedWithAppLogic();
+        }
+    }
+    private void showSetupDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Setup Required")
+                .setMessage("Please set up the required parameters before proceeding.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Open the setup activity or fragment
+                        openSetupActivity();
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
+
+    private void openSetupActivity() {
+        Intent intent = new Intent(this, SettingsDashboard.class);  // Replace with your setup activity
+        startActivity(intent);
+    }
 }

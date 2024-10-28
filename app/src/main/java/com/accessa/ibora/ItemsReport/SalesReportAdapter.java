@@ -34,9 +34,17 @@ public class SalesReportAdapter extends RecyclerView.Adapter<SalesReportAdapter.
 
         // Set the long description
         holder.textViewLongDescription.setText(data.getLongDescription());
-
-        // Set the total price with "Rs" and 2 decimal places
-        String formattedTotalPrice = "Rs " + String.format("%.2f", data.getTotalPrice());
+        String transactionid=data.getTransactionid();
+        double price=data.getTotalPrice();
+        if (transactionid != null && transactionid.startsWith("CRN")) {
+            // Transaction ID starts with "CRN"
+            price=-price;
+            // Implement your logic here
+        } else {
+            // Transaction ID does not start with "CRN"
+            price=price;
+        }        // Set the total price with "Rs" and 2 decimal places
+        String formattedTotalPrice = "Rs " + String.format("%.2f",price);
         holder.textViewTotalPrice.setText(formattedTotalPrice);
 
         // Set the quantity

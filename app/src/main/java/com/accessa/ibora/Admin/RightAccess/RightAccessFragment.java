@@ -1,9 +1,12 @@
 package com.accessa.ibora.Admin.RightAccess;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +17,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -40,10 +45,10 @@ import java.util.Locale;
 
 public class RightAccessFragment extends Fragment {
 private  EditText searchEditText;
-    FloatingActionButton mAddFab;
-    private SearchView mSearchView;
+
+
     private DBManager dbManager;
-    private ItemAdapter mAdapter;
+    private LevelAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private SimpleCursorAdapter adapter;
     private Spinner spinner;
@@ -64,7 +69,7 @@ private  EditText searchEditText;
     // onCreateView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_first, container, false);
+        View view = inflater.inflate(R.layout.fragment_right_access, container, false);
         // Get the current locale
 
         // Spinner
@@ -74,64 +79,49 @@ private  EditText searchEditText;
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
         mDatabaseHelper = new DatabaseHelper(getContext());
-        Cursor cursor = mDatabaseHelper.getAllItems();
 
-        List<String> items = new ArrayList<>();
-        items.add(String.valueOf(getString(R.string.AllItems)));
-        if (cursor.moveToFirst()) {
-            do {
-                String item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
-                items.add(item);
-            } while (cursor.moveToNext());
+
+
+        // Create a custom list of levels
+        List<String> levels = new ArrayList<>();
+        levels.add(getString(R.string.AllLevels)); // Optional: Add "All Items" first
+        for (int i = 1; i <= 5; i++) {
+            levels.add("Level " + i);  // Adding "Level 1" to "Level 5"
         }
-        cursor.close();
 
-        // Create an ArrayAdapter for the spinner with the custom layout
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(requireContext(), 0, items) {
-            @NonNull
+        // Set the spinner adapter with the custom list
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, levels) {
+
             @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_item, parent, false);
-                }
+            public View getView(int position, View convertView, ViewGroup parent) {
+                // Get the current view for the spinner
+                View view = super.getView(position, convertView, parent);
 
-                TextView textView = convertView.findViewById(android.R.id.text1);
+                // Get the TextView from the default layout (android.R.id.text1)
+                TextView textView = view.findViewById(android.R.id.text1);
+
+                // Set the text color to white
                 textView.setTextColor(getResources().getColor(R.color.white));
 
-
-
-                // Set the text for the selected item
-                textView.setText(getItem(position));
-
-                return convertView;
+                return view;
             }
 
-
-
             @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-                }
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                // Get the dropdown view for the spinner
+                View view = super.getDropDownView(position, convertView, parent);
 
-                TextView textView = convertView.findViewById(android.R.id.text1);
+                // Get the TextView from the default layout (android.R.id.text1)
+                TextView textView = view.findViewById(android.R.id.text1);
+
+                // Set the text color to white
                 textView.setTextColor(getResources().getColor(R.color.white));
 
-                // Set the icon for the item
-                ImageView iconImageView = convertView.findViewById(android.R.id.icon);
-
-
-                // Set the text for the item
-                textView.setText(getItem(position));
-
-                return convertView;
+                return view;
             }
         };
 
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Initialize the spinner and set the adapter
-        spinner.setAdapter(spinnerAdapter);
+        spinner.setAdapter(adapter);
 
 
         // Set a listener for item selection
@@ -162,9 +152,20 @@ private  EditText searchEditText;
 
         mDatabaseHelper = new DatabaseHelper(getContext());
 
-        Cursor itemCursor = mDatabaseHelper.getAllItems();
-        mAdapter = new ItemAdapter(getActivity(), itemCursor);
-        mRecyclerView.setAdapter(mAdapter);
+        // Create a list to store the six levels
+         levels = new ArrayList<>();
+
+        // Create a list to store the six levels
+         levels = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            levels.add("Level " + i);  // Add "Level 1" to "Level 5"
+        }
+
+        // Pass the levels list to the new LevelAdapter
+        mAdapter = new LevelAdapter(getActivity(), levels);
+        mRecyclerView.setAdapter(mAdapter);  // Set the new adapter to the RecyclerView
+
+
         // Empty state
         AppCompatImageView imageView = view.findViewById(R.id.empty_image_view);
         Glide.with(getContext()).asGif()
@@ -180,62 +181,268 @@ private  EditText searchEditText;
         }
 
         // SearchView
-        mSearchView = view.findViewById(R.id.search_view);
-         searchEditText = mSearchView.findViewById(androidx.appcompat.R.id.search_src_text);
-        searchEditText.setTextColor(getResources().getColor(android.R.color.white));
-        searchEditText.setHintTextColor(getResources().getColor(android.R.color.white));
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Cursor newCursor = mDatabaseHelper.searchItems(newText);
-                mAdapter.swapCursor(newCursor);
-                if (newText.isEmpty()) {
-
-                    searchEditText.setTextColor(getResources().getColor(android.R.color.white));
-
-                } else {
-
-                    searchEditText.setTextColor(getResources().getColor(R.color.white));
-
-                }
-                return true;
-            }
-        });
 
         dbManager = new DBManager(getContext());
         dbManager.open();
         Cursor cursor1 = dbManager.fetch();
-        mAddFab = view.findViewById(R.id.add_fab);
 
 
-        adapter = new SimpleCursorAdapter(getContext(), R.layout.activity_view_record, cursor1, froms, tos, 0);
-        adapter.notifyDataSetChanged();
+
         // Set item click listener for RecyclerView
         mRecyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getContext(), mRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView idTextView = view.findViewById(R.id.id_text_view);
-                        TextView subjectEditText = view.findViewById(R.id.name_text_view);
-                        TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
-                        TextView priceTextView = view.findViewById(R.id.price_text_view);
+                        TextView idTextView = view.findViewById(R.id.textView);
 
-                        String id1 = idTextView.getText().toString();
-                        String id = idTextView.getText().toString();
-                        String title = subjectEditText.getText().toString();
-                        String longDescription = longDescriptionEditText.getText().toString();
+                        String levelid = idTextView.getText().toString();
 
-                        Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
-                        modifyIntent.putExtra("title", title);
-                        modifyIntent.putExtra("desc", longDescription);
-                        modifyIntent.putExtra("id", id);
+                        // Remove "Level" and trim any extra spaces
+                        String levelNumberStr = levelid.replaceAll("Level", "").trim();
+                        int levelNumber = Integer.parseInt(levelNumberStr);
 
-                        startActivity(modifyIntent);
+                        // Inflate the custom layout for the dialog
+                        LayoutInflater inflater = LayoutInflater.from(requireContext());
+                        View dialogView = inflater.inflate(R.layout.option_level_control, null);
+
+                        // Get the Switch elements from the custom layout
+                        Switch switchCompanyInfo = dialogView.findViewById(R.id.switchCompanyInfo);
+                        Switch switchRightAccess = dialogView.findViewById(R.id.switchRightAccess);
+                        Switch switchPeopleManagement = dialogView.findViewById(R.id.switchPeopleManagement);
+                        Switch switchPOSNumber = dialogView.findViewById(R.id.switchPOSNumber);
+                        Switch switchSales = dialogView.findViewById(R.id.switchSales);
+                        Switch switchReceipts = dialogView.findViewById(R.id.switchReceipts);
+                        Switch switchShift = dialogView.findViewById(R.id.switchShift);
+                        Switch switchItems = dialogView.findViewById(R.id.switchItems);
+                        Switch switchSettings = dialogView.findViewById(R.id.switchSettings);
+                        Switch switchAdmin = dialogView.findViewById(R.id.switchAdmin);
+                        Switch switchOpenClose = dialogView.findViewById(R.id.switchOpenClose);
+                        Switch switchOpenDrawer = dialogView.findViewById(R.id.switchOpenDrawer);
+                        Switch switchSetShiftNumber = dialogView.findViewById(R.id.switchSetShiftNumber);
+                        Switch switchSelectTable = dialogView.findViewById(R.id.switchSelectTable);
+                        Switch switchEditServingsAmount = dialogView.findViewById(R.id.switchEditServingsAmount);
+                        Switch switchClearTransaction = dialogView.findViewById(R.id.switchClearTransaction);
+                        Switch switchClearPayment = dialogView.findViewById(R.id.switchClearPayment);
+                        Switch switchReport = dialogView.findViewById(R.id.switchReport);
+                        Switch switchSalesReport = dialogView.findViewById(R.id.switchSalesReport);
+                        Switch switchCashierSalesReport = dialogView.findViewById(R.id.switchCashierSalesReport);
+                        Switch switchSplitBill = dialogView.findViewById(R.id.switchSplitBill);
+                        Switch switchApplyDiscount = dialogView.findViewById(R.id.switchApplyDiscount);
+                        Switch switchPrintReport = dialogView.findViewById(R.id.switchPrintReport);
+                        Switch switchPrintReceiptDuplicata = dialogView.findViewById(R.id.switchPrintReceiptDuplicata);
+                        Switch switchAddItems = dialogView.findViewById(R.id.switchAddItems);
+                        Switch switchModifyItems = dialogView.findViewById(R.id.switchModifyItems);
+                        Switch switchAddDepartment = dialogView.findViewById(R.id.switchAddDepartment);
+                        Switch switchModifyDepartment = dialogView.findViewById(R.id.switchModifyDepartment);
+                        Switch switchAddSubDepartment = dialogView.findViewById(R.id.switchAddSubDepartment);
+                        Switch switchModifySubDepartment = dialogView.findViewById(R.id.switchModifySubDepartment);
+                        Switch switchAddCategory = dialogView.findViewById(R.id.switchAddCategory);
+                        Switch switchModifyCategory = dialogView.findViewById(R.id.switchModifyCategory);
+                        Switch switchAddSubCategory = dialogView.findViewById(R.id.switchAddSubCategory);
+                        Switch switchModifySubCategory = dialogView.findViewById(R.id.switchModifySubCategory);// New fields for vendors, options, supplements, and discounts
+                        Switch switchAddVendor = dialogView.findViewById(R.id.switchAddVendor);
+                        Switch switchModifyVendor = dialogView.findViewById(R.id.switchModifyVendor);
+
+                        Switch switchAddOption = dialogView.findViewById(R.id.switchAddOption);
+                        Switch switchModifyOption = dialogView.findViewById(R.id.switchModifyOption);
+
+                        Switch switchAddSupplement = dialogView.findViewById(R.id.switchAddSupplement);
+                        Switch switchModifySupplement = dialogView.findViewById(R.id.switchModifySupplement);
+
+                        Switch switchAddDiscount = dialogView.findViewById(R.id.switchAddDiscount);
+                        Switch switchModifyDiscount = dialogView.findViewById(R.id.switchModifyDiscount);
+                        Switch switchAddCouponCode = dialogView.findViewById(R.id.switchAddCouponCode);
+                        Switch switchModifyCouponCode = dialogView.findViewById(R.id.switchModifyCouponCode);
+                        Switch switchQrSettings = dialogView.findViewById(R.id.switchQrSettings);
+                        Switch switchLedDisplaySettings = dialogView.findViewById(R.id.switchLedDisplaySettings);
+                        Switch switchPaymentMethods = dialogView.findViewById(R.id.switchPaymentMethods);
+                        Switch switchPopSettings = dialogView.findViewById(R.id.switchPopSettings);
+                        Switch switchBuyer = dialogView.findViewById(R.id.switchBuyer);
+                        Switch switchMra = dialogView.findViewById(R.id.switchMra);
+                        Switch switchRoomsAndTables = dialogView.findViewById(R.id.switchRoomsAndTables);
+                        Switch switchPrinterSettings = dialogView.findViewById(R.id.switchPrinterSettings);
+                        Switch switchLanguages = dialogView.findViewById(R.id.switchLanguages);
+                        Switch switchServerSettings = dialogView.findViewById(R.id.switchserversettings);
+                        Switch switchAddQr = dialogView.findViewById(R.id.switchAddQr);
+                        Switch switchModifyQr = dialogView.findViewById(R.id.switchModifyQr);
+                        Switch switchAddPaymentMethod = dialogView.findViewById(R.id.switchAddPaymentMethod);
+                        Switch switchModifyPaymentMethod = dialogView.findViewById(R.id.switchModifyPaymentMethod);
+                        Switch switchAddBuyer = dialogView.findViewById(R.id.switchAddBuyer);
+                        Switch switchModifyBuyer = dialogView.findViewById(R.id.switchModifyBuyer);
+                        Switch switchEditMraSettings = dialogView.findViewById(R.id.switchEditMraSettings);
+                        Switch switchSyncRooms  = dialogView.findViewById(R.id.switchSyncRooms);
+                        Switch switchAddRoomsAndTables = dialogView.findViewById(R.id.switchAddRoomsAndTables);
+                        Switch switchModifyRoomsAndTables = dialogView.findViewById(R.id.switchModifyRoomsAndTables);
+                        Switch switchAddUser  = dialogView.findViewById(R.id.switchAddUser);
+                        Switch switchModifyUser  = dialogView.findViewById(R.id.switchModifyUser);
+                        Switch switchSync  = dialogView.findViewById(R.id.switchSync);
+
+                        // Load saved preferences for switches
+                        // Load saved preferences for switches
+                        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                        switchCompanyInfo.setChecked(sharedPreferences.getBoolean("companyInfo_" + levelNumber, true));
+                        switchRightAccess.setChecked(sharedPreferences.getBoolean("rightAccess_" + levelNumber, true));
+                        switchPeopleManagement.setChecked(sharedPreferences.getBoolean("peopleManagement_" + levelNumber, true));
+                        switchPOSNumber.setChecked(sharedPreferences.getBoolean("posNumber_" + levelNumber, true));
+                        switchSales.setChecked(sharedPreferences.getBoolean("sales_" + levelNumber, true));
+                        switchReceipts.setChecked(sharedPreferences.getBoolean("Receipts_" + levelNumber, true));
+                        switchShift.setChecked(sharedPreferences.getBoolean("shift_" + levelNumber, true));
+                        switchItems.setChecked(sharedPreferences.getBoolean("Items_" + levelNumber, true));
+                        switchSettings.setChecked(sharedPreferences.getBoolean("settings_" + levelNumber, true));
+                        switchAdmin.setChecked(sharedPreferences.getBoolean("admin_" + levelNumber, true));
+                        switchOpenClose.setChecked(sharedPreferences.getBoolean("openClose_" + levelNumber, true));
+                        switchOpenDrawer.setChecked(sharedPreferences.getBoolean("openDrawer_" + levelNumber, true));
+                        switchSetShiftNumber.setChecked(sharedPreferences.getBoolean("setShiftNumber_" + levelNumber, true));
+                        switchSelectTable.setChecked(sharedPreferences.getBoolean("selectTable_" + levelNumber, true));
+                        switchEditServingsAmount.setChecked(sharedPreferences.getBoolean("editServingsAmount_" + levelNumber, true));
+                        switchClearTransaction.setChecked(sharedPreferences.getBoolean("clearTransaction_" + levelNumber, true));
+                        switchClearPayment.setChecked(sharedPreferences.getBoolean("clearPayment_" + levelNumber, true));
+                        switchReport.setChecked(sharedPreferences.getBoolean("report_" + levelNumber, true));
+                        switchSalesReport.setChecked(sharedPreferences.getBoolean("salesReport_" + levelNumber, true));
+                        switchCashierSalesReport.setChecked(sharedPreferences.getBoolean("cashierSalesReport_" + levelNumber, true));
+                        switchSplitBill.setChecked(sharedPreferences.getBoolean("splitBill_" + levelNumber, true));
+                        switchApplyDiscount.setChecked(sharedPreferences.getBoolean("applyDiscount_" + levelNumber, true));
+                        switchPrintReport.setChecked(sharedPreferences.getBoolean("printReport_" + levelNumber, true));
+                        switchPrintReceiptDuplicata.setChecked(sharedPreferences.getBoolean("printReceiptDuplicata_" + levelNumber, true));
+                        switchAddItems.setChecked(sharedPreferences.getBoolean("addItems_" + levelNumber, true));
+                        switchModifyItems.setChecked(sharedPreferences.getBoolean("modifyItems_" + levelNumber, true));
+                        switchAddDepartment.setChecked(sharedPreferences.getBoolean("addDepartment_" + levelNumber, true));
+                        switchModifyDepartment.setChecked(sharedPreferences.getBoolean("modifyDepartment_" + levelNumber, true));
+                        switchAddSubDepartment.setChecked(sharedPreferences.getBoolean("addSubDepartment_" + levelNumber, true));
+                        switchModifySubDepartment.setChecked(sharedPreferences.getBoolean("modifySubDepartment_" + levelNumber, true));
+                        switchAddCategory.setChecked(sharedPreferences.getBoolean("addCategory_" + levelNumber, true));
+                        switchModifyCategory.setChecked(sharedPreferences.getBoolean("modifyCategory_" + levelNumber, true));
+                        switchAddSubCategory.setChecked(sharedPreferences.getBoolean("addSubCategory_" + levelNumber, true));
+                        switchModifySubCategory.setChecked(sharedPreferences.getBoolean("modifySubCategory_" + levelNumber, true));
+// New Switches for Vendors, Options, Supplements, and Discounts
+                        switchAddVendor.setChecked(sharedPreferences.getBoolean("addVendor_" + levelNumber, true));
+                        switchModifyVendor.setChecked(sharedPreferences.getBoolean("modifyVendor_" + levelNumber, true));
+
+                        switchAddOption.setChecked(sharedPreferences.getBoolean("addOption_" + levelNumber, true));
+                        switchModifyOption.setChecked(sharedPreferences.getBoolean("modifyOption_" + levelNumber, true));
+
+                        switchAddSupplement.setChecked(sharedPreferences.getBoolean("addSupplement_" + levelNumber, true));
+                        switchModifySupplement.setChecked(sharedPreferences.getBoolean("modifySupplement_" + levelNumber, true));
+
+                        switchAddDiscount.setChecked(sharedPreferences.getBoolean("addDiscount_" + levelNumber, true));
+                        switchModifyDiscount.setChecked(sharedPreferences.getBoolean("modifyDiscount_" + levelNumber, true));
+
+                        switchAddCouponCode.setChecked(sharedPreferences.getBoolean("addCouponCode_" + levelNumber, true));
+                        switchModifyCouponCode.setChecked(sharedPreferences.getBoolean("modifyCouponCode_" + levelNumber, true));
+                        switchQrSettings.setChecked(sharedPreferences.getBoolean("qrSettings_" + levelNumber, true));
+                        switchLedDisplaySettings.setChecked(sharedPreferences.getBoolean("ledDisplaySettings_" + levelNumber, true));
+                        switchPaymentMethods.setChecked(sharedPreferences.getBoolean("paymentMethods_" + levelNumber, true));
+                        switchPopSettings.setChecked(sharedPreferences.getBoolean("popSettings_" + levelNumber, true));
+                        switchBuyer.setChecked(sharedPreferences.getBoolean("buyer_" + levelNumber, true));
+                        switchMra.setChecked(sharedPreferences.getBoolean("mra_" + levelNumber, true));
+                        switchRoomsAndTables.setChecked(sharedPreferences.getBoolean("roomsAndTables_" + levelNumber, true));
+                        switchPrinterSettings.setChecked(sharedPreferences.getBoolean("printerSettings_" + levelNumber, true));
+                        switchLanguages.setChecked(sharedPreferences.getBoolean("languages_" + levelNumber, true));
+                        switchServerSettings.setChecked(sharedPreferences.getBoolean("serversettings_" + levelNumber, true));
+                        switchAddQr.setChecked(sharedPreferences.getBoolean("addQr_" + levelNumber, true));
+                        switchModifyQr.setChecked(sharedPreferences.getBoolean("modifyQr_" + levelNumber, true));
+                        switchAddPaymentMethod.setChecked(sharedPreferences.getBoolean("addPaymentMethod_" + levelNumber, true));
+                        switchModifyPaymentMethod.setChecked(sharedPreferences.getBoolean("modifyPaymentMethod_" + levelNumber, true));
+                        switchAddBuyer.setChecked(sharedPreferences.getBoolean("addBuyer_" + levelNumber, true));
+                        switchModifyBuyer.setChecked(sharedPreferences.getBoolean("modifyBuyer_" + levelNumber, true));
+                        switchEditMraSettings.setChecked(sharedPreferences.getBoolean("editMraSettings_" + levelNumber, true));
+                        switchAddRoomsAndTables.setChecked(sharedPreferences.getBoolean("addRoomsAndTables_" + levelNumber, true));
+                        switchModifyRoomsAndTables.setChecked(sharedPreferences.getBoolean("modifyRoomsAndTables_" + levelNumber, true));
+                        switchSyncRooms.setChecked(sharedPreferences.getBoolean("SyncRoomsAndTables_" + levelNumber, true));
+                        switchAddUser.setChecked(sharedPreferences.getBoolean("addUser_" + levelNumber, true));
+                        switchModifyUser.setChecked(sharedPreferences.getBoolean("modifyUser_" + levelNumber, true));
+                        switchSync.setChecked(sharedPreferences.getBoolean("syncDatabase_" + levelNumber, true));
+
+                        // Show the dialog
+                        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                        builder.setTitle("Set Access for Level " + levelNumber)
+                                .setView(dialogView)
+                                .setPositiveButton("Save", (dialog, which) -> {
+                                    // Save the switch states in SharedPreferences
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putBoolean("companyInfo_" + levelNumber, switchCompanyInfo.isChecked());
+                                    editor.putBoolean("rightAccess_" + levelNumber, switchRightAccess.isChecked());
+                                    editor.putBoolean("peopleManagement_" + levelNumber, switchPeopleManagement.isChecked());
+                                    editor.putBoolean("posNumber_" + levelNumber, switchPOSNumber.isChecked());
+                                    editor.putBoolean("sales_" + levelNumber, switchSales.isChecked());
+                                    editor.putBoolean("Receipts_" + levelNumber, switchReceipts.isChecked());
+                                    editor.putBoolean("shift_" + levelNumber, switchShift.isChecked());
+                                    editor.putBoolean("Items_" + levelNumber, switchItems.isChecked());
+                                    editor.putBoolean("settings_" + levelNumber, switchSettings.isChecked());
+                                    editor.putBoolean("admin_" + levelNumber, switchAdmin.isChecked());
+                                    editor.putBoolean("openClose_" + levelNumber, switchOpenClose.isChecked());
+                                    editor.putBoolean("openDrawer_" + levelNumber, switchOpenDrawer.isChecked());
+                                    editor.putBoolean("setShiftNumber_" + levelNumber, switchSetShiftNumber.isChecked());
+                                    editor.putBoolean("selectTable_" + levelNumber, switchSelectTable.isChecked());
+                                    editor.putBoolean("editServingsAmount_" + levelNumber, switchEditServingsAmount.isChecked());
+                                    editor.putBoolean("clearTransaction_" + levelNumber, switchClearTransaction.isChecked());
+                                    editor.putBoolean("clearPayment_" + levelNumber, switchClearPayment.isChecked());
+                                    editor.putBoolean("report_" + levelNumber, switchReport.isChecked());
+                                    editor.putBoolean("salesReport_" + levelNumber, switchSalesReport.isChecked());
+                                    editor.putBoolean("cashierSalesReport_" + levelNumber, switchCashierSalesReport.isChecked());
+                                    editor.putBoolean("splitBill_" + levelNumber, switchSplitBill.isChecked());
+                                    editor.putBoolean("applyDiscount_" + levelNumber, switchApplyDiscount.isChecked());
+                                    editor.putBoolean("printReport_" + levelNumber, switchPrintReport.isChecked());
+                                    editor.putBoolean("printReceiptDuplicata_" + levelNumber, switchPrintReceiptDuplicata.isChecked());
+                                    editor.putBoolean("addItems_" + levelNumber, switchAddItems.isChecked());
+                                    editor.putBoolean("modifyItems_" + levelNumber, switchModifyItems.isChecked());
+                                    editor.putBoolean("addDepartment_" + levelNumber, switchAddDepartment.isChecked());
+                                    editor.putBoolean("modifyDepartment_" + levelNumber, switchModifyDepartment.isChecked());
+                                    editor.putBoolean("addSubDepartment_" + levelNumber, switchAddSubDepartment.isChecked());
+                                    editor.putBoolean("modifySubDepartment_" + levelNumber, switchModifySubDepartment.isChecked());
+                                    editor.putBoolean("addCategory_" + levelNumber, switchAddCategory.isChecked());
+                                    editor.putBoolean("modifyCategory_" + levelNumber, switchModifyCategory.isChecked());
+                                    editor.putBoolean("addSubCategory_" + levelNumber, switchAddSubCategory.isChecked());
+                                    editor.putBoolean("modifySubCategory_" + levelNumber, switchModifySubCategory.isChecked());
+
+                                    editor.putBoolean("addVendor_" + levelNumber, switchAddVendor.isChecked());
+                                    editor.putBoolean("modifyVendor_" + levelNumber, switchModifyVendor.isChecked());
+
+                                    editor.putBoolean("addOption_" + levelNumber, switchAddOption.isChecked());
+                                    editor.putBoolean("modifyOption_" + levelNumber, switchModifyOption.isChecked());
+
+                                    editor.putBoolean("addSupplement_" + levelNumber, switchAddSupplement.isChecked());
+                                    editor.putBoolean("modifySupplement_" + levelNumber, switchModifySupplement.isChecked());
+
+                                    editor.putBoolean("addDiscount_" + levelNumber, switchAddDiscount.isChecked());
+                                    editor.putBoolean("modifyDiscount_" + levelNumber, switchModifyDiscount.isChecked());
+
+                                    editor.putBoolean("addCouponCode_" + levelNumber, switchAddCouponCode.isChecked());
+                                    editor.putBoolean("modifyCouponCode_" + levelNumber, switchModifyCouponCode.isChecked());
+                                    editor.putBoolean("qrSettings_" + levelNumber, switchQrSettings.isChecked());
+                                    editor.putBoolean("ledDisplaySettings_" + levelNumber, switchLedDisplaySettings.isChecked());
+                                    editor.putBoolean("paymentMethods_" + levelNumber, switchPaymentMethods.isChecked());
+                                    editor.putBoolean("popSettings_" + levelNumber, switchPopSettings.isChecked());
+                                    editor.putBoolean("buyer_" + levelNumber, switchBuyer.isChecked());
+                                    editor.putBoolean("mra_" + levelNumber, switchMra.isChecked());
+                                    editor.putBoolean("roomsAndTables_" + levelNumber, switchRoomsAndTables.isChecked());
+                                    editor.putBoolean("printerSettings_" + levelNumber, switchPrinterSettings.isChecked());
+                                    editor.putBoolean("languages_" + levelNumber, switchLanguages.isChecked());
+                                    editor.putBoolean("serversettings_" + levelNumber, switchServerSettings.isChecked());
+                                    editor.putBoolean("addQr_" + levelNumber, switchAddQr.isChecked());
+                                    editor.putBoolean("modifyQr_" + levelNumber, switchModifyQr.isChecked());
+                                    editor.putBoolean("addPaymentMethod_" + levelNumber, switchAddPaymentMethod.isChecked());
+                                    editor.putBoolean("modifyPaymentMethod_" + levelNumber, switchModifyPaymentMethod.isChecked());
+                                    editor.putBoolean("addBuyer_" + levelNumber, switchAddBuyer.isChecked());
+                                    editor.putBoolean("modifyBuyer_" + levelNumber, switchModifyBuyer.isChecked());
+                                    editor.putBoolean("editMraSettings_" + levelNumber, switchEditMraSettings.isChecked());
+                                    editor.putBoolean("addRoomsAndTables_" + levelNumber, switchAddRoomsAndTables.isChecked());
+                                    editor.putBoolean("modifyRoomsAndTables_" + levelNumber, switchModifyRoomsAndTables.isChecked());
+                                    editor.putBoolean("SyncRoomsAndTables_" + levelNumber, switchSyncRooms.isChecked());
+                                    editor.putBoolean("addUser_" + levelNumber, switchAddUser.isChecked());
+                                    editor.putBoolean("modifyUser_" + levelNumber, switchModifyUser.isChecked());
+                                    editor.putBoolean("syncDatabase_" + levelNumber, switchSync.isChecked());
+
+
+
+                                    editor.apply();
+
+
+                                })
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .create()
+                                .show();
                     }
 
                     @Override
@@ -245,12 +452,7 @@ private  EditText searchEditText;
                 })
         );
 
-        mAddFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openNewActivity();
-            }
-        });
+
 
         return view;
     }
@@ -262,7 +464,7 @@ private  EditText searchEditText;
         } else {
             filteredCursor = mDatabaseHelper.searchItems(selectedItem);
         }
-        mAdapter.swapCursor(filteredCursor);
+
 
         // Show or hide the empty state
         showEmptyState(mAdapter.getItemCount() <= 0);
