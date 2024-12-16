@@ -5,6 +5,7 @@ import android.app.Presentation;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Display;
@@ -51,7 +52,7 @@ public class SeconScreenDisplay extends Presentation {
         textView = findViewById(R.id.presentation_text);
         imageView = findViewById(R.id.presentation_image);
         videoView = findViewById(R.id.presentation_video);
-
+        mDatabaseHelper = new DatabaseHelper(getContext());
 
     }
 
@@ -78,25 +79,35 @@ public class SeconScreenDisplay extends Presentation {
         // Return true if it is a video, false otherwise
         return true;
     }
-    public void updateTextAndQRCode(String text, Bitmap qrCode,String formattedTaxAmount, String formattedTotalAmount) {
+    public void updateTextAndQRCodeOnValidate(String text, Bitmap qrCode, String formattedTaxAmount, String formattedTotalAmount,String phonenumber) {
         QRFrameLayout = findViewById(R.id.qr_frame_layout);
-
-            QRFrameLayout.setVisibility(View.VISIBLE);
-
-
+        QRFrameLayout.setVisibility(View.VISIBLE);
 
         // Update the text displayed on the secondary screen
         TextView textView = findViewById(R.id.text_view);
         TextView TotaltextView = findViewById(R.id.Total_text_view);
         TextView TaxtextView = findViewById(R.id.Tax_text_view);
-        ImageView Poplogo= findViewById(R.id.log_view);
+        TextView phone_numbertextView = findViewById(R.id.phone_number);
+        ImageView Poplogo = findViewById(R.id.log_view);
 
-        if(text.equals("POP")) {
+        // Get the icon path for the payment method
+        String iconpath = mDatabaseHelper.geticonforPaymentMethodId(text);
+
+        if ((iconpath != null && !iconpath.isEmpty())  ) {
+            // Hide the text and display the icon image if iconpath is available
             textView.setText(text);
-            textView.setVisibility(View.INVISIBLE);
+            textView.setVisibility(View.VISIBLE);
             Poplogo.setVisibility(View.VISIBLE);
-            // Set the image resource to the ImageView (assuming you have an image resource in your project)
-            Poplogo.setImageResource(R.drawable.poplogo);
+            if(phonenumber != null && !phonenumber.isEmpty()){
+                phone_numbertextView.setText(phonenumber);
+                phone_numbertextView.setVisibility(View.VISIBLE);
+            }else{
+                phone_numbertextView.setVisibility(View.INVISIBLE);
+            }
+
+            // Load the icon image from the path
+            Bitmap iconBitmap = BitmapFactory.decodeFile(iconpath);
+            Poplogo.setImageBitmap(iconBitmap);
 
             // Set the width and height of the ImageView
             int desiredWidth = 150; // Set your desired width here
@@ -106,21 +117,95 @@ public class SeconScreenDisplay extends Presentation {
             layoutParams.width = desiredWidth;
             layoutParams.height = desiredHeight;
             Poplogo.setLayoutParams(layoutParams);
+        } else if (text.equals("POP")) {
+            // Specific case for "POP" - use a predefined drawable
+            textView.setVisibility(View.INVISIBLE);
+            Poplogo.setVisibility(View.VISIBLE);
+            Poplogo.setImageResource(R.drawable.poplogo);
 
+            int desiredWidth = 150;
+            int desiredHeight = 150;
 
-
-        }else {
-            textView.setText(text);
+            ViewGroup.LayoutParams layoutParams = Poplogo.getLayoutParams();
+            layoutParams.width = desiredWidth;
+            layoutParams.height = desiredHeight;
+            Poplogo.setLayoutParams(layoutParams);
+        } else {
+            // Default case: display text
             textView.setText(text);
             textView.setVisibility(View.VISIBLE);
+            Poplogo.setVisibility(View.INVISIBLE);
         }
+
+        // Set Total and Tax text views
         TotaltextView.setText(getContext().getString(R.string.Total) + ": Rs " + formattedTotalAmount);
-        TaxtextView.setText (getContext().getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+        TaxtextView.setText(getContext().getString(R.string.tax) + ": Rs " + formattedTaxAmount);
 
         // Update the QR code displayed on the secondary screen
         ImageView qrCodeImageView = findViewById(R.id.qr_code_image_view);
         qrCodeImageView.setImageBitmap(qrCode);
     }
+    public void updateTextAndQRCode(String text, Bitmap qrCode, String formattedTaxAmount, String formattedTotalAmount) {
+        QRFrameLayout = findViewById(R.id.qr_frame_layout);
+        QRFrameLayout.setVisibility(View.VISIBLE);
+
+        // Update the text displayed on the secondary screen
+        TextView textView = findViewById(R.id.text_view);
+        TextView TotaltextView = findViewById(R.id.Total_text_view);
+        TextView TaxtextView = findViewById(R.id.Tax_text_view);
+        TextView phone_numbertextView = findViewById(R.id.phone_number);
+        ImageView Poplogo = findViewById(R.id.log_view);
+
+        // Get the icon path for the payment method
+        String iconpath = mDatabaseHelper.geticonforPaymentMethodId(text);
+
+        if (iconpath != null && !iconpath.isEmpty()) {
+            // Hide the text and display the icon image if iconpath is available
+            textView.setText(text);
+            textView.setVisibility(View.VISIBLE);
+            Poplogo.setVisibility(View.VISIBLE);
+
+            // Load the icon image from the path
+            Bitmap iconBitmap = BitmapFactory.decodeFile(iconpath);
+            Poplogo.setImageBitmap(iconBitmap);
+
+            // Set the width and height of the ImageView
+            int desiredWidth = 150; // Set your desired width here
+            int desiredHeight = 150; // Set your desired height here
+
+            ViewGroup.LayoutParams layoutParams = Poplogo.getLayoutParams();
+            layoutParams.width = desiredWidth;
+            layoutParams.height = desiredHeight;
+            Poplogo.setLayoutParams(layoutParams);
+        } else if (text.equals("POP")) {
+            // Specific case for "POP" - use a predefined drawable
+            textView.setVisibility(View.INVISIBLE);
+            Poplogo.setVisibility(View.VISIBLE);
+            Poplogo.setImageResource(R.drawable.poplogo);
+
+            int desiredWidth = 150;
+            int desiredHeight = 150;
+
+            ViewGroup.LayoutParams layoutParams = Poplogo.getLayoutParams();
+            layoutParams.width = desiredWidth;
+            layoutParams.height = desiredHeight;
+            Poplogo.setLayoutParams(layoutParams);
+        } else {
+            // Default case: display text
+            textView.setText(text);
+            textView.setVisibility(View.VISIBLE);
+            Poplogo.setVisibility(View.INVISIBLE);
+        }
+
+        // Set Total and Tax text views
+        TotaltextView.setText(getContext().getString(R.string.Total) + ": Rs " + formattedTotalAmount);
+        TaxtextView.setText(getContext().getString(R.string.tax) + ": Rs " + formattedTaxAmount);
+
+        // Update the QR code displayed on the secondary screen
+        ImageView qrCodeImageView = findViewById(R.id.qr_code_image_view);
+        qrCodeImageView.setImageBitmap(qrCode);
+    }
+
 
     private void displayText(String text) {
         // Display the text content

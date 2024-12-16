@@ -6,15 +6,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.accessa.ibora.Buyer.Buyer;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
 import com.accessa.ibora.product.items.DatabaseHelper;
@@ -66,19 +63,29 @@ public class AddRoomsActivity extends AppCompatActivity {
         String name = editTextName.getText().toString();
         String counter = editTextOtherNames.getText().toString();
 
+        // Check if counter is a valid integer
+        try {
+            int counterInt = Integer.parseInt(counter);
 
-        Rooms newRooms = new Rooms(name,counter,cashorId,lastmodified,lastmodified);
+            // If counter is valid, proceed with saving
+            Rooms newRooms = new Rooms(name, String.valueOf(counterInt), cashorId, lastmodified, lastmodified);
 
-        boolean success = databaseHelper.addRoom(newRooms);
+            boolean success = databaseHelper.addRoom(newRooms);
 
-        if (success) {
-            // Redirect to the Product activity
-            returnHome();
-            finish();
-        } else {
-            Toast.makeText(this, "Failed To insert Room", Toast.LENGTH_SHORT).show();
+            if (success) {
+                // Redirect to the Product activity
+                returnHome();
+                finish();
+            } else {
+                Toast.makeText(this, "Failed To insert Room", Toast.LENGTH_SHORT).show();
+            }
+        } catch (NumberFormatException e) {
+            // Show error if counter is not a valid integer
+            editTextOtherNames.setError("Please enter a valid integer for Counter");
         }
     }
+
+
     public void returnHome() {
         Intent home_intent1 = new Intent(getApplicationContext(), SettingsDashboard.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

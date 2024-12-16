@@ -207,7 +207,7 @@ public class printerSetup extends AppCompatActivity {
 
                                 if( printerpartname.equals("Logo") && printable) {
 
-                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+                                    printLogoAndReceipt(service, LogoPath, 600, 300);
 
                                 }
                             }
@@ -222,7 +222,7 @@ public class printerSetup extends AppCompatActivity {
                             String Add1andAdd2 = ShopAdress + ", " + ShopAdress2 + "\n";
                             String shopAdress3 = ShopAdress3 + "\n";
                             String CompVatNo = getString(R.string.Vat) + "  : " + CompanyVatNo + "\n";
-                            String CompBRNNo = getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n\n";
+                            String CompBRNNo = getString(R.string.BRN) + "  : " + CompanyBRNNo + "\n";
                             String shopname = shopName + "\n";
                             String Tel = "Tel : " + TelNum;
                             String Fax = "Fax : " + FaxNum;
@@ -264,9 +264,9 @@ public class printerSetup extends AppCompatActivity {
                                     // Print the formatted company name line
                                     service.printText(shopname, null);
                                     service.printText(Add1andAdd2, null);
-                                    service.printText(shopAdress3, null);
+                                   // service.printText(shopAdress3, null);
                                     service.printText(Tel + "\n", null);
-                                    service.printText(Fax + "\n", null);
+                                  //  service.printText(Fax + "\n", null);
                                     service.printText(CompVatNo, null);
                                     service.printText(CompBRNNo, null);
                                 }
@@ -442,7 +442,7 @@ public class printerSetup extends AppCompatActivity {
                                     String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
                                     String CatName = mDatabaseHelper.getCatNameById(famille);
                                     String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
-                                    Log.d("famille", String.valueOf(famille));
+                                    Log.d("famille1", String.valueOf(famille));
                                     Log.d("CatName", String.valueOf(CatName));
                                     Log.d("items.getunique_id()", String.valueOf(newid));
 
@@ -454,7 +454,8 @@ public class printerSetup extends AppCompatActivity {
 
                                     }
                                     service.printText(QuantityLine + "\n", null);
-                                    double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                   // double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                    double discount = Double.parseDouble(items.getTotalDiscount());
                                     double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
 
                                     Log.d("discount", String.valueOf(discount));
@@ -532,7 +533,7 @@ public class printerSetup extends AppCompatActivity {
                                         String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
                                         String CatName = mDatabaseHelper.getCatNameById(famille);
                                         String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
-                                        Log.d("famille", String.valueOf(famille));
+                                        Log.d("famille2", String.valueOf(famille));
                                         Log.d("CatName", String.valueOf(CatName));
                                         Log.d("items.getunique_id()", String.valueOf(newid));
 
@@ -544,7 +545,8 @@ public class printerSetup extends AppCompatActivity {
 
                                         }
                                         service.printText(QuantityLine + "\n", null);
-                                        double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                      //  double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
+                                        double discount = Double.parseDouble(items.getTotalDiscount());
                                         double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
                                         Log.d("discount", String.valueOf(discount));
                                         Log.d("discountvalue", String.valueOf(discountvalue));
@@ -603,6 +605,7 @@ public class printerSetup extends AppCompatActivity {
 
 
                                     String newid = String.valueOf(items.getunique_id());
+                                    Log.e("getitem_id", String.valueOf(itemid));
                                     Log.e("newid", newid);
                                     double currentprice = mDatabaseHelper.getItemPrice(newid);
                                     Log.e("currentprice", String.valueOf(currentprice));
@@ -621,7 +624,8 @@ public class printerSetup extends AppCompatActivity {
 
 
                                     String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
-                                    Log.d("famille", String.valueOf(famille));
+                                    Log.d("famille3", String.valueOf(famille));
+                                    Log.d("transactionIdInProgress", String.valueOf(transactionIdInProgress));
                                     String CatName = mDatabaseHelper.getCatNameById(famille);
                                     Log.d("CatName", String.valueOf(CatName));
 
@@ -637,11 +641,12 @@ public class printerSetup extends AppCompatActivity {
 
                                     }
                                     service.printText(QuantityLine + "\n", null);
-                                    double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
-                                    double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
+                                    double discount = mDatabaseHelper.getTransactionTotalDiscountbyItemId(itemid, transactionIdInProgress);
+
+                                    double discountvalue = mDatabaseHelper.getTransactionDiscountByItemId(itemid, transactionIdInProgress);
                                     Log.d("discount", String.valueOf(discount));
                                     Log.d("discountvalue", String.valueOf(discountvalue));
-                                    Log.d("items.getunique_id()", String.valueOf(newid));
+                                    Log.d("items.getunique_id()", String.valueOf(itemid));
                                     if (discount != 0 && discountvalue != 0) {
                                         String UNITPRICEText = "--->Unit Price";
                                         String DiscountText = "--->Discount";
@@ -909,7 +914,39 @@ public class printerSetup extends AppCompatActivity {
                                 String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
 
                                 service.printText(TenderItemsTypesLine + "\n", null);
-                                service.openDrawer(null);
+
+
+                                        paymentName = items.getPaymentName();
+                                        // Query the transaction table to get distinct VAT types
+                                        Cursor DrawerCursor = mDatabaseHelper.getDistinctDrawerconfig(paymentName);
+                                        if (DrawerCursor != null && DrawerCursor.moveToFirst()) {
+                                            StringBuilder vatTypesBuilder = new StringBuilder();
+                                            do {
+                                                int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
+                                                String draweropen = DrawerCursor.getString(columnIndexDrawer);
+                                                if (cashReturn > 0 || "true".equals(draweropen)) {
+                                                    Log.d("drawer1", cashorlevel);
+                                                    service.openDrawer(null);
+
+                                                }
+                                                vatTypesBuilder.append(draweropen).append(", ");
+                                            } while (DrawerCursor.moveToNext());
+                                            DrawerCursor.close();
+
+                                            // Remove the trailing comma and space
+                                            String Drawer = vatTypesBuilder.toString().trim();
+                                            SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+                                            sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                                            sharedPreferences.edit().putString("table_id", "0").apply();
+                                            sharedPreferences.edit().putString("table_num", "0").apply();
+
+
+
+                                        }
+
+
+
+                               // service.openDrawer(null);
                             }
                         } else if (paymentName.equals("POP")) {
                             paymentName = "POP";
@@ -928,9 +965,6 @@ public class printerSetup extends AppCompatActivity {
                             String currentTime = timeFormat.format(new Date());
                             mDatabaseHelper.insertSettlementAmount(paymentName, settlementAmount, transactionIdInProgress, PosNum, transactionDate, currentTime, String.valueOf(roomid), tableid);
 
-                        } else if (paymentName.equals("Cheque")) {
-
-                            service.openDrawer(null);
                         }
 
 
@@ -1035,39 +1069,7 @@ public class printerSetup extends AppCompatActivity {
                         // Print  date and time
                         service.printText(DateTimeIdLine + "\n\n", null);
 
-                        if (settlementItems != null) {
-                            // Use the settlementItems as needed
-                            // You can iterate over the list and access the payment name and settlement amount for each item
-                            for (SettlementItem items : settlementItems) {
 
-                                paymentName = items.getPaymentName();
-                                // Query the transaction table to get distinct VAT types
-                                Cursor DrawerCursor = mDatabaseHelper.getDistinctDrawerconfig(paymentName);
-                                if (DrawerCursor != null && DrawerCursor.moveToFirst()) {
-                                    StringBuilder vatTypesBuilder = new StringBuilder();
-                                    do {
-                                        int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
-                                        String vatType = DrawerCursor.getString(columnIndexDrawer);
-                                        if (cashReturn > 0 || "true".equals(vatType)) {
-                                            service.openDrawer(null);
-                                        }
-                                        vatTypesBuilder.append(vatType).append(", ");
-                                    } while (DrawerCursor.moveToNext());
-                                    DrawerCursor.close();
-
-                                    // Remove the trailing comma and space
-                                    String Drawer = vatTypesBuilder.toString().trim();
-                                    SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-                                    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
-                                    sharedPreferences.edit().putString("table_id", "0").apply();
-                                    sharedPreferences.edit().putString("table_num", "0").apply();
-
-
-
-                                }
-
-                            }
-                        }
 
 
                         // Cut the paper
@@ -1078,10 +1080,6 @@ public class printerSetup extends AppCompatActivity {
                         service.sendRAWData(openDrawerBytes, null);
                         // Open the cash drawer
 
-                        if (cashReturn > 0) {
-                            service.openDrawer(null);
-
-                        }
 
                         String transactionType;
                         mDatabaseHelper.updateCoverCount(0,tableid,Integer.parseInt(roomid));
@@ -1114,8 +1112,13 @@ public class printerSetup extends AppCompatActivity {
                                 boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid, tableid);
                                 Log.e("paid", String.valueOf(paid));
                                 if (paid) {
+                                    if(cashorlevel.equals("0")){
+                                        mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN, String.valueOf(roomid), tableid);
 
-                                    mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid), tableid);
+                                    }else{
+                                        mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid), tableid);
+
+                                    }
 
                                 }
                             }
@@ -1132,25 +1135,54 @@ public class printerSetup extends AppCompatActivity {
                             Log.e("isAtLeastOneItemSelected", String.valueOf(isAtLeastOneItemSelected));
 
                             if (areNOItemsSelected) {
-                                mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                if(cashorlevel.equals("0")) {
+                                    mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
+
+                                }else{
+                                    mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+
+                                }
+
                             }
                             if (areAllItemsPaid) {
-                                // All items with the specified roomId, tableId, and status are selected
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                if(cashorlevel.equals("0")) {
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+
+                                }else{
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+
+                                }
+
 
                             } else if (isAtLeastOneItemSelected) {
-                                mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                if(cashorlevel.equals("0")) {
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
+
+                                }else{
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+
+                                }
+
+
                             } else {
                                 // Some items are not selected
                                 mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
                                 boolean paid = mDatabaseHelper.areAllTransactionsPaid(roomid, tableid);
                                 Log.e("paid", String.valueOf(paid));
                                 if (paid) {
+                                    if(cashorlevel.equals("0")) {
+                                        mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
 
-                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    }else{
+                                        mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+
+                                    }
                                 }
                             }
                             boolean isprf = startsWithPRF(transactionIdInProgress);
@@ -1158,9 +1190,14 @@ public class printerSetup extends AppCompatActivity {
                             if (isprf) {
 
                                 Log.d("isprf", String.valueOf(isprf));
+                                if(cashorlevel.equals("0")) {
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
 
+                                }else{
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
 
-                                mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                }
+
 
 
                             }
@@ -1242,7 +1279,17 @@ public class printerSetup extends AppCompatActivity {
         String Cashreturn = getIntent().getStringExtra("cash_return");
         tableid = getIntent().getStringExtra("tableid");
         roomid = getIntent().getStringExtra("roomid");
-         cashReturn = Double.parseDouble(Cashreturn);
+
+        SharedPreferences preferences = this.getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+
+// Retrieve the room id, with a default value of 1 if not found
+        roomid = String.valueOf(preferences.getInt("room_id", 0));
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
+
+        if(Cashreturn != null){
+            cashReturn = Double.parseDouble(Cashreturn);
+
+        }
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
         mraqr = getIntent().getStringExtra("mraQR");
 
@@ -1254,8 +1301,10 @@ public class printerSetup extends AppCompatActivity {
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
         transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+if(anReturbed !=null){
+    amountReceived = Double.parseDouble(anReturbed);
 
-        amountReceived = Double.parseDouble(anReturbed);
+}
         boolean isprf=  startsWithPRF(latesttransId);
         if(isprf) {
             newtransactionIdInProgress = generateNewTransactionId();

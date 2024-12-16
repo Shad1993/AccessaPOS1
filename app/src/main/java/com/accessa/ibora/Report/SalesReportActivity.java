@@ -9,6 +9,11 @@ import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_DATE_TRA
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_PAYMENT_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_TOTAL_AMOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CASHIER_CODE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE_CREATED;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
@@ -22,17 +27,21 @@ import android.os.Build;
 import android.os.Bundle;
 
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.view.GravityCompat;
@@ -73,7 +82,7 @@ public class SalesReportActivity extends AppCompatActivity {
     private TextView name;
     private TextView CashorId;
     private List<PaymentItem> paymentItems; // Define the paymentItems list
-    private SharedPreferences sharedPreferences,usersharedPreferences;
+    private SharedPreferences sharedPreferences,usersharedPreferences,AccessLevelsharedPreferences;
     private MaterialToolbar toolbar;
     private TextView CompanyName;
     private String Shopname;
@@ -101,6 +110,7 @@ public class SalesReportActivity extends AppCompatActivity {
         }
 
         usersharedPreferences = getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        AccessLevelsharedPreferences = this.getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
 
 
         setContentView(R.layout.activity_sales_report);
@@ -202,8 +212,28 @@ public class SalesReportActivity extends AppCompatActivity {
                 int levelNumber = Integer.parseInt(cashorlevel); // Adjust this based on the user's level
 
                 if (id == R.id.Sales) {
-                    // Check permission for Sales
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "sales_", levelNumber)) {
+                    String Activity="sales_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = preferences.edit();
+
+                            // Set "roomnum" to 1
+                            editor.putInt("roomnum", 1);
+                            editor.putInt("room_id", 1);
+                            editor.putString("table_id", "0");
+                            editor.putString("table_num", "0");
+                            editor.apply(); // Commit the changes
+
+                            Intent intent = new Intent(SalesReportActivity.this, MainActivity.class);
+                            startActivity(intent);
+                        });
+                    }
+                    // Check permission for Receipts
+                    else if (!canHigherAccessReceipt && canAccessReceipt) {
                         SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = preferences.edit();
 
@@ -219,38 +249,83 @@ public class SalesReportActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
                     }
+
                 } else if (id == R.id.Receipts) {
+                    String Activity="receipts_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            Intent intent = new Intent(SalesReportActivity.this, ReceiptActivity.class);
+                            startActivity(intent);
+                        });
+                    }
                     // Check permission for Receipts
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "receipts_", levelNumber)) {
+                    else if (!canHigherAccessReceipt && canAccessReceipt) {
                         Intent intent = new Intent(SalesReportActivity.this, ReceiptActivity.class);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(getApplicationContext(), "Access Denied: Receipts", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Access Denied: Sales", Toast.LENGTH_SHORT).show();
                     }
+
                 } else if (id == R.id.Shift) {
-                    // Check permission for Shift
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "shift_", levelNumber)) {
+                    String Activity="shift_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            Intent intent = new Intent(SalesReportActivity.this, SalesReportActivity.class);
+                            startActivity(intent);
+                        });
+                    }
+                    // Check permission for Receipts
+                    else if (!canHigherAccessReceipt && canAccessReceipt) {
                         Intent intent = new Intent(SalesReportActivity.this, SalesReportActivity.class);
                         startActivity(intent);
                     } else {
                         Toast.makeText(getApplicationContext(), "Access Denied: Shift", Toast.LENGTH_SHORT).show();
                     }
+
                 } else if (id == R.id.Items) {
-                    // Check permission for Items
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "Items_", levelNumber)) {
+                    String Activity="Items_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            Intent intent = new Intent(SalesReportActivity.this, Product.class);
+                            startActivity(intent);
+                        });
+                    }
+                    // Check permission for Receipts
+                    else if (!canHigherAccessReceipt && canAccessReceipt) {
                         Intent intent = new Intent(SalesReportActivity.this, Product.class);
                         startActivity(intent);
                     } else {
                         Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
                     }
+
                 } else if (id == R.id.Settings) {
-                    // Check permission for Settings
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "settings_", levelNumber)) {
+                    String Activity="settings_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            Intent intent = new Intent(SalesReportActivity.this, SettingsDashboard.class);
+                            startActivity(intent);
+                        });
+                    }
+                    // Check permission for Receipts
+                    else if (!canHigherAccessReceipt && canAccessReceipt) {
                         Intent intent = new Intent(SalesReportActivity.this, SettingsDashboard.class);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(getApplicationContext(), "Access Denied: Settings", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Access Denied: Items", Toast.LENGTH_SHORT).show();
                     }
+
                 } else if (id == R.id.nav_logout) {
                     logout();
                     return true;
@@ -258,13 +333,24 @@ public class SalesReportActivity extends AppCompatActivity {
                     Intent intent = new Intent(SalesReportActivity.this, Help.class);
                     startActivity(intent);
                 } else if (id == R.id.nav_Admin) {
-                    // Check permission for Admin
-                    if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "admin_", levelNumber)) {
+                    String Activity="admin_";
+
+                    boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                    boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                    if (canHigherAccessReceipt ) {
+                        showPinDialog(Activity, () -> {
+                            Intent intent = new Intent(SalesReportActivity.this, AdminActivity.class);
+                            startActivity(intent);
+                        });
+                    }
+                    // Check permission for Receipts
+                    else if ((!canHigherAccessReceipt && canAccessReceipt) || levelNumber==7 )  {
                         Intent intent = new Intent(SalesReportActivity.this, AdminActivity.class);
                         startActivity(intent);
                     } else {
                         Toast.makeText(getApplicationContext(), "Access Denied: Admin", Toast.LENGTH_SHORT).show();
                     }
+
                 }
                 return true;
             }
@@ -319,15 +405,23 @@ public class SalesReportActivity extends AppCompatActivity {
             public void onClick(View v) {
                 int levelNumber = Integer.parseInt(cashorlevel);
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "printReport_", levelNumber)) {
+                String Activity="printReport_";
 
-                    openNewActivity();
-                }else{
-                    Toast.makeText(getApplicationContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
-
-
-
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        openNewActivity();
+                    });
                 }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
+                    openNewActivity();
+                } else {
+                    Toast.makeText(getApplicationContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+
+
             }
         });
 
@@ -371,6 +465,138 @@ public class SalesReportActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        AlertDialog.Builder pinBuilder = new AlertDialog.Builder(this);
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = this.getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(this, "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+    private void onclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(this, "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(this, "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(this, "EditText is not initialized", Toast.LENGTH_SHORT).show();
+        }
     }
     public void openNewActivity() {
         Configuration configuration = getResources().getConfiguration();
@@ -592,9 +818,17 @@ public class SalesReportActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String formattedStartDate = dateFormat.format(startDate);
         String formattedEndDate = dateFormat.format(endDate);
-
-// Query the database to get the daily amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? " +
+                        "AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
 
         double amount = 0.0;
 
@@ -627,7 +861,16 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
 // Query the database to get the weekly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
 
         double amount = 0.0;
 
@@ -661,7 +904,16 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
 // Query the database to get the monthly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
 
 
         double amount = 0.0;
@@ -692,9 +944,18 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
         // Query the database to get the daily amount filtered by cashorId
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
-                new String[]{formattedStartDate, formattedEndDate, cashorId});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate, cashorId}
+        );
+
 
         double amount = 0.0;
 
@@ -725,9 +986,18 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
         // Query the database to get the weekly amount filtered by cashorId
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
-                new String[]{formattedStartDate, formattedEndDate, cashorId});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate, cashorId}
+        );
+
 
         double amount = 0.0;
 
@@ -758,9 +1028,18 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
         // Query the database to get the monthly amount filtered by cashorId
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ? AND " + COLUMN_CASHOR_id + " = ?",
-                new String[]{formattedStartDate, formattedEndDate, cashorId});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate, cashorId}
+        );
+
 
         double amount = 0.0;
 

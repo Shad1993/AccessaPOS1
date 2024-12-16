@@ -32,6 +32,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.Weight;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.StrictMode;
@@ -60,10 +61,7 @@ public class SyncAddToMssql extends IntentService {
     private static final String TAG = "SyncService";
 
     // Your database connection parameters
-    private static final String _user = "sa";
-    private static final String _pass = "Logi2131";
-    private static final String _DB = "IboraPOS";
-    private static final String _server = "192.168.1.89";
+
 
     public SyncAddToMssql() {
         super("SyncAddToMssql");
@@ -168,6 +166,14 @@ public class SyncAddToMssql extends IntentService {
         StrictMode.setThreadPolicy(policy);
         Connection conn = null;
         String ConnURL = null;
+        // Get SharedPreferences where the DB parameters are stored
+        SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+        // Retrieve values from SharedPreferences (or use defaults if not set)
+        String _user = preferences.getString("_user", null);
+        String _pass = preferences.getString("_pass", null);
+        String _DB = preferences.getString("_DB", null);
+        String _server = preferences.getString("_server", null);
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
             ConnURL = "jdbc:jtds:sqlserver://" + _server + ";"

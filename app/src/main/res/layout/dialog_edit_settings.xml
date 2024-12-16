@@ -15,19 +15,24 @@
         android:id="@+id/editText1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="User Name" />
+        android:hint="@string/username"
+        android:maxLength="35"
+        android:inputType="text"/>
     <TextView
         android:id="@+id/ebsMraIdtextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ebsMraId"
         android:textSize="18sp"
-        android:paddingTop="8dp"/>
+        android:paddingTop="8dp"
+       />
     <EditText
         android:id="@+id/editText2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="ebsMraId" />
+        android:hint="ebsMraId"
+        android:maxLength="32"
+        android:inputType="text"/>
     <TextView
         android:id="@+id/areaCodeIdtextView"
         android:layout_width="wrap_content"
@@ -39,19 +44,24 @@
         android:id="@+id/editText3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="areaCode" />
+        android:hint="areaCode"
+        android:maxLength="4"
+        android:inputType="number"/>
     <TextView
         android:id="@+id/passwordIdtextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Password"
         android:textSize="18sp"
-        android:paddingTop="8dp"/>
+        android:paddingTop="8dp"
+      />
     <EditText
         android:id="@+id/editText4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Password" />
+        android:hint="Password"
+        android:maxLength="23"
+        android:inputType="textPassword"/>
 
 
 

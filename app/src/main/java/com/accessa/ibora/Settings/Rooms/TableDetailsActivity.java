@@ -110,6 +110,8 @@ public class TableDetailsActivity extends AppCompatActivity implements TableAdap
 
         // Initialize the UI components
         final EditText editSeatCount = dialogView.findViewById(R.id.edit_seat_count);
+        final EditText editTableNumber = dialogView.findViewById(R.id.edit_table_name); // New field for table name
+
         final Spinner statusSpinner = dialogView.findViewById(R.id.status_spinner);
         Button btnUpdate = dialogView.findViewById(R.id.btn_update);
 
@@ -117,6 +119,7 @@ public class TableDetailsActivity extends AppCompatActivity implements TableAdap
         int seatcount= mDatabaseHelper.getSeatCount(roomId,realtableidnum);
         // Populate the existing data in the fields
         editSeatCount.setText(String.valueOf(seatcount));
+        editTableNumber.setText(String.valueOf(table.getTableNumber())); // Fix: Convert int to String
 
         // Set up the status spinner with "reserved" and "not_reserved" values
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, new String[]{"reserved", "not_reserved"});
@@ -145,9 +148,10 @@ public class TableDetailsActivity extends AppCompatActivity implements TableAdap
         btnUpdate.setOnClickListener(v -> {
             int seatCount = Integer.parseInt(editSeatCount.getText().toString());
             String status = statusSpinner.getSelectedItem().toString();
+            String tableNumber = editTableNumber.getText().toString(); // Get the table name from the EditText
 
             // Update the table in the database
-            mDatabaseHelper.updateTableData(roomId, realtableidnum, seatCount, status);
+            mDatabaseHelper.updateTableData(roomId,tableNumber, realtableidnum, seatCount, status);
             Log.d("table update", "R " + roomId + " T: " + realtableidnum);
 
             // Dismiss the dialog

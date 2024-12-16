@@ -1,7 +1,6 @@
 package com.accessa.ibora.product.items;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.BUYER_TABLE_NAME;
-import static com.accessa.ibora.product.items.DatabaseHelper.CAT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_1;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_2;
 import static com.accessa.ibora.product.items.DatabaseHelper.COLUMN_Comp_ADR_3;
@@ -31,18 +30,20 @@ import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_START_DATE;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.COUPON_TIME_CREATED;
-import static com.accessa.ibora.product.items.DatabaseHelper.CatName;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.DEPARTMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DISCOUNT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.DateCreated;
-import static com.accessa.ibora.product.items.DatabaseHelper.ITEM_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.DisplayPhoneNumber;
+import static com.accessa.ibora.product.items.DatabaseHelper.Displayqr;
 import static com.accessa.ibora.product.items.DatabaseHelper.LastModified;
 import static com.accessa.ibora.product.items.DatabaseHelper.OPTION_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.OpenDrawer;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_ID;
+import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_PhoneNumber;
+import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_QR;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_COLUMN_VIsibility;
 import static com.accessa.ibora.product.items.DatabaseHelper.PAYMENT_METHOD_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SUPPLEMENT_DESCRIPTION;
@@ -64,7 +65,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.accessa.ibora.Admin.cashier;
-import com.accessa.ibora.Buyer.Buyer;
+import com.accessa.ibora.Settings.Buyer.Buyer;
 import com.accessa.ibora.QR.QR;
 import com.accessa.ibora.Settings.PaymentFragment.payment;
 import com.accessa.ibora.company.Company;
@@ -80,10 +81,8 @@ import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class DBManager {
 
@@ -789,6 +788,7 @@ public class DBManager {
                 COUPON_DISCOUNT,
                 COUPON_CODE,
                 DatabaseHelper.COUPON_DATE_CREATED,
+                COUPON_START_DATE,
                 COUPON_END_DATE,
                 COUPON_CASHIER_ID,
 
@@ -805,6 +805,7 @@ public class DBManager {
             coupon.setCode(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COUPON_CODE)));
             coupon.setDiscount(cursor.getInt(cursor.getColumnIndex(COUPON_DISCOUNT)));
             coupon.setDateCreated(cursor.getString(cursor.getColumnIndex(DatabaseHelper.COUPON_DATE_CREATED)));
+            coupon.setStartDate(cursor.getString(cursor.getColumnIndex(COUPON_START_DATE)));
             coupon.setEndDate(cursor.getString(cursor.getColumnIndex(COUPON_END_DATE)));
             coupon.setCashierId(cursor.getInt(cursor.getColumnIndex(COUPON_CASHIER_ID)));
 
@@ -1202,10 +1203,17 @@ public class DBManager {
         return true;
     }
 
-    public boolean deleteVariant(String barcode) {
+    public boolean deleteOptionVariants(String barcode) {
         String selection = DatabaseHelper.VARIANT_BARCODE + "=?";
         String[] selectionArgs = { String.valueOf(barcode) };
         database.delete(DatabaseHelper.VARIANTS_TABLE_NAME, selection, selectionArgs);
+        return true;
+    }
+
+    public boolean deleteSupplementVariants(String barcode) {
+        String selection = DatabaseHelper.VARIANT_BARCODE + "=?";
+        String[] selectionArgs = { String.valueOf(barcode) };
+        database.delete(DatabaseHelper.SUPPLEMENTS_TABLE_NAME, selection, selectionArgs);
         return true;
     }
     public boolean deleteDisc(long id) {
@@ -1434,7 +1442,23 @@ public class DBManager {
         return Qr;
     }
 
-    public void insertPaymentMethod(String methodName, String dateCreated, String lastModified, String userId, String icon, String drawerValue) {
+    public void insertPaymentMethod(String methodName, String dateCreated, String lastModified, String userId, String icon,String Visible, String drawerValue,String phonevisible,String qrvisible,String phonenum,String qrnum) {
+        if(Visible.equals("true")){
+            Visible="1";
+        }else{
+            Visible="0";
+        }
+        if(phonevisible.equals("true")){
+            phonevisible="1";
+        }else{
+            phonevisible="0";
+        }
+        if(qrvisible.equals("true")){
+            qrvisible="1";
+        }else{
+            qrvisible="0";
+        }
+
         ContentValues contentValue = new ContentValues();
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME, methodName);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_LAST_MODIFIED, lastModified);
@@ -1442,16 +1466,28 @@ public class DBManager {
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_DATE_CREATED, dateCreated);
         contentValue.put(PAYMENT_METHOD_COLUMN_ICON, icon);
         contentValue.put(OpenDrawer, drawerValue);
+        contentValue.put(Displayqr, qrvisible);
+        contentValue.put(DisplayPhoneNumber, phonevisible);
+        contentValue.put(PAYMENT_METHOD_COLUMN_QR, qrnum);
+        contentValue.put(PAYMENT_METHOD_COLUMN_PhoneNumber, phonenum);
+        contentValue.put(PAYMENT_METHOD_COLUMN_VIsibility, Visible);
         database.insert(PAYMENT_METHOD_TABLE_NAME, null, contentValue);
     }
 
     public payment getpaymentById(String id) {
         payment payments = null;
         String[] columns = new String[]{
+
+
+
                 PAYMENT_METHOD_COLUMN_ID,
                 DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME,
                 DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON,
                 DatabaseHelper.OpenDrawer,
+                DatabaseHelper.Displayqr,
+                DatabaseHelper.DisplayPhoneNumber,
+                DatabaseHelper.PAYMENT_METHOD_COLUMN_QR,
+                DatabaseHelper.PAYMENT_METHOD_COLUMN_PhoneNumber,
                 PAYMENT_METHOD_COLUMN_CASHOR_ID,
                 DatabaseHelper.PAYMENT_METHOD_COLUMN_VIsibility,
 
@@ -1467,8 +1503,13 @@ public class DBManager {
             payments.setId(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ID));
             payments.setPaymentMethodName(cursor.getString(cursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME)));
             payments.setDrawerOpen(Boolean.parseBoolean(cursor.getString(cursor.getColumnIndex(OpenDrawer))));
+            payments.setDisplayqr(cursor.getInt(cursor.getColumnIndex(Displayqr)));
+            payments.setDispplayphone(cursor.getInt(cursor.getColumnIndex(DisplayPhoneNumber)));
+            payments.setPaymentMethodqr(cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_QR)));
+            payments.setPaymentMethodPhone(cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_PhoneNumber)));
             payments.setDPaymentMethodIcon(cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ICON)));
             payments.setVisibility(cursor.getInt(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_VIsibility)));
+
         }
         if (cursor != null) {
             cursor.close();
@@ -1476,7 +1517,7 @@ public class DBManager {
         return payments;
     }
 
-    public boolean updatePayment(long id, String paymentName, String lastmodified, String userId, String icon, String drawer,String Visible) {
+    public boolean updatePayment(long id, String paymentName, String lastmodified, String userId, String icon, String drawer,String Visible,String phonevisible,String qrvisible,String phonenum,String qrnum) {
         ContentValues contentValue = new ContentValues();
 
 
@@ -1485,13 +1526,26 @@ public class DBManager {
         }else{
             Visible="0";
         }
+        if(phonevisible.equals("true")){
+            phonevisible="1";
+        }else{
+            phonevisible="0";
+        }
+        if(qrvisible.equals("true")){
+            qrvisible="1";
+        }else{
+            qrvisible="0";
+        }
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME, paymentName);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_LAST_MODIFIED, lastmodified);
         contentValue.put(DatabaseHelper.PAYMENT_METHOD_COLUMN_CASHOR_ID, userId);
         contentValue.put(PAYMENT_METHOD_COLUMN_ICON, icon);
         contentValue.put(PAYMENT_METHOD_COLUMN_VIsibility, Visible);
         contentValue.put(OpenDrawer, drawer);
-
+        contentValue.put(Displayqr, qrvisible);
+        contentValue.put(DisplayPhoneNumber, phonevisible);
+        contentValue.put(PAYMENT_METHOD_COLUMN_QR, qrnum);
+        contentValue.put(PAYMENT_METHOD_COLUMN_PhoneNumber, phonenum);
         database.update(PAYMENT_METHOD_TABLE_NAME, contentValue, PAYMENT_METHOD_COLUMN_ID + " = " + id, null);
         return true;
     }

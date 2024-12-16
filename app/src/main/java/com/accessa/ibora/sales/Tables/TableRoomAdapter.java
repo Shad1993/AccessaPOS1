@@ -24,8 +24,8 @@ public class TableRoomAdapter extends RecyclerView.Adapter<TableRoomAdapter.Item
     private Context mContext;
     private Cursor mCursor;
     private Cursor originalCursor; // Store the original cursor for filtering
-String roomid;
-String tableid;
+    String roomid;
+    String tableid;
     private DatabaseHelper mDatabaseHelper;
     private String selectedTableId = ""; // New field to store the selected table ID
     private String selectedTableName = ""; // New field to store the selected table name
@@ -56,7 +56,6 @@ String tableid;
 
             nameTextView = itemView.findViewById(R.id.BuyerAdapter);
             Table = itemView.findViewById(R.id.textViewTAN);
-            brn = itemView.findViewById(R.id.textViewBRN);
             room = itemView.findViewById(R.id.roomid);
             button = itemView.findViewById(R.id.button); // Add this line to initialize the CardView reference
 
@@ -90,7 +89,7 @@ String tableid;
         String seat = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SEAT_COUNT));
         String tablenum = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TABLE_NUMBER));
         String covernumber = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.CoverCount));
-       String roomid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ROOM_ID));
+        String roomid = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.ROOM_ID));
         String mergedtableId = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.MERGED_SET_ID));
         if(covernumber== null){
 
@@ -98,7 +97,7 @@ String tableid;
         }
         holder.idTextView.setText(id);
 
-       // holder.nameTextView.setText("Table " + name);
+        // holder.nameTextView.setText("Table " + name);
         holder.Table.setText(tablenum);
         holder.room.setText(roomid);
 
@@ -203,12 +202,12 @@ String tableid;
             if (isCurrentTablePRF) {
                 if (mergedStatus == 1) {
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.red));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_red));
                     holder.nameTextView.setText(tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
                 }else{
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.red));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_red));
                     holder.nameTextView.setText("T " +tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
 
@@ -216,12 +215,12 @@ String tableid;
             } else if (isCurrentTableInProgress) {
                 if (mergedStatus == 1) {
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.yellow));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_yellow));
                     holder.nameTextView.setText(tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
                 }else{
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.yellow));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_yellow));
                     holder.nameTextView.setText("T " +tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
 
@@ -229,13 +228,13 @@ String tableid;
             } else {
                 if (mergedStatus == 1) {
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.green));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_green));
                     holder.nameTextView.setText(tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
                 }else{
 
                     // The current table does not have a status of "PRF" or "InProgress"
-                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.green));
+                    holder.button.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.soft_green));
                     holder.nameTextView.setText("T " +tablenum + "\nS " + covernumber + "\n" + seat);
                     holder.seattxtview.setText("S " + covernumber + "/" + seat);
 

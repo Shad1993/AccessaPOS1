@@ -39,7 +39,7 @@ public class RoomsAdapter extends RecyclerView.Adapter<RoomsAdapter.ItemViewHold
             idTextView = itemView.findViewById(R.id.id);
             nameTextView = itemView.findViewById(R.id.name);
             seatcount = itemView.findViewById(R.id.textViewseatcount);
-            brn = itemView.findViewById(R.id.textViewBRN);
+
             addresse = itemView.findViewById(R.id.textViewAdress);
         }
     }

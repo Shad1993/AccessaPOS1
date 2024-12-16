@@ -36,6 +36,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.gridlayout.widget.GridLayout;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
@@ -191,7 +192,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
     private void createVariantButton1(String optionId, String barcode, String description, double price) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
         Button variantButton = new Button(this);
         variantButton.setText(description); // Set the button text to the variant description
@@ -280,22 +281,8 @@ public class ModifySupplementsActivity extends Activity {
         return isUnique;
     }
 
-    private boolean isItemIdUnique(SQLiteDatabase db, String itemid) {
-        String[] projection = {VARIANT_ITEM_ID};
-        String selection = VARIANT_ITEM_ID + " = ?";
-        String[] selectionArgs = {itemid};
-
-        Cursor cursor = db.query(VARIANTS_TABLE_NAME, projection, selection, selectionArgs, null, null, null);
-        boolean isUnique = cursor == null || cursor.getCount() == 0;
-
-        if (cursor != null) {
-            cursor.close();
-        }
-
-        return isUnique;
-    }
     private void updateVariantButton(long optionId, String barcode, String description, double price, String variantItemId) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
         Button existingButton = null;
 
         // Iterate through the child views to find the button with the matching barcode
@@ -337,7 +324,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
     private void createVariantButton(long optionId, String barcode, String description, double price,String variantitemid) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
         Button variantButton = new Button(this);
         variantButton.setText(description); // Set the button text to the variant description
@@ -387,7 +374,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
     private void deleteVariantFromDatabase(long optionId, String barcode) {
-        boolean isDeleted = dbManager.deleteVariant(barcode);
+        boolean isDeleted = dbManager.deleteSupplementVariants(barcode);
         returnHome();
         if (isDeleted) {
 
@@ -399,7 +386,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
     private void removeVariantButton(String barcode) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
         // Find and remove the button with the specified barcode tag
         for (int i = 0; i < variantButtonsLayout.getChildCount(); i++) {
@@ -469,59 +456,7 @@ public class ModifySupplementsActivity extends Activity {
     }
 
 
-    private void updateSupIntoDatabase(long optionId, String barcode, String description, double price, String itemid) {
-        try {
-            // Assuming you have a DatabaseHelper instance
-            DatabaseHelper dbHelper = new DatabaseHelper(this);
-
-            // Open the database for writing
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-            // Prepare the ContentValues to update the SUPPLEMENTS_TABLE_NAME
-            ContentValues values = new ContentValues();
-            values.put(SUPPLEMENT_ID, optionId); // Assuming SUPPLEMENT_ID is the correct column name for OPTION_ID in the SUPPLEMENTS_TABLE_NAME
-            values.put(VARIANT_BARCODE, barcode);
-            values.put(SUPPLEMENT_DESCRIPTION, description);
-            values.put(SUPPLEMENT_OPTION_ID, itemid);
-            values.put(SUPPLEMENT_PRICE, price);
-
-            // Define the whereClause and whereArgs for the update
-            String whereClause = SUPPLEMENT_OPTION_ID + " = ?";
-            String[] whereArgs = { itemid };
-            Log.d("itemid", itemid);
-            Log.d("optionId", String.valueOf(optionId));
-            Log.d("description", description);
-            Log.d("price", String.valueOf(price));
-
-            // Update the data in the SUPPLEMENTS_TABLE_NAME
-            int rowsAffected = db.update(SUPPLEMENTS_TABLE_NAME, values, whereClause, whereArgs);
-
-            // Close the database
-            db.close();
-
-            if (rowsAffected > 0) {
-                // Update successful
-                // Optionally, you can perform further actions if needed
-                // After successful update, dynamically update a button for the variant
-                createVariantButton(optionId, barcode, description, price,itemid);
-            } else {
-                // Update failed
-                Log.e("DatabaseUpdate", "Failed to update data in SUPPLEMENTS_TABLE_NAME");
-            }
-        } catch (Exception e) {
-            // Handle any exceptions that occur during the update process
-            e.printStackTrace();
-            // Display a toast or perform any other action as needed
-            Toast.makeText(ModifySupplementsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-
-            Log.e("DatabaseUpdate", "Exception: " + e.getMessage());
-        }
-    }
-
-    // Placeholder method for updating a variant button (implement as needed)
-
-
-    private void showAddVariantDialog(long optionId,String barcode,String description,double Price,String variantitemid) {
+    private void showAddVariantDialog(long optionId, String barcode, String description, double price, String variantItemId) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_modify_variant);
@@ -530,56 +465,81 @@ public class ModifySupplementsActivity extends Activity {
         EditText barcodeEditText = dialog.findViewById(R.id.editTextBarcode);
         EditText descEditText = dialog.findViewById(R.id.editTextDescription);
         EditText priceEditText = dialog.findViewById(R.id.editTextPrice);
-        EditText ItemIdEditText = dialog.findViewById(R.id.editTextitemid);
+        EditText itemIdEditText = dialog.findViewById(R.id.editTextitemid);
         Button addButton = dialog.findViewById(R.id.addButton);
-        String price= String.valueOf(Price);
+
+        // Set existing values
         descEditText.setText(description);
         barcodeEditText.setText(barcode);
-        priceEditText.setText(price);
-        ItemIdEditText.setText(variantitemid);
-        addButton.setOnClickListener(new OnClickListener() {
+        priceEditText.setText(String.valueOf(price));
+        itemIdEditText.setText(variantItemId);
+
+        addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Retrieve input values
                 String barcode = barcodeEditText.getText().toString().trim();
                 String description = descEditText.getText().toString().trim();
                 String priceText = priceEditText.getText().toString().trim();
-                String ItemidText = ItemIdEditText.getText().toString().trim();
-                long newoptionid= 1;
+                String itemIdText = itemIdEditText.getText().toString().trim();
+                long newOptionId = 1;
 
-                if (!barcode.isEmpty() && !description.isEmpty() && !priceText.isEmpty()) {
-                    // Convert price to double
-                    double price = Double.parseDouble(priceText);
+                // Regex patterns for validation
+                String barcodePattern = "^[0-9]+$"; // Numeric only for barcode
+                String descriptionPattern = "^[a-zA-Z\\s]+$"; // Letters and spaces only for description
+                String pricePattern = "^[0-9]*(\\.[0-9]{1,2})?$"; // Valid decimal number for price
+                String itemIdPattern = "^[a-zA-Z0-9]+$"; // Alphanumeric for item ID
 
-                    // Get the OPTION_ID associated with the current option
-                    Log.e("optionId", String.valueOf(optionId));
-                    if(optionId <= 0)
-                    {
-                        newoptionid= 1;
-                    }
-                    else
-                    {
-                        newoptionid= optionId + 1;
-                    }
-
-                    Log.e("newoptionid", String.valueOf(newoptionid));
-                    // Display a toast or perform any other action as needed
-
-
-                    // Insert the variant into the database
-                    updateVariantInDatabase(newoptionid, barcode, description, price,ItemidText);
-
-
-                    // Close the dialog
-                    dialog.dismiss();
-                } else {
+                // Validate inputs
+                if (barcode.isEmpty() || description.isEmpty() || priceText.isEmpty() || itemIdText.isEmpty()) {
                     Toast.makeText(ModifySupplementsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                if (!barcode.matches(barcodePattern)) {
+                    barcodeEditText.setError("Barcode must be numeric.");
+                    return;
+                }
+
+                if (!description.matches(descriptionPattern)) {
+                    descEditText.setError("Description can only contain letters and spaces.");
+                    return;
+                }
+
+                if (!priceText.matches(pricePattern)) {
+                    priceEditText.setError("Price must be a valid number (up to 2 decimal places).");
+                    return;
+                }
+
+                if (!itemIdText.matches(itemIdPattern)) {
+                    itemIdEditText.setError("Item ID can only contain letters and numbers.");
+                    return;
+                }
+
+                // Convert price to double
+                double price = Double.parseDouble(priceText);
+
+                // Log the current optionId
+                Log.e("optionId", String.valueOf(optionId));
+                if (optionId <= 0) {
+                    newOptionId = 1;
+                } else {
+                    newOptionId = optionId + 1;
+                }
+
+                Log.e("newOptionId", String.valueOf(newOptionId));
+
+                // Insert or update the variant in the database
+                updateVariantInDatabase(newOptionId, barcode, description, price, itemIdText);
+
+                // Close the dialog
+                dialog.dismiss();
             }
         });
 
         dialog.show();
     }
+
 
     private void updateOptions() {
 
@@ -590,6 +550,14 @@ public class ModifySupplementsActivity extends Activity {
 
         if ( name .isEmpty()  ) {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Regex pattern to ensure OptName only contains letters and spaces
+        String optNamePattern = "^[a-zA-Z\\s]+$"; // Only allows letters and spaces
+
+        // Validate OptName using the regex pattern
+        if (!name.matches(optNamePattern)) {
+            OptionName.setError("OptName can only contain letters and spaces");
             return;
         }
 

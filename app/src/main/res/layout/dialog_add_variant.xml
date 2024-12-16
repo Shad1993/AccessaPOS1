@@ -8,18 +8,24 @@
         android:id="@+id/editTextitemid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Item Id" />
+        android:hint="Item Id"
+        android:maxLength="26"
+        android:inputType="number"/>
     <EditText
         android:id="@+id/editTextBarcode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Barcode" />
+        android:hint="Barcode"
+        android:maxLength="13"
+        android:inputType="number"/>
 
     <EditText
         android:id="@+id/editTextDescription"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Description" />
+        android:hint="Description"
+        android:maxLength="26"
+        android:inputType="text"/>
 
     <EditText
         android:id="@+id/editTextPrice"

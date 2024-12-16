@@ -151,13 +151,33 @@ private EditText VendorCode;
         String updatedEmail = Email_edittext.getText().toString();
         String updatedInternalCode = InternalCode_edittext.getText().toString();
         String updatedSalesmen = Salesmen_edittext.getText().toString();
+        // Regex patterns for validation
+        String phonePattern = "^[0-9]{7,15}$"; // Only digits, length between 7-15
+        String emailPattern = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"; // Basic email pattern
+        String postalCodePattern = "^[0-9]{4,10}$"; // Only digits, length between 4-10
 
 
             if (VendName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || VendCode.isEmpty() || updatedPhoneNumber.isEmpty() ) {
                 Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
                 return;
             }
+        // Validate phone number
+        if (!updatedPhoneNumber.matches(phonePattern)) {
+            PhoneNumber_edittext.setError("Invalid phone number format");
+            return;
+        }
 
+        // Validate email
+        if (!updatedEmail.matches(emailPattern)) {
+            Email_edittext.setError("Invalid email format");
+            return;
+        }
+
+        // Validate postal code
+        if (!updatedPostalCode.matches(postalCodePattern)) {
+            PostalCode_edittext.setError("Invalid postal code format");
+            return;
+        }
 
         boolean isUpdated = dbManager.updateVendor( _id,name, lastmodified, UserId, VendCode,updatedPhoneNumber,updatedStreet,updatedTown,updatedPostalCode,updatedEmail,updatedInternalCode,updatedSalesmen);
         returnHome();

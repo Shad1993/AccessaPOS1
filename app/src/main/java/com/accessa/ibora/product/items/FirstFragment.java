@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -234,9 +236,33 @@ private  EditText searchEditText;
                     @Override
                     public void onItemClick(View view, int position) {
                         int levelNumber = Integer.parseInt(cashorlevel);
+                        String Activity="modifyItems_";
+                        SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
 
-                        if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "modifyItems_", levelNumber)) {
+                        boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                        boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                        if (canHigherAccessReceipt ) {
+                            showPinDialog(Activity, () -> {
+                                TextView idTextView = view.findViewById(R.id.id_text_view);
+                                TextView subjectEditText = view.findViewById(R.id.name_text_view);
+                                TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
+                                TextView priceTextView = view.findViewById(R.id.price_text_view);
 
+                                String id1 = idTextView.getText().toString();
+                                String id = idTextView.getText().toString();
+                                String title = subjectEditText.getText().toString();
+                                String longDescription = longDescriptionEditText.getText().toString();
+
+                                Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyItemActivity.class);
+                                modifyIntent.putExtra("title", title);
+                                modifyIntent.putExtra("desc", longDescription);
+                                modifyIntent.putExtra("id", id);
+
+                                startActivity(modifyIntent);
+                            });
+                        }
+                        // Check permission for Receipts
+                        else if (!canHigherAccessReceipt && canAccessReceipt) {
                             TextView idTextView = view.findViewById(R.id.id_text_view);
                             TextView subjectEditText = view.findViewById(R.id.name_text_view);
                             TextView longDescriptionEditText = view.findViewById(R.id.Longdescription_text_view);
@@ -253,12 +279,10 @@ private  EditText searchEditText;
                             modifyIntent.putExtra("id", id);
 
                             startActivity(modifyIntent);
-                        }else{
-
-                                Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
-
-
+                        } else {
+                            Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
                         }
+
                     }
 
                     @Override
@@ -274,13 +298,24 @@ private  EditText searchEditText;
             public void onClick(View v) {
 
                 int levelNumber = Integer.parseInt(cashorlevel);
+                String Activity="addItems_";
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "addItems_", levelNumber)) {
-                    openNewActivity();
-                }else {
-                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
-
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        openNewActivity();
+                    });
                 }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
+                    openNewActivity();
+                } else {
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
@@ -288,8 +323,56 @@ private  EditText searchEditText;
             @Override
             public void onClick(View v) {
                 int levelNumber = Integer.parseInt(cashorlevel);
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                String Activity="syncDatabase_";
+                SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                boolean canHigherAccessSyncDatabase = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "syncDatabase_", levelNumber)) {
+                if (canHigherAccessSyncDatabase) {
+                    showPinDialog(Activity, () -> {
+
+                        //clear table
+                        // Create an instance of MssqlDataSync
+                        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+
+                        // Call the synchronization method
+
+                        //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
+                        //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
+                        // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
+                        //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
+                        //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
+                        //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
+
+        /*        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
+                mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
+                mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
+
+               */
+                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
+                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+                        mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                        mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
+                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
+                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
+                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
+                        // dbManager.deleteItemsWithSyncStatusNotOffline();
+                        String androidVersion = DeviceInfo.getAndroidVersion();
+                        Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                        // Trim the strings to avoid any leading or trailing whitespace issues
+                        if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                            Log.d("SyncService", "Starting Syncforold");
+                            Syncforold.startSync(requireContext());
+                        } else {
+                            Log.d("SyncService", "Starting SyncService");
+                            SyncService.startSync(requireContext());
+                        }
+
+                    });
+                } else if (!canHigherAccessSyncDatabase && mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber)) {
 
                     //clear table
                     // Create an instance of MssqlDataSync
@@ -312,11 +395,15 @@ private  EditText searchEditText;
                 mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
 
                */
+
+
                     mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
                     mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
                     mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
                     mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
                     mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
+                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
+                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
                     // dbManager.deleteItemsWithSyncStatusNotOffline();
                     String androidVersion = DeviceInfo.getAndroidVersion();
                     Log.d("DeviceInfo", "Android Version: " + androidVersion);
@@ -329,10 +416,11 @@ private  EditText searchEditText;
                         SyncService.startSync(requireContext());
                     }
 
-                }else{
-                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                } else{
+                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
 
                 }
+
             }
         });
 
@@ -340,7 +428,139 @@ private  EditText searchEditText;
         return view;
     }
 
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
 
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "EditText is not initialized", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {
         Cursor filteredCursor;

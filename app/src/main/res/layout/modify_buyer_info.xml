@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Name"
+        android:maxLength="26"
         android:inputType="text" />
     <EditText
         android:id="@+id/etOtherName"
@@ -17,6 +18,7 @@
         android:hint="Other Names"
         android:layout_marginTop="16dp"
         android:layout_below="@+id/etName"
+        android:maxLength="35"
         android:inputType="text" />
 
     <EditText
@@ -26,6 +28,7 @@
         android:layout_below="@+id/etOtherName"
         android:layout_marginTop="16dp"
         android:hint="Company Name"
+        android:maxLength="26"
         android:inputType="text" />
     <EditText
         android:id="@+id/etTAN"
@@ -34,6 +37,7 @@
         android:layout_below="@+id/etcompName"
         android:layout_marginTop="16dp"
         android:hint="TAN"
+        android:maxLength="10"
         android:inputType="text" />
 
     <EditText
@@ -43,6 +47,7 @@
         android:layout_below="@+id/etTAN"
         android:layout_marginTop="16dp"
         android:hint="BRN"
+        android:maxLength="10"
         android:inputType="text" />
 
     <EditText
@@ -75,6 +80,7 @@
         android:layout_below="@+id/spinnerBuyerType"
         android:layout_marginTop="16dp"
         android:hint="NIC"
+        android:maxLength="22"
         android:inputType="text" />
 
     <!-- Add a Spinner for Price Levels -->

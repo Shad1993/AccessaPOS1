@@ -9,7 +9,10 @@
         android:id="@+id/editTerminalNo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Terminal No" />
+        android:hint="Terminal No"
+        android:inputType="numberSigned"
+        android:maxLength="4"
+        />
 
 
 

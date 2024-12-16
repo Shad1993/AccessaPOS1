@@ -39,9 +39,11 @@ import static com.accessa.ibora.product.items.DatabaseHelper.MERGED;
 import static com.accessa.ibora.product.items.DatabaseHelper.MERGED_SET_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.Name;
 import static com.accessa.ibora.product.items.DatabaseHelper.Nature;
+import static com.accessa.ibora.product.items.DatabaseHelper.ORDERTYPE;
 import static com.accessa.ibora.product.items.DatabaseHelper.Price;
 import static com.accessa.ibora.product.items.DatabaseHelper.PriceAfterDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.Quantity;
+import static com.accessa.ibora.product.items.DatabaseHelper.RELATED_TRANSACTION_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.ROOMS;
 import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_NAME;
@@ -174,8 +176,9 @@ public class MssqlDataSync {
                     "SELECT t.* FROM " + TRANSACTION_TABLE_NAME + " t " +
                             "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " h " +
                             "ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
-                            "WHERE h." + TRANSACTION_STATUS + " = 'Completed'",
+                            "WHERE h." + TRANSACTION_STATUS + " IN ('Completed', 'CRN')",
                     null);
+
 
             // Check if cursor has data
             if (cursor != null && cursor.moveToFirst()) {
@@ -401,17 +404,24 @@ public class MssqlDataSync {
             mDatabaseHelper = new DatabaseHelper(context);
             SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
-            // Query SQLite database to retrieve relevant data
-            Cursor cursor = db.rawQuery("SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                    " WHERE " + TRANSACTION_STATUS + " = 'Completed'", null);
+            Cursor cursor = db.rawQuery(
+                    "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                            " WHERE " + TRANSACTION_STATUS + " IN ('Completed', 'CRN')",
+                    null);
+
 
             // Check if cursor has data
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     // Extract data from the cursor
                     long _id = cursor.getLong(cursor.getColumnIndex("_id"));
+                    long shiftnumber = cursor.getLong(cursor.getColumnIndex("ShiftNumber"));
                     long roomId = cursor.getLong(cursor.getColumnIndex("room_id"));
                     long tableId = cursor.getLong(cursor.getColumnIndex("id"));
+                    int NumberPrinter = cursor.getInt(cursor.getColumnIndex("NumberPrinter"));
+                    String RelatedTransactionId = cursor.getString(cursor.getColumnIndex(RELATED_TRANSACTION_ID));
+                    String ordertype = cursor.getString(cursor.getColumnIndex(ORDERTYPE));
+                    int amountofcover = cursor.getInt(cursor.getColumnIndex("AmountCovers"));
                     String splitType = cursor.getString(cursor.getColumnIndex("SplitType"));
                     String transactionId = cursor.getString(cursor.getColumnIndex("TranscationId"));
                     String shopNo = cursor.getString(cursor.getColumnIndex("ShopNo"));
@@ -459,7 +469,7 @@ public class MssqlDataSync {
 
                     // Pass all retrieved data to the insertOrUpdateTransactionHeaderIntoMSSQL method
                     insertOrUpdateTransactionHeaderIntoMSSQL(
-                            conn, _id, roomId, tableId, splitType, transactionId, shopNo,
+                            conn, _id,shiftnumber, roomId, tableId,NumberPrinter,RelatedTransactionId,ordertype,amountofcover, splitType, transactionId, shopNo,
                             terminalNo, dateCreated, dateModified, timeCreated, timeModified,
                             previousHash, memberCard, subTotal, cashierCode, dateTransaction,
                             timeTransaction, totalHT_A, totalTTC, tenderAmount, cashReturn,
@@ -484,7 +494,7 @@ public class MssqlDataSync {
     }
 
 
-    public void insertOrUpdateTransactionHeaderIntoMSSQL(Connection conn, long _id, long roomId, long id, String splitType, String transactionId, String shopNo, int terminalNo, String dateCreated, String dateModified, String timeCreated, String timeModified, String previousHash, String memberCard, double subTotal, String cashierCode, String dateTransaction, String timeTransaction, double totalHT_A, double totalTTC, double tenderAmount, double cashReturn, double vatBeforeDisc, double vatAfterDisc, double total_Tx_1, double total_Tx_2, double total_Tx_3, double totalDisc, int qtyItem, double totalHT_B, String clientName, String clientOtherName, String clientNIC, String clientAdr1, String clientAdr2, String transactionStatus, String clientVATRegNo, String clientBRN, String clientTel, String invoiceRef, String isCashCredit, String idSalesH, String clientCode, String loyalty, String MRA_Response, String MRA_IRN, int invoiceCounter, String MRA_Method) {
+    public void insertOrUpdateTransactionHeaderIntoMSSQL(Connection conn, long _id,long shiftnumber, long roomId, long id,int NumberPrinter,String RelatedTransactionId,String ordertype, int amountofcover, String splitType, String transactionId, String shopNo, int terminalNo, String dateCreated, String dateModified, String timeCreated, String timeModified, String previousHash, String memberCard, double subTotal, String cashierCode, String dateTransaction, String timeTransaction, double totalHT_A, double totalTTC, double tenderAmount, double cashReturn, double vatBeforeDisc, double vatAfterDisc, double total_Tx_1, double total_Tx_2, double total_Tx_3, double totalDisc, int qtyItem, double totalHT_B, String clientName, String clientOtherName, String clientNIC, String clientAdr1, String clientAdr2, String transactionStatus, String clientVATRegNo, String clientBRN, String clientTel, String invoiceRef, String isCashCredit, String idSalesH, String clientCode, String loyalty, String MRA_Response, String MRA_IRN, int invoiceCounter, String MRA_Method) {
         try {
             // Check if the record with the same _id already exists
             String checkExistenceQuery = "SELECT TransactionRef  FROM TransactionHeader WHERE TransactionRef  = ?";
@@ -494,7 +504,7 @@ public class MssqlDataSync {
 
             if (resultSet.next()) {
                 // If the record exists, perform an update
-                String updateSql = "UPDATE TransactionHeader SET room_id = ?, table_id = ?, SplitType = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?, PreviousHash = ?, MemberCard = ?, SubTotal = ?, CashierCode = ?, DateTransaction = ?, TimeTransaction = ?, TOTALHT_A = ?, TotalTTC = ?, TenderAmount = ?, CashReturn = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, Total_Tx_1 = ?, Total_Tx_2 = ?, Total_Tx_3 = ?, TotalDisc = ?, QtyItem = ?, TotalHT_B = ?, ClientName = ?, ClientOtherName = ?, ClientNIC = ?, ClientAdr1 = ?, ClientAdr2 = ?, TransactionStatus = ?, ClientVATRegNo = ?, ClientBRN = ?, ClientTel = ?, InvoiceRef = ?, IsCash_Credit = ?, IDSalesH = ?, ClientCode = ?, Loyalty = ?, MRA_Response = ?, MRA_IRN = ?, Invoice_counter = ?, MRA_Method = ? WHERE TransactionRef  = ?";
+                String updateSql = "UPDATE TransactionHeader SET room_id = ?, table_id = ?, SplitType = ?, ShopNo = ?, TerminalNo = ?, DateCreated = ?, DateModified = ?, TimeCreated = ?, TimeModified = ?, PreviousHash = ?, MemberCard = ?, SubTotal = ?, CashierCode = ?, DateTransaction = ?, TimeTransaction = ?, TOTALHT_A = ?, TotalTTC = ?, TenderAmount = ?, CashReturn = ?, VAT_Before_Disc = ?, VAT_After_Disc = ?, Total_Tx_1 = ?, Total_Tx_2 = ?, Total_Tx_3 = ?, TotalDisc = ?, QtyItem = ?, TotalHT_B = ?, ClientName = ?, ClientOtherName = ?, ClientNIC = ?, ClientAdr1 = ?, ClientAdr2 = ?, TransactionStatus = ?, ClientVATRegNo = ?, ClientBRN = ?, ClientTel = ?, InvoiceRef = ?, IsCash_Credit = ?, IDSalesH = ?, ClientCode = ?, Loyalty = ?, MRA_Response = ?, MRA_IRN = ?, Invoice_counter = ?, MRA_Method = ?, ShiftNumber = ?,NumberPrinter= ?,RelatedTransactionId= ?,OrderType= ?,AmountOfCover=? WHERE TransactionRef  = ?";
                 PreparedStatement updateStatement = conn.prepareStatement(updateSql);
                 updateStatement.setLong(1, roomId);
                 updateStatement.setLong(2, id);
@@ -541,7 +551,12 @@ public class MssqlDataSync {
                 updateStatement.setString(43, MRA_IRN);
                 updateStatement.setInt(44, invoiceCounter);
                 updateStatement.setString(45, MRA_Method);
-                updateStatement.setString(46, transactionId);
+                updateStatement.setLong(46, shiftnumber);
+                updateStatement.setInt(47, NumberPrinter);
+                updateStatement.setString(48, RelatedTransactionId);
+                updateStatement.setString(49, ordertype);
+                updateStatement.setInt(50, amountofcover);
+                updateStatement.setString(51, transactionId);
 
 
 
@@ -555,7 +570,7 @@ public class MssqlDataSync {
                 }
             } else {
                 // If the record doesn't exist, perform an insert
-                String insertSql = "INSERT INTO TransactionHeader ( room_id, table_id, SplitType, TransactionRef , ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified, PreviousHash, MemberCard, SubTotal, CashierCode, DateTransaction, TimeTransaction, TOTALHT_A, TotalTTC, TenderAmount, CashReturn, VAT_Before_Disc, VAT_After_Disc, Total_Tx_1, Total_Tx_2, Total_Tx_3, TotalDisc, QtyItem, TotalHT_B, ClientName, ClientOtherName, ClientNIC, ClientAdr1, ClientAdr2, TransactionStatus, ClientVATRegNo, ClientBRN, ClientTel, InvoiceRef, IsCash_Credit, IDSalesH, ClientCode, Loyalty, MRA_Response, MRA_IRN, Invoice_counter, MRA_Method) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String insertSql = "INSERT INTO TransactionHeader ( room_id, table_id, SplitType, TransactionRef , ShopNo, TerminalNo, DateCreated, DateModified, TimeCreated, TimeModified, PreviousHash, MemberCard, SubTotal, CashierCode, DateTransaction, TimeTransaction, TOTALHT_A, TotalTTC, TenderAmount, CashReturn, VAT_Before_Disc, VAT_After_Disc, Total_Tx_1, Total_Tx_2, Total_Tx_3, TotalDisc, QtyItem, TotalHT_B, ClientName, ClientOtherName, ClientNIC, ClientAdr1, ClientAdr2, TransactionStatus, ClientVATRegNo, ClientBRN, ClientTel, InvoiceRef, IsCash_Credit, IDSalesH, ClientCode, Loyalty, MRA_Response, MRA_IRN, Invoice_counter, MRA_Method, ShiftNumber,NumberPrinter,RelatedTransactionId,OrderType,AmountOfCover) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
                 PreparedStatement insertStatement = conn.prepareStatement(insertSql);
 
@@ -605,7 +620,11 @@ public class MssqlDataSync {
                 insertStatement.setString(44, MRA_IRN);
                 insertStatement.setInt(45, invoiceCounter);
                 insertStatement.setString(46, MRA_Method);
-
+                insertStatement.setLong(47, shiftnumber);
+                insertStatement.setLong(48, NumberPrinter);
+                insertStatement.setString(49, RelatedTransactionId);
+                insertStatement.setString(50, ordertype);
+                insertStatement.setInt(51, amountofcover);
 
                 int rowsInserted = insertStatement.executeUpdate();
                 insertStatement.close();
@@ -682,14 +701,14 @@ public class MssqlDataSync {
     public void insertOrUpdateSettlementIntoMSSQLAndSaveToCSV(Connection conn, int settlementId, int roomId, int id, int shopNo, int terminalNo, String dateTransaction, int codeModeDePaiement, double amount, double totalAmount, long giftVoucherNo, String idInvoiceSettlement, String remark, String dateCreated, String paymentName, long chequeNo) {
         try {
             // Check if the record with the same idInvoiceSettlement already exists
-            String checkExistenceQuery = "SELECT IDInvoiceSettlement FROM InvoiceSettlement WHERE IDInvoiceSettlement = ?";
+            String checkExistenceQuery = "SELECT IDInvoiceSettlement FROM InvoiceSettlement_pos WHERE IDInvoiceSettlement = ?";
             PreparedStatement checkExistenceStatement = conn.prepareStatement(checkExistenceQuery);
             checkExistenceStatement.setString(1, idInvoiceSettlement);
             ResultSet resultSet = checkExistenceStatement.executeQuery();
 
             if (resultSet.next()) {
                 // If the record exists, perform an update
-                String updateSql = "UPDATE InvoiceSettlement SET room_id = ?, table_id = ?, ShopNo = ?, TerminalNo = ?, DateTransaction = ?, CodeModeDePaiement = ?, Amount = ?, TotalAmount = ?, GiftVoucherNo = ?, Remark = ?, DateCreated = ?, PaymentName = ?, ChequeNo = ?, SettlementId = ? WHERE IDInvoiceSettlement = ?";
+                String updateSql = "UPDATE InvoiceSettlement_pos SET room_id = ?, table_id = ?, ShopNo = ?, TerminalNo = ?, DateTransaction = ?, CodeModeDePaiement = ?, Amount = ?, TotalAmount = ?, GiftVoucherNo = ?, Remark = ?, DateCreated = ?, PaymentName = ?, ChequeNo = ?, SettlementId = ? WHERE IDInvoiceSettlement = ?";
                 PreparedStatement updateStatement = conn.prepareStatement(updateSql);
                 updateStatement.setInt(1, roomId);
                 updateStatement.setInt(2, id);
@@ -713,7 +732,7 @@ public class MssqlDataSync {
 
 
                 // If the record doesn't exist, perform an insert
-                String insertSql = "INSERT INTO InvoiceSettlement (SettlementId, room_id, table_id, ShopNo, TerminalNo, DateTransaction, CodeModeDePaiement, Amount, TotalAmount, GiftVoucherNo, IDInvoiceSettlement, Remark, DateCreated, PaymentName, ChequeNo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                String insertSql = "INSERT INTO InvoiceSettlement_pos (SettlementId, room_id, table_id, ShopNo, TerminalNo, DateTransaction, CodeModeDePaiement, Amount, TotalAmount, GiftVoucherNo, IDInvoiceSettlement, Remark, DateCreated, PaymentName, ChequeNo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement insertStatement = conn.prepareStatement(insertSql);
                 insertStatement.setInt(1, settlementId);
                 insertStatement.setInt(2, roomId);

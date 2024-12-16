@@ -1,26 +1,17 @@
-package com.accessa.ibora.Buyer;
+package com.accessa.ibora.Settings.Buyer;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.VectorDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
-
-import java.text.DecimalFormat;
 
 public class BuyerAdapter extends RecyclerView.Adapter<BuyerAdapter.ItemViewHolder> {
 
@@ -45,7 +36,7 @@ public class BuyerAdapter extends RecyclerView.Adapter<BuyerAdapter.ItemViewHold
             idTextView = itemView.findViewById(R.id.Buyerid);
             nameTextView = itemView.findViewById(R.id.BuyerAdapter);
             Tan = itemView.findViewById(R.id.textViewTAN);
-            brn = itemView.findViewById(R.id.textViewBRN);
+
             addresse = itemView.findViewById(R.id.textViewAdress);
 
         }

@@ -43,6 +43,7 @@
                         android:id="@+id/qrName_edittext"
                         style="@style/modifiedEditText"
                         android:hint="@string/methodname"
+                        android:maxLength="26"
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

@@ -124,10 +124,6 @@ public class CompanyInfoFragment extends Fragment {
          cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
         cashierlevel= sharedPreferences.getString("cashorlevel", null);
-
-
-
-
         mDatabaseHelper = new DatabaseHelper(getContext());
 
 
@@ -210,7 +206,27 @@ public class CompanyInfoFragment extends Fragment {
             String openhour = openinghours.getText().toString().trim();
             String comptel = editCompTelNo.getText().toString().trim();
             String compfax = editCompFaxNo.getText().toString().trim();
+            // Regular expressions for validation
+            String vatPattern = "^[A-Z0-9]{8,10}$";       // Adjust VAT pattern as necessary
+            String phonePattern = "^\\d{7,10}$";           // For 7-10 digits
 
+            String intPattern = "^\\d+$";
+            if (!shopnum.matches(intPattern)) {
+                SHOPNumber.setError("Shop number must be an integer");
+                return;
+            }
+            if (!vatNo.matches(vatPattern)) {
+                VATNo.setError("Invalid VAT number format");
+                return;
+            }
+            if (!telNo.matches(phonePattern)) {
+                TelNo.setError("Invalid telephone number format");
+                return;
+            }
+        /*    if (!faxNo.matches(phonePattern)) {
+                FaxNo.setError("Invalid fax number format");
+                return;
+            }*/
 
             String image ;
             if( imagePath== null) {
@@ -221,13 +237,20 @@ public class CompanyInfoFragment extends Fragment {
 
             }
 
-            if (abv.isEmpty() || shopnum.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
+           /* if (abv.isEmpty() || shopnum.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
                     || adr1.isEmpty() || adr2.isEmpty() || adr3.isEmpty() || CompAdr.isEmpty()|| CompAdr2.isEmpty()|| CompAdr3.isEmpty()
                     || telNo.isEmpty() || faxNo.isEmpty() || companyName.isEmpty() || openhour.isEmpty() || comptel.isEmpty() || compfax.isEmpty()) {
                 Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            */
+            if (abv.isEmpty() || shopnum.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty()  || vatNo.isEmpty() || brnNo.isEmpty()
+                    || adr1.isEmpty() || adr2.isEmpty()  || CompAdr.isEmpty()|| CompAdr2.isEmpty()
+                    || telNo.isEmpty() || companyName.isEmpty() || openhour.isEmpty() || comptel.isEmpty() ) {
+                Toast.makeText(getContext(), getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
+                return;
+            }
             ContentValues value = new ContentValues();
             value.put("ShopName", abv);
             // Insert the record into the database

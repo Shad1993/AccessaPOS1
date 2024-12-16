@@ -33,6 +33,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.gridlayout.widget.GridLayout;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.Vendor.Vendor;
@@ -216,8 +217,7 @@ public class ModifyOptionsActivity extends Activity {
         return isUnique;
     }
     private void createVariantButton(long optionId, String barcode, String description, double price,String variantitemid) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
-
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
         Button variantButton = new Button(this);
         variantButton.setText(description); // Set the button text to the variant description
         variantButton.setTag(barcode); // Set a tag to identify the variant (you can use barcode or variantId)
@@ -266,7 +266,7 @@ public class ModifyOptionsActivity extends Activity {
     }
 
     private void deleteVariantFromDatabase(long optionId, String barcode) {
-        boolean isDeleted = dbManager.deleteVariant(barcode);
+        boolean isDeleted = dbManager.deleteOptionVariants(barcode);
         returnHome();
         if (isDeleted) {
 
@@ -278,7 +278,7 @@ public class ModifyOptionsActivity extends Activity {
     }
 
     private void removeVariantButton(String barcode) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
         // Find and remove the button with the specified barcode tag
         for (int i = 0; i < variantButtonsLayout.getChildCount(); i++) {
@@ -395,7 +395,7 @@ public class ModifyOptionsActivity extends Activity {
         }
     }
     private void updateVariantButton(long optionId, String barcode, String description, double price, String variantItemId) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
         Button existingButton = null;
 
         // Iterate through the child views to find the button with the matching barcode
@@ -436,7 +436,7 @@ public class ModifyOptionsActivity extends Activity {
         }
     }
 
-    private void showAddVariantDialog(long optionId,String barcode,String description,double Price,String variantitemid) {
+    private void showAddVariantDialog(long optionId, String barcode, String description, double price, String variantItemId) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_modify_variant);
@@ -445,13 +445,15 @@ public class ModifyOptionsActivity extends Activity {
         EditText barcodeEditText = dialog.findViewById(R.id.editTextBarcode);
         EditText descEditText = dialog.findViewById(R.id.editTextDescription);
         EditText priceEditText = dialog.findViewById(R.id.editTextPrice);
-        EditText ItemIdEditText = dialog.findViewById(R.id.editTextitemid);
+        EditText itemIdEditText = dialog.findViewById(R.id.editTextitemid);
         Button addButton = dialog.findViewById(R.id.addButton);
-        String price= String.valueOf(Price);
+
+        // Set existing values in the dialog fields
         descEditText.setText(description);
         barcodeEditText.setText(barcode);
-        priceEditText.setText(price);
-        ItemIdEditText.setText(variantitemid);
+        priceEditText.setText(String.valueOf(price));
+        itemIdEditText.setText(variantItemId);
+
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -459,42 +461,72 @@ public class ModifyOptionsActivity extends Activity {
                 String barcode = barcodeEditText.getText().toString().trim();
                 String description = descEditText.getText().toString().trim();
                 String priceText = priceEditText.getText().toString().trim();
-                String ItemidText = ItemIdEditText.getText().toString().trim();
-                long newoptionid= 1;
+                String itemIdText = itemIdEditText.getText().toString().trim();
+                long newOptionId = 1;
 
-                if (!barcode.isEmpty() && !description.isEmpty() && !priceText.isEmpty()) {
-                    // Convert price to double
-                    double price = Double.parseDouble(priceText);
+                // Regex patterns
+                String barcodeRegex = "^[0-9]+$"; // Numeric only
+                String descriptionRegex = "^[a-zA-Z\\s]+$"; // Letters and spaces only
+                String itemIdRegex = "^[a-zA-Z0-9]+$"; // Alphanumeric
 
-                    // Get the OPTION_ID associated with the current option
-                    Log.e("optionId", String.valueOf(optionId));
-                    if(optionId <= 0)
-                    {
-                        newoptionid= 1;
-                    }
-                    else
-                    {
-                        newoptionid= optionId + 1;
-                    }
-
-                    Log.e("newoptionid", String.valueOf(newoptionid));
-                    // Display a toast or perform any other action as needed
-
-
-                    // Insert the variant into the database
-                    updateVariantInDatabase(newoptionid, barcode, description, price,ItemidText);
-
-
-                    // Close the dialog
-                    dialog.dismiss();
-                } else {
+                // Input validation
+                if (barcode.isEmpty() || description.isEmpty() || priceText.isEmpty() || itemIdText.isEmpty()) {
                     Toast.makeText(ModifyOptionsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                // Validate barcode
+                if (!barcode.matches(barcodeRegex)) {
+                    Toast.makeText(ModifyOptionsActivity.this, "Barcode must be numeric only", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Validate description
+                if (!description.matches(descriptionRegex)) {
+                    Toast.makeText(ModifyOptionsActivity.this, "Description must contain letters and spaces only", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Validate item ID
+                if (!itemIdText.matches(itemIdRegex)) {
+                    Toast.makeText(ModifyOptionsActivity.this, "Item ID must be alphanumeric with no special symbols", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                double price;
+                try {
+                    // Convert price to double
+                    price = Double.parseDouble(priceText);
+                    if (price < 0) {
+                        Toast.makeText(ModifyOptionsActivity.this, "Price cannot be negative", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(ModifyOptionsActivity.this, "Invalid price format", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Get the new OPTION_ID
+                Log.e("optionId", String.valueOf(optionId));
+                if (optionId <= 0) {
+                    newOptionId = 1;
+                } else {
+                    newOptionId = optionId + 1;
+                }
+
+                Log.e("newOptionId", String.valueOf(newOptionId));
+
+                // Update the variant in the database
+                updateVariantInDatabase(newOptionId, barcode, description, price, itemIdText);
+
+                // Close the dialog
+                dialog.dismiss();
             }
         });
 
         dialog.show();
     }
+
 
     private void updateOptions() {
 
@@ -507,7 +539,14 @@ public class ModifyOptionsActivity extends Activity {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
+        // Optional: Regex pattern to ensure OptName only contains valid characters (e.g., letters and spaces)
+        String optNamePattern = "^[a-zA-Z\\s]+$"; // Only allows letters and spaces
 
+        // Validate OptName using the regex pattern
+        if (!name.matches(optNamePattern)) {
+            OptionName.setError("OptName can only contain letters, numbers, and spaces");
+            return;
+        }
 
         boolean isUpdated = dbManager.updateOptions( _id, name);
         returnHome();

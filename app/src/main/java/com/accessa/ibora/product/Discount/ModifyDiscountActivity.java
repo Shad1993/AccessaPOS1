@@ -81,7 +81,7 @@ public class ModifyDiscountActivity extends Activity {
         buttonUpdate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDept();
+                updateDisc();
             }
         });
         buttonDelete = findViewById(R.id.btn_delete);
@@ -98,25 +98,41 @@ public class ModifyDiscountActivity extends Activity {
     }
 
 
-    private void updateDept() {
+    private void updateDisc() {
         String name = DiscName_Edittext.getText().toString().trim();
 
         // Get the current timestamp
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        String DeptName = DiscName_Edittext.getText().toString().trim();
+        String DiscName = DiscName_Edittext.getText().toString().trim();
         String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
-        String DeptCode = DiscAmount_Edittext.getText().toString().trim();
-        DeptCode = DeptCode.replace("%", ""); // Remove the "%" symbol if present
-
-
-        if (DeptName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || DeptCode.isEmpty() ) {
+        String Discvalue = DiscAmount_Edittext.getText().toString().trim();
+        Discvalue = Discvalue.replace("%", ""); // Remove the "%" symbol if present
+// Regex for DiscName: only letters and spaces
+        String discNamePattern = "^[a-zA-Z ]+$";
+        // Validate DiscName using the regex pattern
+        if (!DiscName.matches(discNamePattern)) {
+            DiscName_Edittext.setError("Discount name can only contain letters and spaces.");
+            return;
+        }
+        double discountValue;
+        try {
+            discountValue = Double.parseDouble(Discvalue);
+            if (discountValue < 1 || discountValue > 100) {
+                Toast.makeText(this, "Discount value must be between 1 and 100.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Invalid discount value. Please enter a numeric value.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (DiscName.isEmpty() || lastmodified.isEmpty() || UserId.isEmpty() || Discvalue.isEmpty() ) {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        boolean isUpdated = dbManager.updateDisc( _id,name, lastmodified, UserId, DeptCode);
+        boolean isUpdated = dbManager.updateDisc( _id,name, lastmodified, UserId, String.valueOf(discountValue));
         returnHome();
         if (isUpdated) {
             Toast.makeText(this, R.string.Disc, Toast.LENGTH_SHORT).show();

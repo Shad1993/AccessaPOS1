@@ -15,11 +15,11 @@ android:padding="5dp">
         android:id="@+id/button"
         android:layout_width="150dp"
         android:layout_weight="1"
-        android:drawableEnd="@drawable/meanspayment"
         android:layout_height="30dp"
         android:background="@drawable/button"
         android:layout_marginStart="1dp"
         android:layout_marginEnd="8dp"/>
+
 
     <LinearLayout
         android:layout_width="wrap_content"

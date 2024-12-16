@@ -472,7 +472,7 @@
     <string name="CRN">Credit Note</string>
     <string name="vat_prompt">VAT</string>
     <string name="type">Type</string>
-    <string name="couponcode">CouponCode</string>
+    <string name="couponcode">Coupon Code</string>
     <string name="AllCoupon">All Coupons</string>
     <string name="updatecoupon">Coupon updated</string>
     <string name="failedupdatecoupon">Coupon Update Failed</string>
@@ -562,6 +562,19 @@
     <string name="ServerSettings">Server Settings</string>
     <string name="AllLevels">All Levels</string>
     <string name="DefaultToolbarTitle">Permissions</string>
+    <string name="catname">Category Name</string>
+    <string name="username">User Name</string>
+    <string name="addpeople">Add People</string>
+    <string name="ShopName">Shop Name</string>
+    <string name="ShopNumber">Shop Number</string>
+    <string name="Transactions">Transactions</string>
+    <string name="debitnote">Debit Note</string>
+    <string name="creditnote">Credit Note</string>
+    <string name="sendtokitchen">Send To Kitchen</string>
+    <string name="HigherLevelAccess">Higher Level Access</string>
+    <string name="select_icon">Select Image</string>
+    <string name="display_qr">Display Qr</string>
+    <string name="display_phone">Display Phone Number</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

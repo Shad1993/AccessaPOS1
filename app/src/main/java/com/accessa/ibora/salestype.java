@@ -29,6 +29,7 @@ public class salestype extends AppCompatActivity {
         Button onSpotButton = findViewById(R.id.onspot);
         Button deliveryButton = findViewById(R.id.delivery);
         Button freeSalesButton = findViewById(R.id.FreeSales);
+        Button takeaway = findViewById(R.id.takeaway);
 
         // Check and set the status based on the clicked button
         onSpotButton.setOnClickListener(v -> {
@@ -41,6 +42,9 @@ public class salestype extends AppCompatActivity {
 
         freeSalesButton.setOnClickListener(v -> {
             saveStatusAndNavigate("Free Sales");
+        });
+        takeaway.setOnClickListener(v -> {
+            saveStatusAndNavigate("Take Away");
         });
     }
     private void saveStatusAndNavigate(String status) {

@@ -8,7 +8,8 @@
         android:id="@+id/editRoomName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Room Name" />
+        android:hint="@string/name"
+        android:maxLength="20"/>
 
 
 

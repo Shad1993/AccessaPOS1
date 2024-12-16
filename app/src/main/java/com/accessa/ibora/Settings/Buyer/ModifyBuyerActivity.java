@@ -1,17 +1,12 @@
-package com.accessa.ibora.Buyer;
-
-import static com.accessa.ibora.product.items.DatabaseHelper.BUYER_TYPE;
+package com.accessa.ibora.Settings.Buyer;
 
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,10 +20,8 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 
 public class ModifyBuyerActivity extends Activity {

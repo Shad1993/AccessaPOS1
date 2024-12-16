@@ -10,26 +10,27 @@
         android:icon="@drawable/baseline_search_24"
         android:title="Icon"
         app:showAsAction="ifRoom|collapseActionView" />
-    <item
-        android:id="@+id/nav_account"
-        android:title="@string/MyProfile" />
-
-    <item
-        android:id="@+id/nav_buyer"
-        android:title="@string/buyer" />
-
-
-    <item
-        android:id="@+id/edit_cover_num"
-        android:title="@string/Editcovernum" />
-
-    <item
-        android:id="@+id/nav_settings"
-        android:title="@string/Settings" />
-
+    <!-- <item
+         android:id="@+id/nav_account"
+         android:title="@string/MyProfile" />
+-->
     <item
         android:id="@+id/nav_logout"
         android:title="@string/Logout" />
+     <item
+         android:id="@+id/nav_buyer"
+         android:title="@string/buyer" />
+
+
+     <item
+         android:id="@+id/edit_cover_num"
+         android:title="@string/Editcovernum" />
+
+    <!-- <item
+        android:id="@+id/nav_settings"
+        android:title="@string/Settings" />
+ -->
+
 
     <item
         android:id="@+id/clear_ticket"
@@ -37,21 +38,23 @@
     <item
         android:id="@+id/clear_Payment"
         android:title="@string/ClearPayment" />
-    <item
-        android:id="@+id/open_drawer"
-        android:title="@string/OpenDrawer" />
+    <!-- <item
+         android:id="@+id/open_drawer"
+         android:title="@string/OpenDrawer" />
+ -->
+     <!--
+   <item
+          android:id="@+id/Report"
+          android:title="@string/Report" />
+          -->
+     <item
+         android:id="@+id/SalesReport"
+         android:title="@string/salesreport" />
+     <item
+         android:id="@+id/CashiorSalesReport"
+         android:title="@string/Cashiorsalesreport" />
+     <item
+         android:id="@+id/SplitBill"
+         android:title="@string/Splitbill" />
 
-    <item
-        android:id="@+id/Report"
-        android:title="@string/Report" />
-    <item
-        android:id="@+id/SalesReport"
-        android:title="@string/salesreport" />
-    <item
-        android:id="@+id/CashiorSalesReport"
-        android:title="@string/Cashiorsalesreport" />
-    <item
-        android:id="@+id/SplitBill"
-        android:title="@string/Splitbill" />
-
-</menu>
+ </menu>

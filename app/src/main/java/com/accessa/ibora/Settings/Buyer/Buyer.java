@@ -1,4 +1,4 @@
-package com.accessa.ibora.Buyer;
+package com.accessa.ibora.Settings.Buyer;
 
 public class Buyer {
     private int id;

@@ -93,7 +93,14 @@ public class CouponDialogFragment extends DialogFragment {
 
                 // Get the entered amount
                 String amount = inputAmount.getText().toString();
+// Regex pattern for positive amount (with optional decimal)
+                String amountPattern = "^[0-9]+(\\.[0-9]{1,2})?$";
 
+                // Validate the amount
+                if (!amount.matches(amountPattern)) {
+                    Toast.makeText(getContext(), "Please enter a valid amount (e.g., 100 or 100.50)", Toast.LENGTH_SHORT).show();
+                    return; // Stop further execution
+                }
                 // Get the start and end dates (similar to the previous code)
                 int startYear = startDatePicker.getYear();
                 int startMonth = startDatePicker.getMonth() + 1;

@@ -227,6 +227,22 @@ public class ReceiptAdapter extends RecyclerView.Adapter<ReceiptAdapter.ItemView
             // Change the image in the ImageView
             holder.Imageview.setImageResource(R.drawable.debitnotes1);
 
+        }else if (status.equals("TRN")) {
+
+            holder.statusTextView.setText("Training");
+            holder.statusTextView.setTextColor(mContext.getResources().getColor(R.color.pink));
+            holder.idTextView.setTextColor(mContext.getResources().getColor(R.color.pink));
+            holder.TransTextView.setTextColor(mContext.getResources().getColor(R.color.pink));
+            holder.TotalTextView.setTextColor(mContext.getResources().getColor(R.color.pink));
+
+            Drawable drawable = ContextCompat.getDrawable(mContext, R.drawable.pinkreceipt);
+            if (drawable != null) {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth() / 2, drawable.getIntrinsicHeight() / 2);
+            }
+            holder.statusTextView.setCompoundDrawables(null, null, drawable, null);
+            // Change the image in the ImageView
+            holder.Imageview.setImageResource(R.drawable.pinkreceipt);
+
         }
 
     }

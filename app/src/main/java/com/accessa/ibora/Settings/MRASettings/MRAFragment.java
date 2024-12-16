@@ -77,13 +77,24 @@ public class MRAFragment extends Fragment {
             public void onClick(View v) {
 
                 int levelNumber = Integer.parseInt(cashorlevel);
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                String Activity="editMraSettings_";
+                SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                boolean canHigherAccessSyncDatabase = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "editMraSettings_", levelNumber)) {
+                if (canHigherAccessSyncDatabase) {
+                    showPinDialog(Activity, () -> {
+                        showEditSettingsDialog();
 
+                    });
+                } else if (!canHigherAccessSyncDatabase && mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber)) {
                     showEditSettingsDialog();
-                }else{
-                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+
+                } else{
+                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+
                 }
+
             }
         });
 
@@ -226,6 +237,139 @@ public class MRAFragment extends Fragment {
 
         return view;
     }
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "EditText is not initialized", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
     private void showEditSettingsDialog() {
         // Inflate the custom dialog layout
         LayoutInflater inflater = getLayoutInflater();
@@ -241,7 +385,8 @@ public class MRAFragment extends Fragment {
         EditText editText3 = dialogView.findViewById(R.id.editText3);
         EditText editText4 = dialogView.findViewById(R.id.editText4);
         Button editButton = dialogView.findViewById(R.id.editButton);
-// Retrieve the stored values from SharedPreferences
+
+        // Retrieve the stored values from SharedPreferences
         SharedPreferences prefs = getActivity().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
         String userNamemra = prefs.getString("User_Name", "");
         String ebsMraIdmra = prefs.getString("ebsMraId", "");
@@ -253,6 +398,7 @@ public class MRAFragment extends Fragment {
         editText2.setText(ebsMraIdmra);
         editText3.setText(areaCodemra);
         editText4.setText(passwordmra);
+
         // Create the AlertDialog
         AlertDialog dialog = builder.create();
 
@@ -266,27 +412,33 @@ public class MRAFragment extends Fragment {
                 String areaCode = editText3.getText().toString();
                 String password = editText4.getText().toString();
 
+                // Check if area code is a valid integer
+                try {
+                    int areaCodeInt = Integer.parseInt(areaCode);
+                    // Save data to SharedPreferences if area code is valid
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("User_Name", userName);
+                    editor.putString("ebsMraId", ebsMraId);
+                    editor.putString("Area_Code", areaCode); // Storing as string to retain leading zeros if any
+                    editor.putString("Password", password);
+                    editor.apply();
 
-                // Save data to SharedPreferences
-                SharedPreferences prefs = requireActivity().getSharedPreferences("mraparams", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("User_Name", userName);
-                editor.putString("ebsMraId", ebsMraId);
-                editor.putString("Area_Code", areaCode);
-                editor.putString("Password", password);
-                editor.apply();
+                    // Show confirmation Toast
+                    Toast.makeText(requireContext(), "Settings saved!", Toast.LENGTH_SHORT).show();
 
-                // Show confirmation Toast
-                Toast.makeText(requireContext(), "Settings saved!", Toast.LENGTH_SHORT).show();
-
-                // Dismiss the dialog
-                dialog.dismiss();
+                    // Dismiss the dialog
+                    dialog.dismiss();
+                } catch (NumberFormatException e) {
+                    // Show error if area code is not a valid integer
+                    editText3.setError("Please enter a valid integer for Area Code");
+                }
             }
         });
 
         // Show the dialog
         dialog.show();
     }
+
 
 
     private void saveSelectedTransactionIds() {

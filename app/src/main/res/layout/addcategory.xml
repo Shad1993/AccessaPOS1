@@ -43,8 +43,9 @@
                     <EditText
                         android:id="@+id/CatName_edittext"
                         style="@style/modifiedEditText"
-                        android:hint="Category Name"
                         android:singleLine="true"
+                        android:hint="@string/catname"
+                        android:maxLength="26"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />

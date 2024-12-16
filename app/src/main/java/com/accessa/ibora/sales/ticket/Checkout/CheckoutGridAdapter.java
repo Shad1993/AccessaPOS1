@@ -14,11 +14,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DatabaseHelper;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomViewTarget;
+import com.bumptech.glide.request.transition.Transition;
 
 public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapter.ItemViewHolder> {
 
@@ -89,36 +93,52 @@ public class CheckoutGridAdapter extends RecyclerView.Adapter<CheckoutGridAdapte
 
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_NAME));
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_ID));
-        String icon = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON));
-
+        String iconPath = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PAYMENT_METHOD_COLUMN_ICON));
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
-        holder.Icon.setText(icon);
+        holder.Icon.setText(iconPath);
+
         // Check if id is "1" and name is "POP"
         if (id.equals("1") && name.equals("POP")) {
             Drawable resizedPopLogo = resizeDrawable(mContext, R.drawable.poplogo, 50, 50);
             if (resizedPopLogo != null) {
                 holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, resizedPopLogo, null);
-                holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
+                holder.button.setCompoundDrawablePadding(8);
                 holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
             }
         } else if (id.equals("6") && name.equals("Coupon Code")) {
-            // Get the coupon drawable from resources
             Drawable couponDrawable = ContextCompat.getDrawable(mContext, R.drawable.couponwhite);
-
-            // Set the drawable on the button
             holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, couponDrawable, null);
-
-            // Set padding between text and drawable
             holder.button.setCompoundDrawablePadding(8);
-
-            // Set the background resource for the button
             holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
+        } else {
+            // Load custom icon from file path or URL using Glide
+            if (iconPath != null && !iconPath.isEmpty()) {
+                Glide.with(mContext)
+                        .load(iconPath)  // Load the image from the icon path
+                        .override(50, 50)  // Resize as needed
+                        .error(R.drawable.meanspayment)  // Fallback to default icon if loading fails
+                        .into(new CustomViewTarget<Button, Drawable>(holder.button) {
+                            @Override
+                            public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                                holder.button.setCompoundDrawablesWithIntrinsicBounds(null, null, resource, null);
+                            }
 
-    } else {
-            // Set the default drawableEnd for other cases here
-            holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.meanspayment, 0);
+                            @Override
+                            public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                                holder.button.setCompoundDrawablesWithIntrinsicBounds(null, null, ContextCompat.getDrawable(mContext, R.drawable.meanspayment), null);
+                            }
+
+                            @Override
+                            protected void onResourceCleared(@Nullable Drawable placeholder) {
+                                holder.button.setCompoundDrawablesWithIntrinsicBounds(null, null, placeholder, null);
+                            }
+                        });
+            } else {
+                // Use default icon if no valid icon path is provided
+                holder.button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.meanspayment, 0);
+            }
             holder.button.setCompoundDrawablePadding(8); // Set padding between text and drawable
         }
 

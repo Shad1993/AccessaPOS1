@@ -41,26 +41,32 @@
     <EditText
         android:id="@+id/editCompanyName"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLength="26"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Shop Name" />
+        android:text="@string/ShopName" />
 
     <EditText
         android:id="@+id/editShopName"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLength="26"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Shop Number" />
+            android:text="@string/ShopNumber" />
 
         <EditText
             android:id="@+id/editShopNumber"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:maxLength="4"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
 

@@ -421,10 +421,10 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         }
                         service.printText(lineSeparator + "\n", null);
 
-                        String TotalSettlement= "Seller(Encaissement) "  ;
+                        String TotalSettlement= "Sellers(Encaissement) "  ;
                         double tax = Double.parseDouble(totalTax);
-                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
-                        double grandTotal = tax + amountWOVat;
+                        double amountWOVat = mDatabaseHelper.getGrandTotalSettlementAmount(reportType,Cashior);
+                        double grandTotal = amountWOVat;
                         String formattedTotalAmount = String.format("%.2f", grandTotal);
                         String Total= "Total";
                         String TotalValue= "Rs " + formattedTotalAmount;
@@ -483,13 +483,14 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                          tax = Double.parseDouble(totalTax);
-                         amountWOVat = Double.parseDouble(totalAmountWOVat);
-                         grandTotal = tax + amountWOVat;
+                        grandTotal = Double.parseDouble(totalAmountWOVat);
+                        amountWOVat = grandTotal-tax;
+                      String   amountwithoutvat = String.format("%.2f", amountWOVat);
                          formattedTotalAmount = String.format("%.2f", grandTotal);
                          Total= "Total";
                         String TVA= getString(R.string.Vat);
                         String amountWoVat= "Amount W/0 VAT";
-                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
+                        String TotalValueWoVat= "Rs " + amountwithoutvat;
                         String TotalVAT= "Rs " + totalTax;
                          TotalValue= "Rs " + formattedTotalAmount;
                          cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();

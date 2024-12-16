@@ -28,6 +28,7 @@
             android:text="Delivery"
             android:drawableRight="@drawable/delivery"
             android:textSize="18sp"
+            android:visibility="gone"
             android:layout_marginStart="500dp"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="500dp"
@@ -51,7 +52,20 @@
             android:backgroundTint="@color/BleuAccessaText"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"/>
-
+        <Button
+            android:id="@+id/takeaway"
+            android:text="Take Away"
+            android:visibility="visible"
+            android:textSize="18sp"
+            android:drawableRight="@drawable/takeaway"
+            android:layout_marginStart="500dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="500dp"
+            android:layout_below="@id/delivery"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/BleuAccessaText"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"/>
 
 
 

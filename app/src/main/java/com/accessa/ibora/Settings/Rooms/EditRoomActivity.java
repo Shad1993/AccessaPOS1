@@ -60,7 +60,18 @@ public class EditRoomActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> {
             // Handle save button click
             String newRoomName = roomNameEditText.getText().toString();
-            int seatcountNumber = Integer.parseInt(seatCountEditText.getText().toString());
+            String seatCountText = seatCountEditText.getText().toString();
+
+            // Validate that seat count is a valid integer
+            int seatcountNumber;
+            try {
+                seatcountNumber = Integer.parseInt(seatCountText);
+            } catch (NumberFormatException e) {
+                // Show an error if seat count is not a valid integer
+                seatCountEditText.setError("Please enter a valid integer for seat count");
+                return;
+            }
+
 
             if (roomId != null) {
                 // Update the room details in the database
@@ -74,6 +85,7 @@ public class EditRoomActivity extends AppCompatActivity {
                 }
             }
         });
+
 
         cancelButton.setOnClickListener(v -> {
             // Handle cancel button click

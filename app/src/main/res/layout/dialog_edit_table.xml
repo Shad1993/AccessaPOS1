@@ -6,6 +6,13 @@
     android:padding="16dp">
 
     <EditText
+        android:id="@+id/edit_table_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/edit_seat_count"
+        android:hint="Table Number"
+        android:inputType="number"/>
+    <EditText
         android:id="@+id/edit_seat_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

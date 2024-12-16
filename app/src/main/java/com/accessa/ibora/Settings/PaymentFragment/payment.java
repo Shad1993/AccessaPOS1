@@ -5,6 +5,10 @@ public class payment {
     private String PaymentMethodName;
     private String PaymentMethodIcon;
     private int visibility;
+    private int displayqr;
+    private int dispplayphone;
+    private String PaymentMethodqr;
+    private String PaymentMethodPhone;
     private boolean OpenDrawer;
 
 
@@ -34,11 +38,31 @@ public class payment {
     public void setId(int id) {
         this.id = id;
     }
+    public int getDisplayqr() {
+        return displayqr;
+    }
+    public int getDispplayphone() {
+        return dispplayphone;
+    }
+
     public int getVisibility() {
         return visibility;
     }
     public void setVisibility(int visibility) {
         this.visibility = visibility;
+    }
+
+    public void setDispplayphone(int dispplayphone) {
+        this.dispplayphone = dispplayphone;
+    }
+    public void setDisplayqr(int displayqr) {
+        this.displayqr = displayqr;
+    }
+    public String getPaymentMethodqr() {
+        return PaymentMethodqr;
+    }
+    public String getPaymentMethodPhone() {
+        return PaymentMethodPhone;
     }
     public String getPaymentName() {
         return PaymentMethodName;
@@ -47,7 +71,12 @@ public class payment {
     public void setPaymentMethodName(String PaymentMethodName) {
         this.PaymentMethodName = PaymentMethodName;
     }
-
+    public void setPaymentMethodqr(String PaymentMethodqr) {
+        this.PaymentMethodqr = PaymentMethodqr;
+    }
+    public void setPaymentMethodPhone(String PaymentMethodPhone) {
+        this.PaymentMethodPhone = PaymentMethodPhone;
+    }
     public String getPaymentMethodIcon() {
         return PaymentMethodIcon;
     }

@@ -27,12 +27,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="VAT No" />
+                    android:text="VAT No"
+                    />
 
                 <EditText
                     android:id="@+id/editVATNo"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:maxLength="10"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -42,7 +45,9 @@
                 <EditText
                     android:id="@+id/editBRNNo"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:maxLength="10"/>
 
             </LinearLayout>
 

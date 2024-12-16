@@ -17,7 +17,14 @@
     <color name="dynamic_button_color">#1D242C</color> <!-- Change this to your desired color for POP -->
     <color name="default_button_color">#204890</color> <!-- Change this to your desired default color -->
     <color name="red">#F61414</color>
+    <color name="soft_red">#D32F2F</color>
+
     <color name="yellow">#FFEB3B</color>
     <color name="lightSkyBlue">#87CEFA</color>
+    <color name="pink">#FFC0CB</color>
+    <color name="soft_green">#32a852</color>
+    <color name="soft_yellow">#FDD835</color>
+
+
 
 </resources>

@@ -35,13 +35,15 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.gridlayout.widget.GridLayout;
+
 import com.accessa.ibora.R;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
 public class AddSupplementsActivity extends Activity {
-    private DatabaseHelper mDatabaseHelper;
+
 
     private EditText OptName_Edittext;
 
@@ -91,7 +93,6 @@ public class AddSupplementsActivity extends Activity {
 
 
     }
-
     private void showAddVariantDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -101,9 +102,8 @@ public class AddSupplementsActivity extends Activity {
         EditText barcodeEditText = dialog.findViewById(R.id.editTextBarcode);
         EditText descEditText = dialog.findViewById(R.id.editTextDescription);
         EditText priceEditText = dialog.findViewById(R.id.editTextPrice);
-        EditText ItemIdEditText = dialog.findViewById(R.id.editTextitemid);
+        EditText itemIdEditText = dialog.findViewById(R.id.editTextitemid);
         Button addButton = dialog.findViewById(R.id.addButton);
-
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,38 +112,60 @@ public class AddSupplementsActivity extends Activity {
                 String barcode = barcodeEditText.getText().toString().trim();
                 String description = descEditText.getText().toString().trim();
                 String priceText = priceEditText.getText().toString().trim();
-                String itemid = ItemIdEditText.getText().toString().trim();
-                long newoptionid= 1;
+                String itemId = itemIdEditText.getText().toString().trim();
+                long newOptionId = 1;
 
-                if (!barcode.isEmpty() && !description.isEmpty() && !priceText.isEmpty() && !itemid.isEmpty()) {
-                    // Convert price to double
-                    double price = Double.parseDouble(priceText);
+                // Regex patterns for validation
+                String barcodePattern = "^[0-9]+$"; // Only allows numeric values for barcode
+                String descriptionPattern = "^[a-zA-Z\\s]+$"; // Only allows letters and spaces for description
+                String pricePattern = "^[0-9]*(\\.[0-9]{1,2})?$"; // Allows valid decimal numbers for price
+                String itemIdPattern = "^[a-zA-Z0-9]+$"; // Alphanumeric for item ID
 
-                    // Get the OPTION_ID associated with the current option
-                    long optionId = getCurrentOptionId(); // Implement this method to get the OPTION_ID
-                    Log.e("optionId", String.valueOf(optionId));
-                    if(optionId <= 0)
-                    {
-                         newoptionid= 1;
-                    }
-                    else
-                    {
-                         newoptionid= optionId + 1;
-                    }
-
-                    Log.e("newoptionid", String.valueOf(newoptionid));
-                    // Display a toast or perform any other action as needed
-
-
-                    // Insert the variant into the database
-                    insertVariantIntoDatabase(String.valueOf(newoptionid), barcode, description, price,itemid);
-
-
-                    // Close the dialog
-                    dialog.dismiss();
-                } else {
+                // Validate inputs
+                if (barcode.isEmpty() || description.isEmpty() || priceText.isEmpty() || itemId.isEmpty()) {
                     Toast.makeText(AddSupplementsActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                if (!barcode.matches(barcodePattern)) {
+                    barcodeEditText.setError("Barcode must be numeric.");
+                    return;
+                }
+
+                if (!description.matches(descriptionPattern)) {
+                    descEditText.setError("Description can only contain letters and spaces.");
+                    return;
+                }
+
+                if (!priceText.matches(pricePattern)) {
+                    priceEditText.setError("Price must be a valid number (up to 2 decimal places).");
+                    return;
+                }
+
+                if (!itemId.matches(itemIdPattern)) {
+                    itemIdEditText.setError("Item ID can only contain letters and numbers.");
+                    return;
+                }
+
+                // Convert price to double
+                double price = Double.parseDouble(priceText);
+
+                // Get the OPTION_ID associated with the current option
+                long optionId = getCurrentOptionId(); // Implement this method to get the OPTION_ID
+                Log.e("optionId", String.valueOf(optionId));
+                if (optionId <= 0) {
+                    newOptionId = 1;
+                } else {
+                    newOptionId = optionId + 1;
+                }
+
+                Log.e("newOptionId", String.valueOf(newOptionId));
+
+                // Insert the variant into the database
+                insertVariantIntoDatabase(String.valueOf(newOptionId), barcode, description, price, itemId);
+
+                // Close the dialog
+                dialog.dismiss();
             }
         });
 
@@ -225,7 +247,7 @@ public class AddSupplementsActivity extends Activity {
         return isUnique;
     }
     private void createVariantButton(String optionId, String barcode, String description, double price) {
-        LinearLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
+        GridLayout variantButtonsLayout = findViewById(R.id.variantButtonsLayout);
 
         Button variantButton = new Button(this);
         variantButton.setText(description); // Set the button text to the variant description
@@ -284,6 +306,14 @@ public class AddSupplementsActivity extends Activity {
         if (OptName.isEmpty()
         ) {
             Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Regex pattern to ensure OptName only contains letters and spaces
+        String optNamePattern = "^[a-zA-Z\\s]+$"; // Only allows letters and spaces
+
+        // Validate OptName using the regex pattern
+        if (!OptName.matches(optNamePattern)) {
+            OptName_Edittext.setError("OptName can only contain letters and spaces");
             return;
         }
 

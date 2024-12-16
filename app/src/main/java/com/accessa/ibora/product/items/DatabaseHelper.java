@@ -13,21 +13,17 @@ import android.database.sqlite.SQLiteDatabase;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.accessa.ibora.Buyer.Buyer;
+import com.accessa.ibora.Settings.Buyer.Buyer;
 import com.accessa.ibora.Constants;
 import com.accessa.ibora.ItemsReport.DataModel;
 import com.accessa.ibora.ItemsReport.CatDataModel;
-import com.accessa.ibora.ItemsReport.ItemSummary;
 import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.Report.PaymentItem;
 import com.accessa.ibora.Settings.Rooms.Rooms;
@@ -41,12 +37,9 @@ import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -165,6 +158,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PIN = "pin";
     public static final String COLUMN_CASHOR_LEVEL = "cashorlevel";
      public static final String COLUMN_CASHOR_NAME = "cashorname";
+    public static final String Activity="Activity";
+    private static final String TABLE_NAME_USER_LOG = "UserLog";
     public static String COLUMN_CASHOR_ShopNum="shopnum";
     public static final String COLUMN_CASHOR_DEPARTMENT = "cashorDepartment";
     // Database Information
@@ -433,7 +428,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COUNTING_REPORT_DIFFERENCE = "difference";
     public static final String COUNTING_REPORT_CASHIER_ID = "cashier_id";
     public static final String COUNTING_REPORT_DATETIME = "datetime";
-
+    public static String Displayqr="DisplayQr";
+    public static String DisplayPhoneNumber="DisplayPhoneNumber";
+    public static final String PAYMENT_METHOD_COLUMN_QR = "QRCode";
+    public static String PAYMENT_METHOD_COLUMN_PhoneNumber="PhoneNumber";
     public static final String CASH_REPORT_TABLE_NAME = "CashReports";
     public static final String ROOMS = "rooms";
     public static final String TABLES = "tables";
@@ -447,6 +445,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String MERGED = "Merged";
     public static final String ROOM_ID = "room_id";
     public static final String TABLE_NUMBER = "table_number";
+    public static final String TABLE_NANE = "Table_Name";
     public static final String SEAT_COUNT = "seat_count";
     public static final String CoverCount = "CoverNum";
     public static final String WAITER_NAME = "waiter_name";
@@ -497,6 +496,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     TABLE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     ROOM_ID + " INTEGER, " +
                     TABLE_NUMBER + " INTEGER, " +
+                    TABLE_NANE + " TEXT, " +
                     SEAT_COUNT + " INTEGER, " +
                     CoverCount+ " INTEGER, " +
                     WAITER_NAME + " TEXT, " +
@@ -561,13 +561,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + SKU + " TEXT  , "
             + Variant + " TEXT NOT NULL, "
             + Cost + " DECIMAL(10, 2), "
-            + Weight + " DECIMAL(10, 2), "
+            + Weight + " DECIMAL(10, 3), "
             + UserId + " INTEGER NOT NULL, "
             + Nature + " TEXT, "
             + TaxCode + " TEXT, "
             + Currency + " TEXT, "
             + ItemCode + " TEXT, "
-            + SyncStatus +  " TEXT NOT NULL CHECK(SyncStatus IN ('Offline', 'Online')), "
+            + SyncStatus +  " TEXT   CHECK(SyncStatus IN ('Offline', 'Online')), "
             + RateDiscount + " TEXT, "
             + AmountDiscount + " TEXT, "
             + TotalDiscount + " DECIMAL(10, 2), "
@@ -876,6 +876,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + ")";
 
 
+    private static final String CREATE_USER_LOGS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME_USER_LOG + " (" +
+            _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_CASHOR_LEVEL + " INTEGER, " +
+            COLUMN_CASHOR_NAME + " TEXT, " +
+            COLUMN_CASHOR_id + " INTEGER, " +
+            LastModified +  " TEXT, " +
+            Activity + " TEXT NOT NULL);";
+
+
     private static final String CREATE_PAYMENT_METHOD_TABLE = "CREATE TABLE IF NOT EXISTS " + PAYMENT_METHOD_TABLE_NAME + " ("
             + PAYMENT_METHOD_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + PAYMENT_METHOD_COLUMN_NAME + " TEXT NOT NULL, "
@@ -884,7 +893,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + PAYMENT_METHOD_COLUMN_LAST_MODIFIED + " TEXT , "
             + PAYMENT_METHOD_COLUMN_VIsibility + " TEXT , "
             + OpenDrawer + " BOOLEAN NOT NULL DEFAULT 1, "
+            + Displayqr + " BOOLEAN NOT NULL DEFAULT 0, "
+            + DisplayPhoneNumber + " BOOLEAN NOT NULL DEFAULT 0, "
             + PAYMENT_METHOD_COLUMN_CASHOR_ID + " TEXT NOT NULL, "
+            + PAYMENT_METHOD_COLUMN_QR + " TEXT , "
+            + PAYMENT_METHOD_COLUMN_PhoneNumber + " TEXT , "
             + "FOREIGN KEY (" + PAYMENT_METHOD_COLUMN_CASHOR_ID + ") REFERENCES "
             + TABLE_NAME_Users + "(" + COLUMN_CASHOR_id + "));";
 
@@ -990,6 +1003,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_STD_ACCESS_TABLE);
         db.execSQL(CREATE_PAYMENTBYQY_TABLE);
         db.execSQL(CREATE_PAYMENT_METHOD_TABLE);
+      db.execSQL(CREATE_USER_LOGS_TABLE);
         db.execSQL(CREATE_POS_TABLE);
         db.execSQL(CREATE_BUYER_TABLE);
         db.execSQL(CREATE_COUPON_TABLE);
@@ -1056,6 +1070,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         // Add further version upgrades if needed for future versions
+    }
+    public void logUserActivity(int cashorId, String cashorName, int cashorLevel, String activity) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_CASHOR_id, cashorId);
+        values.put(COLUMN_CASHOR_NAME, cashorName);
+        values.put(COLUMN_CASHOR_LEVEL, cashorLevel);
+        values.put(Activity, activity);
+        values.put(LastModified, getCurrentDateTime()); // Use formatted date-time
+
+        db.insert(TABLE_NAME_USER_LOG, null, values);
+        db.close();
     }
 
     public static int extractTableNumber(String tableString) {
@@ -1476,8 +1502,8 @@ removeDuplicateTransactions(db,newTransactionId);
         values.put(TRANSACTION_ID, latesttransId); // Assuming TRANSACTION_ID is the column name for the transaction ID
 
         // Define the WHERE clause to identify the row(s) to be updated
-        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND " + IS_PAID + " = ?";
-        String[] whereArgs = {currentTableId, roomId, "0"};
+        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ?)";
+        String[] whereArgs = {currentTableId, roomId, "0", "3"};
 
         // Update the table with the new table ID and transaction ID if IS_PAID is 0
         int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
@@ -1525,10 +1551,10 @@ removeDuplicateTransactions(db,newTransactionId);
         values.put(TABLE_ID, newTableId);
 
         // Define the WHERE clause to identify the row(s) to be updated
-        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND " + IS_PAID + " = ?";
-        String[] whereArgs = {currentTableId, roomId, "0"};
+        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ?)";
+        String[] whereArgs = {currentTableId, roomId, "0", "3"};
 
-        // Update the table with the new table ID if IS_PAID is 0
+        // Update the table with the new table ID if IS_PAID is 0 or 3
         int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
 
         // Optionally, you can check the number of rows affected
@@ -1541,6 +1567,7 @@ removeDuplicateTransactions(db,newTransactionId);
         // Close the database connection
         db.close();
     }
+
 
     public String getShopNumber(SQLiteDatabase db) {
         String shopNumber = null;
@@ -1588,187 +1615,11 @@ removeDuplicateTransactions(db,newTransactionId);
         }
     }
 
-    public double getSumOfTotalForCouponCodeTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
-        double sumTotal = 0.0;
 
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
 
-        SQLiteDatabase db = this.getReadableDatabase();
 
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
 
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Coupon Code"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter + " AND " + TRANSACTION_SHIFT_NUMBER + " = ?";
 
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Coupon Code", String.valueOf(shiftNumber)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForCouponCodeTransactionsByReportType(String reportType) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Coupon Code"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Coupon Code"});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForCouponCodeTransactionsByReportTypeAndCashierId(String reportType, int cashierId) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Coupon Code" and the cashier ID matches
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter +
-                " AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Coupon Code", String.valueOf(cashierId)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForPOPTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "POP"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter + " AND " + TRANSACTION_SHIFT_NUMBER + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"POP", String.valueOf(shiftNumber)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForPOPTransactionsByReportType(String reportType) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "POP"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"POP"});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForPOPTransactionsByReportTypeAndCashierId(String reportType, int cashierId) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "POP" and the cashier ID matches
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter +
-                " AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"POP", String.valueOf(cashierId)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
     public List<String> getAllCashierIds() {
         List<String> cashierIds = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -1783,298 +1634,8 @@ removeDuplicateTransactions(db,newTransactionId);
         return cashierIds;
     }
 
-    public double getSumOfTotalForChequesTransactionsByReportType(String reportType) {
-        double sumTotal = 0.0;
 
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
 
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Cheques"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Cheque"});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForChequesTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Cheques"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter + " AND " + TRANSACTION_SHIFT_NUMBER + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Cheque", String.valueOf(shiftNumber)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForChequesTransactionsByReportTypeAndCashierId(String reportType, int cashierId) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Cheques" and the cashier ID matches
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter +
-                " AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Cheque", String.valueOf(cashierId)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForDebitCardTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Debit Card"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter + " AND " + TRANSACTION_SHIFT_NUMBER + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Debit Card", String.valueOf(shiftNumber)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForDebitCardTransactionsByReportType(String reportType) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Debit Card"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Debit Card"});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-    public double getSumOfTotalForCreditCardTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Credit Card"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter + " AND " + TRANSACTION_SHIFT_NUMBER + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Credit Card", String.valueOf(shiftNumber)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-
-    public double getSumOfTotalForCreditCardTransactionsByReportType(String reportType) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Credit Card"
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Credit Card"});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForCreditCardTransactionsByReportTypeAndCashierId(String reportType, int cashierId) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Credit Card" and the cashier ID matches
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter +
-                " AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Credit Card", String.valueOf(cashierId)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-    public double getSumOfTotalForDebitCardTransactionsByReportTypeAndCashierId(String reportType, int cashierId) {
-        double sumTotal = 0.0;
-
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType(reportType);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Log the date filter for debugging
-        Log.d("ReportPopupDialog", "Date Filter: " + dateFilter);
-
-        // Construct the SQL query to sum FINANCIAL_COLUMN_TOTAL where FINANCIAL_COLUMN_TOTALIZER is "Debit Card" and the cashier ID matches
-        String query = "SELECT SUM(" + FINANCIAL_COLUMN_TOTAL + ") AS sumTotal " +
-                "FROM " + FINANCIAL_TABLE_NAME +
-                " WHERE " + FINANCIAL_COLUMN_TOTALIZER + " = ? AND " + dateFilter +
-                " AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ?";
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{"Debit Card", String.valueOf(cashierId)});
-
-        if (cursor.moveToFirst()) {
-            // Retrieve the sum of FINANCIAL_COLUMN_TOTAL from the cursor
-            sumTotal = cursor.getDouble(cursor.getColumnIndex("sumTotal"));
-        }
-
-        cursor.close();
-        db.close();
-
-        return sumTotal;
-    }
-
-
-
-    public Cursor getAllCompletedItems() {
-        SQLiteDatabase db = getReadableDatabase();
-
-        // Define the selection criteria
-        String selection = "TransactionStatus = ?"; // Adjust this according to your actual column name for status
-        String[] selectionArgs = { "Completed" }; // Replace with your actual status value
-
-        return db.query(
-                TABLE_NAME,              // The table to query
-                null,                    // The columns to return (null means all)
-                selection,               // The columns for the WHERE clause
-                selectionArgs,          // The values for the WHERE clause
-                null,                    // Don't group the rows
-                null,                    // Don't filter by row groups
-                null                     // The sort order
-        );
-    }
 
 
     public double getSumOfTotalForCashTransactionsByReportTypePerShift(String reportType, int shiftNumber) {
@@ -2175,9 +1736,13 @@ removeDuplicateTransactions(db,newTransactionId);
         String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
         // Construct the SQL query
-        String query = "SELECT SUM(" + TRANSACTION_TOTAL_TTC + ") as TotalSumTTC " +
+        String query = "SELECT " +
+                "SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC +
+                " WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC +
+                " ELSE 0 END) AS TotalSumTTC " +
                 "FROM " + TRANSACTION_HEADER_TABLE_NAME +
                 " WHERE " + TRANSACTION_CASHIER_CODE + " = ? " +
+                " AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
                 " AND " + dateFilter;
 
         // Execute the query
@@ -2190,6 +1755,66 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return sum;
     }
+    public double getSumOfTransactionTotalHTA(String cashierCode, String reportType) {
+        double sum = 0.0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get the date filter based on the report type
+        String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
+
+        // Construct the SQL query
+        String query = "SELECT " +
+                "SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_HT_A +
+                " WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_HT_A +
+                " ELSE 0 END) AS TotalSumHTA " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_CASHIER_CODE + " = ? " +
+                " AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
+                " AND " + dateFilter;
+
+        // Execute the query
+        Cursor cursor = db.rawQuery(query, new String[]{cashierCode});
+        if (cursor.moveToFirst()) {
+            sum = cursor.getDouble(cursor.getColumnIndex("TotalSumHTA"));
+        }
+        cursor.close();
+        db.close();
+
+        return sum;
+    }
+
+    public double getSumOfTransactionTotalHTAWithoutShift(String reportType) {
+        double sum = 0.0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get the date filter based on the report type
+        String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
+
+        // Construct the SQL query without shift number filtering
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_HT_A + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_HT_A + " " +
+                "ELSE 0 END) AS TotalSumHTA " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
+                " AND " + dateFilter;
+
+        // Log the SQL query for debugging
+        Log.d("FinancialQuery", "SQL Query: " + query);
+
+        // Execute the query
+        Cursor cursor = db.rawQuery(query, null); // No shift number required
+
+        if (cursor.moveToFirst()) {
+            sum = cursor.getDouble(cursor.getColumnIndex("TotalSumHTA"));
+        }
+
+        cursor.close();
+        db.close();
+
+        return sum;
+    }
+
 
     public double getSumOfTransactionTotalTTCWithoutShift(String reportType) {
         double sum = 0.0;
@@ -2199,18 +1824,54 @@ removeDuplicateTransactions(db,newTransactionId);
         String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
         // Construct the SQL query without shift number filtering
-        String query = "SELECT SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " ELSE " + TRANSACTION_TOTAL_TTC + " END) AS TotalSumTTC " +
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                "ELSE 0 END) AS TotalSumTTC " +
                 "FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + dateFilter;
+                " WHERE (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
+                " AND " + dateFilter;
 
         // Log the SQL query for debugging
         Log.d("FinancialQuery", "SQL Query: " + query);
 
         // Execute the query
-        Cursor cursor = db.rawQuery(query, null);  // No shift number required
+        Cursor cursor = db.rawQuery(query, null); // No shift number required
 
         if (cursor.moveToFirst()) {
             sum = cursor.getDouble(cursor.getColumnIndex("TotalSumTTC"));
+        }
+
+        cursor.close();
+        db.close();
+
+        return sum;
+    }
+
+    public double getSumOfTransactionTotalHTAPerShiftwocashier(String reportType, int shiftNumber) {
+        double sum = 0.0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get the date filter based on the report type
+        String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
+
+        // Construct the SQL query without cashier code filtering
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_HT_A + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_HT_A + " " +
+                "ELSE 0 END) AS TotalSumHTA " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
+                " AND " + TRANSACTION_SHIFT_NUMBER + " = ? " +
+                " AND " + dateFilter;
+
+        // Log the SQL query for debugging
+        Log.d("FinancialQuery", "SQL Query: " + query);
+
+        // Execute the query
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(shiftNumber)});
+        if (cursor.moveToFirst()) {
+            sum = cursor.getDouble(cursor.getColumnIndex("TotalSumHTA"));
         }
 
         cursor.close();
@@ -2227,9 +1888,13 @@ removeDuplicateTransactions(db,newTransactionId);
         String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
         // Construct the SQL query without cashier code filtering
-        String query = "SELECT SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " ELSE " + TRANSACTION_TOTAL_TTC + " END) AS TotalSumTTC " +
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                "ELSE 0 END) AS TotalSumTTC " +
                 "FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + TRANSACTION_SHIFT_NUMBER + " = ? " +
+                " WHERE (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
+                " AND " + TRANSACTION_SHIFT_NUMBER + " = ? " +
                 " AND " + dateFilter;
 
         // Log the SQL query for debugging
@@ -2247,6 +1912,7 @@ removeDuplicateTransactions(db,newTransactionId);
         return sum;
     }
 
+
     public double getSumOfTransactionTotalTTCPerShift(String cashierCode, String reportType, int shiftNumber) {
         double sum = 0.0;
         SQLiteDatabase db = this.getReadableDatabase();
@@ -2255,10 +1921,14 @@ removeDuplicateTransactions(db,newTransactionId);
         String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
         // Construct the SQL query
-        String query = "SELECT SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " ELSE " + TRANSACTION_TOTAL_TTC + " END) AS TotalSumTTC " +
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                "ELSE 0 END) AS TotalSumTTC " +
                 "FROM " + TRANSACTION_HEADER_TABLE_NAME +
                 " WHERE " + TRANSACTION_CASHIER_CODE + " = ? " +
                 " AND " + TRANSACTION_SHIFT_NUMBER + " = ? " +
+                " AND (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
                 " AND " + dateFilter;
 
         // Log the SQL query for debugging
@@ -2275,6 +1945,7 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return sum;
     }
+
 
     public double getSumOfTransactionTotalTTCForCRNpercashior(String reportType, int cashierCode) {
         double sum = 0.0;
@@ -2340,10 +2011,14 @@ removeDuplicateTransactions(db,newTransactionId);
         String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
         // Construct the SQL query
-        String query = "SELECT SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_HT_A + " ELSE " + TRANSACTION_TOTAL_HT_A + " END) AS TotalSum " +
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_HT_A + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_HT_A + " " +
+                "ELSE 0 END) AS TotalSum " +
                 "FROM " + TRANSACTION_HEADER_TABLE_NAME +
                 " WHERE " + TRANSACTION_CASHIER_CODE + " = ? " +
                 " AND " + TRANSACTION_SHIFT_NUMBER + " = ? " +
+                " AND (" + TRANSACTION_STATUS + " = 'CRN' OR " + TRANSACTION_STATUS + " = 'Completed') " +
                 " AND " + dateFilter;
 
         // Log the SQL query for debugging
@@ -2362,30 +2037,10 @@ removeDuplicateTransactions(db,newTransactionId);
     }
 
 
+
     // Method to get the sum of TRANSACTION_TOTAL_HT_A based on TRANSACTION_CASHIER_CODE and report type
-    public double getSumOfTransactionTotalHTA(String cashierCode, String reportType) {
-        double sum = 0.0;
-        SQLiteDatabase db = this.getReadableDatabase();
 
-        // Get the date filter based on the report type
-        String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
 
-        // Construct the SQL query
-        String query = "SELECT SUM(" + TRANSACTION_TOTAL_HT_A + ") as TotalSum " +
-                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
-                " WHERE " + TRANSACTION_CASHIER_CODE + " = ? " +
-                " AND " + dateFilter;
-
-        // Execute the query
-        Cursor cursor = db.rawQuery(query, new String[]{cashierCode});
-        if (cursor.moveToFirst()) {
-            sum = cursor.getDouble(cursor.getColumnIndex("TotalSum"));
-        }
-        cursor.close();
-        db.close();
-
-        return sum;
-    }
 
     // Method to get the date filter based on the report type
     private String getDateFilterForFinancialTableBasedOnReportType2(String reportType) {
@@ -2659,6 +2314,21 @@ removeDuplicateTransactions(db,newTransactionId);
 
         // If the permission value is false and the key does not exist, return true
         if (!permissionValue && !prefs.contains(key)) {
+            return true;
+        }
+
+        return permissionValue;
+    }
+
+    public boolean getAccessPermissionWithDefault(SharedPreferences prefs, String permissionKey, int level) {
+        // Construct the key for the shared preferences
+        String key = permissionKey + level;
+
+        // Get the permission value; if the key doesn't exist, permissionValue will default to false
+        boolean permissionValue = prefs.getBoolean(key, false);
+
+        // If the permission value is false and the key does not exist, return true
+        if (permissionValue && prefs.contains(key)) {
             return true;
         }
 
@@ -2967,6 +2637,29 @@ removeDuplicateTransactions(db,newTransactionId);
         return db.rawQuery(query, new String[]{categoryId});
     }
 
+    public String getCatPrinterOptionById(int id) {
+        String catPrinterOption = null;
+        SQLiteDatabase db = this.getReadableDatabase(); // Assuming this is inside your SQLiteOpenHelper subclass
+
+        // Query to get CAT_PRINTER_OPTION based on _ID
+        Cursor cursor = db.query(
+                CAT_TABLE_NAME,                      // Table name
+                new String[]{CAT_PRINTER_OPTION},    // Columns to return
+                _ID + "=?",                          // WHERE clause
+                new String[]{String.valueOf(id)},    // WHERE clause arguments
+                null,                                // Group By
+                null,                                // Having
+                null                                 // Order By
+        );
+
+        // Check if the cursor returned a result
+        if (cursor != null && cursor.moveToFirst()) {
+            catPrinterOption = cursor.getString(cursor.getColumnIndex(CAT_PRINTER_OPTION));
+            cursor.close(); // Always close the cursor after use
+        }
+
+        return catPrinterOption;
+    }
 
     public void insertSubCategory(String subCatName, int catId, String printerOption) {
         SQLiteDatabase db = getWritableDatabase();
@@ -3068,9 +2761,9 @@ removeDuplicateTransactions(db,newTransactionId);
                 valuesTransactionsLoop.put(TRANSACTION_ID, latesttransId);
                 Log.d("TRANSACTION_ID", "TRANSACTION_ID ID: " + latesttransId);
 
-                // Define the WHERE clause to include TABLE_ID, IS_PAID, and STATUS
-                String whereClauseTransactionsLoop = TABLE_ID + " = ? AND " + IS_PAID + " = ? AND " + TRANSACTION_STATUS + " = ?";
-                String[] whereArgsTransactionsLoop = {tableId, "0", "VALID"};
+                // Define the WHERE clause to include TABLE_ID, IS_PAID (0 or 3 or NULL), and STATUS
+                String whereClauseTransactionsLoop = TABLE_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ? OR " + IS_PAID + " IS NULL) AND " + TRANSACTION_STATUS + " = ?";
+                String[] whereArgsTransactionsLoop = {tableId, "0", "3", "VALID"};
 
 
 
@@ -3438,6 +3131,48 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return relatedItems;
     }
+    public float getUnitPriceFromBarcode(String barcode) {
+        // Check VARIANTS table first for the price
+        float unitPrice = getPriceFromVariants(barcode);
+        if (unitPrice > 0) {
+            return unitPrice;
+        }
+
+        // If no price is found in VARIANTS, check SUPPLEMENTS table
+        unitPrice = getPriceFromSupplements(barcode);
+        return unitPrice > 0 ? unitPrice : 0; // Default to 0 if no price found
+    }
+
+    private float getPriceFromVariants(String barcode) {
+        float price = 0;
+        // Query the VARIANTS table using the barcode
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT " + VARIANT_PRICE + " FROM " + VARIANTS_TABLE_NAME +
+                " WHERE " + VARIANT_BARCODE + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{barcode});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            price = cursor.getFloat(cursor.getColumnIndex(VARIANT_PRICE));
+            cursor.close();
+        }
+        return price;
+    }
+
+    private float getPriceFromSupplements(String barcode) {
+        float price = 0;
+        // Query the SUPPLEMENTS table using the barcode
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT " + SUPPLEMENT_PRICE + " FROM " + SUPPLEMENTS_TABLE_NAME +
+                " WHERE " + VARIANT_BARCODE + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{barcode});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            price = cursor.getFloat(cursor.getColumnIndex(SUPPLEMENT_PRICE));
+            cursor.close();
+        }
+        return price;
+    }
+
     public String getOptionNameById(int optionId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {OPTION_NAME};
@@ -3768,6 +3503,22 @@ removeDuplicateTransactions(db,newTransactionId);
         db.close();
 
         return ticketNo;
+    }
+    public void resetIsSelectedByTransactionId(String transactionId) {
+        SQLiteDatabase db = getReadableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(IS_SELECTED, 0); // Reset IS_SELECTED to 0
+
+        // Update rows where TRANSACTION_ID matches the parameter
+        int rowsUpdated = db.update(
+                TRANSACTION_TABLE_NAME,  // Table name
+                values,                  // Values to update
+                TRANSACTION_ID + "= ?",    // WHERE clause
+                new String[]{transactionId} // Arguments for WHERE clause
+        );
+        System.out.println(transactionId + " transactionId.");
+        // Log or handle the number of rows updated
+        System.out.println(rowsUpdated + " rows updated.");
     }
 
     public boolean isAtLeastOneItemSelected(String transactionId) {
@@ -4351,7 +4102,27 @@ removeDuplicateTransactions(db,newTransactionId);
     public void updateTransactionBasedOnInProgressTicketNo(String transactionTicketNo, String pricelevel) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Determine which PriceAfterDiscount field to use based on the selected price level
+        // Check if the transaction is 'Splitted' before proceeding with the update
+        String checkStatusQuery = "SELECT " + TRANSACTION_SPLIT_TYPE + " FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_TICKET_NO + " = ?";
+
+        Cursor cursor = db.rawQuery(checkStatusQuery, new String[]{transactionTicketNo});
+
+        if (cursor.moveToFirst()) {
+            String transactionStatus = cursor.getString(cursor.getColumnIndex(TRANSACTION_SPLIT_TYPE));
+
+            // If transaction is 'Splitted', log the message and show a Toast to the user
+            if ("Splitted".equals(transactionStatus)) {
+                Log.d("TransactionUpdate", "Cannot select buyer because the transaction is slitted.");
+
+                Toast.makeText(context, "Cannot select buyer, the transaction is splitted.", Toast.LENGTH_SHORT).show();
+                cursor.close();
+                return;  // Prevent the update operation
+            }
+        }
+        cursor.close();
+
+        // Proceed with the normal update operation if the transaction is not 'Splitted'
         String priceAfterDiscountColumn;
         if ("Price Level 1".equals(pricelevel)) {
             priceAfterDiscountColumn = PriceAfterDiscount;
@@ -4360,27 +4131,36 @@ removeDuplicateTransactions(db,newTransactionId);
         } else if ("Price Level 3".equals(pricelevel)) {
             priceAfterDiscountColumn = Price3AfterDiscount;
         } else {
-            // Handle default case (e.g., use PriceAfterDiscount)
-            priceAfterDiscountColumn = PriceAfterDiscount;
+            priceAfterDiscountColumn = PriceAfterDiscount;  // Default case
         }
 
-        // Calculate the tax based on your tax calculation logic
-        double calculatedTax = calculateTax(10.0, VAT); // Replace with your tax calculation logic
+        double vatPercentage = 0.15;  // Default VAT 15%
 
-        // Construct an SQL query to update the TRANSACTION table
+        // Construct SQL query to update the transaction table
         String updateQuery = "UPDATE " + TRANSACTION_TABLE_NAME + " SET " +
-                TOTAL_PRICE + " = (SELECT " + priceAfterDiscountColumn + " * QUANTITY FROM " + TABLE_NAME +
-                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + "), " +
-                VAT + " = (SELECT Quantity * ? FROM " + TABLE_NAME +
-                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + "), " +
-                VAT_Type + " = (SELECT " + VAT + " FROM " + TABLE_NAME +
-                " WHERE " + _ID + " = " + TRANSACTION_TABLE_NAME + "." + ITEM_ID + ") " +
+                TOTAL_PRICE + " = (SELECT " + priceAfterDiscountColumn + " * " + TRANSACTION_TABLE_NAME + "." + QUANTITY +
+                " FROM " + TABLE_NAME +
+                " WHERE " + TABLE_NAME + ".Barcode = " + TRANSACTION_TABLE_NAME + ".Barcode), " +
+
+                VAT + " = CASE " +
+                "WHEN (SELECT VAT FROM " + TABLE_NAME + " WHERE " + TABLE_NAME + ".Barcode = " + TRANSACTION_TABLE_NAME + ".Barcode) = 'VAT 15%' " +
+                "THEN (SELECT " + priceAfterDiscountColumn + " * " + TRANSACTION_TABLE_NAME + "." + QUANTITY + " * 0.15 FROM " + TABLE_NAME +
+                " WHERE " + TABLE_NAME + ".Barcode = " + TRANSACTION_TABLE_NAME + ".Barcode) " +
+                "WHEN (SELECT VAT FROM " + TABLE_NAME + " WHERE " + TABLE_NAME + ".Barcode = " + TRANSACTION_TABLE_NAME + ".Barcode) IN ('VAT Exempted', 'VAT 0%') " +
+                "THEN 0 " +
+                "ELSE 0 END, " +
+
+                VAT_Type + " = (SELECT VAT FROM " + TABLE_NAME +
+                " WHERE " + TABLE_NAME + ".Barcode = " + TRANSACTION_TABLE_NAME + ".Barcode) " +
+
                 "WHERE " + TRANSACTION_ID + " IN " +
                 "(SELECT " + TRANSACTION_ID + " FROM " + TRANSACTION_HEADER_TABLE_NAME +
                 " WHERE " + TRANSACTION_STATUS + " = 'InProgress' AND " + TRANSACTION_TICKET_NO + " = ?)";
 
-        db.execSQL(updateQuery, new Object[]{calculatedTax, transactionTicketNo});
+        // Execute the update with the transactionTicketNo as a parameter
+        db.execSQL(updateQuery, new Object[]{transactionTicketNo});
     }
+
 
     // Update IS_SELECTED field for a specific item
 
@@ -4949,14 +4729,18 @@ removeDuplicateTransactions(db,newTransactionId);
             Log.e(TAG, "Error inserting default item into the database");
         }
     }
-    public boolean isValidBarcode(String barcode) {
+    public Double getCouponDiscountIfValid(String barcode) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Define the columns you want to retrieve (in this case, we only need COUPON_CODE)
-        String[] projection = { COUPON_CODE };
+        // Define the columns you want to retrieve (in this case, we need COUPON_DISCOUNT)
+        String[] projection = { COUPON_DISCOUNT };
 
-        // Define the selection criteria (COUPON_CODE should match the provided barcode)
-        String selection = COUPON_CODE + " = ?";
+        // Define the selection criteria:
+        // - COUPON_CODE should match the provided barcode
+        // - The current date should be between COUPON_START_DATE and COUPON_END_DATE
+        // - COUPON_STATUS should not be "Used"
+        String selection = COUPON_CODE + " = ? AND date('now') BETWEEN " + COUPON_START_DATE + " AND " + COUPON_END_DATE +
+                " AND " + COUPON_STATUS + " != 'Used'";
         String[] selectionArgs = { barcode };
 
         // Execute the query
@@ -4970,14 +4754,75 @@ removeDuplicateTransactions(db,newTransactionId);
                 null                 // The sort order
         );
 
-        // Check if the cursor has any rows (i.e., a coupon with the provided barcode exists)
-        boolean isValid = cursor.moveToFirst();
+        Double discount = null;
+
+        // Check if the cursor has any rows (i.e., a coupon with the provided barcode exists, is within the valid date range, and is not used)
+        if (cursor.moveToFirst()) {
+            // Retrieve the COUPON_DISCOUNT value
+            discount = cursor.getDouble(cursor.getColumnIndexOrThrow(COUPON_DISCOUNT));
+        }
 
         // Close the cursor and the database
         cursor.close();
         db.close();
 
-        return isValid;
+        return discount; // Returns null if no valid coupon was found within the validity period and status constraints
+    }
+
+    public String getCouponStatusById(String couponId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String status = null;
+
+        // Define the columns you want to retrieve (in this case, we need COUPON_STATUS)
+        String[] columns = { COUPON_STATUS };
+
+        // Define the selection criteria (COUPON_ID should match the provided couponId)
+        String selection = COUPON_ID + " = ?";
+        String[] selectionArgs = { couponId };
+
+        // Execute the query
+        Cursor cursor = db.query(
+                COUPON_TABLE_NAME,  // The table to query
+                columns,            // The columns to return
+                selection,          // The columns for the WHERE clause
+                selectionArgs,      // The values for the WHERE clause
+                null,               // Don't group the rows
+                null,               // Don't filter by row groups
+                null                // The sort order
+        );
+
+        // Check if the cursor has any rows
+        if (cursor.moveToFirst()) {
+            // Retrieve the COUPON_STATUS value
+            status = cursor.getString(cursor.getColumnIndexOrThrow(COUPON_STATUS));
+        }
+
+        // Close the cursor and the database
+        cursor.close();
+        db.close();
+
+        return status; // Returns null if no coupon was found with the provided ID
+    }
+
+    public boolean markCouponAsUsed(String couponCode) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Prepare values to update
+        ContentValues values = new ContentValues();
+        values.put(COUPON_STATUS, "Used");
+
+        // Define the condition for which rows to update (match the given coupon code)
+        String selection = COUPON_CODE + " = ?";
+        String[] selectionArgs = { couponCode };
+
+        // Execute the update and get the number of rows affected
+        int rowsUpdated = db.update(COUPON_TABLE_NAME, values, selection, selectionArgs);
+
+        // Close the database
+        db.close();
+
+        // Return true if at least one row was updated
+        return rowsUpdated > 0;
     }
 
     public int getLastSetShiftNumber() {
@@ -5162,6 +5007,62 @@ removeDuplicateTransactions(db,newTransactionId);
         if (result == -1) {
             Log.e(TAG, "Error inserting default item into the database");
         }
+    }
+    public String getPhoneNumberForPaymentMethod(String paymentMethodId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        String phoneNumber = null;
+
+        try {
+            // Query the database for the phone number associated with the payment method
+            cursor = db.query(
+                    PAYMENT_METHOD_TABLE_NAME, // Table name
+                    new String[]{PAYMENT_METHOD_COLUMN_PhoneNumber}, // Columns to retrieve
+                    PAYMENT_METHOD_COLUMN_ID + " = ?", // WHERE clause
+                    new String[]{paymentMethodId}, // Arguments for WHERE clause
+                    null, null, null); // No group by, order by, or limit
+
+            if (cursor != null && cursor.moveToFirst()) {
+                // Retrieve the phone number from the cursor
+                phoneNumber = cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_PhoneNumber));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return phoneNumber;
+    }
+
+    public String getQRCodeForPaymentMethod(String paymentMethodId) {
+        // Define the query to get the QR column for the given payment method ID
+        String query = "SELECT " + PAYMENT_METHOD_COLUMN_QR + " FROM " + PAYMENT_METHOD_TABLE_NAME +
+                " WHERE " + PAYMENT_METHOD_COLUMN_ID + " = ?";
+
+        // Create a cursor to execute the query and get the result
+        Cursor cursor = null;
+        String qrCode = null;
+        try {
+            cursor = getReadableDatabase().rawQuery(query, new String[]{paymentMethodId});
+
+            // Check if cursor has any data
+            if (cursor != null && cursor.moveToFirst()) {
+                // Get the QR code (assuming it's stored as a string)
+                qrCode = cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_QR));
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the exception if there's an error
+        } finally {
+            // Ensure the cursor is closed
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return qrCode; // Return the QR code string (or null if not found)
     }
 
 
@@ -5440,7 +5341,10 @@ removeDuplicateTransactions(db,newTransactionId);
 
         }
 
-
+        Log.d("posNum", posNum);
+        SharedPreferences shardPreference = context.getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        posNum = shardPreference.getString( "posNumber", null);
+        Log.d("posNums", posNum);
         ContentValues values = new ContentValues();
 
         values.put(ITEM_ID, itemId);
@@ -5551,29 +5455,63 @@ removeDuplicateTransactions(db,newTransactionId);
             return result != -1;
         }
     }
-    public boolean updateOrderNumber(String transactionId, int newOrderNumber) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(NUMBER_OF_COVERS, newOrderNumber); // Replace ORDER_NUMBER_COLUMN with your actual column name
 
-        String selection = TRANSACTION_TICKET_NO + " = ?";
-        String[] selectionArgs = { transactionId };
+    // Method to get Displayqr based on PAYMENT_METHOD_COLUMN_ID
+    public String getDisplayQrByPaymentMethodId(String paymentMethodId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String displayQr = null;
 
-        try {
-            int rowsAffected = db.update(
-                    TRANSACTION_HEADER_TABLE_NAME,   // Table name
-                    values,                         // Values to update
-                    selection,                      // WHERE clause
-                    selectionArgs                   // WHERE clause arguments
-            );
+        String query = "SELECT " + Displayqr  +
+                " FROM " + PAYMENT_METHOD_TABLE_NAME +
+                " WHERE " + PAYMENT_METHOD_COLUMN_ID + " = ?";
 
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            Log.e("UpdateOrderNumber", "Error updating order number: " + e.getMessage(), e);
-            return false;
-        } finally {
-            db.close();
+        Cursor cursor = db.rawQuery(query, new String[]{paymentMethodId});
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                displayQr = cursor.getString(cursor.getColumnIndex(Displayqr ));
+            }
+            cursor.close();
         }
+        return displayQr;
+    }
+
+    // Method to get DisplayPhoneNumber based on PAYMENT_METHOD_COLUMN_ID
+    public String getDisplayPhoneNumberByPaymentMethodId(String paymentMethodId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String displayPhoneNumber = null;
+
+        String query = "SELECT " + DisplayPhoneNumber +
+                " FROM " + PAYMENT_METHOD_TABLE_NAME +
+                " WHERE " + PAYMENT_METHOD_COLUMN_ID + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{paymentMethodId});
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                displayPhoneNumber = cursor.getString(cursor.getColumnIndex(DisplayPhoneNumber));
+            }
+            cursor.close();
+        }
+        return displayPhoneNumber;
+    }
+    public String geticonforPaymentMethodId(String name) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String displayPhoneNumber = null;
+
+        String query = "SELECT " + PAYMENT_METHOD_COLUMN_ICON +
+                " FROM " + PAYMENT_METHOD_TABLE_NAME +
+                " WHERE " + PAYMENT_METHOD_COLUMN_NAME + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{name});
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                displayPhoneNumber = cursor.getString(cursor.getColumnIndex(PAYMENT_METHOD_COLUMN_ICON));
+            }
+            cursor.close();
+        }
+        return displayPhoneNumber;
     }
     public int getPreviousInvoiceCounter() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -5624,7 +5562,10 @@ removeDuplicateTransactions(db,newTransactionId);
 
         String previousNoteHash = calculatePreviousNoteHash(formattedDateTime, String.valueOf(totalTTC), brnnumber, transactionId);
 
-
+        Log.d("posNumh", posNum);
+        SharedPreferences shardPreference = context.getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+        posNum = shardPreference.getString( "posNumber", null);
+        Log.d("posNumsh", posNum);
 
         // Check if the transaction ID already exists
         String query = "SELECT COUNT(*) FROM " + TRANSACTION_HEADER_TABLE_NAME +
@@ -5692,6 +5633,24 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return variantId;
     }
+
+    public void updateTransactionHeaderStatusWithoutCondition(String newTransactionStatus, String transactionId, String roomid, String tableid) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TRANSACTION_STATUS, newTransactionStatus);
+
+        // Update the status of the transaction with the specified transactionId, roomid, and tableid
+        String whereClause = TRANSACTION_TICKET_NO + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
+        String[] whereArgs = {transactionId, roomid, tableid};
+
+        int rowsUpdated = db.update(TRANSACTION_HEADER_TABLE_NAME, values, whereClause, whereArgs);
+
+        // Optional: Log the number of rows updated for verification
+        Log.d("DB Update", "Rows updated: " + rowsUpdated +" "+ transactionId);
+    }
+
+
     public void updateAllTransactionsHeaderStatus(String newTransactionStatus, String roomid, String tableid) {
         SQLiteDatabase db = getWritableDatabase();
 
@@ -5803,6 +5762,30 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return totalDiscount;
     }
+    public double getTransactionTotalDiscountbyItemId(int uniqueitemId, String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        double transactionDiscount = 0.0; // Default value if no match is found
+
+        // Define the query to retrieve the transaction discount based on itemId and transactionId
+        String query = "SELECT " + TRANSACTION_TOTAL_DISCOUNT  +
+                " FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + ITEM_ID + " = ? AND " + TRANSACTION_ID + " = ?";
+
+        // Use try-with-resources to ensure the cursor is closed after use
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(uniqueitemId), transactionId})) {
+            if (cursor.moveToFirst()) {
+                transactionDiscount = cursor.getDouble(cursor.getColumnIndex(TRANSACTION_TOTAL_DISCOUNT ));
+                // Log the result
+                Log.d("DatabaseHelper", "Transaction discount for item ID: " + uniqueitemId + ", transaction ID: " + transactionId + " is " + transactionDiscount);
+            } else {
+                Log.d("DatabaseHelper", "No data found for item ID: " + uniqueitemId + ", transaction ID: " + transactionId);
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error retrieving transaction discount", e);
+        }
+
+        return transactionDiscount;
+    }
     public double getTransactionTotalDiscount(int uniqueitemId, String transactionId) {
         SQLiteDatabase db = this.getReadableDatabase();
         double transactionDiscount = 0.0; // Default value if no match is found
@@ -5826,6 +5809,26 @@ removeDuplicateTransactions(db,newTransactionId);
         }
 
         return transactionDiscount;
+    }
+
+    public List<Long> getSelectedUnpaidItemIds(String transactionId, String roomId, String tableId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Long> itemIds = new ArrayList<>();
+
+        String query = "SELECT " + _ID + " FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + TRANSACTION_ID + " = ? AND " + ROOM_ID + " = ? AND " +
+                TABLE_ID + " = ? AND " + IS_SELECTED + " = 1 AND " + IS_PAID + " = 0";
+
+        Cursor cursor = db.rawQuery(query, new String[]{transactionId, roomId, tableId});
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                itemIds.add(cursor.getLong(cursor.getColumnIndexOrThrow(_ID)));
+            }
+            cursor.close();
+        }
+
+        return itemIds;
     }
 
 
@@ -6790,6 +6793,7 @@ removeDuplicateTransactions(db,newTransactionId);
         SQLiteDatabase db = getReadableDatabase();
         return db.query(TABLE_NAME, null, null, null, null, null, null);
     }
+
     public Cursor getAllBuyer() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(BUYER_TABLE_NAME, null, null, null, null, null, null);
@@ -7003,25 +7007,7 @@ removeDuplicateTransactions(db,newTransactionId);
         String sortOrder = ROOM_NAME + " ASC";
         return db.query(ROOMS, projection, selection, selectionArgs, null, null, sortOrder);
     }
-    public Cursor searchTable(String query, String roomid) {
-        SQLiteDatabase db = getReadableDatabase();
-        String[] projection = {ID, TABLE_ID, TABLE_NUMBER, ROOM_ID};
-        String selection;
-        String[] selectionArgs;
 
-        if (roomid != null && !roomid.isEmpty()) {
-            // If roomid is provided, include it in the selection
-            selection = TABLE_NUMBER + " LIKE ? AND " + ROOM_ID + " = ?";
-            selectionArgs = new String[]{"%" + query + "%", roomid};
-        } else {
-            // If roomid is not provided, only use the LIKE condition
-            selection = TABLE_NUMBER + " LIKE ?";
-            selectionArgs = new String[]{"%" + query + "%"};
-        }
-
-        String sortOrder = TABLE_NUMBER + " ASC";
-        return db.query(TABLES, projection, selection, selectionArgs, null, null, sortOrder);
-    }
 
     public Cursor searchUser(String query) {
         SQLiteDatabase db = getReadableDatabase();
@@ -8233,7 +8219,7 @@ removeDuplicateTransactions(db,newTransactionId);
         long result = db.insert(TABLE_NAME_Users, null, values);
         long result1 = db.insert(DEPARTMENT_TABLE_NAME, null, values1);
         db.close();
-        return result;
+        return result1;
     }
 
     // Method to retrieve data from the std_access table
@@ -9171,109 +9157,183 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return totalTTC;
     }
-
-
-    public void duplicateHeaderTransactionData(String type, String oldTransactionId, String newTransactionId, String roomId, String tableId) {
+    public void duplicateHeaderTransactionData(String oldTransactionId, String newTransactionId, String roomId, String tableId) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = null;
 
-        // Start a transaction for safety
-        db.beginTransaction();
         try {
-            // Query to get all the rows matching oldTransactionId, roomId, and tableId with the specific statuses
+            // Begin a transaction for safety
+            db.beginTransaction();
+
+            // Query to get all rows matching the oldTransactionId, roomId, and tableId with specific statuses
             String query = "SELECT * FROM " + TRANSACTION_HEADER_TABLE_NAME +
                     " WHERE " + TRANSACTION_TICKET_NO + " = ? AND " + TRANSACTION_STATUS + " IN (?, ?) AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
             String[] selectionArgs = {oldTransactionId, DatabaseHelper.TRANSACTION_STATUS_IN_PROGRESS, "PRF", roomId, tableId};
 
-            // Execute the query to retrieve the existing data
+            // Execute the query
             cursor = db.rawQuery(query, selectionArgs);
 
-            // Check if any rows are returned
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    // Prepare a new set of values based on the old data, but with a new transaction ticket number
+                    // Prepare new values for the duplicated transaction
                     ContentValues values = new ContentValues();
 
-                    // Copy data from the cursor into ContentValues, excluding the _id column
                     for (int i = 0; i < cursor.getColumnCount(); i++) {
                         String columnName = cursor.getColumnName(i);
 
-                        // Don't copy the _id column and the old transaction ticket number; use the new one instead
+                        // Exclude the unique identifier and transaction ID to replace with the new one
                         if (!columnName.equals("_id") && !columnName.equals(TRANSACTION_TICKET_NO)) {
                             values.put(columnName, cursor.getString(i));
                         }
                     }
-            int oldcounternum=getPreviousInvoiceCounter();
-                    Date currentDate1 = new Date();
 
-                    // Define the desired date format
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss", Locale.getDefault());
-                    BigDecimal totalttc= getTotalTTCByTransactionId(oldTransactionId);
-                    // Format the date and time
-                    String formattedDateTime = dateFormat.format(currentDate1);
-                    String brnnumber=getBrnNo();
-                    String previousNoteHash = calculatePreviousNoteHash(formattedDateTime, String.valueOf(totalttc), brnnumber, newTransactionId);
-
-                    // Set the new transaction ticket number
+                    // Set the new transaction ticket number for each duplicated row
                     values.put(TRANSACTION_TICKET_NO, newTransactionId);
-                    values.put(TRANSACTION_MRA_Invoice_Counter, oldcounternum);
-                 values.put(TRANSACTION_PREVIOUS_HASH, previousNoteHash );
 
                     // Insert the duplicated row into the database with the new transaction ID
                     db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
 
                 } while (cursor.moveToNext());
 
+                // Mark the oldest transaction with the oldTransactionId as "OLDPRF"
+                String oldestTransactionQuery = "SELECT _id FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                        " WHERE " + TRANSACTION_TICKET_NO + " = ? ORDER BY _id ASC LIMIT 1";
+                Cursor oldestCursor = db.rawQuery(oldestTransactionQuery, new String[]{oldTransactionId});
 
-                // Mark the transaction as successful
+                if (oldestCursor != null && oldestCursor.moveToFirst()) {
+                    // Get the _id of the oldest transaction
+                    int oldestTransactionId = oldestCursor.getInt(oldestCursor.getColumnIndex("_id"));
+                    Log.d("oldestTransactionId" , String.valueOf(oldestTransactionId));
+                    // Update the status of the oldest transaction to "OLDPRF"
+                    ContentValues updateValues = new ContentValues();
+                    updateValues.put(TRANSACTION_STATUS, "OLDPRF");
+
+                    db.update(TRANSACTION_HEADER_TABLE_NAME, updateValues, "_id = ?", new String[]{String.valueOf(oldestTransactionId)});
+                    oldestCursor.close();
+                }
+
+                // Mark the latest duplicated entry with the newTransactionId
+                String latestTransactionQuery = "SELECT _id FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                        " WHERE " + TRANSACTION_TICKET_NO + " = ? ORDER BY _id DESC LIMIT 1";
+                Cursor latestCursor = db.rawQuery(latestTransactionQuery, new String[]{newTransactionId});
+
+                if (latestCursor != null && latestCursor.moveToFirst()) {
+                    // Get the _id of the latest transaction
+                    int latestTransactionId = latestCursor.getInt(latestCursor.getColumnIndex("_id"));
+
+                    // Update the TRANSACTION_TICKET_NO of the latest transaction to newTransactionId
+                    ContentValues latestUpdateValues = new ContentValues();
+                    latestUpdateValues.put(TRANSACTION_TICKET_NO, newTransactionId);
+                    latestUpdateValues.put(RELATED_TRANSACTION_ID, oldTransactionId);
+                    db.update(TRANSACTION_HEADER_TABLE_NAME, latestUpdateValues, "_id = ?", new String[]{String.valueOf(latestTransactionId)});
+                    latestCursor.close();
+                }
+
+                // Commit the transaction
                 db.setTransactionSuccessful();
-
-                Log.d("Database Duplication", "Header Transaction duplicated successfully. Old ID: " + oldTransactionId +
-                        ", New ID: " + newTransactionId + ", Room ID: " + roomId + ", Table ID: " + tableId);
-                if (oldTransactionId.startsWith("PRF")) {
-
-                    type = "OLDPRF";
-                }
-
-                // Now update the old transaction's status to the new type
-                ContentValues updateOldValues = new ContentValues();
-                updateOldValues.put(TRANSACTION_STATUS, type);
-
-                // Define the WHERE clause to update the old transaction
-                String whereClause = TRANSACTION_TICKET_NO + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ?";
-                String[] whereArgs = {oldTransactionId, roomId, tableId};
-
-                // Update the old transaction's status
-                int rowsAffected = db.update(TRANSACTION_HEADER_TABLE_NAME, updateOldValues, whereClause, whereArgs);
-
-                if (rowsAffected > 0) {
-                    Log.d("Database Update", "Old Transaction status updated to " + type + " for Transaction ID: " + oldTransactionId);
-                } else {
-                    Log.e("Database Update", "Failed to update Old Transaction status to " + type + " for Transaction ID: " + oldTransactionId);
-                }
-
-                // Perform any additional actions related to updating the related transaction ID
-                updateRelatedTransactionId(newTransactionId, oldTransactionId);
+                Log.d("Database Duplication", "Header Transaction duplicated successfully. Old ID: " + oldTransactionId + ", New ID: " + newTransactionId);
 
             } else {
-                Log.e("Database Duplication", "Failed to duplicate Header Transaction. No matching rows found for ID: " + oldTransactionId +
-                        ", Room ID: " + roomId + ", Table ID: " + tableId + ", with status 'InProgress' or 'PRF'");
+                Log.e("Database Duplication", "No matching rows found for ID: " + oldTransactionId + ", Room ID: " + roomId + ", Table ID: " + tableId);
             }
 
         } catch (Exception e) {
-            // Handle any exceptions that may arise
-            e.printStackTrace();
+            Log.e("Database Duplication", "Error duplicating transaction", e);
         } finally {
-            // End the transaction and close the database and cursor
-            db.endTransaction();
-
             if (cursor != null) {
                 cursor.close();
             }
-
+            db.endTransaction();
             db.close();
         }
     }
+    public boolean updateTransactionStatusoldprf( String transactionId, String newStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean isUpdated = false;
+
+        try {
+            // Prepare the values for the update
+            ContentValues values = new ContentValues();
+            values.put(TRANSACTION_STATUS, newStatus);
+
+            // Perform the update
+            int rowsAffected = db.update(
+                    TRANSACTION_HEADER_TABLE_NAME, // Table name
+                    values,                       // Values to update
+                    TRANSACTION_TICKET_NO + " = ?", // WHERE clause
+                    new String[]{transactionId}   // WHERE args
+            );
+
+            if (rowsAffected > 0) {
+                isUpdated = true;
+                Log.d("UpdateStatus", "Transaction status updated successfully. Rows affected: " + rowsAffected);
+            } else {
+                Log.e("UpdateStatus", "No rows found for Transaction ID: " + transactionId);
+            }
+        } catch (Exception e) {
+            Log.e("UpdateStatus", "Error updating transaction status", e);
+        }
+
+        return isUpdated;
+    }
+
+    public void duplicateTransactionLines(String oldTransactionId, String newTransactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = null;
+
+        try {
+            // Begin a transaction for safety
+            db.beginTransaction();
+
+            // Query to get all rows in TRANSACTION_TABLE_NAME with oldTransactionId and status "valid"
+            String query = "SELECT * FROM " + TRANSACTION_TABLE_NAME +
+                    " WHERE " + TRANSACTION_TICKET_NO + " = ? AND " + TRANSACTION_STATUS + " = ?";
+            String[] selectionArgs = {oldTransactionId, "VALID"};
+
+            // Execute the query
+            cursor = db.rawQuery(query, selectionArgs);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    // Prepare values for the duplicated transaction line
+                    ContentValues values = new ContentValues();
+
+                    for (int i = 0; i < cursor.getColumnCount(); i++) {
+                        String columnName = cursor.getColumnName(i);
+
+                        // Exclude the unique identifier and transaction ID to replace with the new one
+                        if (!columnName.equals("_id") && !columnName.equals(TRANSACTION_TICKET_NO)) {
+                            values.put(columnName, cursor.getString(i));
+                        }
+                    }
+
+                    // Set the new transaction ticket number for each duplicated line
+                    values.put(TRANSACTION_TICKET_NO, newTransactionId);
+
+                    // Insert the duplicated row into the database with the new transaction ID
+                    db.insert(TRANSACTION_TABLE_NAME, null, values);
+
+                } while (cursor.moveToNext());
+
+                // Commit the transaction
+                db.setTransactionSuccessful();
+                Log.d("Database Duplication", "Transaction lines duplicated successfully. Old ID: " + oldTransactionId + ", New ID: " + newTransactionId);
+
+            } else {
+                Log.e("Database Duplication", "No matching lines found for ID: " + oldTransactionId);
+            }
+
+        } catch (Exception e) {
+            Log.e("Database Duplication", "Error duplicating transaction lines", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.endTransaction();
+            db.close();
+        }
+    }
+
 
     public void updateReasonStatus(String ticketNumber, String reason) {
         // Ensure you have access to your SQLite database helper instance
@@ -9419,34 +9479,24 @@ removeDuplicateTransactions(db,newTransactionId);
     }
     public void duplicateTransactionAndHeaderData(String type, String oldTransactionId, String newTransactionId, String roomId, String tableId, int paidstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = null;
 
-        // Start a transaction for safety
         db.beginTransaction();
         try {
-            // Call duplicateTransactionData without closing the database
+            // Perform duplicate operations without closing the database within these methods
             duplicateTransactionDataInternal(db, oldTransactionId, newTransactionId, roomId, tableId, paidstatus);
-
-            // Call duplicateHeaderTransactionData without closing the database
             duplicateHeaderTransactionDataInternal(db, type, oldTransactionId, newTransactionId, roomId, tableId);
 
             // Mark the transaction as successful
             db.setTransactionSuccessful();
         } catch (Exception e) {
-            // Handle any exceptions that may arise
             e.printStackTrace();
         } finally {
-            // End the transaction and close the database and cursor
+            // End the transaction and close the database once after all operations are done
             db.endTransaction();
-
-
-
-            // Close the database once after both operations are done
             db.close();
         }
     }
 
-    // Internal methods that no longer close the database
     private void duplicateTransactionDataInternal(SQLiteDatabase db, String oldTransactionId, String newTransactionId, String roomId, String tableId, int paidstatus) {
         Cursor cursor = null;
         try {
@@ -9500,45 +9550,35 @@ removeDuplicateTransactions(db,newTransactionId);
                             values.put(columnName, cursor.getString(i));
                         }
                     }
-                    int oldcounternum=getPreviousInvoiceCounter();
+                    int oldcounternum = getPreviousInvoiceCounter();
                     Date currentDate1 = new Date();
-
-                    // Define the desired date format
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss", Locale.getDefault());
-                    BigDecimal totalttc= getTotalTTCByTransactionId(oldTransactionId);
-                    // Format the date and time
+                    BigDecimal totalttc = getTotalTTCByTransactionId(oldTransactionId);
                     String formattedDateTime = dateFormat.format(currentDate1);
-                    String brnnumber=getBrnNo();
+                    String brnnumber = getBrnNo();
                     String previousNoteHash = calculatePreviousNoteHash(formattedDateTime, String.valueOf(totalttc), brnnumber, newTransactionId);
                     if (oldTransactionId.startsWith("PRF")) {
-
                         type = "OLDPRF";
                     }
-                    // Set the new transaction ticket number
                     values.put(TRANSACTION_TICKET_NO, newTransactionId);
                     values.put(TRANSACTION_MRA_Invoice_Counter, oldcounternum);
-                    values.put(TRANSACTION_PREVIOUS_HASH, previousNoteHash );
+                    values.put(TRANSACTION_PREVIOUS_HASH, previousNoteHash);
                     values.put(TRANSACTION_STATUS, type);
-
 
                     db.insert(TRANSACTION_HEADER_TABLE_NAME, null, values);
                 } while (cursor.moveToNext());
 
-                // Update the old transaction's status
                 ContentValues updateOldValues = new ContentValues();
                 updateOldValues.put(TRANSACTION_STATUS, type);
-                db.update(TRANSACTION_HEADER_TABLE_NAME, updateOldValues, TRANSACTION_TICKET_NO + " = ?", new String[] { oldTransactionId });
+                db.update(TRANSACTION_HEADER_TABLE_NAME, updateOldValues, TRANSACTION_TICKET_NO + " = ?", new String[]{oldTransactionId});
             }
         } finally {
-            if (db != null) {
-                db.endTransaction();
-            }
-            // Close cursor
             if (cursor != null) {
                 cursor.close();
             }
         }
     }
+
 
     public void duplicateTransactionData(String oldTransactionId, String newTransactionId, String roomId, String tableId, int paidstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -9600,28 +9640,52 @@ removeDuplicateTransactions(db,newTransactionId);
         }
     }
 
+    public boolean isTableNumberDuplicate(int roomId, String tableNumber) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM " + TABLES + " WHERE " + ROOM_ID + " = ? AND " + TABLE_NUMBER + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(roomId), tableNumber});
 
-    public void updateTableData(int roomId, int tableId, int seatCount, String status) {
+        boolean isDuplicate = false;
+        if (cursor.moveToFirst()) {
+            isDuplicate = cursor.getInt(0) > 0; // Check if the count is greater than 0
+        }
+
+        cursor.close();
+        db.close();
+        return isDuplicate;
+    }
+
+    public void updateTableData(int roomId, String newTableNumber, int tableId, int seatCount, String status) {
+        // Check for duplicate table numbers
+        if (isTableNumberDuplicate(roomId, newTableNumber)) {
+            // Show a toast message and exit
+            Toast.makeText(context, "Table number already exists!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Prepare the values to update
         ContentValues values = new ContentValues();
         values.put(SEAT_COUNT, seatCount);
         values.put(STATUS, status);
-        Log.d("STATUS", status);
-        Log.d("SEAT_COUNT", String.valueOf(seatCount));
+        values.put(TABLE_NUMBER, newTableNumber);
+
         // Update the table row using roomId and tableId
-        int rowsAffected = db.update(TABLES, values, ROOM_ID + " = ? AND " + TABLE_NUMBER + " = ?", new String[]{String.valueOf(roomId), String.valueOf(tableId)});
+        int rowsAffected = db.update(TABLES, values, ROOM_ID + " = ? AND " + TABLE_NUMBER + " = ?",
+                new String[]{String.valueOf(roomId), String.valueOf(tableId)});
 
         // Log the result
         if (rowsAffected > 0) {
             Log.d("DatabaseUpdate", "Successfully updated " + rowsAffected + " row(s) in the table.");
+            Toast.makeText(context, "Table updated successfully!", Toast.LENGTH_SHORT).show();
         } else {
             Log.d("DatabaseUpdate", "No rows were updated. Check if the roomId and tableId exist.");
         }
 
         db.close();
     }
+
 
 
     public int getSeatCount(int roomId, int tableId) {
@@ -9805,37 +9869,59 @@ removeDuplicateTransactions(db,newTransactionId);
     public double getTotalSaleAmountpercashior(String startDate, String endDate, String cashorId) {
         SQLiteDatabase db = getReadableDatabase();
 
-        // Query the database to calculate the total sale amount filtered by cashorId and date range
-        String query = "SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                " WHERE " + SETTLEMENT_DATE_TRANSACTION + " BETWEEN ? AND ? AND " + COLUMN_CASHOR_id + " = ?";
+        // Query to calculate the total sale amount filtered by cashorId and date range
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                "ELSE 0 END) AS TotalSumTTC " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                "WHERE " + TRANSACTION_DATE_CREATED + " BETWEEN ? AND ? " +
+                "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')";
 
         Cursor cursor = db.rawQuery(query, new String[]{startDate, endDate, cashorId});
 
         double totalAmount = 0.0;
 
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             totalAmount = cursor.getDouble(0);
         }
 
-        cursor.close();
+        if (cursor != null) {
+            cursor.close();
+        }
         db.close();
 
         return totalAmount;
     }
 
+
     public double getTotalSaleAmount(String startDate, String endDate) {
         SQLiteDatabase db = getReadableDatabase();
 
         // Query the database to calculate the total sale amount
-        Cursor cursor = db.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " BETWEEN ? AND ?", new String[]{startDate, endDate});
+        Cursor cursor = db.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " BETWEEN ? AND ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{startDate, endDate}
+        );
 
         double totalAmount = 0.0;
 
-        if (cursor.moveToFirst()) {
+        // Extract the calculated total from the cursor
+        if (cursor != null && cursor.moveToFirst()) {
             totalAmount = cursor.getDouble(0);
         }
 
-        cursor.close();
+        // Close the cursor and database
+        if (cursor != null) {
+            cursor.close();
+        }
         db.close();
 
         return totalAmount;
@@ -9914,25 +10000,29 @@ removeDuplicateTransactions(db,newTransactionId);
 
         // Query the database to calculate the total sale amount for the specified date range and cashier
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT SUM(" + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_AMOUNT + ") " +
-                "FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " ON " +
-                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_INVOICE_ID + " = " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE +
-                " WHERE " + INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " +
-                INVOICE_SETTLEMENT_TABLE_NAME + "." + SETTLEMENT_DATE_TRANSACTION + " <= ? AND " +
-                TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE + " = ?";
+        String query = "SELECT SUM(CASE " +
+                "WHEN " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_TOTAL_TTC + " " +
+                "WHEN " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_TOTAL_TTC + " " +
+                "ELSE 0 END) AS TotalSumTTC " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_DATE_CREATED + " BETWEEN ? AND ? " +
+                "AND (" + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " = 'CRN') " +
+                "AND " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_CASHIER_CODE + " = ?";
 
         Cursor cursor = db.rawQuery(query, new String[]{startDateString, endDateString, selectedCashier});
 
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             totalAmount = cursor.getDouble(0);
         }
 
-        cursor.close();
+        if (cursor != null) {
+            cursor.close();
+        }
         db.close();
 
         return totalAmount;
     }
+
     public double getSumOfCashReturnForCurrentDate() {
         double sumCashReturn = 0.0;
 
@@ -10573,6 +10663,26 @@ removeDuplicateTransactions(db,newTransactionId);
 
         db.close();
     }
+
+    public long insertDepartment(String departmentCode, String departmentName, int cashorId) {
+        // Get writable database
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Prepare content values
+        ContentValues values = new ContentValues();
+        values.put(DEPARTMENT_CODE, departmentCode);
+        values.put(DEPARTMENT_NAME, departmentName);
+        values.put(COLUMN_CASHOR_id, cashorId);
+
+        // Insert the row and return the new row's ID
+        long result = db.insert(DEPARTMENT_TABLE_NAME, null, values);
+
+        // Close the database
+        db.close();
+
+        return result;
+    }
+
     public void insertOptionTableData(int id, String optionName) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -10911,14 +11021,16 @@ removeDuplicateTransactions(db,newTransactionId);
             // Prepare placeholders for the IN clause
             String transactionIdsPlaceholder = TextUtils.join(",", Collections.nCopies(transactionIds.size(), "?"));
 
+
+
             String splittedQuery = "SELECT t." + TRANSACTION_ID + ", t." + LongDescription + ", t." + TRANSACTION_COMMENT +
                     ", SUM(t." + QUANTITY + ") AS totalQuantity, SUM(t." + TOTAL_PRICE + ") AS totalPrice " +
                     "FROM " + TRANSACTION_TABLE_NAME + " t " +
+                    "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " h ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
                     "WHERE t." + TRANSACTION_ID + " IN (" + transactionIdsPlaceholder + ") " +
                     "AND t." + TRANSACTION_STATUS + " = 'Splitted' " +
-                    " AND h." + TRANSACTION_STATUS + "= 'Completed' " +
+                    "AND h." + TRANSACTION_STATUS + " = 'Completed' " +
                     "GROUP BY t." + TRANSACTION_ID + ", t." + LongDescription;
-
 
             Cursor cursor = db.rawQuery(splittedQuery, transactionIds.toArray(new String[0]));
 
@@ -10987,6 +11099,43 @@ removeDuplicateTransactions(db,newTransactionId);
         dataList.addAll(dataMap.values());
 
         return dataList;
+    }
+    // Method to get CASHOR_NAME based on PIN
+    public String getCashorNameByPin(String pin) {
+        String cashorName = null;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_NAME_Users,
+                new String[]{COLUMN_CASHOR_NAME},
+                COLUMN_PIN + " = ?",
+                new String[]{pin},
+                null, null, null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            cashorName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CASHOR_NAME));
+            cursor.close();
+        }
+        return cashorName;
+    }
+
+    // Method to get CASHOR_ID based on PIN
+    public int getCashorIdByPin(String pin) {
+        int cashorId = -1;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_NAME_Users,
+                new String[]{COLUMN_CASHOR_id},
+                COLUMN_PIN + " = ?",
+                new String[]{pin},
+                null, null, null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            cashorId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CASHOR_id));
+            cursor.close();
+        }
+        return cashorId;
     }
 
     public List<DataModel> getDataBasedOnReportTypeAndShift(String reportType, int shiftNumber) {
@@ -11367,6 +11516,7 @@ removeDuplicateTransactions(db,newTransactionId);
                 "FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " AS t " +
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + SETTLEMENT_INVOICE_ID + " = h." + TRANSACTION_TICKET_NO + " " +
                 "WHERE " + dateFilter + " AND h." + TRANSACTION_CASHIER_CODE + " = ? " +
+                "AND t." + SETTLEMENT_PAYMENT_NAME + " != 'Refund' " +
                 "GROUP BY t." + SETTLEMENT_PAYMENT_NAME;
 
         SQLiteDatabase db = this.getReadableDatabase();
@@ -11391,6 +11541,31 @@ removeDuplicateTransactions(db,newTransactionId);
 
 
 
+    public double getGrandTotalSettlementAmount(String reportType, int cashierId) {
+        double grandTotal = 0.0;
+
+        // Generate date filter based on report type
+        String dateFilter = getDatesFilterBasedOnReportType1(reportType, "h");
+
+        // Query to calculate the grand total of SETTLEMENT_AMOUNT
+        String query = "SELECT SUM(t." + SETTLEMENT_AMOUNT + ") AS grandTotal " +
+                "FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " AS t " +
+                "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + SETTLEMENT_INVOICE_ID + " = h." + TRANSACTION_TICKET_NO + " " +
+                "WHERE " + dateFilter + " AND h." + TRANSACTION_CASHIER_CODE + " = ? " +
+                "AND t." + SETTLEMENT_PAYMENT_NAME + " != 'Refund'";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(cashierId)});
+
+        if (cursor.moveToFirst()) {
+            grandTotal = cursor.getDouble(cursor.getColumnIndex("grandTotal"));
+        }
+        cursor.close();
+        db.close();
+
+        return grandTotal;
+    }
+
 
 
     public double getTotalTaxBasedOnReportTypeAndCashier(String reportType, int cashierId) {
@@ -11406,7 +11581,8 @@ removeDuplicateTransactions(db,newTransactionId);
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
                 "WHERE " + dateFilter + " AND h." + TRANSACTION_CASHIER_CODE + " = ? " +
                 " AND t." + TRANSACTION_STATUS + " IN ('VALID', 'CRN') " +
-                "AND h." + TRANSACTION_STATUS + " != 'InProgress'"; // Exclude 'IN_PROGRESS' status
+                " AND (h." + TRANSACTION_STATUS + " = 'Completed' OR h." + TRANSACTION_STATUS + " = 'CRN')";
+
 
         // Log the SQL query for debugging
 
@@ -11436,7 +11612,8 @@ removeDuplicateTransactions(db,newTransactionId);
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
                 "WHERE " + dateFilter +
                 " AND t." + TRANSACTION_STATUS + " = 'VALID' " +
-                " AND h." + TRANSACTION_STATUS + " != 'InProgress'";
+                " AND (h." + TRANSACTION_STATUS + " = 'Completed' OR h." + TRANSACTION_STATUS + " = 'CRN')";
+
 
         // Log the SQL query for debugging
         Log.d("FinancialQuery", "SQL Query: " + query);
@@ -11469,7 +11646,8 @@ removeDuplicateTransactions(db,newTransactionId);
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO +
                 " WHERE " + dateFilter +
                 " AND t." + TRANSACTION_STATUS + " IN ('VALID', 'CRN') " +
-                " AND h." + TRANSACTION_STATUS + " != 'InProgress'";
+                " AND (h." + TRANSACTION_STATUS + " = 'Completed' OR h." + TRANSACTION_STATUS + " = 'CRN')";
+
 
         // Log the SQL query for debugging
         Log.d("FinancialQuery", "SQL Query: " + query);
@@ -11503,7 +11681,7 @@ removeDuplicateTransactions(db,newTransactionId);
                 "JOIN " + TRANSACTION_HEADER_TABLE_NAME + " AS h ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO + " " +
                 "WHERE " + dateFilter + " AND h." + TRANSACTION_CASHIER_CODE + " = ? " +
                 " AND t." + TRANSACTION_STATUS + " IN ('VALID', 'CRN') " +
-                "AND h." + TRANSACTION_STATUS + " != 'InProgress'"; // Exclude 'IN_PROGRESS' status
+                " AND (h." + TRANSACTION_STATUS + " = 'Completed' OR h." + TRANSACTION_STATUS + " = 'CRN')";
 
 
 
@@ -11649,22 +11827,23 @@ removeDuplicateTransactions(db,newTransactionId);
         SQLiteDatabase db = this.getReadableDatabase();
         int quantity = 0; // Default value if no match is found
 
-        // Define the query to retrieve the quantity based on transactionId, barcode, sentToKitchen status 0, and discount 0
+        // Define the query to retrieve the quantity based on transactionId, barcode, sentToKitchen status 0, discount 0, and transaction status "VALID"
         String query = "SELECT " + QUANTITY +
                 " FROM " + TRANSACTION_TABLE_NAME +
                 " WHERE " + TRANSACTION_ID + " = ? AND " +
                 TRANSACTION_BARCODE + " = ? AND " +
                 TRANSACTION_SentToKitchen + " = ? AND " +
-                TRANSACTION_DISCOUNT + " = ?";
+                TRANSACTION_DISCOUNT + " = ? AND " +
+                TRANSACTION_STATUS + " = ?";
 
         // Use try-with-resources to ensure the cursor is closed after use
-        try (Cursor cursor = db.rawQuery(query, new String[]{transactionId, barcode, "0", "0"})) {
+        try (Cursor cursor = db.rawQuery(query, new String[]{transactionId, barcode, "0", "0", "VALID"})) {
             if (cursor.moveToFirst()) {
                 quantity = cursor.getInt(cursor.getColumnIndex(QUANTITY));
                 // Log the result
-                Log.d("DatabaseHelper", "Quantity for transaction ID: " + transactionId + ", barcode: " + barcode + ", sentToKitchen: 0, discount: 0 is " + quantity);
+                Log.d("DatabaseHelper", "Quantity for transaction ID: " + transactionId + ", barcode: " + barcode + ", sentToKitchen: 0, discount: 0, status: VALID is " + quantity);
             } else {
-                Log.d("DatabaseHelper", "No data found for transaction ID: " + transactionId + ", barcode: " + barcode + ", sentToKitchen: 0, discount: 0");
+                Log.d("DatabaseHelper", "No data found for transaction ID: " + transactionId + ", barcode: " + barcode + ", sentToKitchen: 0, discount: 0, status: VALID");
             }
         } catch (Exception e) {
             Log.e("DatabaseHelper", "Error retrieving quantity", e);
@@ -11673,6 +11852,30 @@ removeDuplicateTransactions(db,newTransactionId);
         return quantity;
     }
 
+    public double getTransactionDiscountByItemId(int uniqueitemId, String transactionId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        double transactionDiscount = 0.0; // Default value if no match is found
+
+        // Define the query to retrieve the transaction discount based on itemId and transactionId
+        String query = "SELECT " + TRANSACTION_DISCOUNT +
+                " FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + ITEM_ID + " = ? AND " + TRANSACTION_ID + " = ?";
+
+        // Use try-with-resources to ensure the cursor is closed after use
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(uniqueitemId), transactionId})) {
+            if (cursor.moveToFirst()) {
+                transactionDiscount = cursor.getDouble(cursor.getColumnIndex(TRANSACTION_DISCOUNT));
+                // Log the result
+                Log.d("DatabaseHelper", "Transaction discount for item ID: " + uniqueitemId + ", transaction ID: " + transactionId + " is " + transactionDiscount);
+            } else {
+                Log.d("DatabaseHelper", "No data found for item ID: " + uniqueitemId + ", transaction ID: " + transactionId);
+            }
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error retrieving transaction discount", e);
+        }
+
+        return transactionDiscount;
+    }
     public double getTransactionDiscount(int uniqueitemId, String transactionId) {
         SQLiteDatabase db = this.getReadableDatabase();
         double transactionDiscount = 0.0; // Default value if no match is found
@@ -11727,10 +11930,11 @@ removeDuplicateTransactions(db,newTransactionId);
         values.put(TRANSACTION_TOTAL_DISCOUNT, 0);
         values.put(VAT_Type, vatType);
 
-        // Select the latest transaction based on TRANSACTION_DATE_CREATED in descending order
+        // Select the latest transaction where status is "VALID" based on TRANSACTION_DATE_CREATED in descending order
         String latestTransactionQuery = "SELECT " + _ID + " FROM " + TRANSACTION_TABLE_NAME +
-                " WHERE " + TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ? AND " + TRANSACTION_SentToKitchen + " = ?" +
-                " ORDER BY " + TRANSACTION_DATE_CREATED + " DESC LIMIT 1";
+                " WHERE " + TRANSACTION_ID + " = ? AND " + ITEM_ID + " = ? AND " + ROOM_ID + " = ? AND " + TABLE_ID + " = ? " +
+                "AND " + TRANSACTION_SentToKitchen + " = ? AND " + TRANSACTION_STATUS + " = 'VALID' " +
+                "ORDER BY " + TRANSACTION_DATE_CREATED + " DESC LIMIT 1";
 
         int updatedRowId = -1;
         String[] selectionArgs = {latesttransId, String.valueOf(itemId), roomid, tableid, "0"};
@@ -11755,9 +11959,10 @@ removeDuplicateTransactions(db,newTransactionId);
                 Log.d("DatabaseHelper", "No transaction updated. Transaction ID: " + latesttransId + ", Item ID: " + itemId);
             }
         } else {
-            Log.d("DatabaseHelper", "No transaction found to update for Transaction ID: " + latesttransId + ", Item ID: " + itemId);
+            Log.d("DatabaseHelper", "No valid transaction found to update for Transaction ID: " + latesttransId + ", Item ID: " + itemId);
         }
     }
+
 
 
 
@@ -12399,7 +12604,7 @@ removeDuplicateTransactions(db,newTransactionId);
                                     String compFaxNo, String shopName, String shopNumber, String logo, String vatNo,
                                     String adr1, String adr2, String adr3, String telNo, String faxNo,
                                     String openingHours, String companyName, int cashorId, String lastModified,
-                                    String dateCreated, String posNum) {
+                                    String dateCreated) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -12423,7 +12628,7 @@ removeDuplicateTransactions(db,newTransactionId);
         values.put(COLUMN_CASHOR_id, cashorId);
         values.put(LastModified, lastModified);
         values.put(DateCreated, dateCreated);
-        values.put(COLUMN_POS_Num, posNum);
+
 
         // Insert the data into the std_access table
         long newRowId = db.insert(TABLE_NAME_STD_ACCESS, null, values);
@@ -12436,8 +12641,7 @@ removeDuplicateTransactions(db,newTransactionId);
     public void inserttablesDatas(int tableId, int roomids, int TableNumber, int seatCount, String waiterName, String status, String merged, String mergeSetid, int roomnum, int TillNum) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Validate roomnum and TillNum
-        if (isShopAndTillValid(roomnum, TillNum)) {
+
             ContentValues values = new ContentValues();
             values.put(TABLE_ID, tableId);
             values.put(ROOM_ID, roomids);
@@ -12470,9 +12674,7 @@ removeDuplicateTransactions(db,newTransactionId);
                     Log.d("Insertion", "Data inserted successfully into tables table");
                 }
             }
-        } else {
-            Log.e("Validation", "Invalid room number or till number. Data not inserted.");
-        }
+
 
         db.close();
     }
@@ -12504,8 +12706,7 @@ removeDuplicateTransactions(db,newTransactionId);
     public void insertroomsDatas(int id, String roomname, String tablecount, int roomnum, int tillnum) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Validate roomnum and tillnum
-       if (isShopAndTillValid(roomnum, tillnum)) {
+
             ContentValues values = new ContentValues();
             values.put(ID, id);
             values.put(ROOM_NAME, roomname);
@@ -12533,9 +12734,7 @@ removeDuplicateTransactions(db,newTransactionId);
                     Log.d("Updaterooms", "Data updated successfully in rooms table");
                 }
             }
-       } else {
-           Log.e("Validationrooms", "Invalid room number or till number. Data not inserted.");
-        }
+
 
         db.close();
     }
@@ -12580,9 +12779,9 @@ removeDuplicateTransactions(db,newTransactionId);
 
 
 
-    public void insertItemsDatas(String id, int shopNumber, int tillNumber, String itemname, String RelatedSupplements, String Comment,
+    public void insertItemsDatas(String id, String itemname, String Comment, String RelatedSupplements,
                                  String desc, String price, String price2, String price3, String ratediscount, String amountdiscount,
-                                 String relateditemid,String category,String Subcategory, String barcode, float weight, String department, String subDepartment,
+                                 String relateditemid, String category, String Subcategory, String barcode, float weight, String department, String subDepartment,
                                  String longDescription, String quantity, String expiryDate, String vAT, String availableForSale,
                                  String soldBy, String image, String variant, String sku, String cost, String userId,
                                  String dateCreated, String lastModified, String Hasoptions, String nature, String currency,
@@ -12591,7 +12790,14 @@ removeDuplicateTransactions(db,newTransactionId);
                                  double priceAfterDiscount3, String Related_item, String Related_item2, String Related_item3,
                                  String Related_item4, String Related_item5, String HasSupplements, String syncStatus) {
 
-        // Trim the string fields before using them in the contentValues
+        // Default values for syncStatus and soldBy
+        syncStatus = (syncStatus == null || syncStatus.trim().isEmpty()) ? "Online" : syncStatus.trim();
+        if (soldBy != null) {
+            soldBy = soldBy.trim().equalsIgnoreCase("EACH") ? "Each" :
+                    soldBy.trim().equalsIgnoreCase("VOLUME") ? "Volume" : soldBy.trim();
+        }
+
+        // Trim other string fields
         itemname = itemname != null ? itemname.trim() : null;
         RelatedSupplements = RelatedSupplements != null ? RelatedSupplements.trim() : null;
         Comment = Comment != null ? Comment.trim() : null;
@@ -12612,7 +12818,6 @@ removeDuplicateTransactions(db,newTransactionId);
         expiryDate = expiryDate != null ? expiryDate.trim() : null;
         vAT = vAT != null ? vAT.trim() : null;
         availableForSale = availableForSale != null ? availableForSale.trim() : null;
-        soldBy = soldBy != null ? soldBy.trim() : null;
         image = image != null ? image.trim() : null;
         variant = variant != null ? variant.trim() : null;
         sku = sku != null ? sku.trim() : null;
@@ -12634,78 +12839,75 @@ removeDuplicateTransactions(db,newTransactionId);
         Related_item4 = Related_item4 != null ? Related_item4.trim() : null;
         Related_item5 = Related_item5 != null ? Related_item5.trim() : null;
         HasSupplements = HasSupplements != null ? HasSupplements.trim() : null;
-        syncStatus = syncStatus != null ? syncStatus.trim() : null;
+        Log.d("Hasoptionsd",Hasoptions);
+        Log.d("HasSupplementsd",HasSupplements);
+        Log.d("RelatedSupplementsd",RelatedSupplements);
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DatabaseHelper._ID, id);
+        contentValue.put(DatabaseHelper.Name, itemname);
+        contentValue.put(DatabaseHelper.Related_ITEM_ID, relateditemid);
+        contentValue.put(DatabaseHelper.comment, Comment);
+        contentValue.put(DatabaseHelper.relatedSupplements, RelatedSupplements);
+        contentValue.put(DatabaseHelper.DESC, desc);
+        contentValue.put(DatabaseHelper.Price, price);
+        contentValue.put(DatabaseHelper.Price2, price2);
+        contentValue.put(DatabaseHelper.Price3, price3);
+        contentValue.put(DatabaseHelper.RateDiscount, ratediscount);
+        contentValue.put(DatabaseHelper.AmountDiscount, amountdiscount);
+        contentValue.put(DatabaseHelper.hasoptions, Hasoptions);
+        contentValue.put(DatabaseHelper.Category, category);
+        contentValue.put(DatabaseHelper.SubCategory, Subcategory);
+        contentValue.put(DatabaseHelper.Barcode, barcode);
+        contentValue.put(DatabaseHelper.Department, department);
+        contentValue.put(DatabaseHelper.SubDepartment, subDepartment);
+        contentValue.put(DatabaseHelper.LongDescription, longDescription);
+        contentValue.put(DatabaseHelper.Quantity, quantity);
+        contentValue.put(DatabaseHelper.ExpiryDate, expiryDate);
+        contentValue.put(DatabaseHelper.VAT, vAT);
+        contentValue.put(DatabaseHelper.Weight, weight);
+        contentValue.put(DatabaseHelper.AvailableForSale, availableForSale);
+        contentValue.put(DatabaseHelper.SoldBy, soldBy);
+        contentValue.put(DatabaseHelper.Image, image);
+        contentValue.put(DatabaseHelper.Variant, variant);
+        contentValue.put(DatabaseHelper.SKU, sku);
+        contentValue.put(DatabaseHelper.Cost, cost);
+        contentValue.put(DatabaseHelper.DateCreated, dateCreated);
+        contentValue.put(DatabaseHelper.LastModified, lastModified);
+        contentValue.put(DatabaseHelper.UserId, userId);
+        contentValue.put(DatabaseHelper.Nature, nature);
+        contentValue.put(DatabaseHelper.Currency, currency);
+        contentValue.put(DatabaseHelper.ItemCode, itemCode);
+        contentValue.put(DatabaseHelper.TaxCode, taxCode);
+        contentValue.put(DatabaseHelper.TotalDiscount, totalDiscount);
+        contentValue.put(DatabaseHelper.TotalDiscount2, totalDiscount2);
+        contentValue.put(DatabaseHelper.TotalDiscount3, totalDiscount3);
+        contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
+        contentValue.put(DatabaseHelper.Price2AfterDiscount, priceAfterDiscount2);
+        contentValue.put(DatabaseHelper.Price3AfterDiscount, priceAfterDiscount3);
+        contentValue.put(DatabaseHelper.related_item, Related_item);
+        contentValue.put(DatabaseHelper.related_item2, Related_item2);
+        contentValue.put(DatabaseHelper.related_item3, Related_item3);
+        contentValue.put(DatabaseHelper.related_item4, Related_item4);
+        contentValue.put(DatabaseHelper.related_item5, Related_item5);
+        contentValue.put(DatabaseHelper.hasSupplements, HasSupplements);
+        contentValue.put(DatabaseHelper.SyncStatus, syncStatus);
 
-        if (isShopAndTillValid(shopNumber, tillNumber)) {
-            ContentValues contentValue = new ContentValues();
-            contentValue.put(DatabaseHelper._ID, id);
-            contentValue.put(DatabaseHelper.Name, itemname);
-            contentValue.put(DatabaseHelper.Related_ITEM_ID, relateditemid);
-            contentValue.put(DatabaseHelper.comment, Comment);
-            contentValue.put(DatabaseHelper.relatedSupplements, RelatedSupplements);
-            contentValue.put(DatabaseHelper.DESC, desc);
-            contentValue.put(DatabaseHelper.Price, price);
-            contentValue.put(DatabaseHelper.Price2, price2);
-            contentValue.put(DatabaseHelper.Price3, price3);
-            contentValue.put(DatabaseHelper.RateDiscount, ratediscount);
-            contentValue.put(DatabaseHelper.AmountDiscount, amountdiscount);
-            contentValue.put(DatabaseHelper.hasoptions, Hasoptions);
-            contentValue.put(DatabaseHelper.Category, category);
-            contentValue.put(DatabaseHelper.SubCategory, Subcategory);
-            contentValue.put(DatabaseHelper.Barcode, barcode);
-            contentValue.put(DatabaseHelper.Department, department);
-            contentValue.put(DatabaseHelper.SubDepartment, subDepartment);
-            contentValue.put(DatabaseHelper.LongDescription, longDescription);
-            contentValue.put(DatabaseHelper.Quantity, quantity);
-            contentValue.put(DatabaseHelper.ExpiryDate, expiryDate);
-            contentValue.put(DatabaseHelper.VAT, vAT);
-            contentValue.put(DatabaseHelper.Weight, weight);
-            contentValue.put(DatabaseHelper.AvailableForSale, availableForSale);
-            contentValue.put(DatabaseHelper.SoldBy, soldBy);
-            contentValue.put(DatabaseHelper.Image, image);
-            contentValue.put(DatabaseHelper.Variant, variant);
-            contentValue.put(DatabaseHelper.SKU, sku);
-            contentValue.put(DatabaseHelper.Cost, cost);
-            contentValue.put(DatabaseHelper.DateCreated, dateCreated);
-            contentValue.put(DatabaseHelper.LastModified, lastModified);
-            contentValue.put(DatabaseHelper.UserId, userId);
-            contentValue.put(DatabaseHelper.Nature, nature);
-            contentValue.put(DatabaseHelper.Currency, currency);
-            contentValue.put(DatabaseHelper.ItemCode, itemCode);
-            contentValue.put(DatabaseHelper.TaxCode, taxCode);
-            contentValue.put(DatabaseHelper.TotalDiscount, totalDiscount);
-            contentValue.put(DatabaseHelper.TotalDiscount2, totalDiscount2);
-            contentValue.put(DatabaseHelper.TotalDiscount3, totalDiscount3);
-            contentValue.put(DatabaseHelper.PriceAfterDiscount, priceAfterDiscount);
-            contentValue.put(DatabaseHelper.Price2AfterDiscount, priceAfterDiscount2);
-            contentValue.put(DatabaseHelper.Price3AfterDiscount, priceAfterDiscount3);
-            contentValue.put(DatabaseHelper.related_item, Related_item);
-            contentValue.put(DatabaseHelper.related_item2, Related_item2);
-            contentValue.put(DatabaseHelper.related_item3, Related_item3);
-            contentValue.put(DatabaseHelper.related_item4, Related_item4);
-            contentValue.put(DatabaseHelper.related_item5, Related_item5);
-            contentValue.put(DatabaseHelper.hasSupplements, HasSupplements);
-            contentValue.put(DatabaseHelper.SyncStatus, syncStatus);
-
-            try (SQLiteDatabase db = this.getWritableDatabase()) {
-                if (!checkBarcodeExistsForItems(barcode)) {
-                    long result = db.insert(TABLE_NAME, null, contentValue);
-                    if (result == -1) {
-                        Log.e("Insertion", "Failed to insert data into item table");
-                    } else {
-                        Log.d("Insertion", "Data inserted successfully into item table");
-                    }
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            if (!checkBarcodeExistsForItems(barcode)) {
+                long result = db.insert(TABLE_NAME, null, contentValue);
+                if (result == -1) {
+                    Log.e("Insertion", "Failed to insert data into item table");
                 } else {
-                    int result = db.update(TABLE_NAME, contentValue, DatabaseHelper.Barcode + "=?", new String[]{barcode});
-                    if (result == -1) {
-                        Log.e("Update", "Failed to update data in item table");
-                    } else {
-                        Log.d("Update", "Data updated successfully in item table");
-                    }
+                    Log.d("Insertion", "Data inserted successfully into item table");
+                }
+            } else {
+                int result = db.update(TABLE_NAME, contentValue, DatabaseHelper.Barcode + "=?", new String[]{barcode});
+                if (result == -1) {
+                    Log.e("Update", "Failed to update data in item table");
+                } else {
+                    Log.d("Update", "Data updated successfully in item table");
                 }
             }
-        } else {
-            Log.e("Validation", "Invalid shop number or till number. Data not inserted.");
         }
     }
 

@@ -44,6 +44,7 @@
                         style="@style/modifiedEditText"
                         android:hint="@string/Vendorname"
                         android:singleLine="true"
+                     android:maxLength="26"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
@@ -98,6 +99,7 @@
                         style="@style/modifiedEditText"
                         android:hint="@string/Vendorcode"
                         android:singleLine="true"
+                        android:maxLength="10"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number" />
@@ -118,7 +120,7 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="phone" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -147,6 +149,7 @@
                             android:id="@+id/Street_edittext"
                             style="@style/modifiedEditText"
                             android:hint="@string/Street"
+                            android:maxLength="26"
                             android:singleLine="true"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -163,6 +166,7 @@
                             android:id="@+id/Town_edittext"
                             style="@style/modifiedEditText"
                             android:hint="@string/Town"
+                            android:maxLength="26"
                             android:singleLine="true"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -180,9 +184,10 @@
                             style="@style/modifiedEditText"
                             android:hint="@string/PostalCode"
                             android:singleLine="true"
+                            android:maxLength="26"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="text" />
+                            android:inputType="number" />
 
                     </LinearLayout>
                     <TextView
@@ -199,7 +204,7 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="textEmailAddress" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -213,9 +218,10 @@
                         style="@style/modifiedEditText"
                         android:hint="@string/InternalCode"
                         android:singleLine="true"
+                        android:maxLength="10"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text" />
+                        android:inputType="number" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -228,6 +234,7 @@
                         android:id="@+id/Salesmen_edittext"
                         style="@style/modifiedEditText"
                         android:hint="@string/Salesmen"
+                        android:maxLength="26"
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

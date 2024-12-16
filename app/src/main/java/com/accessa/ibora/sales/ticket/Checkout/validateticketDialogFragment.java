@@ -118,6 +118,11 @@ public class validateticketDialogFragment extends DialogFragment  {
     }
 
     String id;
+    private String displayQr ; // Replace "1" with actual ID
+
+    // Get DisplayPhoneNumber for a specific payment method ID
+    private String displayPhoneNumber ; // Replace "1" with actual ID
+
     private QRFragment.DataPassListener dataPassListener;
     private String tableid;
     private EditText clickedEditText;
@@ -329,7 +334,11 @@ public class validateticketDialogFragment extends DialogFragment  {
                 if (!amountReceivedEditText.getText().toString().isEmpty()) {
                     amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
                 }
+                // Get Displayqr for a specific payment method ID
+                String displayQr = mDatabaseHelper.getDisplayQrByPaymentMethodId(id); // Replace "1" with actual ID
 
+                // Get DisplayPhoneNumber for a specific payment method ID
+                String displayPhoneNumber = mDatabaseHelper.getDisplayPhoneNumberByPaymentMethodId(id); // Replace "1" with actual ID
                 if ((name.equals("Cash") || name.equals("Cheque")) && amountReceived!=0){
 
 
@@ -349,70 +358,98 @@ public class validateticketDialogFragment extends DialogFragment  {
                     mRecyclerView.setVisibility(View.VISIBLE);
 
                     validateButton.setVisibility(View.GONE);
-                    handleFullPayment(id);
+
+                                    Log.d("displayQr", "= " + displayQr);
+                                    Log.d("displayPhoneNumber", "= " + displayPhoneNumber);
+                             if (id != null && (id.equals("6") && name.equals("Coupon Code"))) {
+                                 // Create an AlertDialog.Builder
+                                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+                                 alertDialogBuilder.setTitle("Enter Barcode"); // Set dialog title
+
+// Create an EditText for the barcode input
+                                 final EditText editTextBarcode = new EditText(getContext());
+                                 editTextBarcode.setHint("Barcode Number"); // Set hint for EditText
+                                 editTextBarcode.setInputType(InputType.TYPE_CLASS_TEXT); // Set input type to text
+                                 alertDialogBuilder.setView(editTextBarcode);
+
+// Create a method for handling barcode validation
+                                 DialogInterface.OnClickListener validateBarcode = new DialogInterface.OnClickListener() {
+                                     @Override
+                                     public void onClick(DialogInterface dialog, int which) {
+                                         String barcode = editTextBarcode.getText().toString();
+
+
+                                         Double discount = mDatabaseHelper.getCouponDiscountIfValid(barcode);
+                                         if (discount != null) {
+                                             Toast.makeText(getContext(), "Valid Barcode, Discount: " + discount, Toast.LENGTH_SHORT).show();
+                                             handleCouponPayment(id,discount);
+                                             mDatabaseHelper.markCouponAsUsed(barcode);
+                                             // Continue with processing the valid coupon
+                                             editTextBarcode.setText(""); // Clear the EditText on invalid barcode
+
+                                         } else {
+                                             Toast.makeText(getContext(), "Invalid Barcode or Expired Coupon", Toast.LENGTH_SHORT).show();
+                                             editTextBarcode.setText(""); // Clear the EditText on invalid barcode
+
+                                         }
+
+                                     }
+                                 };
+
+// Set positive button (Enter)
+                                 alertDialogBuilder.setPositiveButton("Enter", validateBarcode);
+
+// Set an OnEditorActionListener for the EditText
+                                 editTextBarcode.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                                     @Override
+                                     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                                         if (actionId == EditorInfo.IME_ACTION_DONE ||
+                                                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                                             // Trigger the validation logic
+                                             validateBarcode.onClick(null, DialogInterface.BUTTON_POSITIVE);
+                                             return true;
+                                         }
+                                         return false;
+                                     }
+                                 });
+
+// Create and show the AlertDialog
+                                 AlertDialog alertDialog = alertDialogBuilder.create();
+                                 alertDialog.show();
+
+
+                                 return; // Exit the method if validation fails
+                                    }else if ((displayQr != null && !displayQr.equals("0")) || (displayPhoneNumber != null && !displayPhoneNumber.equals("0"))) {
+                         String qrcode= mDatabaseHelper.getQRCodeForPaymentMethod(id);
+                        String phonenumber= mDatabaseHelper.getPhoneNumberForPaymentMethod(id);
+                         showSecondaryScreenOnValidate(name, id, qrcode,phonenumber);
+
+                               // Display validation pop-up dialog
+                              showTransactionValidationDialog(id);
+                                        return; // Exit the method if validation fails
+                           }
+                                    handleFullPayment(id);
                 }
+
                 else if (id !=null && (id.equals("1") && name.equals("POP")))
                 {
                     showPopAmountOptionsDialog(); // Call the showPopOptionsDialog() method here for "POP" button click
 
-                } else if (id != null && (id.equals("6") && name.equals("Coupon Code"))) {
-                    // Create an AlertDialog.Builder
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-                    alertDialogBuilder.setTitle("Enter Barcode"); // Set dialog title
-
-                    // Create an EditText for the barcode input
-                    final EditText editTextBarcode = new EditText(getContext());
-                    editTextBarcode.setHint("Barcode Number"); // Set hint for EditText
-                    alertDialogBuilder.setView(editTextBarcode);
-
-                    // Create a method for handling barcode validation
-                    DialogInterface.OnClickListener validateBarcode = new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // This logic is the same as before
-                            String barcode = editTextBarcode.getText().toString();
-                            boolean isBarcodeValid = mDatabaseHelper.isValidBarcode(barcode);
-
-                            if (isBarcodeValid) {
-                                Toast.makeText(getContext(), "Valid Barcode", Toast.LENGTH_SHORT).show();
-                                // Barcode is valid, start another activity and pass the amount
-                                // Intent intent = new Intent(getContext(), AnotherActivity.class);
-                                // intent.putExtra("amount", calculateAmount()); // Pass the calculated amount
-                                // startActivity(intent);
-                            } else {
-                                // Barcode is invalid, show an error message
-                                Toast.makeText(getContext(), "Invalid Barcode", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    };
-
-                    // Set positive button (Enter)
-                    alertDialogBuilder.setPositiveButton("Enter", validateBarcode);
-
-                    // Set an OnEditorActionListener for the EditText
-                    editTextBarcode.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                        @Override
-                        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                                // "Enter" key on the keyboard was pressed
-                                validateBarcode.onClick(null, DialogInterface.BUTTON_POSITIVE); // Trigger the validation logic
-                                return true;
-                            }
-                            return false;
-                        }
-                    });
-
-                    // Create and show the AlertDialog
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();
-                }
-
-
-
-                else if (id != null ) {
+                } else if (id != null ) {
                     selectedItems.add(id);
+                                    Log.d("displayQr", "= " + displayQr);
+                                    Log.d("displayPhoneNumber", "= " + displayPhoneNumber);
 
-                    handleSplittedPayment(id);
+                                    // Check if either displayQr or displayPhoneNumber is not null or zero
+     if ((displayQr != null && !displayQr.equals("0")) || (displayPhoneNumber != null && !displayPhoneNumber.equals("0"))) {
+
+               String qrcode= mDatabaseHelper.getQRCodeForPaymentMethod(id);
+                String phonenumber= mDatabaseHelper.getPhoneNumberForPaymentMethod(id);
+                  showSecondaryScreenOnValidate(name, id, qrcode,phonenumber);                                       // Display validation pop-up dialog
+                      showSplittedTransactionValidationDialog(id);
+                      return; // Exit the method if validation fails
+                }
+                                    handleSplittedPayment(id);// Recursively call the method to proceed
                     amountReceivedEditText.setText("");
                     gridLayout.setVisibility(View.VISIBLE);
                     containerLayout.setVisibility(View.VISIBLE);
@@ -571,14 +608,18 @@ public class validateticketDialogFragment extends DialogFragment  {
                 int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
                 int columnIndexSplitType = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
+                String statusType1= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+
+
+                String latesttransId1= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType1);
 
                 String transactionid= mDatabaseHelper.getTransactionTicketNo(roomid,tableid);
-                Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid,String.valueOf(roomid),tableid);
+                Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(latesttransId1,String.valueOf(roomid),tableid);
                 Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid),tableid);
 
-                boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(transactionid);
-                boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionid);
-                boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(transactionid);
+                boolean areNOItemsSelected=  mDatabaseHelper.areAllItemsNotSelected(latesttransId1);
+                boolean areAllItemsNotSelectedNotPaid=  mDatabaseHelper.areAllItemsNotSelectedNotPaid(latesttransId1);
+                boolean areNoItemsSelectedNorPaid=  mDatabaseHelper.areNoItemsSelectedNorPaid(latesttransId1);
 
                 if(areAllItemsNotSelectedNotPaid) {
                     if (cursor1 != null && cursor1.moveToFirst()) {
@@ -1059,146 +1100,21 @@ if(isAtLeastOneItemSelected){
             @Override
             public void onClick(View view) {
                 int levelNumber= Integer.parseInt(cashorlevel);
+
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                String Activity="applyDiscount_";
                 SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                boolean canHigherAccessSyncDatabase = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "applyDiscount_", levelNumber)) {
-                    // Inflate the PIN dialog layout
-                    LayoutInflater inflater = getLayoutInflater();
-                    View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
-                    pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+                if (canHigherAccessSyncDatabase) {
+                    showPinDialog(Activity, () -> {
+                    showDiscountDialog(Integer.parseInt(cashorlevel));
 
-                    // Find the number buttons and set OnClickListener
-                    Button button1 = pinDialogView.findViewById(R.id.button1);
-                    Button button2 = pinDialogView.findViewById(R.id.button2);
-                    Button button3 = pinDialogView.findViewById(R.id.button3);
-                    Button button4 = pinDialogView.findViewById(R.id.button4);
-                    Button button5 = pinDialogView.findViewById(R.id.button5);
-                    Button button6 = pinDialogView.findViewById(R.id.button6);
-                    Button button7 = pinDialogView.findViewById(R.id.button7);
-                    Button button8 = pinDialogView.findViewById(R.id.button8);
-                    Button button9 = pinDialogView.findViewById(R.id.button9);
-                    Button button0 = pinDialogView.findViewById(R.id.button0);
-                    Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
-                    Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
-
-                    // Set up button click listeners in the dialog
-                    setPinButtonClickListeners(pinDialogView, pinEditText);
-
-                    // Create the PIN dialog without positive and negative buttons
-                    AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
-                    pinBuilder.setTitle("Enter PIN")
-                            .setView(pinDialogView);
-
-                    AlertDialog pinDialog = pinBuilder.create();
-                    pinDialog.show();
-
-                    // Set click listener for the Clear button
-                    buttonClear.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onpinClearButtonClick(pinEditText);
-                        }
                     });
-                    button1.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (pinEditText != null) {
-                                onPinNumberButtonClick(v, "1");
-                            } else {
-                                // Handle the case where clickedEditText is null
-                                Toast.makeText(getContext(), "No EditText selected", Toast.LENGTH_SHORT).show();
-                                // Alternatively, perform another action to handle this case
-                            }
-                        }
-                    });
+                } else if (!canHigherAccessSyncDatabase && mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber)) {
+                    showDiscountDialog(Integer.parseInt(cashorlevel));
 
-
-                    button2.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            onPinNumberButtonClick(v, "2");
-                        }
-                    });
-
-                    button3.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "3");
-                        }
-                    });
-
-                    button4.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "4");
-                        }
-                    });
-
-                    button5.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "5");
-                        }
-                    });
-
-                    button6.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "6");
-                        }
-                    });
-
-                    button7.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "7");
-                        }
-                    });
-
-                    button8.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "8");
-                        }
-                    });
-
-                    button9.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "9");
-                        }
-                    });
-
-                    button0.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onPinNumberButtonClick(v, "0");
-                        }
-                    });
-
-
-                    // Set click listener for the Login button
-                    buttonLogin.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            String enteredPIN = pinEditText.getText().toString();
-
-                            // Validate the entered PIN
-                            int cashorLevel = validatePIN(enteredPIN);
-                            if (cashorLevel != -1) {
-                                // PIN is valid, now show the discount dialog
-                                showDiscountDialog(cashorLevel);
-                                // Dismiss the dialog
-                                dismiss();
-                                pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
-                            } else {
-                                // PIN is invalid, show an error message
-                                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }else{
+                } else{
                     Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
 
                 }
@@ -1279,8 +1195,14 @@ if(isAtLeastOneItemSelected){
     }
 
     public void onClearButtonClick(View view) {
-        EditText pinEditText = view.findViewById(R.id.editTextPIN);
-        pinEditText.setText("");
+        if (amountReceivedEditText != null) {
+            // Insert the letter into the EditText
+            amountReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Method to validate the PIN
@@ -1291,7 +1213,58 @@ if(isAtLeastOneItemSelected){
         // Return the cashor level if valid, or -1 if invalid
         return cashorLevel;
     }
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
 
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        androidx.appcompat.app.AlertDialog.Builder pinBuilder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        androidx.appcompat.app.AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    mDatabaseHelper.logUserActivity(Integer.parseInt(cashierId), cashierName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void showPermissionDeniedDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
     // Method to show the discount dialog
     private void showDiscountDialog(int cashorLevel) {
         LayoutInflater inflater = getLayoutInflater();
@@ -1345,26 +1318,44 @@ if(isAtLeastOneItemSelected){
         String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
         String latestTransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
 
-        // Calculate the total amount and tax total amount
-        double totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
-        double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
+        // Get a list of selected and unpaid item IDs
+        List<Long> selectedItemIds = mDatabaseHelper.getSelectedUnpaidItemIds(latestTransId, roomid, tableid);
 
-        // Calculate the discount amount
-        double discountAmount = totalAmount * (discountPercentage / 100);
-        double discounttaxAmount = taxTotalAmount * (discountPercentage / 100);
-        // Calculate the new total amount after applying the discount
-        double newTotalAmount = totalAmount - discountAmount;
+        if (!selectedItemIds.isEmpty()) {
+            // If at least one item is selected, apply the discount to selected items
+            for (long itemId : selectedItemIds) {
+                mDatabaseHelper.applyDiscountToTransactionItemsById(latestTransId, discountPercentage, itemId);
+            }
+            Log.d("DISCOUNT_STATUS", "Applied discount to selected items.");
+        } else {
+            // If no items or all items are selected, apply discount to all unpaid items
+            double totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
+            double taxTotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
 
-        // Ensure the new total amount is not negative
-        if (newTotalAmount < 0) {
-            newTotalAmount = 0;
+            // Calculate the discount amount
+            double discountAmount = totalAmount * (discountPercentage / 100);
+            double discountTaxAmount = taxTotalAmount * (discountPercentage / 100);
+
+            // Calculate the new total amount after applying the discount
+            double newTotalAmount = totalAmount - discountAmount;
+
+            // Ensure the new total amount is not negative
+            if (newTotalAmount < 0) {
+                newTotalAmount = 0;
+            }
+
+            // Update the database with the new total amount and discount amount
+            mDatabaseHelper.updateDiscountByTransactionId(newTotalAmount, discountAmount, discountTaxAmount, latestTransId);
+            mDatabaseHelper.applyDiscountToTransactionItems(latestTransId, discountPercentage);
+            Log.d("DISCOUNT_STATUS", "Applied discount to all unpaid items.");
         }
 
-        // Update the database with the new total amount and discount amount
-        mDatabaseHelper.updateDiscountByTransactionId(newTotalAmount, discountAmount,discounttaxAmount, latestTransId);
-        mDatabaseHelper.applyDiscountToTransactionItems(latestTransId,discountPercentage);
-    }
+        // Update the UI with the new total amount
+        double totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(latestTransId, roomid, tableid);
+        totalAmountTextView.setText(getString(R.string.Total) + ": Rs " + totalAmount);
 
+        dismiss();
+    }
 
 
 
@@ -1507,14 +1498,272 @@ if(isAtLeastOneItemSelected){
                     cashReportValues.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Positive cash in amount
                     cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
                     cashReportValues.put(FINANCIAL_CashReturn, cashReturn);
+                    cashReportValues.put(FINANCIAL_COLUMN_TransId, transactionIdInProgress);
+                    cashReportValues.put(TRANSACTION_SHIFT_NUMBER, (String) null); // Set shift number as null initially
+                    db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+                }
+                cashCursor.close();
+            }
+            Log.d("InsertCashReturn2", settlementItem.getSettlementAmount() +" " + transactionIdInProgress);
+            mDatabaseHelper.updateTenderAmount(transactionIdInProgress, settlementItem.getSettlementAmount());
+        }
+
+
+        // Notify the listener that an item is added
+        if (itemAddedListener != null) {
+            itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+        }
+        double totalAmountinserted = 0.0;
+        // Iterate over the settlement items to calculate the total amount
+        for (SettlementItem item : settlementItems) {
+            totalAmountinserted += item.getSettlementAmount();
+        }
+        double totalsplit= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
+        String MRAMETHOD="Single";
+        insertCashReturn(String.valueOf(cashReturn), String.valueOf(totalAmountinserted),qrMra,mrairn,MRAMETHOD);
+        boolean isAtLeastOneItemSelected= mDatabaseHelper.isAtLeastOneItemSelected(latesttransId);
+        Log.d("cashReturn", "= " + cashReturn);
+        Log.d("total", "= " + totalsplit);
+        Log.d("isAtLeastOneItemSelected", "= " + isAtLeastOneItemSelected);
+
+
+        double sum = 0.0;
+        List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, Integer.parseInt(roomid), tableid);
+
+        // Calculate the subtotal and display payment methods
+        if (summaries != null && !summaries.isEmpty()) {
+
+            StringBuilder paymentMethods = new StringBuilder();
+
+            for (DatabaseHelper.SettlementSummary summary : summaries) {
+                sum += summary.sum;
+            }
+
+        }
+
+
+        if(isAtLeastOneItemSelected) {
+            cashReturn= sum - totalsplit;
+
+            Log.d("total", "= " + totalsplit);
+            Log.d("sum", "= " + sum);
+            Log.d("totalAmountinserted", "= " + totalAmountinserted);
+            Log.d(" " +
+                    "", "= " + cashReturn);
+
+            if( cashReturn>=0){
+                String newtransid=  generateNewTransactionId();
+                Log.d("latesttransIditemsel", String.valueOf(latesttransId));
+                Log.d("newtransiditemsel", String.valueOf(newtransid));
+                mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
+                // Update the transaction ID in the header table for transactions with status "InProgress"
+                SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalsplit,"VAT 15%"),newtransid);
+                double newamoubt;
+                if(totalAmount != 0) {
+                    newamoubt = totalAmount - totalsplit;
+                }else{
+                    newamoubt=totalsplit;
+                }
+                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),transactionIdInProgress);
+                mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
+                Intent intent = new Intent(getActivity(), Mra.class);
+                intent.putExtra("amount_received", String.valueOf(totalsplit));
+                intent.putExtra("cash_return", String.valueOf(cashReturn));
+                intent.putExtra("settlement_items", settlementItems);
+                intent.putExtra("id", latesttransId);
+                intent.putExtra("selectedBuyerName", Buyname);
+                intent.putExtra("selectedBuyerTAN", BuyTAN);
+                intent.putExtra("selectedBuyerCompanyName", BuyComp);
+                intent.putExtra("selectedBuyerType", BuyType);
+                intent.putExtra("selectedBuyerBRN", BuyBRN);
+                intent.putExtra("selectedBuyerNIC", BuyNIC);
+                intent.putExtra("selectedBuyerAddresse", BuyAdd);
+                intent.putExtra("selectedBuyerprofile", BuyProfile);
+                intent.putExtra("roomid", roomid);
+                intent.putExtra("tableid", tableid);
+                System.out.println("selectedBuyerTANs: " + BuyTAN);
+                startActivity(intent);
+                mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
+            }
+
+
+        }else {
+            cashReturn= sum - totalAmount;
+
+            Log.d("total", "= " + totalsplit);
+            Log.d("sum", "= " + sum);
+            Log.d("totalAmountinserted", "= " + totalAmountinserted);
+            Log.d("cashReturn", "= " + cashReturn);
+            if( cashReturn>=0){
+
+                Log.d("latesttransIditemsel", String.valueOf(latesttransId));
+
+                // Update the transaction ID in the header table for transactions with status "InProgress"
+                SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
+                mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
+                Intent intent = new Intent(getActivity(), Mra.class);
+                intent.putExtra("amount_received", String.valueOf(totalsplit));
+                intent.putExtra("cash_return", String.valueOf(cashReturn));
+                intent.putExtra("settlement_items", settlementItems);
+                intent.putExtra("id", latesttransId);
+                intent.putExtra("selectedBuyerName", Buyname);
+                intent.putExtra("selectedBuyerTAN", BuyTAN);
+                intent.putExtra("selectedBuyerCompanyName", BuyComp);
+                intent.putExtra("selectedBuyerType", BuyType);
+                intent.putExtra("selectedBuyerBRN", BuyBRN);
+                intent.putExtra("selectedBuyerNIC", BuyNIC);
+                intent.putExtra("selectedBuyerAddresse", BuyAdd);
+                intent.putExtra("selectedBuyerprofile", BuyProfile);
+                intent.putExtra("roomid", roomid);
+                intent.putExtra("tableid", tableid);
+                System.out.println("selectedBuyerTANs: " + BuyTAN);
+                startActivity(intent);
+                mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
+            }
+        }
+
+    }
+
+    private void handleCouponPayment(String id,Double amountReceived) {
+
+
+
+        // Check if the amount received is zero
+        if (amountReceived == 0) {
+            Toast.makeText(getContext(), "Amount received cannot be zero", Toast.LENGTH_SHORT).show();
+            return; // Stop further execution
+        }
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+        // Iterate over the container layout to get the settlement details
+        ArrayList<SettlementItem> settlementItems = new ArrayList<>();
+        for (int i = 0; i < containerLayout.getChildCount(); i += 2) {
+            View childView = containerLayout.getChildAt(i);
+            if (childView instanceof TextView) {
+                // Use the loop variable i to identify the correct payment details
+                PaymentDetails paymentDetails = mDatabaseHelper.getPaymentDetailsById(id);
+                String paymentName = paymentDetails.getPaymentName();
+                double settlementAmount = amountReceived;
+                // Use a specific Locale for date formatting
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                String currentDate = dateFormat.format(new Date());
+                Log.d("insertsettlementtest2", paymentName );
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                String currentTime = timeFormat.format(new Date());
+                mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, latesttransId, PosNum,currentDate,currentTime, String.valueOf(roomid),tableid);
+
+                settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+            }
+        }
+// Assuming you have a method in your DatabaseHelper to fetch payment details by id
+        PaymentDetails paymentDetails = mDatabaseHelper.getPaymentDetailsById(id);
+
+        if (paymentDetails != null) {
+            // Assuming PaymentDetails has methods to get paymentName and amount
+            String paymentName = paymentDetails.getPaymentName();
+            double settlementAmount = amountReceived;
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            String currentDate = dateFormat.format(new Date());
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+            String currentTime = timeFormat.format(new Date());
+            settlementItems.add(new SettlementItem(paymentName, settlementAmount));
+            Log.d("insertsettlementtest3", paymentName );
+
+            mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, latesttransId, PosNum,currentDate,currentTime, String.valueOf(roomid),tableid);
+            Log.d("PaymentDetails2", "Name: " + paymentName + ", Amount: " + settlementAmount+ " " + transactionIdInProgress);
+
+            Log.d("settlementItems", String.valueOf(settlementItems));
+        }
+
+        Log.d("id", String.valueOf(id));
+        // Take the total amount as the value
+        // This logic is the same as before, replace it with your own logic
+
+        double cashReturn= 0.0;
+
+        System.out.println("selectedBuyerTANs: " + BuyTAN);
+        // Pass the amount received and settlement items as extras to the print activity
+
+        for (SettlementItem settlementItem : settlementItems) {
+
+            // Use a specific Locale for date formatting
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            String currentDate = dateFormat.format(new Date());
+
+            SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Use the current date
+            values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+            values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, settlementItem.getPaymentName());
+            values.put(FINANCIAL_COLUMN_POSNUM, PosNum); // Insert the posnum
+
+            // Check if a row with the same payment name, current date, cashier ID, and posnum already exists and has no shift number
+            String[] whereArgs = new String[] {settlementItem.getPaymentName(), currentDate, cashierId, PosNum};
+            Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                    FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                            FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ? AND " +
+                            TRANSACTION_SHIFT_NUMBER + " IS NULL",
+                    whereArgs, null, null, null);
+
+            if (cursor.moveToFirst()) {
+                // If a row with the same payment name, current date, cashier ID, and posnum exists and has no shift number, update the values
+                int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + settlementItem.getSettlementAmount()); // Update the total
+                values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getPaymentName()); // Update the totalizer
+
+                db.update(FINANCIAL_TABLE_NAME, values, FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " +
+                        FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                        FINANCIAL_COLUMN_POSNUM + " = ? AND " + TRANSACTION_SHIFT_NUMBER + " IS NULL", whereArgs);
+            } else {
+                // If no row with the same payment name and current date exists or has a shift number, insert a new row
+                values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
+                values.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Initialize total
+                values.put(FINANCIAL_COLUMN_TOTALIZER, settlementItem.getPaymentName()); // Initialize totalizer
+                values.put(FINANCIAL_COLUMN_SHOP_NUMBER, ShopNumber);
+                values.put(FINANCIAL_COLUMN_PAYMENT, settlementItem.getPaymentName());
+                db.insert(FINANCIAL_TABLE_NAME, null, values);
+            }
+            cursor.close();
+
+            if ("Cash".equals(settlementItem.getPaymentName())) {
+                // Check if a row with the current date, cashier ID, posnum, and no shift number already exists in the cash report table
+                String[] cashWhereArgs = new String[] {currentDate, cashierId, PosNum};
+                Cursor cashCursor = db.query(CASH_REPORT_TABLE_NAME, null,
+                        FINANCIAL_COLUMN_DATETIME + " = ? AND " + FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " +
+                                FINANCIAL_COLUMN_POSNUM + " = ? AND " + TRANSACTION_SHIFT_NUMBER + " IS NULL",
+                        cashWhereArgs, null, null, null);
+
+                if (cashCursor.moveToFirst()) {
+                    // If a row exists, update it
+                    double currentTotal = cashCursor.getDouble(cashCursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                    ContentValues cashReportValues = new ContentValues();
+                    cashReportValues.put(FINANCIAL_COLUMN_TOTAL, currentTotal + settlementItem.getSettlementAmount());
+                    cashReportValues.put(FINANCIAL_CashReturn, cashReturn); // Ensure this field is updated as well
+                    db.update(CASH_REPORT_TABLE_NAME, cashReportValues, FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                            FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ? AND " +
+                            TRANSACTION_SHIFT_NUMBER + " IS NULL", cashWhereArgs);
+                } else {
+                    // If no row exists, insert a new row
+                    ContentValues cashReportValues = new ContentValues();
+                    cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                    cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                    cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                    cashReportValues.put(FINANCIAL_COLUMN_TOTAL, settlementItem.getSettlementAmount()); // Positive cash in amount
+                    cashReportValues.put(FINANCIAL_COLUMN_POSNUM, PosNum);
+                    cashReportValues.put(FINANCIAL_CashReturn, cashReturn);
                     cashReportValues.put(FINANCIAL_COLUMN_TransId, latesttransId);
                     cashReportValues.put(TRANSACTION_SHIFT_NUMBER, (String) null); // Set shift number as null initially
                     db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
                 }
                 cashCursor.close();
             }
-
-            mDatabaseHelper.updateTenderAmount(latesttransId, settlementItem.getSettlementAmount());
+            Log.d("InsertCashReturn3", cashReturn +" " + latesttransId);
+            mDatabaseHelper.updateTenderAmount(latesttransId, cashReturn);
         }
 
 
@@ -1761,7 +2010,49 @@ if(isAtLeastOneItemSelected){
         // Generate the transaction ID by combining the three letters and the counter
         return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
+    private void showTransactionValidationDialog(String id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Validate Transaction")
+                .setMessage("Please validate the transaction to proceed.")
+                .setPositiveButton("Validate", (dialog, which) -> {
+                    // Perform transaction validation
+                    boolean isValidationSuccessful = validateTransaction(); // Add your validation logic here
+                    if (isValidationSuccessful) {
+                        dialog.dismiss();
+                        handleFullPayment(id); // Recursively call the method to proceed
+                    } else {
+                        Toast.makeText(getContext(), "Transaction validation failed.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+    private void showSplittedTransactionValidationDialog(String id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Validate Transaction")
+                .setMessage("Please validate the transaction to proceed.")
+                .setPositiveButton("Validate", (dialog, which) -> {
+                    // Perform transaction validation
+                    boolean isValidationSuccessful = validateTransaction(); // Add your validation logic here
+                    if (isValidationSuccessful) {
+                        dialog.dismiss();
+                        handleSplittedPayment(id);// Recursively call the method to proceed
+                    } else {
+                        Toast.makeText(getContext(), "Transaction validation failed.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+    private boolean validateTransaction() {
+        // Add your validation logic here, returning true if successful, false otherwise
+        // For example, check for a valid PIN or confirm payment method
+        return true; // or false, depending on validation result
+    }
+
+
     private void handleFullPayment(String id) {
+
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 if (totalAmount==0){
@@ -1909,6 +2200,8 @@ if (totalAmount==0){
 
             updateheader(totalAmount,mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
             mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
+            Log.d("latesttransId", String.valueOf(latesttransId));
+            Log.d("newtransid", String.valueOf(newtransid));
             Intent intent = new Intent(getActivity(), Mra.class);
             intent.putExtra("amount_received", String.valueOf(remainingAmount));
             intent.putExtra("cash_return", String.valueOf(cashReturn));
@@ -2307,6 +2600,42 @@ if (totalAmount==0){
             return null;
         }
     }
+    private void showSecondaryScreenOnValidate(String name,String id, String QR,String Phonenumber) {
+        // Obtain a real secondary screen
+        Display presentationDisplay = getPresentationDisplay();
+        String formattedTaxAmount = null,formattedTotalAmount = null;
+        if (presentationDisplay != null) {
+            // Create an instance of SeconScreenDisplay using the obtained display
+            SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
+            Log.d("QR", QR);
+
+            // Show the secondary display
+            secondaryDisplay.show();
+            Cursor cursor = mDatabaseHelper.getTransactionHeader(roomid,tableid);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndexTotalAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
+                int columnIndexTotalTaxAmount = cursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+                double totalAmount = cursor.getDouble(columnIndexTotalAmount);
+                double taxTotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
+
+                formattedTaxAmount = String.format("%.2f", taxTotalAmount);
+                formattedTotalAmount = String.format("%.2f", totalAmount);
+            }
+            // Get the selected item from the RecyclerView
+            String selectedName = name;
+            String selectedQR = QR;
+            // Convert the QR code string to a Bitmap
+            Bitmap qrBitmap = generateQRCodeBitmap(selectedQR);
+            // Update the text and QR code on the secondary screen
+            secondaryDisplay.updateTextAndQRCodeOnValidate(selectedName, qrBitmap, formattedTaxAmount, formattedTotalAmount,Phonenumber);
+        } else {
+            // Secondary screen not found or not supported
+            //  Toast.makeText(getActivity(), "Secondary screen not found or not supported", Toast.LENGTH_SHORT).show();
+            dataPassListener.onDataPass(name, id, QR);
+
+        }
+    }
     private void showSecondaryScreen(String name,String id, String QR) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();
@@ -2314,6 +2643,7 @@ if (totalAmount==0){
         if (presentationDisplay != null) {
             // Create an instance of SeconScreenDisplay using the obtained display
             SeconScreenDisplay secondaryDisplay = new SeconScreenDisplay(getActivity(), presentationDisplay);
+            Log.d("QR", QR);
 
             // Show the secondary display
             secondaryDisplay.show();
@@ -2342,7 +2672,6 @@ if (totalAmount==0){
 
         }
     }
-
     private Bitmap generateQRCodeBitmap(String qrCode) {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         int width = 400;

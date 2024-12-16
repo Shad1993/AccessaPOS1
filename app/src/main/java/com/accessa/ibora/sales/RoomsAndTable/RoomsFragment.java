@@ -267,7 +267,7 @@ public class RoomsFragment extends Fragment {
                         TextView idTextView = view.findViewById(R.id.Buyerid);
                         TextView subjectEditText = view.findViewById(R.id.BuyerAdapter);
 
-                        TextView priceTextView = view.findViewById(R.id.textViewBRN);
+
 
                         String id = idTextView.getText().toString();
                         String title = subjectEditText.getText().toString();

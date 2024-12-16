@@ -152,21 +152,19 @@ public class Syncforold extends IntentService {
     private void performBidirectionalSync(Connection conn) {
         try {
             // Step 1: Fetch data from the local SQLite database
-           // mDatabaseHelper = new DatabaseHelper(this);
-          //  Cursor localCursor = mDatabaseHelper.getAllItems();
             getAndInsertBuyerData(conn);
             getCategoriesFromMssql(conn);
             getSubCategoryFromMssql(conn);
             getDepartmentFromMssql(conn);
             getAndInsertSubDepartmentData(conn);
-            getAndInsertVendorData(conn);
+            // getAndInsertVendorData(conn);
             getAndInsertOptionData(conn);
             getAndInsertSupplementData(conn);
             getAndInsertDiscountAndCouponData(conn);
-            getAndInsertCostData(conn);
+            //getAndInsertCostData(conn);
             getRoomsAndTablesFromMssql(conn);
-           getItemsFromMssql(conn);
-           // getAndInsertStdAccessData(conn);
+            getItemsFromMssql(conn);
+            getAndInsertStdAccessData(conn);
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }
@@ -280,7 +278,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the Vendor table
-            String selectQuery = "SELECT * FROM Vendor";
+            String selectQuery = "SELECT * FROM Vendor_pos";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each vendor entry
@@ -784,7 +782,6 @@ public class Syncforold extends IntentService {
 
 
     private void getItemsFromMssql(Connection conn) {
-
         try {
             String selectQuery = "SELECT COUNT(*) as totalItems FROM Items";
             Statement statement = conn.createStatement();
@@ -829,10 +826,12 @@ public class Syncforold extends IntentService {
                         String _id= resultSets.getString(_ID);
                         String barcode = resultSets.getString(Barcode);
                         String relateditemid = resultSets.getString(Related_ITEM_ID);
+
                         String itemname = resultSets.getString(Name);
                         String desc = resultSets.getString(DESC);
                         String category = resultSets.getString(Category);
                         String subcategory = resultSets.getString(SubCategory);
+
                         String quantity = resultSets.getString(Quantity);
                         String department = resultSets.getString(Department);
                         String longDescription = resultSets.getString(LongDescription);
@@ -871,9 +870,12 @@ public class Syncforold extends IntentService {
                         String totalDiscount2 = resultSets.getString(TotalDiscount2);
                         String totalDiscount3 = resultSets.getString(TotalDiscount3);
                         String Hasoptions = resultSets.getString(hasoptions);
-                        if(Hasoptions.equals("1")){
+                        Log.e("Hasoptions1",Hasoptions);
+
+
+                        if(Hasoptions.equals("True") || Hasoptions.equals("1")){
                             Hasoptions="true";
-                        } else if (Hasoptions.equals("0")) {
+                        } else if (Hasoptions.equals("0") || Hasoptions.equals("False")) {
                             Hasoptions="false";
                         }
                         String Comment = resultSets.getString(comment);
@@ -885,29 +887,27 @@ public class Syncforold extends IntentService {
                         String Related_item5 = resultSets.getString(related_item5);
                         //hasSupplements
                         String HasSupplements = resultSets.getString(hasSupplements);
+                        Log.e("Related_item1",Related_item);
+                        Log.e("HasSupplements1",HasSupplements);
+                        if(HasSupplements.equals("True") || HasSupplements.equals("1")){
+                            HasSupplements="true";
+                        } else if (HasSupplements.equals("0") || HasSupplements.equals("False")) {
+                            HasSupplements="false";
+                        }
                         //relatedSupplements
                         String RelatedSupplements = resultSets.getString(relatedSupplements);
+                        Log.e("dRelatedSupplements",RelatedSupplements);
                         int ShopNums = resultSets.getInt(ShopNum);
                         int TillNums = resultSets.getInt(TillNum);
 
-                        Log.e("Hasoptions",Hasoptions);
-                        Log.e("Related_item",Related_item);
-
-                        databaseHelper.insertItemsDatas(_id,ShopNums,TillNums,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, relateditemid,category, subcategory,barcode, Float.parseFloat(weight), department,
+                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount,relateditemid, category,subcategory, barcode, Float.parseFloat(weight), department,
                                 subDepartment, longDescription, quantity, expiryDate, vAT,
                                 availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
 
-
-                        // dbManager.insertwithnewbarcode(itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
-                        //             subDepartment, longDescription, quantity, expiryDate, vAT,
-                        //           availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
-                        //          nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
-
                         // Redirect to the Product activity
                         Intent intent = new Intent(Syncforold.this, Product.class);
-
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     }
 
@@ -916,7 +916,6 @@ public class Syncforold extends IntentService {
                 }
             }
             resultSets.close();
-
             statement.close();
             dbManager.close();
         } catch (SQLException se) {

@@ -177,19 +177,19 @@ public class SyncService extends IntentService {
             // Step 1: Fetch data from the local SQLite database
 
           //  Cursor localCursor = mDatabaseHelper.getAllItems();
-            getAndInsertBuyerData(conn);
+           getAndInsertBuyerData(conn);
             getCategoriesFromMssql(conn);
             getSubCategoryFromMssql(conn);
-            getDepartmentFromMssql(conn);
+           getDepartmentFromMssql(conn);
             getAndInsertSubDepartmentData(conn);
-            getAndInsertVendorData(conn);
+           // getAndInsertVendorData(conn);
             getAndInsertOptionData(conn);
             getAndInsertSupplementData(conn);
             getAndInsertDiscountAndCouponData(conn);
-            getAndInsertCostData(conn);
-            getRoomsAndTablesFromMssql(conn);
+            //getAndInsertCostData(conn);
+           getRoomsAndTablesFromMssql(conn);
             getItemsFromMssql(conn);
-            //getAndInsertStdAccessData(conn);
+            getAndInsertStdAccessData(conn);
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }
@@ -555,7 +555,7 @@ public class SyncService extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the Vendor table
-            String selectQuery = "SELECT * FROM Vendor";
+            String selectQuery = "SELECT * FROM Vendor_pos";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each vendor entry
@@ -908,9 +908,12 @@ public class SyncService extends IntentService {
                         String totalDiscount2 = resultSets.getString(TotalDiscount2);
                         String totalDiscount3 = resultSets.getString(TotalDiscount3);
                         String Hasoptions = resultSets.getString(hasoptions);
-                        if(Hasoptions.equals("1")){
+                        Log.e("Hasoptions1",Hasoptions);
+
+
+                        if(Hasoptions.equals("True") || Hasoptions.equals("1")){
                             Hasoptions="true";
-                        } else if (Hasoptions.equals("0")) {
+                        } else if (Hasoptions.equals("0") || Hasoptions.equals("False")) {
                             Hasoptions="false";
                         }
                         String Comment = resultSets.getString(comment);
@@ -922,14 +925,20 @@ public class SyncService extends IntentService {
                         String Related_item5 = resultSets.getString(related_item5);
                         //hasSupplements
                         String HasSupplements = resultSets.getString(hasSupplements);
+                        Log.e("Related_item1",Related_item);
+                        Log.e("HasSupplements1",HasSupplements);
+                        if(HasSupplements.equals("True") || HasSupplements.equals("1")){
+                            HasSupplements="true";
+                        } else if (HasSupplements.equals("0") || HasSupplements.equals("False")) {
+                            HasSupplements="false";
+                        }
                         //relatedSupplements
                         String RelatedSupplements = resultSets.getString(relatedSupplements);
+                        Log.e("dRelatedSupplements",RelatedSupplements);
                         int ShopNums = resultSets.getInt(ShopNum);
                         int TillNums = resultSets.getInt(TillNum);
-                        Log.e("Hasoptions",Hasoptions);
-                        Log.e("Related_item",Related_item);
 
-                        databaseHelper.insertItemsDatas(_id,ShopNums,TillNums,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount,relateditemid, category,subcategory, barcode, Float.parseFloat(weight), department,
+                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount,relateditemid, category,subcategory, barcode, Float.parseFloat(weight), department,
                                 subDepartment, longDescription, quantity, expiryDate, vAT,
                                 availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);

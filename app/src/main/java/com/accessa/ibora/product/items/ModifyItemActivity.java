@@ -917,28 +917,24 @@ private ImageView image_view;
         optionsContainer.removeAllViews();
 
         // Dynamically create checkboxes for each option
-        for (int i = 0; i < optionsList.size(); i++) {
-            Options options = optionsList.get(i);
+        for (Options options : optionsList) {
             CheckBox checkBox = new CheckBox(this);
             checkBox.setText(options.getOptionname());
 
             final long optionId = options.getOptionId(); // Get the option ID from the Options object
             Log.d("optionId", String.valueOf(optionId));
 
-            // Check if related item corresponding to this option is not 0
-            boolean isChecked = false;
-            if (i < relatedItems.size()) {
-                String relatedItem = relatedItems.get(i);
-                if (relatedItem != null && !relatedItem.equals("0")) {
-                    isChecked = true;
-                }
-            }
+            // Check if the optionId exists in the relatedItems list
+            boolean isChecked = relatedItems.contains(String.valueOf(optionId));
             checkBox.setChecked(isChecked);
 
-            // Store the option ID in the corresponding variable if checked
+            // If checked, add the option ID to the selectedOptionIds list
             if (isChecked) {
                 selectedOptionIds.add((int) optionId);
-                switch (i) {
+
+                // Assign the optionId to the appropriate variable
+                int currentIndex = selectedOptionIds.size() - 1;
+                switch (currentIndex) {
                     case 0:
                         optionId1 = optionId;
                         break;
@@ -958,17 +954,18 @@ private ImageView image_view;
             }
 
             // Set a listener for checkbox changes
-            final int finalIndex = i; // Store the index in a final variable for use inside the listener
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
                         // Check if the maximum limit is reached
                         if (selectedOptionIds.size() < MAX_SELECTION_LIMIT) {
-                            // Checkbox is checked, add the option ID to the selected list
+                            // Add the option ID to the selected list
                             selectedOptionIds.add((int) optionId);
-                            // Store the option ID in the corresponding variable
-                            switch (finalIndex) {
+
+                            // Assign the optionId to the appropriate variable
+                            int currentIndex = selectedOptionIds.size() - 1;
+                            switch (currentIndex) {
                                 case 0:
                                     optionId1 = optionId;
                                     break;
@@ -985,6 +982,7 @@ private ImageView image_view;
                                     optionId5 = optionId;
                                     break;
                             }
+
                             // Toast the option ID
                             Toast.makeText(ModifyItemActivity.this, "Option ID: " + optionId + " checked", Toast.LENGTH_SHORT).show();
                         } else {
@@ -993,26 +991,15 @@ private ImageView image_view;
                             Toast.makeText(ModifyItemActivity.this, "Maximum limit of 5 options reached", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        // Checkbox is unchecked, remove the option ID from the selected list
+                        // Remove the option ID from the selected list
                         selectedOptionIds.remove(Integer.valueOf((int) optionId));
+
                         // Clear the corresponding variable
-                        switch (finalIndex) {
-                            case 0:
-                                optionId1 = 0;
-                                break;
-                            case 1:
-                                optionId2 = 0;
-                                break;
-                            case 2:
-                                optionId3 = 0;
-                                break;
-                            case 3:
-                                optionId4 = 0;
-                                break;
-                            case 4:
-                                optionId5 = 0;
-                                break;
-                        }
+                        if (optionId == optionId1) optionId1 = 0;
+                        else if (optionId == optionId2) optionId2 = 0;
+                        else if (optionId == optionId3) optionId3 = 0;
+                        else if (optionId == optionId4) optionId4 = 0;
+                        else if (optionId == optionId5) optionId5 = 0;
                     }
                     updateSelectedOptions(); // Display selected option IDs
                 }
@@ -1022,6 +1009,7 @@ private ImageView image_view;
             optionsContainer.addView(checkBox);
         }
     }
+
 
 
 

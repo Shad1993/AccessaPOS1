@@ -35,7 +35,7 @@ public class Transaction {
     private double TotalPrice;
 
     private int itemQuantity;
-    public Transaction(int uniqueId, String itemName, double itemPrice, int itemQuantity, String unitPrice, int itemId, String relatedoptionid) {
+    public Transaction(int uniqueId, String itemName, double itemPrice, int itemQuantity, String unitPrice, int itemId, String relatedoptionid,Double totaldisc) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemQuantity = itemQuantity;
@@ -43,6 +43,7 @@ public class Transaction {
         this.item_id=itemId;
         this.unique_id = uniqueId;
         this.relatedoptionid = relatedoptionid;
+        this.TotalDiscount = String.valueOf(totaldisc);
     }
 
     public Transaction() {

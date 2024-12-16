@@ -636,7 +636,6 @@ EditText pinEditText;
                 String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
                 int distinctitemcount= mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
 
-                Log.d("distinctitemcount", String.valueOf(distinctitemcount));
                 if(distinctitemcount==1){
 // Show a pop-up dialog
                     new AlertDialog.Builder(getActivity())
@@ -673,11 +672,11 @@ EditText pinEditText;
                 }else{
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Confirm Action")
-                            .setMessage(" Do you want to void this Item?")
+                            .setMessage("Do you want to void this Item?")
                             .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    deleteItem(Unique_ITEM_ID,latesttransId);
+                                    deleteItem(Unique_ITEM_ID, latesttransId);
                                     // Perform the delete operation here
                                     if (Xdatabasemanager != null) {
                                         Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
@@ -686,14 +685,22 @@ EditText pinEditText;
                                         }
 
                                         refreshTicketFragment();
-                                        dismiss(); // Close the dialog after deleting the item
 
+                                        if (itemclearedListener != null) {
+                                            itemclearedListener.onAmountModified();
+                                            dismiss(); // Close the dialog after deleting the item
+                                        }
                                     }
                                 }
                             })
-
-                            .setCancelable(false)
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss(); // Close the dialog without doing anything
+                                }
+                            })
                             .show();
+
                 }
 
             }

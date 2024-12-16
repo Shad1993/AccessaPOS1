@@ -82,6 +82,7 @@
                         android:hint="Company Name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="26"
                         android:inputType="text"/>
 
                     <TextView
@@ -97,7 +98,8 @@
                         android:hint="Shop Number"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:maxLength="4"
+                        android:inputType="number"/>
 
 
                     <TextView
@@ -114,6 +116,7 @@
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="26"
                         android:inputType="text" />
                     <TextView
                         android:layout_width="wrap_content"
@@ -135,6 +138,7 @@
                         android:hint="VAT No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="10"
                         android:inputType="text" />
 
                     <TextView
@@ -150,6 +154,7 @@
                         android:hint="BRN No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="10"
                         android:inputType="text" />
                     <TextView
                         android:layout_width="wrap_content"
@@ -171,6 +176,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
+                        android:maxLength="30"
                         android:hint="Address Line 1" />
 
                     <TextView
@@ -186,6 +192,7 @@
                         android:hint="Address Line 2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="30"
                         android:inputType="text"/>
 
 
@@ -202,6 +209,7 @@
                         android:hint="Address Line 3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLength="30"
                         android:inputType="text"/>
 
                     <TextView
@@ -224,6 +232,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
+                        android:maxLength="30"
                         android:hint="Address Line 1" />
 
                     <TextView
@@ -239,7 +248,8 @@
                         android:hint="Address Line 2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="text"
+                        android:maxLength="30"/>
 
 
                     <TextView
@@ -255,7 +265,8 @@
                         android:hint="Address Line 3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="text"
+                        android:maxLength="30"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -286,7 +297,7 @@
                         android:hint="Tel No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="phone"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -301,7 +312,7 @@
                         android:hint="Fax No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="phone"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -325,7 +336,7 @@
                         android:hint="Tel No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="phone"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -340,7 +351,7 @@
                         android:hint="Fax No"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="phone"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -363,7 +374,9 @@
                         android:hint="06h00-18h00"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"/>
+                        android:inputType="text"
+                        android:maxLength="15"
+                       />
 
 
 

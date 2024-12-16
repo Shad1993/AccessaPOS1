@@ -67,7 +67,7 @@ public class QrAdaptor extends RecyclerView.Adapter<QrAdaptor.ItemViewHolder> {
         if (id.equals("1") && name.equals("POP")) {
             holder.imageView.setImageResource(R.drawable.poplogo);
         } else {
-            holder.imageView.setImageResource(R.drawable.purpleqr);
+            holder.imageView.setImageResource(R.drawable.qr);
         }
         holder.itemView.setTag(id);
     }

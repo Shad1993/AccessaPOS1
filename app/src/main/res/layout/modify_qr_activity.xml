@@ -43,6 +43,7 @@
                         style="@style/modifiedEditText"
                         android:hint="@string/methodname"
                         android:singleLine="true"
+                        android:maxLength="15"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />

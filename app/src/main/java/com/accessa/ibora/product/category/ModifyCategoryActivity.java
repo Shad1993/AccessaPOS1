@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.widget.SwitchCompat;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.menu.Product;
 
 import top.defaults.colorpicker.ColorPickerPopup;
@@ -34,6 +35,7 @@ public class ModifyCategoryActivity extends Activity {
     private CategoryDBManager CatdbManager;
 
     private CategoryDatabaseHelper mDatabaseHelper;
+    private DatabaseHelper mrealDatabaseHelper;
 
     private ImageView imageView;
 
@@ -72,12 +74,13 @@ public class ModifyCategoryActivity extends Activity {
         String id = intent.getStringExtra("id");
         String CatName = intent.getStringExtra("CatName");
         String colorValue = intent.getStringExtra("Color");
-        String printingstatus = intent.getStringExtra("printingstatus");
         mDefaultColor = Color.parseColor(colorValue);
         _id = Long.parseLong(id);
         CatNameText.setText(CatName);
         ColorText.setText(colorValue);
+        mrealDatabaseHelper = new DatabaseHelper(this);
 
+        String printingstatus = mrealDatabaseHelper.getCatPrinterOptionById((int) _id);
 
 
         if (printingstatus.equals("true") ||printingstatus.equals("1")) {

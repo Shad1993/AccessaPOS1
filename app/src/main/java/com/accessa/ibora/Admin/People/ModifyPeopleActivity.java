@@ -58,6 +58,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -96,9 +97,7 @@ public class ModifyPeopleActivity extends Activity {
 
         Intent intent = getIntent();
         String id = intent.getStringExtra("id");
-        String name = intent.getStringExtra("name");
-        String level = intent.getStringExtra("level");
-        String dept = intent.getStringExtra("dept");
+
 
         _id = Long.parseLong(id);
 
@@ -134,10 +133,18 @@ public class ModifyPeopleActivity extends Activity {
             } while (departmentCursor.moveToNext());
         }
         departmentCursor.close();
+        // Get the array from resources and convert it to a list
+        String[] cashierLevelsArray = getResources().getStringArray(R.array.cashier_levels);
+        List<String> cashierLevelsList = new ArrayList<>(Arrays.asList(cashierLevelsArray));
 
-// Populate spinner with options 1 to 5
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.cashier_levels, android.R.layout.simple_spinner_item);
+// Replace "0" with "Trainee"
+        cashierLevelsList.set(0, "Trainee");
+
+// Create an ArrayAdapter with the modified list
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cashierLevelsList);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+// Populate spinner with options 1 to 5
+
         spinnerCashierLevel.setAdapter(spinnerAdapter);
 
 
@@ -221,15 +228,29 @@ public class ModifyPeopleActivity extends Activity {
         String lastmodified = dateFormat.format(new Date(currentTimeMillis));
         String name = NameText.getText().toString().trim();
         String dept = spinnerDepartment.getSelectedItem().toString();
-        String pin =PIN.getText().toString().trim();
         String level = spinnerCashierLevel.getSelectedItem().toString();
+        if (level.equals("Trainee")) {
+            level = "0";
+        }
         String enteredPIN = PIN.getText().toString();
 
-        if (name.isEmpty()  || enteredPIN.isEmpty()) {
+
+        String namePattern = "^[A-Za-z\\s]{2,26}$"; // Letters and spaces only, 2-26 characters
+        String pinPattern = "^\\d{4,6}$";           // Numeric PIN with 4-6 digits
+
+        // Validate fields
+        if (name.isEmpty() || enteredPIN.isEmpty()) {
             Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
-
+        if (!name.matches(namePattern)) {
+            NameText.setError("Name should only contain letters and be 2-50 characters long");
+            return;
+        }
+        if (!enteredPIN.matches(pinPattern)) {
+            PIN.setError("PIN should be 4-6 digits long");
+            return;
+        }
 
         Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
 
@@ -305,22 +326,23 @@ public class ModifyPeopleActivity extends Activity {
     private int getSpinnerIndex1(Spinner spinner, String value) {
         // Retrieve departments from the database
         DatabaseHelper databaseHelper = new DatabaseHelper(spinner.getContext());
-        Cursor levelCursor = databaseHelper.getAllUsers();
+        Cursor levelCursor = databaseHelper.getAlllevels();
 
         List<String> user = new ArrayList<>();
 
         // Iterate through the cursor and add department names to the list
         if (levelCursor.moveToFirst()) {
             do {
-                String department = levelCursor.getString(levelCursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
-                user.add(department);
+                String userlevel = levelCursor.getString(levelCursor.getColumnIndex(COLUMN_CASHOR_LEVEL));
+                user.add(userlevel);
             } while (levelCursor.moveToNext());
         }
 
         // Create an ArrayAdapter and populate it with the retrieved data
-        ArrayAdapter<String> spinnerAdapterDept = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, user);
-        spinnerAdapterDept.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapterDept);
+        ArrayAdapter<String> spinnerAdapterLevel = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, user);
+        spinnerAdapterLevel.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCashierLevel.setAdapter(spinnerAdapterLevel);
+
 
         // Find the index of the selected value in the spinner
         int index = user.indexOf(value);

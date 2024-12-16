@@ -92,13 +92,18 @@ public class PosInfo extends AppCompatActivity {
     }
 
     private boolean validateData(String terminalNo) {
-        // Perform validation checks
+        // Check if terminalNo is empty
         if (TextUtils.isEmpty(terminalNo)) {
-            // Display an error message or show a Toast indicating that Terminal No is required
             Toast.makeText(this, "Terminal No is required", Toast.LENGTH_SHORT).show();
             return false;
         }
 
+        // Check if terminalNo contains only digits (integer only)
+        String regex = "\\d+"; // Modify this if you need a different pattern
+        if (!terminalNo.matches(regex)) {
+            Toast.makeText(this, "Invalid Terminal No. Only numbers are allowed.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
         // All data is valid
         return true;

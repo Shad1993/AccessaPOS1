@@ -642,14 +642,17 @@ public class CloseShiftReport extends AppCompatActivity {
                         int lineWidth = 48;
                         // Calculate the padding for the item name
                         double tax = Double.parseDouble(totalTax);
-                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
-                         grandTotal = tax + amountWOVat;
+                        double amountWOVat =grandTotal - Double.parseDouble(totalTax);
+                        String formattedTax = String.format("%.2f", tax);
                         String formattedTotalAmount = String.format("%.2f", grandTotal);
+                        String formattedTotalAmountWO = String.format("%.2f", amountWOVat);
 
                         String TotalValue= "Rs " + formattedTotalAmount;
+                        String Totaltaxe= "Rs " + formattedTax;
+                        String TotalValuewotaxe= "Rs " + formattedTotalAmountWO;
 
                         int TotalValuePadding = lineWidth - TotalValueWoVat.length() - Total.length();
-                        int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();
+                        int TaxValuePadding = lineWidth - Totaltaxe.length() - TVA.length();
                         int AmountWoVatValuePadding = lineWidth - TotalValueWoVat.length() - amountWoVat.length();
                         // Enable bold text and set font size to 30
                        boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -667,8 +670,8 @@ public class CloseShiftReport extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
                         service.setAlignment(1, null); // Align center
-                        String totalamountWoVatLine = amountWoVat + " ".repeat(Math.max(0, AmountWoVatValuePadding)) + TotalValueWoVat;
-                        String totaltaxLine = TVA + " ".repeat(Math.max(0, TaxValuePadding)) + TotalVAT;
+                        String totalamountWoVatLine = amountWoVat + " ".repeat(Math.max(0, AmountWoVatValuePadding)) + TotalValuewotaxe;
+                        String totaltaxLine = TVA + " ".repeat(Math.max(0, TaxValuePadding)) + Totaltaxe;
                         service.printText(totalamountWoVatLine + "\n", null);
                         service.printText(totaltaxLine + "\n\n", null);
                         service.printText(lineSeparator + "\n\n", null);

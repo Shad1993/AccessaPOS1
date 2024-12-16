@@ -54,8 +54,8 @@ public class SplittedTicketAdapter extends RecyclerView.Adapter<SplittedTicketAd
                 int item_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
                 int unique_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper._ID));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
-
-                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id,relatedoptionid);
+                double totaldisc = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT));
+                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id,relatedoptionid,totaldisc);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
         }

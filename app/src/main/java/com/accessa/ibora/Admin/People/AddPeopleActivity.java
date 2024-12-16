@@ -49,6 +49,7 @@ import com.bumptech.glide.Glide;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -61,6 +62,7 @@ public class AddPeopleActivity extends Activity {
 
     private DatabaseHelper mDatabaseHelper;
     private EditText CashierNameTextView,Userid_Edittext;
+    private  String cashierLevel;
     private EditText PinTextView;
     private EditText DepartmentTextView;
     private Spinner LevelSpinner;
@@ -76,7 +78,7 @@ public class AddPeopleActivity extends Activity {
 
         // Retrieve the locale value from intent extras
         String locale = getIntent().getStringExtra("locale");
-        setTitle(getString(R.string.send));
+        setTitle(getString(R.string.addpeople));
 
 
 
@@ -84,7 +86,6 @@ public class AddPeopleActivity extends Activity {
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
-        String cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
         ShopName = sharedPreferences.getString("ShopName", null); // Retrieve cashor's level
 
         cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
@@ -98,10 +99,17 @@ public class AddPeopleActivity extends Activity {
         DepartmentTextView = findViewById(R.id.department_edittext);
         LevelSpinner = findViewById(R.id.Cashier_spinner);
 
+// Get the array from resources and convert it to a list
+        String[] cashierLevelsArray = getResources().getStringArray(R.array.cashier_levels);
+        List<String> cashierLevelsList = new ArrayList<>(Arrays.asList(cashierLevelsArray));
 
-// Populate spinner with options 1 to 5
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.cashier_levels, android.R.layout.simple_spinner_item);
+// Replace "0" with "Trainee"
+        cashierLevelsList.set(0, "Trainee");
+
+// Create an ArrayAdapter with the modified list
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cashierLevelsList);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         LevelSpinner.setAdapter(spinnerAdapter);
 
 
@@ -131,7 +139,15 @@ public class AddPeopleActivity extends Activity {
             Toast.makeText(this, "Please enter a PIN", Toast.LENGTH_SHORT).show();
             return;
         }
+        // Define regex patterns
+        String pinPattern = "^\\d{4,6}$";            // Numeric PIN, 4-6 digits
+        String namePattern = "^[A-Za-z\\s]{2,26}$";  // Letters and spaces only, 2-50 characters
 
+        // Check if PIN is valid
+        if (!enteredPIN.matches(pinPattern)) {
+            PinTextView.setError("PIN should be 4-6 digits long");
+            return;
+        }
         Cursor cursor = mDatabaseHelper.getUserByPIN(enteredPIN);
 
         if (cursor.moveToFirst()) {
@@ -143,14 +159,26 @@ public class AddPeopleActivity extends Activity {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
             String DateCreated = dateFormat.format(new Date(currentTimeMillis));
             String LastModified = dateFormat.format(new Date(currentTimeMillis));
-            String cashierLevel = LevelSpinner.getSelectedItem().toString();
+             cashierLevel = LevelSpinner.getSelectedItem().toString();
+            if (cashierLevel.equals("Trainee")) {
+                cashierLevel = "0";
+            }
             String cashorname = CashierNameTextView.getText().toString();
             String cashordepartment = DepartmentTextView.getText().toString();
 
-            // Check if all required fields are filled
-            if (cashorname.isEmpty() || cashordepartment.isEmpty() || cashierLevel.isEmpty()
-                ) {
+            // Validate required fields
+            if (cashorname.isEmpty() || cashordepartment.isEmpty() || cashierLevel.isEmpty()) {
                 Toast.makeText(this, getString(R.string.please_fill_in_all_fields), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Validate name and department with regex
+            if (!cashorname.matches(namePattern)) {
+                CashierNameTextView.setError("Name should only contain letters and be 2-50 characters long");
+                return;
+            }
+            if (!cashordepartment.matches(namePattern)) {
+                DepartmentTextView.setError("Department should only contain letters and be 2-50 characters long");
                 return;
             }
 

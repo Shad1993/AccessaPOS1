@@ -2,6 +2,8 @@ package com.accessa.ibora.product.Rooms;
 
 public class Table {
     private int  id;
+    private String tableName; // Add table name field
+
     private long roomId;
     private int tableNumber;
     private String tableNumbers;
@@ -46,6 +48,13 @@ public class Table {
     }
     public String getStatus() {
         return status;
+    }
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
 }

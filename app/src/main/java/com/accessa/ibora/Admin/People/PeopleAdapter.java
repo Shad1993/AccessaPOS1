@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,7 @@ public class PeopleAdapter extends RecyclerView.Adapter<PeopleAdapter.ItemViewHo
         public TextView idTextView;
         public TextView priceTextView;
         public TextView Available;
+        public ImageView profileImageView;  // Add this line for the ImageView
 
         public ItemViewHolder(View itemView) {
             super(itemView);
@@ -38,6 +40,7 @@ public class PeopleAdapter extends RecyclerView.Adapter<PeopleAdapter.ItemViewHo
             nameTextView = itemView.findViewById(R.id.name_text_view);
            Dept = itemView.findViewById(R.id.Dept_text_view);
             Level = itemView.findViewById(R.id.Level_text_view);
+            profileImageView = itemView.findViewById(R.id.image);  // Initialize the ImageView
 
         }
     }
@@ -55,23 +58,28 @@ public class PeopleAdapter extends RecyclerView.Adapter<PeopleAdapter.ItemViewHo
         if (mCursor == null || !mCursor.moveToFirst()) {
             return;
         }
-        // Move the cursor to the specified position.
         mCursor.moveToPosition(position);
 
         String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_id));
         String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_NAME));
-        String Dept = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT));
-        String level = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_LEVEL ));
-
-
+        String dept = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_DEPARTMENT));
+        String level = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.COLUMN_CASHOR_LEVEL));
 
         holder.idTextView.setText(id);
         holder.nameTextView.setText(name);
-        holder.Dept.setText(Dept);
+        holder.Dept.setText(dept);
         holder.Level.setText(level);
+
+        // Set a different image if level is "0"
+        if ("0".equals(level)) {
+            holder.profileImageView.setImageResource(R.drawable.trainee);  // Replace with your trainee image
+        } else {
+            holder.profileImageView.setImageResource(R.drawable.usericon);  // Default image
+        }
 
         holder.itemView.setTag(id);
     }
+
 
     public int getItemCount() {
         return (mCursor != null) ? mCursor.getCount() : 0;

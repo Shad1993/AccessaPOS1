@@ -5,11 +5,17 @@ import static com.accessa.ibora.Constants.DB_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.INVOICE_SETTLEMENT_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_AMOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_DATE_TRANSACTION;
+import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_INVOICE_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_PAYMENT_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_TOTAL_AMOUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE_CREATED;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
 
 import android.content.Context;
 import android.content.Intent;
@@ -957,7 +963,17 @@ public class PrintReport extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
 // Query the database to get the daily amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
+
 
         double amount = 0.0;
 
@@ -990,7 +1006,16 @@ public class PrintReport extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
 // Query the database to get the weekly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
 
         double amount = 0.0;
 
@@ -1024,10 +1049,16 @@ public class PrintReport extends AppCompatActivity {
 
         // Query the database to get the yearly amount
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
-                        " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?",
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
                 new String[]{formattedStartDate, formattedEndDate}
         );
+
 
         double amount = 0.0;
 
@@ -1059,8 +1090,17 @@ public class PrintReport extends AppCompatActivity {
         String formattedEndDate = dateFormat.format(endDate);
 
 // Query the database to get the monthly amount
-        Cursor cursor = database.rawQuery("SELECT SUM(" + SETTLEMENT_AMOUNT + ") FROM " + INVOICE_SETTLEMENT_TABLE_NAME + " WHERE " + SETTLEMENT_DATE_TRANSACTION + " >= ? AND " + SETTLEMENT_DATE_TRANSACTION + " < ?", new String[]{formattedStartDate, formattedEndDate});
-
+        // Query the database to get the yearly amount
+        Cursor cursor = database.rawQuery(
+                "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
+                new String[]{formattedStartDate, formattedEndDate}
+        );
 
         double amount = 0.0;
 

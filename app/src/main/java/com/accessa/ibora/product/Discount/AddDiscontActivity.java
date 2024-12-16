@@ -60,7 +60,8 @@ public class AddDiscontActivity extends Activity {
         //set userid and last Modified
         Userid_Edittext.setText(String.valueOf(cashorId));
 
-    }private void addRecord() {
+    }
+    private void addRecord() {
 
         long currentTimeMillis = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
@@ -68,6 +69,14 @@ public class AddDiscontActivity extends Activity {
         String LastModified = dateFormat.format(new Date(currentTimeMillis));
         String UserId = cashorId;
         String Discvalue = Discvalue_Edittext.getText().toString().trim();
+
+        // Regex for DiscName: only letters and spaces
+        String discNamePattern = "^[a-zA-Z ]+$";
+        // Validate DiscName using the regex pattern
+        if (!DiscName.matches(discNamePattern)) {
+            DiscName_Edittext.setError("Discount name can only contain letters and spaces.");
+            return;
+        }
         Discvalue = Discvalue.replace("%", ""); // Remove the "%" symbol if present
         // Check if all required fields are filled
         if (Discvalue.isEmpty() ||  DiscName.isEmpty()
@@ -75,7 +84,18 @@ public class AddDiscontActivity extends Activity {
             Toast.makeText(this, R.string.please_fill_in_all_fields, Toast.LENGTH_SHORT).show();
             return;
         }
-
+        // Validate Discvalue as a number between 1 and 100
+        double discountValue;
+        try {
+            discountValue = Double.parseDouble(Discvalue);
+            if (discountValue < 1 || discountValue > 100) {
+                Toast.makeText(this, "Discount value must be between 1 and 100.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Invalid discount value. Please enter a numeric value.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // Insert the record into the database
         DBManager dbManager = new DBManager(this);
         dbManager.open();
@@ -88,7 +108,7 @@ public class AddDiscontActivity extends Activity {
             Toast.makeText(this, R.string.MaxDis, Toast.LENGTH_SHORT).show();
             return;
         }
-        dbManager.insertDisc(DiscName, LastModified, UserId, Discvalue);
+        dbManager.insertDisc(DiscName, LastModified, UserId, String.valueOf(discountValue));
         dbManager.close();
 
         // Clear the input
@@ -98,7 +118,6 @@ public class AddDiscontActivity extends Activity {
         Discvalue_Edittext.setText("");
 
         returnHome();
-
 
     }
 

@@ -240,7 +240,7 @@ String CompanyBRNNo;
                         JSONObject jsondetailedtransacs = new JSONObject();
                         Log.d("cashier", cashorlevel);
 if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
-    if(cashorlevel.equals("1")) {
+    if(cashorlevel.equals("0")) {
         transactionType = "TRN";
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
         int latestTransactionTRNCounter = sharedPreferences.getInt("transaction_counter_TRN", 0);
@@ -279,7 +279,7 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
 
 }  else {
-    if(cashorlevel.equals("1")) {
+    if(cashorlevel.equals("0")) {
         transactionType = "TRN";
 
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
@@ -689,15 +689,21 @@ if(!areAllItemsNotSelectedNotPaid){
     }
 
     public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD,String Transactiontype,String selectedBuyerName,String selectedBuyerTAN,String selectedBuyerBRN,String selectedBuyerNIC){
-        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
         SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 
-        double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,transactionIdInProgress);
-        double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,transactionIdInProgress);
+        double sumBeforeDisc = mDatabaseHelper.getSumOfTransactionVATBeforeDiscByTransactionId(db,latesttransId);
+        double sumAfterDisc = mDatabaseHelper.getSumOfTransactionVATAfterDiscByTransactionId(db,latesttransId);
 
         db.close();
-        mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, transactionIdInProgress,qrMra,mrairn,MRAMETHOD);
-        mDatabaseHelper.getTotalVATAndUpdateTransactionHeader(transactionIdInProgress,sumBeforeDisc,sumAfterDisc,selectedBuyerName,selectedBuyerTAN,selectedBuyerBRN,selectedBuyerNIC);
+        Log.d("InsertCashReturn", cashReturn +" " + latesttransId);
+        Log.d("InsertCashReturnx", cashReturn +" " + transactionIdInProgress);
+
+        mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, latesttransId,qrMra,mrairn,MRAMETHOD);
+        mDatabaseHelper.getTotalVATAndUpdateTransactionHeader(latesttransId,sumBeforeDisc,sumAfterDisc,selectedBuyerName,selectedBuyerTAN,selectedBuyerBRN,selectedBuyerNIC);
 
     }
     public static String extractQrCode(String apiResponse) {
@@ -796,25 +802,7 @@ if(!areAllItemsNotSelectedNotPaid){
         return Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
     }
 
-    private  String readTextFromFile(String fileName) {
-        try {
-            FileInputStream fileInputStream = this.openFileInput(fileName);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
 
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-
-            bufferedReader.close();
-
-            return stringBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
     private List<Transaction> getItemsFromDatabase() {
         List<Transaction> itemList = new ArrayList<>();
 

@@ -91,12 +91,33 @@ public class AddVendorActivity extends Activity {
         String Email = Email_Edittext.getText().toString().trim();
         String InternalCode = InternalCode_Edittext.getText().toString().trim();
         String Salesmen = Salesmen_Edittext.getText().toString().trim();
+        // Regex patterns
+        String phonePattern = "^[0-9]{7,15}$"; // Only digits, length between 7-15 (adjust as needed)
+        String emailPattern = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"; // Basic email pattern
+        String postalCodePattern = "^[0-9]{4,10}$"; // Only digits, length between 4-10 (adjust if needed)
 
         // Check if all required fields are filled
         if (VendorName.isEmpty() || VendCode.isEmpty() || PhoneNumber.isEmpty() ||
                 Street.isEmpty() || Town.isEmpty() || PostalCode.isEmpty() ||
                 Email.isEmpty() || InternalCode.isEmpty() || Salesmen.isEmpty()) {
             Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Validate phone number
+        if (!PhoneNumber.matches(phonePattern)) {
+            PhoneNumber_Edittext.setError("Invalid phone number format");
+            return;
+        }
+
+        // Validate email
+        if (!Email.matches(emailPattern)) {
+            Email_Edittext.setError("Invalid email format");
+            return;
+        }
+
+        // Validate postal code
+        if (!PostalCode.matches(postalCodePattern)) {
+            PostalCode_Edittext.setError("Invalid postal code format");
             return;
         }
 

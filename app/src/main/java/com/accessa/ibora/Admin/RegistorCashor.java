@@ -25,7 +25,10 @@ import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class RegistorCashor extends AppCompatActivity {
 
@@ -54,9 +57,16 @@ public class RegistorCashor extends AppCompatActivity {
         editTextCashor = findViewById(R.id.editTextCashor);
         editTextName = findViewById(R.id.editTextName);
         spinnerCashierLevel = findViewById(R.id.spinnerCashierLevel);
-        // Populate spinner with options 1 to 5
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.cashier_levels, android.R.layout.simple_spinner_item);
+        String[] cashierLevelsArray = getResources().getStringArray(R.array.cashier_levels);
+        List<String> cashierLevelsList = new ArrayList<>(Arrays.asList(cashierLevelsArray));
+
+// Replace "0" with "Trainee"
+        cashierLevelsList.set(0, "Trainee");
+
+// Create an ArrayAdapter with the modified list
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cashierLevelsList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         spinnerCashierLevel.setAdapter(adapter);
         // Set click listener for Login button
         Button buttonLogin = findViewById(R.id.buttonLogin);
@@ -166,7 +176,10 @@ public class RegistorCashor extends AppCompatActivity {
 
                 }
                 String cashierLevel = spinnerCashierLevel.getSelectedItem().toString();
-
+// Check if "Trainee" was selected and convert it to "0" for database purposes
+                if (cashierLevel.equals("Trainee")) {
+                    cashierLevel = "0";
+                }
                 ContentValues values = new ContentValues();
                 ContentValues values1 = new ContentValues();
                 values.put("ShopName", ShopName);

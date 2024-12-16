@@ -54,7 +54,7 @@
         android:id="@+id/versionname"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="V 1.0.20"
+        android:text="V 1.0.27"
         android:layout_below="@id/Company_name"
         android:textColor="@color/white"
         android:layout_marginTop="10dp"

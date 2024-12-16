@@ -700,18 +700,15 @@ public class printerSetupforPRF extends AppCompatActivity {
                         // Cut the paper
                         service.cutPaper(null);
 
-                        // Open the cash drawer
-                        byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
-                        service.sendRAWData(openDrawerBytes, null);
-                        // Open the cash drawer
+
 
 
                        String transactionType;
-                        if(cashorlevel.equals("1")) {
+                        if(cashorlevel.equals("Trainee")) {
 
-                            mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_TRN,roomid,tableid);
+                            mDatabaseHelper.updateTransactionHeaderStatusWithoutCondition(DatabaseHelper.TRANSACTION_STATUS_TRN,newtransactionid,roomid,tableid);
                         }else{
-                            mDatabaseHelper.updateAllTransactionsHeaderStatus(invoicetype,roomid,tableid);
+                            mDatabaseHelper.updateTransactionHeaderStatusWithoutCondition(invoicetype,newtransactionid,roomid,tableid);
                         }
 
 

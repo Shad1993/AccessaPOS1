@@ -626,17 +626,20 @@ public class PrintShiftReport extends AppCompatActivity {
                         String Total= "Total";
                         String TVA= getString(R.string.Vat);
                         String amountWoVat= "Amount W/0 VAT";
-                        String TotalValueWoVat= "Rs " + totalAmountWOVat;
-                        String TotalVAT= "Rs " + totalTax;
+
+
                          lineWidths= 38;
                         int lineWidth = 48;
                         // Calculate the padding for the item name
                         double tax = Double.parseDouble(totalTax);
-                        double amountWOVat = Double.parseDouble(totalAmountWOVat);
-                         grandTotal = tax + amountWOVat;
-                        String formattedTotalAmount = String.format("%.2f", grandTotal);
+                        double amountWOVat = grandTotal- Double.parseDouble(totalTax);
 
+                        String formattedTotalAmount = String.format("%.2f", grandTotal);
+                        String formattedtax = String.format("%.2f", tax);
+                        String formattedtamountWOVat = String.format("%.2f", amountWOVat);
                         String TotalValue= "Rs " + formattedTotalAmount;
+                        String TotalValueWoVat= "Rs " + formattedtamountWOVat;
+                        String TotalVAT= "Rs " + formattedtax;
 
                         int TotalValuePadding = lineWidth - TotalValueWoVat.length() - Total.length();
                         int TaxValuePadding = lineWidth - TotalVAT.length() - TVA.length();

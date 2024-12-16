@@ -13,13 +13,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragmentContainer"
-            android:name="com.accessa.ibora.sales.ticket.Checkout.SplitTicketFragment"
-            android:layout_width="70dp"
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="65dp"
             android:layout_height="650dp"
             android:layout_weight="1"
-            android:tag="TicketFragment" />
+            android:id="@+id/splitBillRecyclerView"
+             />
 
         <LinearLayout
             android:layout_width="0dp"

@@ -85,7 +85,7 @@ private  EditText searchEditText;
         // Create a custom list of levels
         List<String> levels = new ArrayList<>();
         levels.add(getString(R.string.AllLevels)); // Optional: Add "All Items" first
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 6; i++) {
             levels.add("Level " + i);  // Adding "Level 1" to "Level 5"
         }
 
@@ -157,7 +157,7 @@ private  EditText searchEditText;
 
         // Create a list to store the six levels
          levels = new ArrayList<>();
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 6; i++) {
             levels.add("Level " + i);  // Add "Level 1" to "Level 5"
         }
 
@@ -209,12 +209,22 @@ private  EditText searchEditText;
                         // Get the Switch elements from the custom layout
                         Switch switchCompanyInfo = dialogView.findViewById(R.id.switchCompanyInfo);
                         Switch switchRightAccess = dialogView.findViewById(R.id.switchRightAccess);
+                        Switch switchHigherRightAccess = dialogView.findViewById(R.id.switchHigherRightAccess);
                         Switch switchPeopleManagement = dialogView.findViewById(R.id.switchPeopleManagement);
                         Switch switchPOSNumber = dialogView.findViewById(R.id.switchPOSNumber);
+
                         Switch switchSales = dialogView.findViewById(R.id.switchSales);
                         Switch switchReceipts = dialogView.findViewById(R.id.switchReceipts);
                         Switch switchShift = dialogView.findViewById(R.id.switchShift);
                         Switch switchItems = dialogView.findViewById(R.id.switchItems);
+
+
+
+                        Switch switchproforma = dialogView.findViewById(R.id.switchProformat);
+                        Switch switchdebitnote = dialogView.findViewById(R.id.switchdebitnote);
+                        Switch switchcreditnote = dialogView.findViewById(R.id.switchcreditnote);
+                        Switch switchSendtokitchen = dialogView.findViewById(R.id.switchsendtokitchen);
+
                         Switch switchSettings = dialogView.findViewById(R.id.switchSettings);
                         Switch switchAdmin = dialogView.findViewById(R.id.switchAdmin);
                         Switch switchOpenClose = dialogView.findViewById(R.id.switchOpenClose);
@@ -284,11 +294,20 @@ private  EditText searchEditText;
                         switchCompanyInfo.setChecked(sharedPreferences.getBoolean("companyInfo_" + levelNumber, true));
                         switchRightAccess.setChecked(sharedPreferences.getBoolean("rightAccess_" + levelNumber, true));
                         switchPeopleManagement.setChecked(sharedPreferences.getBoolean("peopleManagement_" + levelNumber, true));
+                        switchHigherRightAccess.setChecked(sharedPreferences.getBoolean("HigherLevel_" + levelNumber, true));
                         switchPOSNumber.setChecked(sharedPreferences.getBoolean("posNumber_" + levelNumber, true));
                         switchSales.setChecked(sharedPreferences.getBoolean("sales_" + levelNumber, true));
                         switchReceipts.setChecked(sharedPreferences.getBoolean("Receipts_" + levelNumber, true));
                         switchShift.setChecked(sharedPreferences.getBoolean("shift_" + levelNumber, true));
                         switchItems.setChecked(sharedPreferences.getBoolean("Items_" + levelNumber, true));
+
+
+                        switchproforma.setChecked(sharedPreferences.getBoolean("proforma_" + levelNumber, true));
+                        switchdebitnote.setChecked(sharedPreferences.getBoolean("debitnote_" + levelNumber, true));
+                        switchcreditnote.setChecked(sharedPreferences.getBoolean("creditnote_" + levelNumber, true));
+                        switchSendtokitchen.setChecked(sharedPreferences.getBoolean("sendtokitchen_" + levelNumber, true));
+
+
                         switchSettings.setChecked(sharedPreferences.getBoolean("settings_" + levelNumber, true));
                         switchAdmin.setChecked(sharedPreferences.getBoolean("admin_" + levelNumber, true));
                         switchOpenClose.setChecked(sharedPreferences.getBoolean("openClose_" + levelNumber, true));
@@ -364,11 +383,17 @@ private  EditText searchEditText;
                                     editor.putBoolean("companyInfo_" + levelNumber, switchCompanyInfo.isChecked());
                                     editor.putBoolean("rightAccess_" + levelNumber, switchRightAccess.isChecked());
                                     editor.putBoolean("peopleManagement_" + levelNumber, switchPeopleManagement.isChecked());
+                                    editor.putBoolean("HigherLevel_" + levelNumber, switchHigherRightAccess.isChecked());
                                     editor.putBoolean("posNumber_" + levelNumber, switchPOSNumber.isChecked());
                                     editor.putBoolean("sales_" + levelNumber, switchSales.isChecked());
                                     editor.putBoolean("Receipts_" + levelNumber, switchReceipts.isChecked());
                                     editor.putBoolean("shift_" + levelNumber, switchShift.isChecked());
                                     editor.putBoolean("Items_" + levelNumber, switchItems.isChecked());
+                                    editor.putBoolean("proforma_" + levelNumber, switchproforma.isChecked());
+                                    editor.putBoolean("debitnote_" + levelNumber, switchdebitnote.isChecked());
+                                    editor.putBoolean("creditnote_" + levelNumber, switchcreditnote.isChecked());
+                                    editor.putBoolean("sendtokitchen_" + levelNumber, switchSendtokitchen.isChecked());
+
                                     editor.putBoolean("settings_" + levelNumber, switchSettings.isChecked());
                                     editor.putBoolean("admin_" + levelNumber, switchAdmin.isChecked());
                                     editor.putBoolean("openClose_" + levelNumber, switchOpenClose.isChecked());

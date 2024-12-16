@@ -61,7 +61,9 @@
     <EditText
         android:id="@+id/editTelNo"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:maxLength="20"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -71,18 +73,22 @@
     <EditText
         android:id="@+id/editFaxNo"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:inputType="phone"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Opening Hours" />
+                android:text="Opening Hours"
+                />
 
             <EditText
                 android:id="@+id/editOpeninghours"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="06h00-18h00"
+                android:inputType="text"
+                android:maxLength="20"
                 android:textColorHint="@android:color/holo_red_dark"/>
 
             <androidx.appcompat.widget.AppCompatImageView

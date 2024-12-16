@@ -216,7 +216,7 @@ public class MRADBN extends AppCompatActivity {
                         JSONObject jsondetailedtransacs = new JSONObject();
                         if(SelectedBuyerProfile.equals("")) {
 
-                            if (cashorlevel.equals("1")) {
+                            if (cashorlevel.equals("0")) {
                                 transactionType = "TRN";
                             } else {
                                 transactionType = TransactionType;
@@ -245,7 +245,7 @@ public class MRADBN extends AppCompatActivity {
                                 jsondetailedtransacs.put("dateTimeInvoiceIssued", formattedDateTime);
                             }
                         else {
-                                if (cashorlevel.equals("1")) {
+                                if (cashorlevel.equals("0")) {
                                     transactionType = "TRN";
                                 } else {
                                     transactionType = TransactionType;

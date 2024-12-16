@@ -66,8 +66,9 @@ public class welcome extends AppCompatActivity {
 
                         EditText brnEditText = dialogView.findViewById(R.id.brnEditText);
                         EditText passwordEditText = dialogView.findViewById(R.id.passwordEditText);
-                        EditText shopnumEditText = dialogView.findViewById(R.id.ShopnumEditText);
-                        EditText posnumEditText = dialogView.findViewById(R.id.tillnumEditText);
+                        EditText ServerNameEditText = dialogView.findViewById(R.id.serverEditText);
+                        EditText DBNAMEEditText = dialogView.findViewById(R.id.dbnameEditText);
+                        EditText usernameditText = dialogView.findViewById(R.id.userEditText);
                         Button buttonSubmit = dialogView.findViewById(R.id.buttonSubmit);
 
                         buttonSubmit.setOnClickListener(new View.OnClickListener() {
@@ -76,17 +77,29 @@ public class welcome extends AppCompatActivity {
                                 // Retrieve BRN and password from EditText fields
                                 String brn = brnEditText.getText().toString();
                                 String password = passwordEditText.getText().toString();
-                                String shopnumber = shopnumEditText.getText().toString();
-                                String tillnum = posnumEditText.getText().toString();
+                                String serverName = ServerNameEditText.getText().toString();
+                                String DBName = DBNAMEEditText.getText().toString();
+                                String userName = usernameditText.getText().toString();
+
+                                // Regex patterns
+                                String brnPattern = "^[a-zA-Z0-9]+$";  // Alphanumeric only
+
+                                // Validate input fields
+                                if (!brn.matches(brnPattern)) {
+                                    brnEditText.setError("BRN must be alphanumeric.");
+                                    return;
+                                }
 
 
-                                SyncActivitySync.startSync(welcome.this, brn, password,shopnumber,tillnum);
 
+                                // If all validations pass, start sync
+                                SyncActivitySync.startSync(welcome.this, brn, password, serverName, DBName,userName);
                                 dialog.dismiss(); // Close the dialog
                             }
                         });
                     }
                 });
+
 
             }
         });

@@ -53,7 +53,7 @@ public class menuFragment extends Fragment {
         // Pass List<Category> to CategoryAdapter
         CategoryAdapter categoryAdapter = new CategoryAdapter(categories);
         recyclerView.setAdapter(categoryAdapter);
-
+        Cursor cursor = dbHelper.getAllItems();
         // Initialize the ItemGridAdapter
         itemGridAdapter = new ItemGridAdapter(requireContext(), null); // Pass null initially
 
@@ -107,17 +107,23 @@ public class menuFragment extends Fragment {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor newCursor = db.query(DatabaseHelper.TABLE_NAME,
                 null,
-                DatabaseHelper.Category + " = ?",
+                DatabaseHelper.Category + " = ?",  // Use correct column name
                 new String[]{selectedCategory},
                 null,
                 null,
-                null);
+                DatabaseHelper.SubCategory + " ASC"); // Sort by subcategory
 
-        if (getActivity() != null) {
-            ItemGridAdapter itemGridAdapter = new ItemGridAdapter(getActivity(), newCursor);
-            SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+        if (newCursor != null) {
+            Log.d("updateItemGridAdapter", "Filtered items count: " + newCursor.getCount());
+            if (getActivity() != null) {
+                ItemGridAdapter itemGridAdapter = new ItemGridAdapter(getActivity(), newCursor);
+                SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+            }
+        } else {
+            Log.e("updateItemGridAdapter", "No items found for category: " + selectedCategory);
         }
     }
+
 
     // Update this method to return a List<Category>
     private List<Category> fetchCategories() {

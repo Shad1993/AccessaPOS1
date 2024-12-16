@@ -42,7 +42,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.ItemViewHolder
             idTextView = itemView.findViewById(R.id.Buyerid);
             nameTextView = itemView.findViewById(R.id.BuyerAdapter);
             Tan = itemView.findViewById(R.id.textViewTAN);
-            brn = itemView.findViewById(R.id.textViewBRN);
+
             addresse = itemView.findViewById(R.id.textViewAdress);
 
         }

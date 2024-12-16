@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -53,7 +55,7 @@ private  EditText searchEditText;
     private Spinner spinner;
     private ImageView arrow;
     private SharedPreferences sharedPreferences;
-    private String cashorId,Shopname;
+    private String cashorId,Shopname,cashiername;
     private  String cashorlevel;
     private TextView name;
     private TextView CashorId;
@@ -84,7 +86,9 @@ private  EditText searchEditText;
 
 
          cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
-
+        cashorlevel = sharedPreferences.getString("cashorlevel", null); // Retrieve cashor's level
+        cashiername = sharedPreferences.getString("cashorName", null);
+        cashorId =sharedPreferences.getString("cashorId", null);
         //arrow
         arrow=view.findViewById(R.id.spinner_icon);
         // Retrieve the items from the database
@@ -252,16 +256,24 @@ private  EditText searchEditText;
                         // Get current user level
                         int userLevel = Integer.parseInt(cashorlevel); // Assuming you have cashorlevel as a string variable
                         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                        SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                        String Activity="modifyUser_";
 
+                        boolean canModifyUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, Activity, userLevel);
+                        boolean canHigherAccessModifyUser = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, userLevel);
 
-                        boolean canModifyUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "modifyUser_", userLevel);
+                        if (canHigherAccessModifyUser ) {
+                            showPinDialog(Activity, () -> {
+                                // If permission is granted, start the ModifyPeopleActivity
+                                Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyPeopleActivity.class);
+                                modifyIntent.putExtra("name", name);
+                                modifyIntent.putExtra("level", level);
+                                modifyIntent.putExtra("dept", Dept);
+                                modifyIntent.putExtra("id", id);
 
-
-
-                        // If the user does not have permission, show a toast
-                        if (!canModifyUser) {
-                            Toast.makeText(requireContext(), "User is not allowed to modify users.", Toast.LENGTH_SHORT).show();
-                        } else {
+                                startActivity(modifyIntent);
+                            });
+                        }else if ((!canHigherAccessModifyUser && canModifyUser) ) {
                             // If permission is granted, start the ModifyPeopleActivity
                             Intent modifyIntent = new Intent(requireActivity().getApplicationContext(), ModifyPeopleActivity.class);
                             modifyIntent.putExtra("name", name);
@@ -270,6 +282,9 @@ private  EditText searchEditText;
                             modifyIntent.putExtra("id", id);
 
                             startActivity(modifyIntent);
+                        } else {
+                            Toast.makeText(requireContext(), "User is not allowed to modify users.", Toast.LENGTH_SHORT).show();
+
                         }
                     }
 
@@ -289,21 +304,162 @@ private  EditText searchEditText;
                 int userLevel = Integer.parseInt(cashorlevel);
                 SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
 
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                String Activity="addUser_";
 
-                boolean canAddUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "addUser_", userLevel);
 
-                // If the user does not have permission, show a toast
-                if (!canAddUser) {
-                    Toast.makeText(requireContext(), "User is not allowed to add new users.", Toast.LENGTH_SHORT).show();
+                boolean canAddUser = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, Activity, userLevel);
+                boolean canHigherAccessAddUser = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, userLevel);
+                if (canHigherAccessAddUser) {
+                    showPinDialog(Activity, () -> {
+                        openNewActivity();
+                    });
+                }else  if (!canHigherAccessAddUser && canAddUser) {
+
+                    openNewActivity();
+
                 } else {
                     // If permission is granted, open the new activity
-                    openNewActivity();
+                    Toast.makeText(requireContext(), "User is not allowed to add new users.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
 
         return view;
+    }
+
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "EditText is not initialized", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
     }
     // Filter the RecyclerView based on the selected item
     private void filterRecyclerView(String selectedItem) {

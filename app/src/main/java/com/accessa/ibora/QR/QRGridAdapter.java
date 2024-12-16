@@ -105,7 +105,7 @@ public class QRGridAdapter extends RecyclerView.Adapter<QRGridAdapter.ItemViewHo
             holder.imageView.getLayoutParams().height = 50; // Set the desired height in pixels
             holder.button.setBackgroundResource(R.drawable.button_dynamic_color);
         } else {
-            holder.imageView.setImageResource(R.drawable.purpleqr);
+            holder.imageView.setImageResource(R.drawable.qr);
         }
 
         holder.itemView.setTag(id);

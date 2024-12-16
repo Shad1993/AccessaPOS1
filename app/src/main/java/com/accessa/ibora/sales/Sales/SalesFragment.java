@@ -20,9 +20,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +33,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+
+import androidx.gridlayout.widget.GridLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -374,10 +377,11 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     Barcode=item.getBarcode();
                     Weight=item.getWeight();
                     catname=item.getCategory();
+                    Log.d("HasOptions1", String.valueOf(HasOptions));
+                    if (Boolean.TRUE.equals(HasOptions) || "1".equals(HasOptions)) {
 
-                    if (Boolean.TRUE.equals(HasOptions) ) {
 
-
+                        Log.d("HasOptions", String.valueOf(HasOptions));
 
                         showOptionPopup(Hascomment,RelatedItem,RelatedItem2,RelatedItem3,RelatedItem4,RelatedItem5,SupplementsItem,itemId, transactionId, transactionDate, 1, UnitPrice, Double.parseDouble(vat), longDescription, UnitPrice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
                     }else if (cursor != null && cursor.moveToFirst()) {
@@ -518,6 +522,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                                     }
                                                 }else {
+                                                    Log.d("updateTransaction1", "= " + newQuantity);
                                                     mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                                                 }
@@ -623,6 +628,20 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                     }
                                 }else {
+                                     taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
+
+                                     newQuantity = currentQuantity + 1;
+                                     pricewithoutVat= Double.parseDouble(priceWithoutVat);
+                                     newpriceWithoutVat= pricewithoutVat * newQuantity;
+                                     totaltaxbeforediscount= taxbeforediscount * newQuantity;
+                                     newTotalDiscount= newQuantity * TotalDiscount;
+                                     taxafterdiscount= calculateTax();
+                                     newtotaltaxafterdiscount= taxafterdiscount * newQuantity;
+                                     newTotalPrice = UnitPrice * newQuantity;
+                                     newVat = newQuantity * calculateTax();
+
+                                    Log.d("updateTransaction2", "= " + newQuantity);
+
                                     mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                                 }
@@ -813,7 +832,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         List<Variant> supplementList = dbManager.getSupplementListById(relatensupplement);
 
         if (supplementList != null && !supplementList.isEmpty()) {
-            LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.SupplementsButtonsLayout);
+            GridLayout supplementButtonsLayout = dialogView.findViewById(R.id.SupplementsButtonsLayout);
+            supplementButtonsLayout.setColumnCount(5); // Set maximum 5 columns per row
 
             for (Variant variant : supplementList) {
                 Button variantButton = new Button(getContext());
@@ -849,7 +869,18 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 });
 
                 // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+              //  variantButtonsLayout.addView(variantButton);
+                // Configure GridLayout parameters
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Distribute width equally
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Weight for equal distribution
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+                params.setMargins(8, 8, 8, 8); // Add margin around buttons
+                variantButton.setLayoutParams(params);
+
+                // Add button to GridLayout
+                supplementButtonsLayout.addView(variantButton);
             }
         } else {
 
@@ -900,7 +931,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             for (Variant variant : variantList) {
                 // Log each VARIANT_DESC
 
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout);
+                GridLayout gridLayout = dialogView.findViewById(R.id.variantButtonsLayout);  // Ensure this is a GridLayout in your XML layout
+
+                gridLayout.setColumnCount(4); // 4 columns per row
 
                 Button variantButton = new Button(getContext());
                 String buttonText = variant.getDescription() + " - Rs " + variant.getPrice(); // Display name and price
@@ -935,6 +968,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 variantButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.d("ItemExistence", "id " + id + ", itemId: " + itemId + ", longDescription: " + longDescription + ", NewBarcode: " + NewBarcode);
 
                         insertdata(null, SupplementsItem, id, itemId, transactionId, transactionDate, vat, longDescription, priceWithoutVat, NewBarcode, newDesc, newprice, newitemid);
 // Make the button visible when the variant button is clicked
@@ -965,8 +999,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     }
                 });
 
-                // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+                // Set LayoutParams for the button
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Allow weight-based distribution
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Equal width
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Let the grid manage rows
+                variantButton.setLayoutParams(params);
+
+// Add button to GridLayout
+                gridLayout.addView(variantButton);
             }
         } else {
 
@@ -983,7 +1025,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         if (variantList2 != null && !variantList2.isEmpty()) {
             for (Variant variant : variantList2) {
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout2);
+                GridLayout gridLayout = dialogView.findViewById(R.id.variantButtonsLayout2);  // Ensure this is a GridLayout in your XML layout
+                gridLayout.setColumnCount(4); // 4 columns per row
+
 
                 Button variantButton = new Button(getContext());
                 String buttonText = variant.getDescription() + " - Rs " + variant.getPrice(); // Display name and price
@@ -1046,9 +1090,17 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                         return true; // Consume the long click event
                     }
                 });
+                // Set LayoutParams for the button
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Allow weight-based distribution
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Equal width
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Let the grid manage rows
+                variantButton.setLayoutParams(params);
 
-                // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+// Add button to GridLayout
+                gridLayout.addView(variantButton);
+
             }
         } else {
 
@@ -1065,7 +1117,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             for (Variant variant : variantList3) {
                 // Log each VARIANT_DESC
 
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout3);
+                GridLayout gridLayout = dialogView.findViewById(R.id.variantButtonsLayout3);  // Ensure this is a GridLayout in your XML layout
+                gridLayout.setColumnCount(4); // 4 columns per row
 
                 Button variantButton = new Button(getContext());
                 String buttonText = variant.getDescription() + " - Rs " + variant.getPrice(); // Display name and price
@@ -1127,8 +1180,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     }
                 });
 
-                // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+                // Set LayoutParams for the button
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Allow weight-based distribution
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Equal width
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Let the grid manage rows
+                variantButton.setLayoutParams(params);
+
+// Add button to GridLayout
+                gridLayout.addView(variantButton);
             }
         } else {
 
@@ -1145,7 +1206,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             for (Variant variant : variantList4) {
                 // Log each VARIANT_DESC
 
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout4);
+                GridLayout gridLayout = dialogView.findViewById(R.id.variantButtonsLayout4);  // Ensure this is a GridLayout in your XML layout
+                gridLayout.setColumnCount(4); // 4 columns per row
 
                 Button variantButton = new Button(getContext());
                 String buttonText = variant.getDescription() + " - Rs " + variant.getPrice(); // Display name and price
@@ -1208,8 +1270,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     }
                 });
 
-                // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+                // Set LayoutParams for the button
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Allow weight-based distribution
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Equal width
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Let the grid manage rows
+                variantButton.setLayoutParams(params);
+
+// Add button to GridLayout
+                gridLayout.addView(variantButton);
             }
         } else {
 
@@ -1226,7 +1296,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             for (Variant variant : variantList5) {
                 // Log each VARIANT_DESC
 
-                LinearLayout variantButtonsLayout = dialogView.findViewById(R.id.variantButtonsLayout5);
+                GridLayout gridLayout = dialogView.findViewById(R.id.variantButtonsLayout5);  // Ensure this is a GridLayout in your XML layout
+                gridLayout.setColumnCount(4); // 4 columns per row
 
                 Button variantButton = new Button(getContext());
                 String buttonText = variant.getDescription() + " - Rs " + variant.getPrice(); // Display name and price
@@ -1288,8 +1359,16 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                     }
                 });
 
-                // Add the button to the layout
-                variantButtonsLayout.addView(variantButton);
+                // Set LayoutParams for the button
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0; // Allow weight-based distribution
+                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Equal width
+                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Let the grid manage rows
+                variantButton.setLayoutParams(params);
+
+// Add button to GridLayout
+                gridLayout.addView(variantButton);
             }
         } else {
 
@@ -1460,6 +1539,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                 }
                             }else {
+                                Log.d("updateTransaction3", "= " + newQuantity);
                                 mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                             }
@@ -1480,7 +1560,13 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 int currentQuantity = mDatabaseHelper.getQuantity(latesttransId,NewBarcode);
 
                 UnitPrice = newprice;
-                double unitprice = item.getPrice();
+                float unitprice=0;
+                if(NewBarcode != null){
+                     unitprice= mDatabaseHelper.getUnitPriceFromBarcode(NewBarcode);
+                }else{
+                     unitprice = item.getPrice();
+                }
+
 
                 double taxbeforediscount=calculateinitialTax(String.valueOf(unitprice));
 
@@ -1555,6 +1641,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                         }
                     }else {
+                        Log.d("updateTransaction4", "= " + newQuantity);
                         mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                     }
@@ -1832,6 +1919,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                 }
                             }else {
+                                Log.d("updateTransaction5", "= " + newQuantity);
                                 mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                             }
@@ -1926,6 +2014,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                     }
                 }else {
+                    Log.d("updateTransaction6", "= " + newQuantity);
                     mDatabaseHelper.updateTransaction(Integer.parseInt(newitemid),newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid), tableid);
 
                 }
@@ -2159,6 +2248,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                             boolean existingitems=mDatabaseHelper.checkItemExists(latesttransId,tableid, String.valueOf(roomid));
 
                             if(!isdiscounted && existingitems ){
+                                Log.d("updateTransaction7", "= " + newQuantity);
                                 mDatabaseHelper.updateTransaction(itemId,newpriceWithoutVat, newQuantity,totaltaxbeforediscount,newVat,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                             } else if (!isdiscounted){
@@ -2182,6 +2272,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                 }
                             }else{
+                                Log.d("updateTransaction8", "= " + newQuantity);
                                 mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount, newVat, VatType, String.valueOf(roomid),tableid);
 
                             }
@@ -2517,6 +2608,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
                                             }
                                         }else {
+                                            Log.d("updateTransaction9", "= " + newQuantity);
                                             mDatabaseHelper.updateTransaction(itemId, newpriceWithoutVat,newQuantity,totaltaxbeforediscount,newtotaltaxafterdiscount,latesttransId, newTotalPrice,newTotalDiscount,newVat,VatType, String.valueOf(roomid),tableid);
                                         }
 
@@ -2824,6 +2916,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                 );
 
             }
+            Log.d("updateNumberOfCovers", covernumber +" " + latesttransId);
+            Log.d("updateNumberOfCoversx", covernumber +" " + transactionIdInProgress);
             mDatabaseHelper.updateNumberOfCovers(transactionIdInProgress,covernumber);
 
         }

@@ -203,8 +203,6 @@ public class FirstSlideFragment extends Fragment {
 
 
 
-
-
     public String getLogoPath() {
         return imagePath;
     }

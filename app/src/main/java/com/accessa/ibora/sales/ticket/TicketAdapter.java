@@ -54,8 +54,9 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
                 int item_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper.ITEM_ID));
                 int unique_id = mCursor.getInt(mCursor.getColumnIndex(DatabaseHelper._ID));
                 String unitPrice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_UNIT_PRICE));
+                double totaldisc = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT));
 
-                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id,relatedoptionid);
+                Transaction item = new Transaction(unique_id,itemName, itemPrice, itemQuantity, unitPrice,item_id,relatedoptionid,totaldisc);
                 transactionList.add(0, item); // Add the item at the beginning of the list to maintain the desired order
             } while (mCursor.moveToPrevious());
         }
@@ -197,6 +198,15 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             params.leftMargin = 0; // Reset the left margin if there's no relatedOptionId or description starts with "SUP"
             holder.itemView.setLayoutParams(params);
         }
+    }
+    public void uncheckAllCheckboxes() {
+        // Clear the list of checked items
+        checkedItems.clear();
+
+
+
+        // Notify the adapter to refresh the view
+        notifyDataSetChanged();
     }
 
 

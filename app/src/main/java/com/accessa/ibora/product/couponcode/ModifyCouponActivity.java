@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.accessa.ibora.R;
+import com.accessa.ibora.printer.PrintCoupon;
 import com.accessa.ibora.product.Department.Department;
 import com.accessa.ibora.product.category.CategoryDatabaseHelper;
 import com.accessa.ibora.product.items.DBManager;
@@ -57,7 +58,6 @@ public class ModifyCouponActivity extends Activity {
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        String cashorName = sharedPreferences.getString("cashorName", null); // Retrieve cashor's name
          cashorId = sharedPreferences.getString("cashorId", null); // Retrieve cashor's ID
 
         catDatabaseHelper = new CategoryDatabaseHelper(this);
@@ -124,7 +124,7 @@ public class ModifyCouponActivity extends Activity {
         buttonUpdate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDept();
+                updatecoupon();
             }
         });
         buttonDelete = findViewById(R.id.btn_delete);
@@ -141,10 +141,17 @@ public class ModifyCouponActivity extends Activity {
     }
 
 
-    private void updateDept() {
+    private void updatecoupon() {
         String couponCode = couponcode.getText().toString().trim();
         String amount = inputAmount.getText().toString().trim();
+        // Regex pattern for positive amount (with optional decimal)
+        String amountPattern = "^[0-9]+(\\.[0-9]{1,2})?$";
 
+        // Validate the amount
+        if (!amount.matches(amountPattern)) {
+            Toast.makeText(getApplicationContext(), "Please enter a valid amount (e.g., 100 or 100.50)", Toast.LENGTH_SHORT).show();
+            return; // Stop further execution
+        }
         // Retrieve the selected start date from the DatePicker
         int startYear = startDatePicker.getYear();
         int startMonth = startDatePicker.getMonth();
@@ -174,6 +181,16 @@ public class ModifyCouponActivity extends Activity {
 
         if (isUpdated) {
             Toast.makeText(this, getString(R.string.updatecoupon), Toast.LENGTH_SHORT).show();
+            // Data was inserted successfully
+
+            Intent intent = new Intent(this, PrintCoupon.class);
+            intent.putExtra("amount", amount);
+            intent.putExtra("startDate", startDate);
+            intent.putExtra("endDate", endDate);
+            intent.putExtra("code", couponCode);
+
+
+            startActivity(intent);
             System.out.println(startDate + " " + endDate+ " " + status);
             finish();
         } else {

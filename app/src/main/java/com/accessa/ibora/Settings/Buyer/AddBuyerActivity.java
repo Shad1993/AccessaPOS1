@@ -1,4 +1,4 @@
-package com.accessa.ibora.Buyer;
+package com.accessa.ibora.Settings.Buyer;
 
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -18,9 +16,7 @@ import android.widget.Toast;
 
 import com.accessa.ibora.R;
 import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.menu.Product;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

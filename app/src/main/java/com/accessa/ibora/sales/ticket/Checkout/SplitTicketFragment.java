@@ -1,17 +1,11 @@
 package com.accessa.ibora.sales.ticket.Checkout;
 
-import static com.accessa.ibora.product.items.DatabaseHelper.Barcode;
-import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_INVOICE_REF;
-
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.hardware.display.DisplayManager;
 import android.media.SoundPool;
 import android.os.Bundle;
@@ -25,60 +19,33 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.accessa.ibora.Buyer.Buyer;
-import com.accessa.ibora.MRA.MRADBN;
-import com.accessa.ibora.MRA.MRAdaptor;
-import com.accessa.ibora.MRA.Mra;
-import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
-import com.accessa.ibora.Report.ReportActivity;
-import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
-import com.accessa.ibora.Settings.SettingsDashboard;
-import com.accessa.ibora.SplashFlashActivity;
-import com.accessa.ibora.product.Department.RecyclerDepartmentClickListener;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
-import com.accessa.ibora.product.items.RecyclerItemClickListener;
-import com.accessa.ibora.sales.ticket.ModifyItemDialogFragment;
-import com.accessa.ibora.sales.ticket.TicketAdapter;
-import com.accessa.ibora.scanner.InbuiltScannerFragment;
+import com.accessa.ibora.sales.ticket.SplitBillTicketAdapter;
 import com.bumptech.glide.Glide;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
 public class SplitTicketFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
     private RecyclerView mRecyclerView;
-    private TicketAdapter mAdapter;
+    private SplitBillTicketAdapter mAdapter;
 
     private String cashierId,cashierLevel,shopname, cashiername;
     private DatabaseHelper mDatabaseHelper;
@@ -116,11 +83,29 @@ private TextView textViewVATs,textViewTotals;
 
         }
     };
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mDatabaseHelper = new DatabaseHelper(getContext());
+        // Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = preferences.getString("table_id", "");
+        mRecyclerView = view.findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        Cursor cursor1 = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId,String.valueOf(roomid),tableid);
+        mAdapter = new SplitBillTicketAdapter(getActivity(), cursor1); // Initialize with null Cursor
+        mRecyclerView.setAdapter(mAdapter);
 
+        // Fetch initial data
+        refreshData();
+    }
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setRetainInstance(true);
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
         String deviceType = sharedPreferences.getString("device_type", null);
@@ -199,7 +184,7 @@ private TextView textViewVATs,textViewTotals;
         Log.d("transactionIdInProgress2", latesttransId);
         actualdate = mDatabaseHelper.getCurrentDate();
 
-        mAdapter = new TicketAdapter(getActivity(), cursor1);
+        mAdapter = new SplitBillTicketAdapter(getActivity(), cursor1);
         mRecyclerView.setAdapter(mAdapter);
 
         dbManager = new DBManager(getContext());
@@ -269,6 +254,8 @@ private TextView textViewVATs,textViewTotals;
         } else {
             mRecyclerView.setVisibility(View.VISIBLE);
             emptyFrameLayout.setVisibility(View.GONE);
+            Log.d("mAdapter.getItemCount()", String.valueOf(mAdapter.getItemCount()));
+            mRecyclerView.setAdapter(mAdapter);
         }
 
   /*      // Set item click listener for RecyclerView
@@ -420,6 +407,41 @@ private TextView textViewVATs,textViewTotals;
 
 
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshData();
+    }
+
+
+    private void refreshData() {
+        String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+        String latesttransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+        Cursor cursor = mDatabaseHelper.getAllInProgressTransactionsbytable(latesttransId, String.valueOf(roomid), tableid);
+
+        if (cursor != null && cursor.getCount() > 0) {
+            Log.d("PopUpDebug", "Data fetched successfully: " + cursor.getCount() + " rows.");
+        } else {
+            Log.d("PopUpDebug", "No data found for the given parameters.");
+        }
+
+        // Check item count and show/hide RecyclerView or empty frame
+        if (mAdapter.getItemCount() <= 0) {
+            mRecyclerView.setVisibility(View.GONE);
+            emptyFrameLayout.setVisibility(View.VISIBLE);
+            Log.d("PopUpDebug0", "Data fetched successfully: " + mAdapter.getItemCount() + " rows.");
+        } else {
+            mRecyclerView.setVisibility(View.VISIBLE);
+            emptyFrameLayout.setVisibility(View.GONE);
+            Log.d("PopUpDebug1", "Data fetched successfully: " + mAdapter.getItemCount() + " rows.");
+            mRecyclerView.setAdapter(mAdapter);
+        }
+
+        // Swap the cursor and notify the adapter
+        mAdapter.swapCursor(cursor);
+        mAdapter.notifyDataSetChanged(); // Ensure data is refreshed
     }
 
 

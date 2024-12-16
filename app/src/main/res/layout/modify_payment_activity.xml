@@ -43,6 +43,7 @@
                         style="@style/modifiedEditText"
                         android:hint="@string/PaymentMethods"
                         android:singleLine="true"
+                        android:maxLength="15"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
@@ -83,26 +84,76 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:textSize="18sp"
+                            android:text="@string/icon" />
 
-                    <TextView
+                        <!-- ImageView to display selected icon -->
+                        <ImageView
+                            android:id="@+id/icon_imageview"
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@string/icon"
+                            android:src="@drawable/select_image" /> <!-- Placeholder image -->
+
+                        <!-- Button to open image picker or URL dialog -->
+                        <Button
+                            android:id="@+id/select_icon_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/select_icon"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="10dp" />
+
+                    </LinearLayout>
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/display_qr_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="visible"
-                        android:layout_gravity="start"
+                        android:text="@string/display_qr"
+                        android:checked="false"
                         android:textSize="18sp"
-                        android:text="@string/icon" />
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_gravity="center" />
 
-
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/display_phone_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/display_phone"
+                        android:checked="false"
+                        android:textSize="18sp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_gravity="center" />
                     <EditText
-                        android:visibility="visible"
-                        android:id="@+id/qrcode_edittext"
+                        android:id="@+id/qr_edittext"
                         style="@style/modifiedEditText"
-                        android:hint="@string/icon"
-                        android:singleLine="true"
+                        android:hint="@string/QrCode"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
+
+                    <EditText
+                        android:id="@+id/phone_number_edittext"
+                        style="@style/modifiedEditText"
+                        android:hint="@string/PhoneNumber"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="phone" />
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/makevisible"
                         android:layout_width="wrap_content"

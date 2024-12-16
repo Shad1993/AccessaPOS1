@@ -43,6 +43,7 @@
                         android:id="@+id/DeptName_edittext"
                         style="@style/modifiedEditText"
                         android:hint="@string/SupplementName"
+                        android:maxLength="26"
                         android:singleLine="true"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -106,13 +107,16 @@
 
 
 
-                    <LinearLayout
+                    <!-- Use GridLayout to display 6 buttons per row -->
+                    <androidx.gridlayout.widget.GridLayout
                         android:id="@+id/variantButtonsLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="16dp">
-                    </LinearLayout>
+                        app:columnCount="8"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp"
+                        app:orientation="horizontal">
+                    </androidx.gridlayout.widget.GridLayout>
 
                 </LinearLayout>
 

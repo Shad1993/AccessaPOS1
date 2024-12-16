@@ -54,7 +54,7 @@ String tableid;
             idTextView = itemView.findViewById(R.id.Buyerid);
             nameTextView = itemView.findViewById(R.id.BuyerAdapter);
             Table = itemView.findViewById(R.id.textViewTAN);
-            brn = itemView.findViewById(R.id.textViewBRN);
+
             room = itemView.findViewById(R.id.roomid);
             button = itemView.findViewById(R.id.button); // Add this line to initialize the CardView reference
 

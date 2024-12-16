@@ -70,6 +70,7 @@ import com.accessa.ibora.ItemsReport.PaymentMethodDataModel;
 import com.accessa.ibora.ItemsReport.SalesReportAdapter;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
+import com.accessa.ibora.Receipt.ReceiptActivity;
 import com.accessa.ibora.Report.ReportActivity;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
@@ -83,6 +84,7 @@ import com.accessa.ibora.product.Rooms.Room;
 import com.accessa.ibora.product.items.AddItemActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
+import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.Sales.SalesFragment;
 import com.accessa.ibora.sales.Tables.TableAdapter;
 import com.accessa.ibora.sales.Tables.TableRoomAdapter;
@@ -128,7 +130,7 @@ public class FunctionFragment extends Fragment {
     private SalesReportAdapter reportAdapter;
     private PaymentMethodAdapter paymentMethodAdapter;
     private String selectedTableToTransfer;
-    private SharedPreferences usersharedPreferences;
+    private SharedPreferences usersharedPreferences,AccessLevelsharedPreferences;
     String tableid;
     private IWoyouService woyouService;
     private String cashierId,cashierLevel,shopname,posNum,shopId;
@@ -163,6 +165,8 @@ public class FunctionFragment extends Fragment {
         intent.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         requireActivity().bindService(intent, connService, Context.BIND_AUTO_CREATE);
         usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+        AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+
 
         mDatabaseHelper = new DatabaseHelper(getContext()); // Initialize DatabaseHelper
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("device", Context.MODE_PRIVATE);
@@ -209,23 +213,277 @@ public class FunctionFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 int levelNumber = Integer.parseInt(cashierLevel);
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "selectTable_", levelNumber)) {
-                    // Call the method to show the coin count popup
-                    showroomTablesPopup(v);
-                }else{
-                    Toast.makeText(getContext(), "Not allowed to perform this action.", Toast.LENGTH_SHORT).show();
+                String Activity="selectTable_";
 
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        showroomTablesPopup(v);
+                    });
                 }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
+                    showroomTablesPopup(v);
+                } else {
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
         buttonShiftNumber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String Activity="setShiftNumber_";
                 int levelNumber = Integer.parseInt(cashierLevel);
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
                 if(hasInProgressOrPRF){
                     Toast.makeText(getContext(), getText(R.string.pleaseclosetransacts), Toast.LENGTH_SHORT).show();
 
-                }else   if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "setShiftNumber_", levelNumber)) {
+                } else if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+
+                        // Create a dialog with a custom layout
+                        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                        LayoutInflater inflater = requireActivity().getLayoutInflater();
+                        View dialogView = inflater.inflate(R.layout.close_shift_report_popup, null);
+                        builder.setView(dialogView);
+                        Button extraButton = dialogView.findViewById(R.id.extraButton);
+                        Button closeShift = dialogView.findViewById(R.id.closeShift);
+                        spinnerReportType = dialogView.findViewById(R.id.spinnerReportType);
+                        spinnershiftnum = dialogView.findViewById(R.id.spinnerShiftnumber);
+                        recyclerViewReports = dialogView.findViewById(R.id.recyclerViewSalesReport);
+                        secondRecyclerView = dialogView.findViewById(R.id.secondRecyclerView);
+                        // Update TextViews
+                        TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
+                        TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
+                        TextView textViewnodata= dialogView.findViewById(R.id.textViewnodata);
+                        // Initialize the database helper
+                        mDatabaseHelper = new DatabaseHelper(requireContext());
+
+                        // Populate spinner with report types (daily, weekly, monthly, yearly)
+                        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(requireContext(),
+                                R.array.report_types, android.R.layout.simple_spinner_item);
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        spinnerReportType.setAdapter(adapter);
+
+
+                        // Fetch shift numbers for today
+                        List<Integer> shiftNumbers = mDatabaseHelper.getShiftNumbersForToday();
+
+                        // Assume shiftNumbers is a List<Integer> that you populated from the database
+                        if ( shiftNumbers.isEmpty()) {
+                            Log.d("shiftNumbers", "shiftNumbers: " + shiftNumbers);
+                            // Handle the case where no data is populated
+                            spinnerReportType.setVisibility(View.GONE);
+                            spinnershiftnum.setVisibility(View.GONE);
+                            recyclerViewReports.setVisibility(View.GONE);
+                            secondRecyclerView.setVisibility(View.GONE);
+                            textViewTotalTax.setVisibility(View.GONE);
+                            textViewTotalAmount.setVisibility(View.GONE);
+                            extraButton.setVisibility(View.GONE);
+                            closeShift.setVisibility(View.GONE);
+                            textViewnodata.setVisibility(View.VISIBLE);
+
+
+
+                        } else if (shiftNumbers.size() == 1 && shiftNumbers.get(0) == 0) {
+                            Log.d("shiftNumbersnull", "shiftNumbers: " + shiftNumbers);
+                            spinnerReportType.setVisibility(View.GONE);
+                            spinnershiftnum.setVisibility(View.GONE);
+                            recyclerViewReports.setVisibility(View.GONE);
+                            secondRecyclerView.setVisibility(View.GONE);
+                            textViewTotalTax.setVisibility(View.GONE);
+                            textViewTotalAmount.setVisibility(View.GONE);
+                            extraButton.setVisibility(View.GONE);
+                            closeShift.setVisibility(View.VISIBLE);
+                            textViewnodata.setVisibility(View.GONE);
+                        } else {
+
+                            Log.d("shiftNumbers", "shiftNumbers: " + shiftNumbers);
+                            // Populate the spinner with shift numbers
+                            ArrayAdapter<Integer> adaptershiftnum = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, shiftNumbers);
+                            adaptershiftnum.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spinnershiftnum.setAdapter(adaptershiftnum);
+                            spinnershiftnum.setEnabled(true);
+                        }
+
+                        // Set up RecyclerViews and their adapters
+                        setUpRecyclerViews(dialogView);
+
+                        // Variables to hold the selected report type, formatted total tax, and formatted total amount
+                        final String[] selectedReportType = new String[1];
+                        final String[] formattedTotalTax = new String[1];
+                        final String[] formattedTotalamountwithouVat = new String[1];
+                        final String[] formattedTotalAmount = new String[1];
+                        final String[] selectedshift = new String[1];
+
+
+
+
+                        // Set the spinner's item selected listener
+                        spinnerReportType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+
+                                selectedReportType[0] = spinnerReportType.getSelectedItem().toString();
+
+                                // Log the selected report type and shift number for debugging
+                                Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType[0]);
+                                Log.d("ReportPopupDialog", "Selected Shift Number: " + selectedshift[0] );
+                                List<DataModel> newDataList ;
+                                List<PaymentMethodDataModel>newDataLists;
+                                double totalTax=0;
+                                double totalAmount=0;
+                                double totalAmountwithoutvat= 0;
+                                if( selectedshift[0]== null){
+                                    selectedshift[0] ="0";
+
+                                }
+                                // Fetch data based on the selected report type and shift number
+                                newDataList = fetchDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                newDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+                                // Log the fetched data for debugging
+                                Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
+
+                                // Update the adapters with the new data
+                                reportAdapter.updateData(newDataList);
+                                paymentMethodAdapter.updateData(newDataLists);
+
+                                // Assuming you have methods to fetch total tax and total amount based on report type and shift number
+                                totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                totalAmount = totalAmountwithoutvat + totalTax;
+
+
+                                // Format totalTax and totalAmount to display only two decimal places
+                                formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
+                                formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
+                                formattedTotalamountwithouVat[0] = String.format(Locale.getDefault(), "%.2f", totalAmountwithoutvat);
+
+                                textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax[0]);
+                                textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount[0]);
+
+                            }
+
+                            @Override
+                            public void onNothingSelected(AdapterView<?> parentView) {
+                                // Do nothing here
+                            }
+                        });
+                        spinnershiftnum.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                                // Get the selected report type and shift number
+
+
+                                selectedReportType[0] = spinnerReportType.getSelectedItem().toString();
+                                selectedshift[0] = spinnershiftnum.getSelectedItem().toString();
+                                // Log the selected report type and shift number for debugging
+                                Log.d("ReportPopupDialog", "Selected Report Type: " + selectedReportType[0]);
+                                Log.d("ReportPopupDialog", "Selected Shift Number: " + selectedshift[0] );
+
+                                // Fetch data based on the selected report type and shift number
+                                List<DataModel> newDataList = fetchDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                List<PaymentMethodDataModel> newDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+
+                                // Log the fetched data for debugging
+                                Log.d("ReportPopupDialog", "Fetched Data: " + newDataList.toString());
+
+                                // Update the adapters with the new data
+                                reportAdapter.updateData(newDataList);
+                                paymentMethodAdapter.updateData(newDataLists);
+
+                                // Assuming you have methods to fetch total tax and total amount based on report type and shift number
+                                double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                double totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
+                                double totalAmount = totalAmountwithoutvat + totalTax;
+
+                                // Update TextViews
+                                TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
+                                TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
+
+
+                                // Format totalTax and totalAmount to display only two decimal places
+                                formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
+                                formattedTotalamountwithouVat[0] = String.format(Locale.getDefault(), "%.2f", totalAmountwithoutvat);
+                                formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
+                                textViewTotalTax.setText("Total Tax: Rs " + formattedTotalTax[0]);
+                                textViewTotalAmount.setText("Total Amount: Rs " + formattedTotalAmount[0]);
+
+
+                            }
+
+                            @Override
+                            public void onNothingSelected(AdapterView<?> parentView) {
+                                // Do nothing here
+                            }
+                        });
+                        builder.setTitle("Close/Shift Report")
+                                .setPositiveButton("OK", (dialog, which) -> {
+
+                                })
+                                .setNegativeButton("Cancel", null) // Optional: Add a cancel button
+                                .show();
+
+
+                        extraButton.setOnClickListener(s -> {
+                            Configuration configuration = getResources().getConfiguration();
+                            Locale currentLocale = configuration.locale;
+
+                            // Start the CloseShiftReport activity
+                            Intent intent = new Intent(getContext(), PrintShiftReport.class);
+                            intent.putExtra("locale", currentLocale.toString());
+                            intent.putExtra("reportType", selectedReportType[0]);
+                            intent.putExtra("shiftNumber", selectedshift[0]);
+                            intent.putExtra("reportType", selectedReportType[0]);
+                            intent.putExtra("totalTax", formattedTotalTax[0]);
+                            intent.putExtra("totalAmount", formattedTotalamountwithouVat[0]);
+                            startActivity(intent);
+
+                        });
+
+
+                        closeShift.setOnClickListener(s -> {
+                            Configuration configuration = getResources().getConfiguration();
+                            Locale currentLocale = configuration.locale;
+                            if(selectedshift[0] =="0"){
+                                Toast.makeText(getContext(), R.string.notransactionstarted, Toast.LENGTH_SHORT).show();
+                            }else {
+
+                                mDatabaseHelper.setShiftNumberInHeader();
+                                int actualshift=mDatabaseHelper.getactualShiftNumber();
+                                int newshiftnumber= mDatabaseHelper.getLastSetShiftNumber();
+                                Log.d("actualshift", String.valueOf(actualshift));
+                                Log.d("newshiftnumber", String.valueOf(newshiftnumber));
+
+                                mDatabaseHelper.setShiftNumberInFinancialTable(newshiftnumber);
+                                mDatabaseHelper.setShiftNumberInCountingReportTable(newshiftnumber);
+                                mDatabaseHelper.setShiftNumberInCashReportTable(newshiftnumber);
+
+                                // Start the CloseShiftReport activity
+                                Intent intent = new Intent(getContext(), CloseShiftReport.class);
+                                intent.putExtra("reportType", "Daily");
+                                intent.putExtra("shiftNumber", selectedshift[0]);
+                                intent.putExtra("reportType", selectedReportType[0]);
+                                intent.putExtra("totalTax", formattedTotalTax[0]);
+                                intent.putExtra("totalAmount", formattedTotalamountwithouVat[0]);
+                                startActivity(intent);
+                            }
+                        });
+                        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+                        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
+                        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
+                        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
+                        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
+                        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
+                    });
+                }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
 
                     // Create a dialog with a custom layout
                     AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -259,19 +517,19 @@ public class FunctionFragment extends Fragment {
                     if ( shiftNumbers.isEmpty()) {
                         Log.d("shiftNumbers", "shiftNumbers: " + shiftNumbers);
                         // Handle the case where no data is populated
-                         spinnerReportType.setVisibility(View.GONE);
-                                spinnershiftnum.setVisibility(View.GONE);
-                                recyclerViewReports.setVisibility(View.GONE);
-                                secondRecyclerView.setVisibility(View.GONE);
-                                textViewTotalTax.setVisibility(View.GONE);
-                                textViewTotalAmount.setVisibility(View.GONE);
-                                extraButton.setVisibility(View.GONE);
-                                closeShift.setVisibility(View.GONE);
-                                textViewnodata.setVisibility(View.VISIBLE);
+                        spinnerReportType.setVisibility(View.GONE);
+                        spinnershiftnum.setVisibility(View.GONE);
+                        recyclerViewReports.setVisibility(View.GONE);
+                        secondRecyclerView.setVisibility(View.GONE);
+                        textViewTotalTax.setVisibility(View.GONE);
+                        textViewTotalAmount.setVisibility(View.GONE);
+                        extraButton.setVisibility(View.GONE);
+                        closeShift.setVisibility(View.GONE);
+                        textViewnodata.setVisibility(View.VISIBLE);
 
 
 
-                        } else if (shiftNumbers.size() == 1 && shiftNumbers.get(0) == 0) {
+                    } else if (shiftNumbers.size() == 1 && shiftNumbers.get(0) == 0) {
                         Log.d("shiftNumbersnull", "shiftNumbers: " + shiftNumbers);
                         spinnerReportType.setVisibility(View.GONE);
                         spinnershiftnum.setVisibility(View.GONE);
@@ -323,7 +581,7 @@ public class FunctionFragment extends Fragment {
                             if( selectedshift[0]== null){
                                 selectedshift[0] ="0";
 
-                                 }
+                            }
                             // Fetch data based on the selected report type and shift number
                             newDataList = fetchDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                             newDataLists = fetchPaymentMethodDataBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
@@ -338,7 +596,7 @@ public class FunctionFragment extends Fragment {
                             // Assuming you have methods to fetch total tax and total amount based on report type and shift number
                             totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                             totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
-                             totalAmount = totalAmountwithoutvat + totalTax;
+                            totalAmount = totalAmountwithoutvat + totalTax;
 
 
                             // Format totalTax and totalAmount to display only two decimal places
@@ -416,15 +674,15 @@ public class FunctionFragment extends Fragment {
                         Configuration configuration = getResources().getConfiguration();
                         Locale currentLocale = configuration.locale;
 
-                            // Start the CloseShiftReport activity
-                            Intent intent = new Intent(getContext(), PrintShiftReport.class);
-                            intent.putExtra("locale", currentLocale.toString());
-                            intent.putExtra("reportType", selectedReportType[0]);
-                            intent.putExtra("shiftNumber", selectedshift[0]);
-                            intent.putExtra("reportType", selectedReportType[0]);
-                            intent.putExtra("totalTax", formattedTotalTax[0]);
-                            intent.putExtra("totalAmount", formattedTotalamountwithouVat[0]);
-                            startActivity(intent);
+                        // Start the CloseShiftReport activity
+                        Intent intent = new Intent(getContext(), PrintShiftReport.class);
+                        intent.putExtra("locale", currentLocale.toString());
+                        intent.putExtra("reportType", selectedReportType[0]);
+                        intent.putExtra("shiftNumber", selectedshift[0]);
+                        intent.putExtra("reportType", selectedReportType[0]);
+                        intent.putExtra("totalTax", formattedTotalTax[0]);
+                        intent.putExtra("totalAmount", formattedTotalamountwithouVat[0]);
+                        startActivity(intent);
 
                     });
 
@@ -463,10 +721,10 @@ public class FunctionFragment extends Fragment {
                     mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
                     mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
                     mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
-                }else{
-                    Toast.makeText(getContext(), "Not allowed to perform this action.", Toast.LENGTH_SHORT).show();
-
+                } else {
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
                 }
+
 
 
             }
@@ -783,10 +1041,141 @@ public class FunctionFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 int levelNumber = Integer.parseInt(cashierLevel);
+                String Activity="openClose_";
 
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "openClose_", levelNumber)) {
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        try {
+                            woyouService.openDrawer(null);
+                        } catch (RemoteException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        // Inflate the custom dialog layout
+                        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.loan_dialog, null);
+
+                        // Create the dialog
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
+                        dialogBuilder.setView(dialogView);
+
+                        // Find views in the custom dialog layout
+                        EditText loanAmountEditText = dialogView.findViewById(R.id.loanAmountEditText);
+                        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+                        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+
+                        // Create and show the dialog
+                        final AlertDialog dialog = dialogBuilder.create();
+                        dialog.show();
+
+                        // Handle confirm button click
+                        confirmButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // Get the loan amount and posnum from the EditTexts
+                                String loanAmount = loanAmountEditText.getText().toString();
+
+                                // Check if the loan amount and posnum are not empty
+                                if (!loanAmount.isEmpty() && !posNum.isEmpty()) {
+                                    // Update the FINANCIAL_TABLE with the loan details
+                                    DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+                                    SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+                                    ContentValues values = new ContentValues();
+
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                                    String currentDate = dateFormat.format(new Date());
+                                    Calendar calendar = Calendar.getInstance();
+                                    int hour = calendar.get(Calendar.HOUR_OF_DAY); // 24-hour format
+                                    int minute = calendar.get(Calendar.MINUTE);
+                                    int second = calendar.get(Calendar.SECOND);
+
+                                    // Format the time
+                                    String formattedTime = String.format("%02d:%02d:%02d", hour, minute, second);
+
+                                    values.put(FINANCIAL_COLUMN_DATETIME, currentDate); // Insert only the date
+                                    values.put(FINANCIAL_COLUMN_CURRENT_TIME, formattedTime); // Insert only the time
+                                    values.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId); // Use the current cashier ID
+                                    values.put(FINANCIAL_COLUMN_TRANSACTION_CODE, "Loan");
+                                    values.put(FINANCIAL_COLUMN_POSNUM, posNum); // Insert the posnum
+                                    values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+                                    values.put(FINANCIAL_COLUMN_SHOP_NUMBER, shopId); // Update the totalizer
+
+// Check if a row with the same transaction code ("Loan"), date, cashier ID, and posnum already exists
+                                    String[] whereArgs = new String[] {"Loan", currentDate, String.valueOf(cashierId), String.valueOf(posNum)};
+                                    Cursor cursor = db.query(FINANCIAL_TABLE_NAME, null,
+                                            FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                                                    FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                                            whereArgs, null, null, null);
 
 
+                                    if (cursor.moveToFirst()) {
+                                        // If a row with the same transaction code, date, cashier ID, and posnum exists, update the values
+                                        int currentQuantity = cursor.getInt(cursor.getColumnIndex(FINANCIAL_COLUMN_QUANTITY));
+                                        double currentTotal = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTAL));
+                                        double currentTotalizer = cursor.getDouble(cursor.getColumnIndex(FINANCIAL_COLUMN_TOTALIZER));
+
+                                        values.put(FINANCIAL_COLUMN_QUANTITY, currentQuantity + 1); // Increment the quantity
+                                        values.put(FINANCIAL_COLUMN_TOTAL, currentTotal + Double.parseDouble(loanAmount)); // Update the total
+                                        values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                        values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+
+                                        db.update(FINANCIAL_TABLE_NAME, values,
+                                                FINANCIAL_COLUMN_TRANSACTION_CODE + " = ? AND " + FINANCIAL_COLUMN_DATETIME + " = ? AND " +
+                                                        FINANCIAL_COLUMN_CASHOR_ID + " = ? AND " + FINANCIAL_COLUMN_POSNUM + " = ?",
+                                                whereArgs);
+                                    } else {
+                                        // If no row with the same transaction code, date, cashier ID, and posnum exists, insert a new row
+                                        values.put(FINANCIAL_COLUMN_QUANTITY, 1); // Initialize quantity to 1 for a new entry
+                                        values.put(FINANCIAL_COLUMN_TOTAL, Double.parseDouble(loanAmount)); // Initialize total
+                                        values.put(FINANCIAL_COLUMN_TOTALIZER, "Loan"); // Update the totalizer
+                                        values.put(FINANCIAL_COLUMN_PAYMENT, "Cash"); // Update the totalizer
+
+                                        db.insert(FINANCIAL_TABLE_NAME, null, values);
+                                    }
+                                    // Insert the same data into the CashReports table with a positive value
+                                    ContentValues cashReportValues = new ContentValues();
+                                    cashReportValues.put(FINANCIAL_COLUMN_DATETIME, currentDate);
+                                    cashReportValues.put(FINANCIAL_COLUMN_CASHOR_ID, cashierId);
+                                    cashReportValues.put(FINANCIAL_COLUMN_QUANTITY, 1); // Quantity is always 1 for cash reports
+                                    cashReportValues.put(FINANCIAL_COLUMN_TOTAL, Double.parseDouble(loanAmount)); // Positive cash in amount
+                                    cashReportValues.put(FINANCIAL_COLUMN_POSNUM, posNum);
+
+                                    db.insert(CASH_REPORT_TABLE_NAME, null, cashReportValues);
+
+                                    // Open the drawer (add your drawer opening code here)
+
+                                    Intent intent = new Intent(getActivity(), printerSetupForPickUp.class);
+                                    intent.putExtra("type", "Loan");
+                                    intent.putExtra("amount", Double.parseDouble(loanAmount));
+                                    intent.putExtra("date", currentDate);
+                                    intent.putExtra("time", formattedTime);
+                                    intent.putExtra("shopnum", shopId);
+                                    Log.d("amount1",loanAmount);
+                                    startActivity(intent);
+                                    // Close the dialog
+                                    dialog.dismiss();
+                                } else {
+                                    // Inform the user that the cash in amount and posNum are required
+                                    Toast.makeText(getContext(), "Please enter a Cash In amount.", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+
+                        // Handle cancel button click
+                        cancelButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // Close the dialog
+                                dialog.dismiss();
+                            }
+                        });
+                    });
+                }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
                     try {
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
@@ -913,8 +1302,9 @@ public class FunctionFragment extends Fragment {
                         }
                     });
                 } else {
-                    Toast.makeText(getContext(), "Not allowed to perform this action.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
 
@@ -922,15 +1312,30 @@ public class FunctionFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 int levelNumber= Integer.parseInt(cashierLevel);
-                if (mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, "openDrawer_", levelNumber)) {
+                String Activity="openDrawer_";
+
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        try {
+                            woyouService.openDrawer(null);
+                        } catch (RemoteException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
                     try {
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
-                }else {
+                } else {
                     Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
                 }
+
             }
 
         });
@@ -1394,7 +1799,7 @@ public class FunctionFragment extends Fragment {
 
                 RecyclerView tableRecyclerView = popupView.findViewById(R.id.recycler_view); // RecyclerView in layout
 
-                int numberOfColumns = 4; // Specify the number of columns you want
+                int numberOfColumns = 5; // Specify the number of columns you want
                 GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfColumns);
                 tableRecyclerView.setLayoutManager(gridLayoutManager);
                 tableRecyclerView.setAdapter(mRoomAdapter); // Set adapter for tables
@@ -1469,6 +1874,7 @@ public class FunctionFragment extends Fragment {
         Button dineInButton = popupView.findViewById(R.id.onspot);
         Button deliveryButton = popupView.findViewById(R.id.delivery);
         Button freeSalesButton = popupView.findViewById(R.id.FreeSales); // This is currently hidden, but could be shown if needed
+        Button takeawayButton = popupView.findViewById(R.id.takeaway);
 
         // Create the AlertDialog with the custom layout
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -1477,7 +1883,19 @@ public class FunctionFragment extends Fragment {
         // Create and show the dialog
         AlertDialog dialog = builder.create();
         dialog.show();
+        takeawayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Save "Dine In" status to SharedPreferences
+                saveDiningStatusToPreferences("Take Away");
 
+                // Close the dialog and proceed to the next step
+                dialog.dismiss();
+
+                processNumberOfCovers( 0,roomnum,tableNum,dialogs);
+
+            }
+        });
         // Handle "Dine In" button click
         dineInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1488,6 +1906,8 @@ public class FunctionFragment extends Fragment {
                 // Close the dialog and proceed to the next step
                 dialog.dismiss();
                 showNumberOfCoversDialog(tableNum, roomnum, dialogs);
+
+
             }
         });
 
@@ -1500,7 +1920,7 @@ public class FunctionFragment extends Fragment {
 
                 // Close the dialog and proceed to the next step
                 dialog.dismiss();
-                showNumberOfCoversDialog(tableNum, roomnum, dialogs);
+                processNumberOfCovers( 0,roomnum,tableNum,dialogs);
             }
         });
 
@@ -1513,7 +1933,7 @@ public class FunctionFragment extends Fragment {
 
                 // Close the dialog and proceed to the next step
                 dialog.dismiss();
-                showNumberOfCoversDialog(tableNum, roomnum, dialogs);
+                processNumberOfCovers( 0,roomnum,tableNum,dialogs);
             }
         });
     }
@@ -2101,6 +2521,137 @@ public class FunctionFragment extends Fragment {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+        }
+    }
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        AlertDialog.Builder pinBuilder = new AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
+                }
+            } else {
+                Toast.makeText(getContext(), "Invalid PIN", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+    private int validatePIN(String enteredPIN) {
+        // Fetch the cashor level based on the entered PIN
+        int cashorLevel = mDatabaseHelper.getCashorLevelByPIN(enteredPIN);
+
+        // Return the cashor level if valid, or -1 if invalid
+        return cashorLevel;
+    }
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClick(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+    private void onclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void setPinButtonClickListeners(View pinDialogView, final EditText pinEditText) {
+        int[] buttonIds = new int[] {
+                R.id.button0, R.id.button1, R.id.button2, R.id.button3,
+                R.id.button4, R.id.button5, R.id.button6, R.id.button7,
+                R.id.button8, R.id.button9, R.id.buttonClear
+        };
+
+        for (int id : buttonIds) {
+            Button button = pinDialogView.findViewById(id);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPinNumberButtonClick((Button) v, pinEditText);
+                }
+            });
+        }
+    }
+    public void onPinNumberButtonClick(Button button, EditText pinEditText) {
+        if (pinEditText != null) {
+            String buttonText = button.getText().toString();
+
+            switch (buttonText) {
+                case "Clear": // Handle clear
+                    pinEditText.setText("");
+                    break;
+                case "BS": // Handle backspace
+                    CharSequence currentText = pinEditText.getText();
+                    if (currentText.length() > 0) {
+                        pinEditText.setText(currentText.subSequence(0, currentText.length() - 1));
+                    }
+                    break;
+                default: // Handle numbers
+                    pinEditText.append(buttonText);
+                    break;
+            }
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "EditText is not initialized", Toast.LENGTH_SHORT).show();
         }
     }
     private Display getPresentationDisplay() {
