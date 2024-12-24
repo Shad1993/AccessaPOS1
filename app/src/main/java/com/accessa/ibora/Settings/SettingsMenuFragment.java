@@ -2,6 +2,8 @@ package com.accessa.ibora.Settings;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.Settings.Buyer.buyerFragment;
 import com.accessa.ibora.CustomerLcd.CustomerLcdFragment;
 import com.accessa.ibora.R;
@@ -44,6 +47,7 @@ public class SettingsMenuFragment extends Fragment {
     private DatabaseHelper mDatabaseHelper;
     private SharedPreferences sharedPreferences,usersharedPreferences;
     String cashorlevel;
+    private static final String TRANSACTION_ID_KEY = "transaction_id";
 
     // activity listener
     private OnMenufragListener menufragListener;
@@ -88,7 +92,8 @@ public class SettingsMenuFragment extends Fragment {
                 getString(R.string.Roomstable),
                 getString(R.string.PrinterSettings),
                 getString(R.string.Language),
-                getString(R.string.ServerSettings)
+                getString(R.string.ServerSettings),
+                getString(R.string.pricelevel)
 
         };
         icons = new int[]{
@@ -101,7 +106,8 @@ public class SettingsMenuFragment extends Fragment {
                 R.drawable.room,
                 R.drawable.printersetup,
                 R.drawable.flag,
-                R.drawable.dataserverblue
+                R.drawable.dataserverblue,
+                R.drawable.pricelevel
 
         };
 
@@ -575,6 +581,7 @@ public class SettingsMenuFragment extends Fragment {
                         final EditText editTextPassword = dialogView.findViewById(R.id.editTextPassword);
                         final EditText editTextDB = dialogView.findViewById(R.id.editTextDB);
                         final EditText editTextServer = dialogView.findViewById(R.id.editTextServer);
+                        final EditText editTextZoneId = dialogView.findViewById(R.id.editTextZone);
                         Button buttonSave = dialogView.findViewById(R.id.buttonSave);
 
                         SharedPreferences preferences = getContext().getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
@@ -582,12 +589,14 @@ public class SettingsMenuFragment extends Fragment {
                         String pass = preferences.getString("_pass", "");
                         String db = preferences.getString("_DB", "");
                         String server = preferences.getString("_server", "");
+                        String zone = preferences.getString("_zone", "");
 
                         // Populate the fields with existing data
                         editTextUser.setText(user);
                         editTextPassword.setText(pass);
                         editTextDB.setText(db);
                         editTextServer.setText(server);
+                        editTextZoneId.setText(zone);
 
                         AlertDialog dialog = builder.create();
                         dialog.show();
@@ -599,6 +608,7 @@ public class SettingsMenuFragment extends Fragment {
                             editor.putString("_pass", editTextPassword.getText().toString());
                             editor.putString("_DB", editTextDB.getText().toString());
                             editor.putString("_server", editTextServer.getText().toString());
+                            editor.putString("_zone", editTextZoneId.getText().toString());
                             editor.apply();
 
                             Toast.makeText(getContext(), "Database parameters saved!", Toast.LENGTH_SHORT).show();
@@ -613,7 +623,84 @@ public class SettingsMenuFragment extends Fragment {
 
                 // Set the toolbar title
                 ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(toolbarTitle);
-                }else{
+                  } else if (position == 10)
+
+            {
+                // Define the options
+                final String[] priceLevels = {"Price Level 1", "Price Level 2", "Price Level 3"};
+
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+               String  transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
+
+                SharedPreferences sharedPreferences2 = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+                String buyerName = sharedPreferences2.getString("BuyerName", null);
+
+                if (transactionIdInProgress != null || !transactionIdInProgress.isEmpty()) {
+                    if (buyerName == null || buyerName.isEmpty()) {
+                        // Both conditions are met (no transaction in progress and no selected buyer), so allow changing price level.
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                        builder.setTitle("Select a Price Level")
+                                .setItems(priceLevels, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // Handle the selected price level
+                                        String selectedPriceLevel = priceLevels[which];
+
+                                        if (selectedPriceLevel != null && !selectedPriceLevel.isEmpty()) {
+                                            SharedPreferences sharedPreferencesPriceLevel = requireContext().getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+                                            SharedPreferences.Editor editor = sharedPreferencesPriceLevel.edit();
+                                            editor.putString("selectedPriceLevel", selectedPriceLevel);
+                                            editor.apply();
+
+                                            // Show a new dialog with a message
+                                            AlertDialog.Builder messageBuilder = new AlertDialog.Builder(requireContext());
+                                            messageBuilder.setTitle("Message")
+                                                    .setMessage("Price level selected: " + selectedPriceLevel)
+                                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            // Navigate to MainActivity when OK is clicked
+                                                            Intent intent = new Intent(requireContext(), MainActivity.class);
+                                                            startActivity(intent);
+                                                        }
+                                                    });
+                                            messageBuilder.create().show();
+                                        }
+                                    }
+                                });
+                        builder.create().show();
+                    } else {
+                        // If a buyer is selected, show a message to handle this case.
+                        // Transaction is in progress, show a message to complete the transaction or update individual items.
+                        AlertDialog.Builder transactionBuilder = new AlertDialog.Builder(requireContext());
+                        transactionBuilder.setTitle("Buyer  Selected")
+                                .setMessage("You must remove active Buyer  before changing the price level.")
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // Handle what to do when the user clicks "OK" in the incomplete transaction dialog.
+                                        // This might involve taking the user to a transaction screen or item price update screen.
+                                    }
+                                });
+                        transactionBuilder.create().show();
+                    }
+                } else {
+                    // Transaction is in progress, show a message to complete the transaction or update individual items.
+                    AlertDialog.Builder transactionBuilder = new AlertDialog.Builder(requireContext());
+                    transactionBuilder.setTitle("Incomplete Transaction")
+                            .setMessage("You must complete the transaction or update individual item prices before changing the price level.")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // Handle what to do when the user clicks "OK" in the incomplete transaction dialog.
+                                    // This might involve taking the user to a transaction screen or item price update screen.
+                                }
+                            });
+                    transactionBuilder.create().show();
+                }
+            }
+            else{
                     Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
                 }
             }

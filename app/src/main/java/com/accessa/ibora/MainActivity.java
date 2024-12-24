@@ -68,6 +68,7 @@ import com.accessa.ibora.printer.externalprinterlibrary2.Kitchen.SendNoteToKitch
 import com.accessa.ibora.product.category.CategoryFragment;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.ItemAdapter;
+import com.accessa.ibora.product.items.menuFragment;
 import com.accessa.ibora.product.menu.Product;
 import com.accessa.ibora.sales.RoomsAndTable.RoomsFragment;
 import com.accessa.ibora.sales.Sales.SalesFragment;
@@ -96,7 +97,8 @@ import java.util.List;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
 
-public class MainActivity extends AppCompatActivity  implements SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener,ModifyItemDialogFragment.DiscountAppliedListener,  QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener , RoomsFragment.OnRoomUpdateListener, FunctionFragment.OnTableClickListener,TablesFragment.OnTableClickListener, TablesFragment.OnReloadFragmentListener, SearchDialogFragment.OnSearchListener , TicketFragment.CoverAmountListener{
+
+public class MainActivity extends AppCompatActivity  implements menuFragment.OnCategoryClickListener, SalesFragment.ItemAddedListener,CustomerLcdFragment.TicketClearedListener, ModifyItemDialogFragment.ItemClearedListener,ModifyItemDialogFragment.DiscountAppliedListener,  QRFragment.DataPassListener, validateticketDialogFragment.DataPassListener , RoomsFragment.OnRoomUpdateListener, FunctionFragment.OnTableClickListener,TablesFragment.OnTableClickListener, TablesFragment.OnReloadFragmentListener, SearchDialogFragment.OnSearchListener , TicketFragment.CoverAmountListener{
     private boolean doubleBackToExitPressedOnce = false;
     private TextDisplay customPresentation;
     private String tableid;
@@ -1030,6 +1032,17 @@ if (cashReturn != 0.0) {
         if (tablesFragment != null) {
             // Update the UI in TablesFragment
             tablesFragment.updateUIForRoomUpdate(currentId);
+        }
+    }
+
+
+    @Override
+    public void onCategorySelected(String categoryId) {
+        // Find the SalesFragment and call its onCategoryClick method
+        SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
+
+        if (salesFragment != null) {
+            salesFragment.onCategoryClick(categoryId);
         }
     }
 

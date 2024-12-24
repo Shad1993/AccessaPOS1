@@ -6791,9 +6791,31 @@ removeDuplicateTransactions(db,newTransactionId);
 
     public Cursor getAllItems() {
         SQLiteDatabase db = getReadableDatabase();
-        return db.query(TABLE_NAME, null, null, null, null, null, null);
+
+        // Sort by Category and then by SubCategory (optional)
+        return db.query(TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                SubCategory);
     }
 
+    public Cursor getAllItemsCategoryCursor(String category) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        String selection = "(" + DatabaseHelper.Category + " = ? OR " + DatabaseHelper.Category + " IS NULL OR " + DatabaseHelper.Category + " = '')";
+        String[] selectionArgs = {category};
+
+        return db.query(DatabaseHelper.TABLE_NAME,
+                null, // Select all columns
+                selection,
+                selectionArgs,
+                null,
+                null,
+                SubCategory); // Order by Category
+    }
     public Cursor getAllBuyer() {
         SQLiteDatabase db = getReadableDatabase();
         return db.query(BUYER_TABLE_NAME, null, null, null, null, null, null);

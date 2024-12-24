@@ -461,12 +461,14 @@ private ImageView image_view;
 
 
         List<String> Subcategories = new ArrayList<>();
-        Subcategories.add(getString(R.string.AllSubCategory));
+       // Subcategories.add(getString(R.string.AllSubCategory));
+        Subcategories.add("All Sub Categories");
         if (SubcategoryCursor.moveToFirst()) {
             do {
                 String subcategory = SubcategoryCursor.getString(SubcategoryCursor.getColumnIndex(SUBCatName));
                 Log.d("SubCategory", subcategory); // Log subcategory names
                 Subcategories.add(subcategory);
+
             } while (SubcategoryCursor.moveToNext());
         } else {
             Log.d("SubCategory", "No subcategories found!"); // Log if nothing is found
@@ -579,7 +581,8 @@ private ImageView image_view;
 
                     // Clear and update the subcategories list
                     List<String> Subcategories = new ArrayList<>();
-                    Subcategories.add(getString(R.string.AllSubCategory)); // Optional: Add default "All Subcategories" option
+                  //  Subcategories.add(getString(R.string.AllSubCategory)); // Optional: Add default "All Subcategories" option
+                    Subcategories.add("All Sub Categories");
                     if (SubcategoryCursor.moveToFirst()) {
                         do {
                             String subcategory = SubcategoryCursor.getString(SubcategoryCursor.getColumnIndex(SUBCatName));
@@ -1339,7 +1342,7 @@ private ImageView image_view;
         Cursor SubcategoryCursor = databaseHelper.getAllSubCategory();
 
         List<String> Subcategories = new ArrayList<>();
-
+        Subcategories.add("All Sub Categories");
         // Iterate through the cursor and add categories to the list
         if (SubcategoryCursor.moveToFirst()) {
             do {

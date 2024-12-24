@@ -1,4 +1,5 @@
 package com.accessa.ibora.product.items;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,6 +34,7 @@ public class menuFragment extends Fragment {
     private DatabaseHelper dbHelper;
 
     private ItemGridAdapter itemGridAdapter; // Add this variable
+    private OnCategoryClickListener categoryClickListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,27 +53,34 @@ public class menuFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         recyclerView.setLayoutManager(layoutManager);
 
+
         // Pass List<Category> to CategoryAdapter
-        CategoryAdapter categoryAdapter = new CategoryAdapter(categories);
+        CategoryAdapter categoryAdapter = new CategoryAdapter(getContext(),categories);
         recyclerView.setAdapter(categoryAdapter);
         Cursor cursor = dbHelper.getAllItems();
         // Initialize the ItemGridAdapter
-        itemGridAdapter = new ItemGridAdapter(requireContext(), null); // Pass null initially
+        itemGridAdapter = new ItemGridAdapter(requireContext(), cursor); // Pass null initially
 
         // Handle item click events
+
         categoryAdapter.setOnItemClickListener((position, category) -> {
             if (category.getCatName().equals("All Categories")) {
                 // Display all items
-                ItemGridAdapter itemGridAdapter = new ItemGridAdapter(requireContext(), getAllItemsCursor());
-                // Set the adapter to your RecyclerView
-                SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+                handleCategoryClick(null);
             } else {
                 // Update the ItemGridAdapter with the selected category
-                updateItemGridAdapter(category.getCatName());
+
+                //ItemGridAdapter itemGridAdapter = new ItemGridAdapter(requireContext(), getAllItemsCategoryCursor(category.getCatName()));
+
+                //SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
                 // Set the category filter in the ItemGridAdapter
-                itemGridAdapter.setCategoryFilter(category.getCatName());
+                //itemGridAdapter.setCategoryFilter(category.getCatName());
+
+                handleCategoryClick(category.getCatName());
             }
+
         });
+
         categoryAdapter.setOnSubcategoryClickListener(subcategory -> {
             // Call updateItemGridAdapter with the selected subcategory
             Log.d("menu Clicked", "Clicked on: " + subcategory);
@@ -83,11 +93,36 @@ public class menuFragment extends Fragment {
             return true; // Return true to indicate the event has been handled
         });
     }
+    private void updateRecyclerViewWithItems(Cursor cursor, GridLayoutManager gridLayoutManager) {
+        if (cursor != null) {
+            itemGridAdapter = new ItemGridAdapter(requireContext(), cursor);
+            SalesFragment.mRecyclerView.setAdapter(itemGridAdapter);
+
+        }
+    }
 
     private Cursor getAllItemsCursor() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         return db.query(DatabaseHelper.TABLE_NAME, null, null, null, null, null, null);
     }
+
+    private Cursor getAllItemsCategoryCursor(String category) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        String selection = "(" + DatabaseHelper.Category + " = ? OR " + DatabaseHelper.Category + " IS NULL OR " + DatabaseHelper.Category + " = '')";
+        String[] selectionArgs = {category};
+
+        return db.query(DatabaseHelper.TABLE_NAME,
+                null, // Select all columns
+                selection,
+                selectionArgs,
+                null,
+                null,
+                DatabaseHelper.Category); // Order by Category
+    }
+
+
+
     private void updateItemGridAdapterWithSubcategory(String selectedSubcategory) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor newCursor = db.query(DatabaseHelper.TABLE_NAME,
@@ -108,10 +143,10 @@ public class menuFragment extends Fragment {
         Cursor newCursor = db.query(DatabaseHelper.TABLE_NAME,
                 null,
                 DatabaseHelper.Category + " = ?",  // Use correct column name
-                new String[]{selectedCategory},
+               null,
                 null,
                 null,
-                DatabaseHelper.SubCategory + " ASC"); // Sort by subcategory
+                null); // Sort by subcategory
 
         if (newCursor != null) {
             Log.d("updateItemGridAdapter", "Filtered items count: " + newCursor.getCount());
@@ -159,8 +194,8 @@ public class menuFragment extends Fragment {
 
         List<Category> categoryList = new ArrayList<>();
 
-        // Ensure "All Categories" is at the top
-        categoryList.add(new Category(0, "All Categories", "#000000"));
+        // Comment out or remove the "All Categories" entry
+         categoryList.add(new Category(0, "All Categories", "#000000"));
 
         // Convert set to list of Category objects
         for (String categoryName : uniqueCategories) {
@@ -168,6 +203,33 @@ public class menuFragment extends Fragment {
         }
 
         return categoryList;
+    }
+
+    public interface OnCategoryClickListener {
+        void onCategorySelected(String categoryId);
+    }
+
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnCategoryClickListener) {
+            categoryClickListener = (OnCategoryClickListener) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement OnCategoryClickListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        categoryClickListener = null;
+    }
+
+    private void handleCategoryClick(String categoryId) {
+        if (categoryClickListener != null) {
+            categoryClickListener.onCategorySelected(categoryId);
+        }
     }
 
 }

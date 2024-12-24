@@ -22,8 +22,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
     private OnItemClickListener onItemClickListener;
     private OnItemLongClickListener onItemLongClickListener;
     private OnSubcategoryClickListener onSubcategoryClickListener;
+    private Context context;
 
-    public CategoryAdapter(List<Category> categoryList) {
+    public CategoryAdapter(Context context, List<Category> categoryList) {
+        this.context = context;
         this.categoryList = categoryList;
     }
 
@@ -78,7 +80,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
                 Log.d("CategoryAdapter", "Category collapsed: " + category.getCatName());
             } else {
                 // If the category is collapsed, fetch and expand it
-                DatabaseHelper databaseHelper = new DatabaseHelper(holder.itemView.getContext());
+                DatabaseHelper databaseHelper = new DatabaseHelper(context);
                 Log.d("CategoryAdapter", "Subcategories fetched for: " + category.getCatName());
                 int catid = databaseHelper.getCategoryIdByName(category.getCatName());
                 // Fetch subcategories from the database

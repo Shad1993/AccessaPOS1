@@ -1,6 +1,9 @@
 package com.accessa.ibora.sales.Sales;
 
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+import static com.accessa.ibora.product.items.DatabaseHelper.SubCategory;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -53,6 +56,8 @@ import com.accessa.ibora.sales.ticket.TicketFragment;
 import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +72,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
     private  String NewBarcode;
     private static final String PREF_ROOM_ID = "room_id";
     public static RecyclerView mRecyclerView;
+
+    private TextView mSubcategoryTitle;
+
     private ItemGridAdapter mAdapter;
     private DatabaseHelper mDatabaseHelper;
     private String cashierId,shopname,catname;
@@ -147,7 +155,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         roomid = preferences.getInt("roomnum", 0); // -1 is a default value in case the key is not found
 
 
-        int numberOfColumns = 12;
+
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         transactionIdInProgress = sharedPreferences.getString(TRANSACTION_ID_KEY, null);
 
@@ -200,18 +208,42 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        String ShopName = sharedPreference.getString("ShopName", null);
 
 
 
         mRecyclerView = view.findViewById(R.id.recycler_view1);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), numberOfColumns));
+
 
         mDatabaseHelper = new DatabaseHelper(getContext());
         actualdate = mDatabaseHelper.getCurrentDate();
         Cursor cursor = mDatabaseHelper.getAllItems();
 
-        mAdapter = new ItemGridAdapter(getContext(), cursor);
+        int numberOfColumns = 12;
+        // Set up the GridLayoutManager with span size logic
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfColumns);
+
+        mRecyclerView.setLayoutManager(gridLayoutManager);
+
+
+
+
+      mAdapter = new ItemGridAdapter(getContext(), cursor);
+         gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                // Check if the item is a header or an actual item
+                if (mAdapter.getItemViewType(position) == ItemGridAdapter.VIEW_TYPE_HEADER) {
+                    // Headers span all columns
+                    return gridLayoutManager.getSpanCount();
+                } else {
+                    // Regular items span one column
+                    return 1;
+                }
+            }
+        });
+
+
+
         mRecyclerView.setAdapter(mAdapter);
         getParentFragmentManager().setFragmentResultListener("searchQuery", this, new FragmentResultListener() {
             @Override
@@ -2808,6 +2840,9 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
 
         return priceWithoutVat;
     }
+
+
+
     public double calculateTotalAmount() {
 
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
@@ -2949,6 +2984,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
             posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
 
         }
+        Log.d("newtrans", companyLetters + "-" + posNumberLetters + "-" + currentCounter);
+
         // Generate the transaction ID by combining the three letters and the counter
         return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
     }
@@ -2960,11 +2997,101 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
         // For example, if you need to refresh the UI or update data
 
     }
+
+    private boolean shouldSkipLine(int position, Cursor cursor) {
+        // Validate cursor and position
+        if (cursor == null || position < 0 || position >= cursor.getCount()) {
+            Log.e("SubCategoryCheck", "Invalid cursor or position");
+            return true; // Skip invalid positions
+        }
+
+        String currentSubCategory = null;
+        String previousSubCategory = null;
+        String currentId = null;
+        String previousId = null;
+
+        int originalPosition = cursor.getPosition(); // Save the original position
+
+        try {
+            // Get the current subcategory and ID
+            if (cursor.moveToPosition(position)) {
+                currentSubCategory = cursor.getString(cursor.getColumnIndex(SubCategory));
+                currentId = cursor.getString(cursor.getColumnIndex(DatabaseHelper._ID)); // Get the current item's ID
+            }
+
+            // Get the previous subcategory and ID (only if position > 0)
+            if (position > 0 && cursor.moveToPosition(position - 1)) {
+                previousSubCategory = cursor.getString(cursor.getColumnIndex(SubCategory));
+                previousId = cursor.getString(cursor.getColumnIndex(DatabaseHelper._ID)); // Get the previous item's ID
+            }
+        } finally {
+            // Restore the cursor to the original position
+            cursor.moveToPosition(originalPosition);
+        }
+
+        // Compare the subcategories (ignoring case and trimming spaces)
+        boolean isDifferent = false;
+
+        if (currentSubCategory != null && previousSubCategory != null) {
+            isDifferent = !currentSubCategory.trim().equalsIgnoreCase(previousSubCategory.trim());
+        } else if (currentSubCategory != null || previousSubCategory != null) {
+            isDifferent = true; // One is null, so they are different
+        }
+
+        // Log the ID only if there is a subcategory change
+        if (isDifferent) {
+            Log.d("SubCategoryChange", "Subcategory change detected at ID: " + currentId +
+                    " (Previous ID: " + previousId +
+                    ", From: " + previousSubCategory +
+                    " To: " + currentSubCategory + ")");
+        }
+
+        return isDifferent;
+    }
+
+
+
+
+
     private String getCurrentDateTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return sdf.format(new Date());
     }
 
+    public void onCategoryClick(String categoryId) {
+        Cursor cursor;
+        if(categoryId == null){
+             cursor = mDatabaseHelper.getAllItems();
+        }else{
+            // Fetch filtered items from the database
+             cursor = mDatabaseHelper.getAllItemsCategoryCursor(categoryId);
+        }
+
+
+
+        mAdapter = new ItemGridAdapter(getContext(), cursor);
+        int numberOfColumns = 12;
+        // Set up the GridLayoutManager with span size logic
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfColumns);
+
+        gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                // Check if the item is a header or an actual item
+                if (mAdapter.getItemViewType(position) == ItemGridAdapter.VIEW_TYPE_HEADER) {
+                    // Headers span all columns
+                    return gridLayoutManager.getSpanCount();
+                } else {
+                    // Regular items span one column
+                    return 1;
+                }
+            }
+        });
+
+
+
+        mRecyclerView.setAdapter(mAdapter);
+    }
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);

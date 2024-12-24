@@ -8,11 +8,15 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.URLUtil;
+import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,41 +35,151 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
-
+public class ItemGridAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static final int PERMISSION_REQUEST_CODE = 123;
+    public static final int VIEW_TYPE_HEADER = 0;
+    private static final int VIEW_TYPE_ITEM = 1;
 
     private Context mContext;
     private Cursor mCursor;
+    private List<Object> itemsWithHeaders; // List of items and headers
     private List<Integer> availableItemsIndices;
+
+     public int totalItemCount = 0; // Track total items
     private ItemClickListener itemClickListener;
-    private String selectedCategory; // Variable to store the selected category filter
-    public void setCategoryFilter(String category) {
-        selectedCategory = category;
-        updateAvailableItemsIndices();
-        notifyDataSetChanged();
-    }
-    public void setItemClickListener(ItemClickListener listener) {
-        this.itemClickListener = listener;
-    }
+    private int blankSpacesCount = 0;
+    private String selectedCategory;
+    private String selectedSubCategory;
+    private int subcategoryTitleCount = 0;
+
+
     public ItemGridAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
+        itemsWithHeaders = new ArrayList<>();
+        updateAvailableItemsWithHeaders();
         availableItemsIndices = new ArrayList<>(); // Initialize the list here
-        updateAvailableItemsIndices();
+       // updateAvailableItemsIndices();
     }
 
-    public Item getItem(int childAdapterPosition) {
-        int realPosition = getRealPosition(childAdapterPosition);
-        if (mCursor.moveToPosition(realPosition)) {
-            return getItemFromCursor(mCursor);
+    public void setCategoryFilter(String category) {
+        selectedCategory = category;
+        updateAvailableItemsWithHeaders();
+       // updateAvailableItemsIndices();
+        notifyDataSetChanged();
+    }
+
+    public void setSubCategoryFilter(String subCategory) {
+        selectedSubCategory = subCategory;
+        updateAvailableItemsWithHeaders();
+        notifyDataSetChanged();
+    }
+
+    private void updateAvailableItemsWithHeaders() {
+        if (mCursor == null) {
+            return;
         }
-        return null;
-    }
 
+        itemsWithHeaders.clear();
+        mCursor.moveToPosition(-1);
+
+        String currentSubCategory = null;
+        int itemsPerRow = 12; // Number of items per row in the grid
+
+        int currentRowCount = 0; // Track the current position within the row
+        subcategoryTitleCount = 0; // Reset subcategory title count
+        blankSpacesCount = 0; // Reset blank spaces count
+
+        while (mCursor.moveToNext()) {
+            String availableForSale = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.AvailableForSale));
+            String category = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Category));
+            String subCategory = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SubCategory));
+            String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
+
+            if (subCategory == null) {
+                subCategory = "Uncategorized"; // Default for items with no subcategory
+            }
+
+            boolean categoryMatches = (selectedCategory == null || category.equals(selectedCategory));
+            boolean subCategoryMatches = (selectedSubCategory == null || subCategory.equals(selectedSubCategory));
+            Log.d("subCategoryMatches", String.valueOf(subCategoryMatches));
+
+            if (availableForSale.equals("true") && categoryMatches && subCategoryMatches) {
+                // If we encounter a new subcategory, add it as a header
+                if (!subCategory.equals(currentSubCategory)) {
+                    // Add blank cells to complete the previous row if necessary
+                    if (currentRowCount > 0 && currentRowCount % itemsPerRow != 0) {
+                        int blankCells = itemsPerRow - (currentRowCount % itemsPerRow);
+                        Log.d("AddingBlankCells", String.valueOf(blankCells));
+                        for (int i = 0; i < blankCells; i++) {
+
+                        }
+                        blankSpacesCount += blankCells;
+                    }
+
+                    // Add subcategory title as a full-width row
+                    currentSubCategory = subCategory;
+
+
+                    itemsWithHeaders.add(currentSubCategory); // Add subcategory title as a header
+                    subcategoryTitleCount++; // Increment subcategory title count
+                    currentRowCount = 0; // Reset for the new subcategory
+                }
+
+                // Add the current item
+                itemsWithHeaders.add(mCursor.getPosition());
+                totalItemCount++;
+                currentRowCount++;
+            }
+        }
+
+        // Handle blank cells for the last row after all items
+        if (currentRowCount > 0 && currentRowCount % itemsPerRow != 0) {
+            int blankCells = itemsPerRow - (currentRowCount % itemsPerRow);
+            Log.d("FinalBlankCells", String.valueOf(blankCells));
+            for (int i = 0; i < blankCells; i++) {
+
+            }
+            blankSpacesCount += blankCells;
+        }
+
+        // Log final counts
+        Log.d("FinalCounts", "TotalItemCount: " + totalItemCount + ", SubcategoryTitleCount: " + subcategoryTitleCount + ", BlankSpacesCount: " + blankSpacesCount);
+    }
 
     public interface ItemClickListener {
         void onItemClick(Item item);
+    }
+
+    public void setItemClickListener(ItemClickListener listener) {
+        this.itemClickListener = listener;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (position < itemsWithHeaders.size()) {
+            if (itemsWithHeaders.get(position) instanceof String) {
+                return VIEW_TYPE_HEADER;
+            } else {
+                return VIEW_TYPE_ITEM;
+            }
+        }
+        // Handle cases where position is out of bounds, if needed
+        return super.getItemViewType(position);  // Default return
+    }
+
+
+
+    @Override
+    public int getItemCount() {
+        // Add the size of availableItemsIndices and any additional blank spaces you are inserting
+
+        return totalItemCount + subcategoryTitleCount;
+    }
+
+
+    private int getRealPosition(int position) {
+        return availableItemsIndices.get(position);
     }
 
     private void updateAvailableItemsIndices() {
@@ -86,142 +200,124 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             position++;
         }
     }
-
-    public class ItemViewHolder extends RecyclerView.ViewHolder {
-
-        public TextView nameTextView;
-        public TextView descriptionTextView;
-        public TextView idTextView;
-        public TextView priceTextView,priceNorsTextView,initialprice;
-        public ImageView productImage;
-
-
-        public ItemViewHolder(View itemView) {
-            super(itemView);
-
-            idTextView = itemView.findViewById(R.id.id_text_view);
-            nameTextView = itemView.findViewById(R.id.name_text_view);
-            descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
-            priceTextView = itemView.findViewById(R.id.price_text_view);
-            priceNorsTextView=itemView.findViewById(R.id.priceNoRs_text_view);
-            productImage = itemView.findViewById(R.id.ProductImage);
-            initialprice= itemView.findViewById(R.id.initialprice_text_view);
-
-        }
-    }
-
     @NonNull
     @Override
-    public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        View view = inflater.inflate(R.layout.item_gridlayout, parent, false);
-        return new ItemViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == VIEW_TYPE_HEADER) {
+            View view = LayoutInflater.from(mContext).inflate(R.layout.sub_category_header, parent, false);
+            return new HeaderViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(mContext).inflate(R.layout.item_gridlayout, parent, false);
+            return new ItemViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final ItemViewHolder holder, int position) {
-        if (!mCursor.moveToPosition(getRealPosition(position))) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (position < 0 || position >= itemsWithHeaders.size()) {
+            // Handle invalid position (e.g., return null)
             return;
         }
+        // Check if this position corresponds to a header (subcategory title)
+        if (getItemViewType(position) == VIEW_TYPE_HEADER) {
+            String subCategory = (String) itemsWithHeaders.get(position);
+            HeaderViewHolder headerHolder = (HeaderViewHolder) holder;
 
-        SharedPreferences sharedPreferencepos = mContext.getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
-
-        // Check if "selectedPriceLevel" is present in the preferences
-        if (!sharedPreferencepos.contains("selectedPriceLevel")) {
-            // If not present, set the default value as "Price Level 1"
-            SharedPreferences.Editor editor = sharedPreferencepos.edit();
-            editor.putString("selectedPriceLevel", "Price Level 1");
-            editor.apply();
-        }
-
-        String pLevel = sharedPreferencepos.getString("selectedPriceLevel", null);
-        String price = null;
-        String initialprice = null;
-        String PriceInRs = null;
-
-        String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
-        String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
-        if(pLevel.equals("Price Level 1")) {
-            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
-            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
-            PriceInRs = "Rs " + price;
-        } else if (pLevel.equals("Price Level 2")) {
-            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
-            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2));
-
-            PriceInRs = "Rs " + price;
-
-        } else if (pLevel.equals("Price Level 3")) {
-            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
-            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3));
-
-            PriceInRs = "Rs " + price;
-
-        } else   {
-            price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
-            initialprice = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
-
-            PriceInRs = "Rs " + price;
-
-        }
+            if (subCategory == null || subCategory.trim().isEmpty()) {
+                // If the subcategory is blank, hide the header view
+                headerHolder.headerTextView.setText("");
 
 
-        String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
-        String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));
-
-        holder.idTextView.setText(id);
-        holder.nameTextView.setText(name);
-        holder.descriptionTextView.setText(description);
-        holder.priceTextView.setText(PriceInRs);
-        holder.priceNorsTextView.setText(price);
-        holder.initialprice.setText(initialprice);
-
-        if (isWebLink(productImageName)) {
-            // Load image from web link
-            Glide.with(mContext)
-                    .load(new File(productImageName))
-                    .override(100, 100) // Set desired width and height
-                    .placeholder(R.drawable.emptybasket)
-                    .error(R.drawable.emptybasket)
-                    .into(holder.productImage);
-
-        } else {
-            // Load image from local storage
-            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
             } else {
-                loadLocalImage(holder.productImage, productImageName);
+
+                // Display the subcategory title
+                headerHolder.headerTextView.setText(subCategory);
+
             }
+        } else {
+            // Handle regular items (non-header)
+            int realPosition = (int) itemsWithHeaders.get(position);
+
+            if (!mCursor.moveToPosition(realPosition)) {
+                return;
+            }
+
+            // Fetch item data from the cursor
+            String subCategory = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.SubCategory)); // Sub-category column
+
+
+            SharedPreferences sharedPreferencepos = mContext.getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
+            String pLevel = sharedPreferencepos.getString("selectedPriceLevel", "Price Level 1");
+            String PriceInRs = getPriceinRSBasedOnLevel(pLevel);
+            String price = getPriceBasedOnLevel(pLevel);
+
+            final String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
+            final String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
+            final String id = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper._ID));
+            final String productImageName = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Image));
+
+            // Bind item data to the views
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            itemHolder.idTextView.setText(id);
+            itemHolder.nameTextView.setText(name);
+            itemHolder.descriptionTextView.setText(description);
+            itemHolder.priceTextView.setText(PriceInRs);
+            itemHolder.priceNorsTextView.setText(price);
+
+
+            // Load image based on its source (web or local)
+            if (isWebLink(productImageName)) {
+                Glide.with(mContext)
+                        .load(new File(productImageName))
+                        .override(100, 100) // Set desired dimensions
+                        .placeholder(R.drawable.emptybasket)
+                        .error(R.drawable.emptybasket)
+                        .into(itemHolder.productImage);
+            } else {
+                if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                } else {
+                    loadLocalImage(itemHolder.productImage, productImageName);
+                }
+            }
+
+            // Set item click listener
+            itemHolder.itemView.setOnClickListener(v -> {
+                if (itemClickListener != null) {
+                    Item item = new Item(name, id, price, description, productImageName);
+                    itemClickListener.onItemClick(item);
+                }
+            });
         }
-
-        holder.itemView.setTag(id);
     }
 
-    @Override
-    public int getItemCount() {
-        return availableItemsIndices.size();
-    }
 
-    private int getRealPosition(int position) {
-        return availableItemsIndices.get(position);
-    }
 
-    public void swapCursor(Cursor newCursor) {
-        if (mCursor != null) {
-            mCursor.close();
-        }
-        mCursor = newCursor;
-        updateAvailableItemsIndices();
 
-        if (newCursor != null) {
-            updateAvailableItemsIndices();
-            notifyDataSetChanged();
+
+
+    private String getPriceinRSBasedOnLevel(String pLevel) {
+        switch (pLevel) {
+            case "Price Level 2":
+                return "Rs " + mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
+            case "Price Level 3":
+                return "Rs " + mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
+            default:
+                return "Rs " + mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
         }
     }
 
-    public static boolean isWebLink(String url) {
-        return URLUtil.isValidUrl(url);
+    private String getPriceBasedOnLevel(String pLevel) {
+        switch (pLevel) {
+            case "Price Level 2":
+                return mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price2AfterDiscount));
+            case "Price Level 3":
+                return mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price3AfterDiscount));
+            default:
+                return mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.PriceAfterDiscount));
+        }
     }
+
 
     public static void loadLocalImage(ImageView imageView, String imageLocation) {
         if (imageLocation != null && !imageLocation.isEmpty()) {
@@ -268,30 +364,80 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
         return inSampleSize;
     }
+    public void swapCursor(Cursor newCursor) {
+        if (mCursor != null) {
+            mCursor.close();
+        }
+        mCursor = newCursor;
+        updateAvailableItemsWithHeaders();
 
-    private Item getItemFromCursor(Cursor cursor) {
-        // Retrieve the item data from the cursor and create an Item object
-        // Modify this code based on your cursor structure and item class
-        String name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Name));
-        String id = cursor.getString(cursor.getColumnIndex(DatabaseHelper._ID));
-        String price = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Price));
-        String description = cursor.getString(cursor.getColumnIndex(DatabaseHelper.LongDescription));
-        String productImageName = cursor.getString(cursor.getColumnIndex(DatabaseHelper.Image));
 
-        Item item = new Item(name, id, price, description, productImageName);
-        return item;
+        if (newCursor != null) {
+            updateAvailableItemsWithHeaders();
+
+
+            notifyDataSetChanged();
+
+
+        }
     }
+    public Item getItem(int position) {
+        if (position < 0 || position >= itemsWithHeaders.size()) {
+            return null; // Return null if the position is out of bounds
+        }
 
-    // Handle the permission request response
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, reload the image
-                notifyDataSetChanged();
-            } else {
-                // Permission denied, handle accordingly (e.g., show a message or use a placeholder image)
-                Toast.makeText(mContext, "Permission denied", Toast.LENGTH_SHORT).show();
+        Object itemOrHeader = itemsWithHeaders.get(position);
+
+        // Ensure it's not a header
+        if (itemOrHeader instanceof Integer) {
+            int realPosition = (int) itemOrHeader;
+            if (mCursor.moveToPosition(realPosition)) {
+                String name = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Name));
+                String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.Price));
+                String description = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.LongDescription));
+
+                // Create and return the Item object
+                return new Item(name, price, description);
             }
         }
+        return null; // Return null if it's a header or invalid position
+    }
+    public void updateData(List<Object> newData) {
+        this.itemsWithHeaders = newData;
+    }
+    public class HeaderViewHolder extends RecyclerView.ViewHolder {
+        public TextView headerTextView;
+
+        public HeaderViewHolder(View itemView) {
+            super(itemView);
+            headerTextView = itemView.findViewById(R.id.header_text_view); // Ensure this ID exists in sub_category_header layout
+        }
+    }
+
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
+        public TextView nameTextView;
+        public TextView priceTextView;
+        public TextView idTextView;
+        public TextView priceNorsTextView,initialprice;
+
+        public TextView descriptionTextView;
+        public ImageView productImage;
+
+        public ItemViewHolder(View itemView) {
+            super(itemView);
+            idTextView = itemView.findViewById(R.id.id_text_view);
+
+            nameTextView = itemView.findViewById(R.id.name_text_view);
+            priceTextView = itemView.findViewById(R.id.price_text_view);
+            priceNorsTextView=itemView.findViewById(R.id.priceNoRs_text_view);
+            productImage = itemView.findViewById(R.id.ProductImage);
+            descriptionTextView = itemView.findViewById(R.id.Longdescription_text_view);
+            initialprice= itemView.findViewById(R.id.initialprice_text_view);
+
+        }
+    }
+
+    public static boolean isWebLink(String url) {
+        return URLUtil.isValidUrl(url);
     }
 }

@@ -128,6 +128,7 @@ public class Syncforold extends IntentService {
         String _pass = preferences.getString("_pass", null);
         String _DB = preferences.getString("_DB", null);
         String _server = preferences.getString("_server", null);
+        String _zoneid = preferences.getString("_zone", null);
 
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
@@ -151,6 +152,10 @@ public class Syncforold extends IntentService {
 
     private void performBidirectionalSync(Connection conn) {
         try {
+            // Get SharedPreferences where the DB parameters are stored
+            SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+            String _zoneid = preferences.getString("_zone", null);
             // Step 1: Fetch data from the local SQLite database
             getAndInsertBuyerData(conn);
             getCategoriesFromMssql(conn);
@@ -163,8 +168,8 @@ public class Syncforold extends IntentService {
             getAndInsertDiscountAndCouponData(conn);
             //getAndInsertCostData(conn);
             getRoomsAndTablesFromMssql(conn);
-            getItemsFromMssql(conn);
-            getAndInsertStdAccessData(conn);
+            getItemsFromMssql(conn, Integer.parseInt(_zoneid));
+            //getAndInsertStdAccessData(conn);
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }
@@ -781,7 +786,7 @@ public class Syncforold extends IntentService {
     }
 
 
-    private void getItemsFromMssql(Connection conn) {
+    private void getItemsFromMssql(Connection conn,int tillZoneId) {
         try {
             String selectQuery = "SELECT COUNT(*) as totalItems FROM Items";
             Statement statement = conn.createStatement();
@@ -818,9 +823,18 @@ public class Syncforold extends IntentService {
                         databaseHelper.insertUserDatas(cashorId, pin, cashorLevel, cashorName, cashorShop, cashorDepartment, dateCreatedUsers, lastModifiedUsers);
                     }
 
-                    String query = "SELECT * FROM Items";
-                    resultSets = statement.executeQuery(query);
-                    Log.d("items", query);
+                    String itemsQuery =
+                            "SELECT i.* " +
+                                    "FROM Items i " +
+                                    "INNER JOIN iBoraPOS_ItemPerZone z " +
+                                    "ON i.Barcode = z.Item_Barcode " +
+                                    "WHERE z.Zone_ID = ?";
+                    PreparedStatement preparedStatement = conn.prepareStatement(itemsQuery);
+                    preparedStatement.setInt(1, tillZoneId); // Bind the ZoneID of the till
+                    resultSets = preparedStatement.executeQuery();
+
+
+
                     while (resultSets.next()) {
                         // Process each row of data here
                         String _id= resultSets.getString(_ID);
