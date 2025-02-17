@@ -246,8 +246,10 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         int latestTransactionTRNCounter = sharedPreferences.getInt("transaction_counter_TRN", 0);
         // Increment the transaction counter
         latestTransactionTRNCounter++;
+        SimpleDateFormat dateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
+        String currentDateTime = dateFormat1.format(new Date());
         // Generate the transaction ID with the format "MEMO-integer"
-        String newTransactionId = transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
+        String newTransactionId = currentDateTime + transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
         // Update the transaction ID in the transaction table for transactions with status "InProgress"
         mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,3);
         // Update the transaction ID in the header table for transactions with status "InProgress"
@@ -286,8 +288,11 @@ if(SelectedBuyerProfile==null || SelectedBuyerProfile.equals("")) {
         int latestTransactionTRNCounter = sharedPreferences.getInt("transaction_counter_TRN", 0);
         // Increment the transaction counter
         latestTransactionTRNCounter++;
+
+        SimpleDateFormat dateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
+        String currentDateTime = dateFormat1.format(new Date());
         // Generate the transaction ID with the format "MEMO-integer"
-        String newTransactionId = transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
+        String newTransactionId = currentDateTime + transactionType + "-" +Till_id + "-" +latestTransactionTRNCounter;
         // Update the transaction ID in the transaction table for transactions with status "InProgress"
         mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(transactionIdInProgress,newTransactionId, String.valueOf(roomid),tableid,3);
         // Update the transaction ID in the header table for transactions with status "InProgress"
@@ -528,8 +533,9 @@ if(!areAllItemsNotSelectedNotPaid){
                         System.out.println("tableid: " + tableid);
                         System.out.println("selectedBuyerTAN: " + selectedBuyerTAN);
                         System.out.println("settlementItems: " + settlementItems);
+
                         String MRAMETHOD="Single";
-                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
+                       // insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
                         startActivity(intent);
                     } else {
                         String resulta="Request Failed";
@@ -550,12 +556,13 @@ if(!areAllItemsNotSelectedNotPaid){
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
 
+
                         System.out.println("tr: " + transactionIdInProgress);
                         System.out.println("tableid: " + tableid);
 
 
                         String MRAMETHOD="Single";
-                        insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
+                        //insertCashReturn(cashReturn, totalAmountinserted,result,irn,MRAMETHOD,transactionType, selectedBuyerName, selectedBuyerTAN, selectedBuyerBRN, selectedBuyerNIC);
                         startActivity(intent);
                     }
                 }
@@ -602,9 +609,30 @@ if(!areAllItemsNotSelectedNotPaid){
              SelectedBuyerProfile= intent.getStringExtra("selectedBuyerprofile");
             roomid= getIntent().getStringExtra("roomid");
             tableid  = getIntent().getStringExtra("tableid");
-
+            Log.d("cashReturndadadodod", String.valueOf(cashReturn));
+            Log.d("totalAmountinserteddoda", String.valueOf(totalAmountinserted));
+            Log.d("Transaction_Id", String.valueOf(Transaction_Id));
         }
-
+          SharedPreferences preferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = String.valueOf(preferences.getInt("roomnum", 0));
+        tableid = preferences.getString("table_id", "0");
+        Log.d("Transaction_Id", String.valueOf(Transaction_Id));
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        if(cashReturn == null) {
+            cashReturn = String.valueOf(mDatabaseHelper.getCashReturnByTransactionId(latesttransId));
+            Log.d("cashReturnds", String.valueOf(cashReturn));
+        }
+        if(Transaction_Id == null) {
+            SharedPreferences sharedPreferences = getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+            String newTransactionId = sharedPreferences.getString("new_transaction_id", null);
+            if (newTransactionId != null) {
+                Transaction_Id = newTransactionId;
+                Log.d("NewTransactionID", "Retrieved transaction ID: " + newTransactionId);
+            } else {
+                Log.e("NewTransactionID", "Transaction ID not found in SharedPreferences");
+            }
+        }
 
         try {
 

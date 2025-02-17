@@ -1227,8 +1227,13 @@ private ImageView image_view;
             return;
         }
 
-
-
+        Log.d("ModifyItemActivity", "SKU: " + sku);
+        Log.d("ModifyItemActivity", "Cost: " + cost);
+        Log.d("ModifyItemActivity", "Cashor ID: " + cashorId);
+        if (sku == null || sku.isEmpty()) {
+            // Handle the error, e.g., show a message to the user or log the issue
+            sku= String.valueOf(0.00);
+        }
         mDatabaseHelper.updateCostDetails(barcode, Double.parseDouble(sku), Double.parseDouble(cost), lastmodified, Integer.parseInt(cashorId), null);
 
         boolean isUpdated = dbManager.updateItem( _id,   optionStatus,String.valueOf(supplementId1), String.valueOf(optionId1), String.valueOf(optionId2),String.valueOf(optionId3),String.valueOf(optionId4),String.valueOf(optionId5),name, desc,selectedDiscounts, price,price2,price3, category,subcategory, barcode, Float.parseFloat(weight), department,

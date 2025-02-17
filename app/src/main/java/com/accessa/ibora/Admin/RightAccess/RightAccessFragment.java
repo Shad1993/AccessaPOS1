@@ -219,7 +219,7 @@ private  EditText searchEditText;
                         Switch switchItems = dialogView.findViewById(R.id.switchItems);
 
 
-
+                        Switch switchvoiditem = dialogView.findViewById(R.id.switchvoiditem);
                         Switch switchproforma = dialogView.findViewById(R.id.switchProformat);
                         Switch switchdebitnote = dialogView.findViewById(R.id.switchdebitnote);
                         Switch switchcreditnote = dialogView.findViewById(R.id.switchcreditnote);
@@ -301,7 +301,7 @@ private  EditText searchEditText;
                         switchShift.setChecked(sharedPreferences.getBoolean("shift_" + levelNumber, true));
                         switchItems.setChecked(sharedPreferences.getBoolean("Items_" + levelNumber, true));
 
-
+                        switchvoiditem.setChecked(sharedPreferences.getBoolean("voiditem_" + levelNumber, true));
                         switchproforma.setChecked(sharedPreferences.getBoolean("proforma_" + levelNumber, true));
                         switchdebitnote.setChecked(sharedPreferences.getBoolean("debitnote_" + levelNumber, true));
                         switchcreditnote.setChecked(sharedPreferences.getBoolean("creditnote_" + levelNumber, true));
@@ -390,6 +390,7 @@ private  EditText searchEditText;
                                     editor.putBoolean("shift_" + levelNumber, switchShift.isChecked());
                                     editor.putBoolean("Items_" + levelNumber, switchItems.isChecked());
                                     editor.putBoolean("proforma_" + levelNumber, switchproforma.isChecked());
+                                    editor.putBoolean("voiditem_" + levelNumber, switchvoiditem.isChecked());
                                     editor.putBoolean("debitnote_" + levelNumber, switchdebitnote.isChecked());
                                     editor.putBoolean("creditnote_" + levelNumber, switchcreditnote.isChecked());
                                     editor.putBoolean("sendtokitchen_" + levelNumber, switchSendtokitchen.isChecked());

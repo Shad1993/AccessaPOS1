@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.SQLException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +33,7 @@ import com.accessa.ibora.product.menu.MenuFragment.OnMenufragListener;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -151,6 +156,8 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("drawer24", "drawer24");
+
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
@@ -460,30 +467,81 @@ public class Product extends AppCompatActivity implements MenuFragment.OnMenufra
             Toast.makeText(this, "EditText is not initialized", Toast.LENGTH_SHORT).show();
         }
     }
-        public void logout() {
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                ContextCompat.getSystemService(this, ConnectivityManager.class);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+
+    public void logout() {
         MssqlDataSync mssqlDataSync = new MssqlDataSync();
-        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
-        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
-        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
-        // Perform any necessary cleanup or logout actions here
-        // For example, you can clear session data, close database connections, etc.
-        // Create an editor to modify the preferences
+
+        try {
+            if (isNetworkAvailable()) {
+                SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+                // Retrieve values from SharedPreferences (or use defaults if not set)
+                String _user = preferences.getString("_user", null);
+                String _pass = preferences.getString("_pass", null);
+                String _DB = preferences.getString("_DB", null);
+                String _server = preferences.getString("_server", null);
+
+                // Run server check asynchronously
+                mDatabaseHelper.isServerReachableAsync(_server, isReachable -> {
+                    try {
+                        if (!isReachable) {
+                            Toast.makeText(this, "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("LogoutSyncok", "Database  logout");
+                            // Perform sync operations
+                            mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
+                        }
+                    } catch (SQLException e) {
+                        Log.e("LogoutSyncError", "Database error during logout", e);
+                        Toast.makeText(this, "Database error. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e("LogoutSyncError", "Unexpected error during logout", e);
+                        Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        // Ensure logout happens after sync or error handling
+                        clearSharedPreferences();
+                        navigateToLogin();
+                    }
+                });
+
+            } else {
+                Toast.makeText(this, "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                clearSharedPreferences();
+                navigateToLogin();
+            }
+        } catch (Exception e) {
+            Log.e("LogoutError", "Unexpected error during logout", e);
+            Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+            clearSharedPreferences();
+            navigateToLogin();
+        }
+    }
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
         SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        sharedPreferences.edit().clear().apply();
+    }
 
-        // Clear all the stored values
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();
-
-        // Redirect to the login activity
+    private void navigateToLogin() {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
-        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+        finish();
     }
 
     @Override

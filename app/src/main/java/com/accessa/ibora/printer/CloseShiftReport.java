@@ -142,7 +142,7 @@ public class CloseShiftReport extends AppCompatActivity {
 
                                 if( printerpartname.equals("Logo") && printable) {
 
-                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+                                    printLogoAndReceipt(service, LogoPath, 600, 300);
 
                                 }
                             }
@@ -234,10 +234,18 @@ public class CloseShiftReport extends AppCompatActivity {
                             String numberofcovers = "Number Of covers: " + covernumber;
                             String lastshift = "******: "+"Shift Number: " + actualshift+"******";
 
+
+                            // Get the current date and time
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String currentDateTime = dateFormat.format(new Date());
+                            String datetime = "Date/Time: " + currentDateTime;
+
+
                             String cashiename = "Cashier Name: " + Cashiername;
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
                             service.printText(lastshift + "\n\n", null);
+                            service.printText(datetime + "\n\n", null);
                             for (PrinterSetupPrefs setup : printerSetups) {
                                 printerpartname = setup.getName();
                                 printable = setup.isDrawerOpens();
@@ -325,6 +333,7 @@ public class CloseShiftReport extends AppCompatActivity {
                             if (transactionid != null && transactionid.startsWith("CRN")) {
                                 // Transaction ID starts with "CRN"
                                 totalAmount=-totalAmount;
+                                paymentName = "**" + paymentName;  // Add "**" to the payment name if CRN
                                 // Implement your logic here
                             } else {
                                 // Transaction ID does not start with "CRN"
@@ -392,38 +401,44 @@ public class CloseShiftReport extends AppCompatActivity {
                         for (CatDataModel item : CatDataList) {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
-                            int quantity= item.getTotalQuantity();
+                            int quantity = item.getTotalQuantity();
                             String transactionid = item.getTransactionid();
 
                             if (transactionid != null && transactionid.startsWith("CRN")) {
                                 // Transaction ID starts with "CRN"
-                                totalAmount=-totalAmount;
+                                totalAmount = -totalAmount;
                                 // Implement your logic here
                             } else {
                                 // Transaction ID does not start with "CRN"
-                                totalAmount=totalAmount;
+                                totalAmount = totalAmount;
                             }
-                            Log.d("categorycode" , String.valueOf(categorycode));
-                            Log.d("quantity" , String.valueOf(quantity));
-                            String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
 
-                            if (categorycode.equals("0")){
+                            Log.d("categorycode", String.valueOf(categorycode));
+                            Log.d("quantity", String.valueOf(quantity));
 
-                                CategoryName="Menu Repas";
+                            // Check if categorycode is "---- Separator ----"
+                            if (categorycode.equals("---- Separator ----")) {
+                                // Print separator line (e.g., a line of dashes)
+                                service.printText("*************Refund*************\n", null);
+                            } else {
+                                String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
+
+                                if (categorycode.equals("0")) {
+                                    CategoryName = "Menu Repas";
+                                }
+
+                                String formattedTotalAmount = String.format("%.2f", totalAmount);
+                                String formattedPaymentInfo = CategoryName + " X " + quantity;
+                                String formattedam = " Rs " + formattedTotalAmount;
+
+                                int remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedam.length();
+                                String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                                // Print the payment information for the current item
+                                service.printText(paddedPaymentInfo + "\n", null);
                             }
-                            String formattedTotalAmount = String.format("%.2f", totalAmount);
-
-
-                            String formattedPaymentInfo =  CategoryName + " X " + quantity ;
-                            String formattedam=" Rs " + formattedTotalAmount;
-
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
-
-                            // Print the payment information for the current item
-                            service.printText(paddedPaymentInfo + "\n", null);
                         }
+
                         service.printText(lineSeparator + "\n", null);
                         String TotalSettlement = "Sellers(Encaissement) ";
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -469,8 +484,22 @@ public class CloseShiftReport extends AppCompatActivity {
                                 service.printText(paddedPaymentInfo + "\n", null);
                             }
 
+                            double cashret = mDatabaseHelper.getSumCashReturn(reportType, Integer.parseInt(cashierId));
+
+                            if(cashret != 0 ) {
+                                String formattedCashAmount = String.format("%.2f", cashret);
+
+                                String formattedCashReturnInfo = "Change Returned";
+                                String formattedChangeAmount = " Rs- " + formattedCashAmount;
+                                int remainingSpacechange = lineWidth - formattedCashReturnInfo.length() - formattedChangeAmount.length();
+
+                                String paddedChangetInfo = formattedCashReturnInfo + " ".repeat(Math.max(0, remainingSpacechange)) + formattedChangeAmount;
+
+                                service.printText(paddedChangetInfo + "\n", null);
+                            }
 
                         }
+
 
 
                         service.printText(lineSeparator + "\n", null);
@@ -533,7 +562,7 @@ public class CloseShiftReport extends AppCompatActivity {
 
 
 
-                            double cashret = mDatabaseHelper.getSumglobalCashReturnPerShift(reportType, actualshift);
+                             double cashret = mDatabaseHelper.getSumglobalCashReturnPerShift(reportType, actualshift);
                             double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportTypePerShift(reportType,actualshift);
                             double cashbackval = 0.0;
                             double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportTypePerShift(reportType, actualshift);
@@ -887,7 +916,7 @@ public class CloseShiftReport extends AppCompatActivity {
 
         // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
         // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndShiftNumber(reportType,shiftnum);
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndShift(reportType,shiftnum);
 
         return dummyDataList;
     }

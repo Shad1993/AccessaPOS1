@@ -1,6 +1,7 @@
 package com.accessa.ibora;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,12 +12,15 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -42,6 +46,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -84,6 +89,8 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.squareup.picasso.LruCache;
+import com.squareup.picasso.Picasso;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.SunmiPrinterService;
 
@@ -93,6 +100,7 @@ import android.widget.VideoView;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 
 import woyou.aidlservice.jiuiv5.IWoyouService;
@@ -229,7 +237,20 @@ public class MainActivity extends AppCompatActivity  implements menuFragment.OnC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
 
+     if (memoryInfo.lowMemory) {
+            //  Clear cache
+             mDatabaseHelper.clearCache(getApplicationContext()); // 'this' refers to the Activity context
+            mDatabaseHelper.clearSQLiteCache();
+                       Glide.get(getApplicationContext()).clearMemory();
+                        new Thread(() -> {
+                            Glide.get(getApplicationContext()).clearDiskCache();
+                        }).start();
+                        Picasso picasso = new Picasso.Builder(getApplicationContext()).memoryCache(new LruCache(0)).build();
+        }
         TicketFragment ticketFragment1=new TicketFragment();
         ticketFragment1.setHasOptionsMenu(true);
         double cashReturn = getIntent().getDoubleExtra("cash_return_key", 0.0); // Replace 0.0 with a default value if needed
@@ -288,6 +309,7 @@ if (cashReturn != 0.0) {
             }
         } else if ("sunmit2".equalsIgnoreCase(deviceType)) {
             setContentView(R.layout.activity_main);
+
         }
 
 
@@ -300,7 +322,13 @@ if (cashReturn != 0.0) {
         bindService(intent1, connService, Context.BIND_AUTO_CREATE);
 
         instance = this;
-        mDatabaseHelper = new DatabaseHelper(this);
+
+
+        if (mDatabaseHelper == null) {
+            mDatabaseHelper = new DatabaseHelper(this);
+        }
+
+        mDatabaseHelper.clearCache(this);
         // Retrieve the shared preferences
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
 
@@ -361,6 +389,7 @@ if (cashReturn != 0.0) {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("drawer8", "drawer8");
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
@@ -583,35 +612,88 @@ if (cashReturn != 0.0) {
     public static MainActivity getInstance() {
         return instance;
     }
+
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                ContextCompat.getSystemService(this, ConnectivityManager.class);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+
     public void logout() {
         MssqlDataSync mssqlDataSync = new MssqlDataSync();
-        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
-        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
-        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
-        SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor1 = sharedPrefs.edit();
-        editor1.clear();
-        editor1.apply();
-        // Perform any necessary cleanup or logout actions here
-        // For example, you can clear session data, close database connections, etc.
-        // Create an editor to modify the preferences
+
+        try {
+            if (isNetworkAvailable()) {
+                SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+                // Retrieve values from SharedPreferences (or use defaults if not set)
+                String _user = preferences.getString("_user", null);
+                String _pass = preferences.getString("_pass", null);
+                String _DB = preferences.getString("_DB", null);
+                String _server = preferences.getString("_server", null);
+                mDatabaseHelper.archiveOldTransactions();
+                // Run server check asynchronously
+                mDatabaseHelper.isServerReachableAsync(_server, isReachable -> {
+                    try {
+                        if (!isReachable) {
+                            Toast.makeText(this, "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("LogoutSyncok", "Database  logout");
+                            // Perform sync operations
+                            mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
+                        }
+                    } catch (SQLException e) {
+                        Log.e("LogoutSyncError", "Database error during logout", e);
+                        Toast.makeText(this, "Database error. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e("LogoutSyncError", "Unexpected error during logout", e);
+                        Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        // Ensure logout happens after sync or error handling
+                        clearSharedPreferences();
+                        navigateToLogin();
+                    }
+                });
+
+            } else {
+                Toast.makeText(this, "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                clearSharedPreferences();
+                navigateToLogin();
+            }
+        } catch (Exception e) {
+            Log.e("LogoutError", "Unexpected error during logout", e);
+            Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+            clearSharedPreferences();
+            navigateToLogin();
+        }
+    }
+
+
+
+
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
         SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        sharedPreferences.edit().clear().apply();
+    }
 
-        // Clear all the stored values
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();
-
-        // Redirect to the login activity
+    private void navigateToLogin() {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
-        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+        finish();
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -1207,6 +1289,7 @@ if (cashReturn != 0.0) {
     }
     @Override
     public void onReloadFragment(String tableId, String roomnum) {
+
         // Reload the other fragment
         SalesFragment salesFragment = (SalesFragment) getSupportFragmentManager().findFragmentById(R.id.sales_fragment);
 

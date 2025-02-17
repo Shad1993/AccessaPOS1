@@ -12,6 +12,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TOTAL_PRICE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_CASHIER_CODE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_DATE_CREATED;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_HEADER_TABLE_NAME_ARCHIVE;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TOTAL_TTC;
 
@@ -22,7 +23,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -44,6 +48,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -95,7 +100,7 @@ public class SalesReportActivity extends AppCompatActivity {
     private TextView dateTextView,enddateTextView,TotalSaleAmountTextView;
     private ImageView datePickerIcon;
     private RecyclerView recyclerView;
-   private FloatingActionButton mAddFab;
+   private FloatingActionButton mAddFab,mExitFab;
     private DatabaseHelper mDatabaseHelper;
     public static final String TRANSACTION_TABLE_NAME = "Transactions";
     public static final String TRANSACTION_TOTAL_PRICE = "TotalPrice";
@@ -198,6 +203,8 @@ public class SalesReportActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("drawer27", "drawer27");
+
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
@@ -400,6 +407,16 @@ public class SalesReportActivity extends AppCompatActivity {
         });
 
         mAddFab = findViewById(R.id.print_fab);
+        mExitFab =findViewById(R.id.exit_fab);
+
+        mExitFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SalesReportActivity.this, MainActivity.class);
+                startActivity(intent);
+
+            }
+        });
         mAddFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -855,21 +872,31 @@ public class SalesReportActivity extends AppCompatActivity {
         calendar.add(Calendar.WEEK_OF_YEAR, 1);
         Date endDate = calendar.getTime();
 
-// Format startDate and endDate to 'yyyy-MM-dd' format
+        // Format startDate and endDate to 'yyyy-MM-dd' format
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String formattedStartDate = dateFormat.format(startDate);
         String formattedEndDate = dateFormat.format(endDate);
 
-// Query the database to get the weekly amount
+        // Query the database including archive table
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(CASE " +
+                "SELECT SUM(TotalSumTTC) FROM (" +
+                        "SELECT SUM(CASE " +
                         "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
                         "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
                         "ELSE 0 END) AS TotalSumTTC " +
                         "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
                         "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
-                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
-                new String[]{formattedStartDate, formattedEndDate}
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
+                        "UNION ALL " +
+                        "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME_ARCHIVE + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')" +
+                        ")",
+                new String[]{formattedStartDate, formattedEndDate, formattedStartDate, formattedEndDate}
         );
 
         double amount = 0.0;
@@ -879,10 +906,7 @@ public class SalesReportActivity extends AppCompatActivity {
         }
 
         cursor.close();
-
         return amount;
-
-
     }
 
     private double getMonthlyAmount(Date date) {
@@ -898,23 +922,32 @@ public class SalesReportActivity extends AppCompatActivity {
         calendar.add(Calendar.MONTH, 1);
         Date endDate = calendar.getTime();
 
-// Format startDate and endDate to 'yyyy-MM-dd' format
+        // Format startDate and endDate to 'yyyy-MM-dd' format
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String formattedStartDate = dateFormat.format(startDate);
         String formattedEndDate = dateFormat.format(endDate);
 
-// Query the database to get the monthly amount
+        // Query the database including archive table
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(CASE " +
+                "SELECT SUM(TotalSumTTC) FROM (" +
+                        "SELECT SUM(CASE " +
                         "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
                         "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
                         "ELSE 0 END) AS TotalSumTTC " +
                         "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
                         "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
-                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
-                new String[]{formattedStartDate, formattedEndDate}
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
+                        "UNION ALL " +
+                        "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME_ARCHIVE + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')" +
+                        ")",
+                new String[]{formattedStartDate, formattedEndDate, formattedStartDate, formattedEndDate}
         );
-
 
         double amount = 0.0;
 
@@ -923,9 +956,9 @@ public class SalesReportActivity extends AppCompatActivity {
         }
 
         cursor.close();
-
         return amount;
     }
+
     private double getDailyAmountPerCashior(Date date, String cashorId) {
         // Calculate the start and end date of the current day
         Calendar calendar = Calendar.getInstance();
@@ -968,7 +1001,6 @@ public class SalesReportActivity extends AppCompatActivity {
         return amount;
     }
     private double getWeeklyAmountpercashior(Date date, String cashorId) {
-        // Calculate the start and end date of the current week
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
@@ -980,35 +1012,42 @@ public class SalesReportActivity extends AppCompatActivity {
         calendar.add(Calendar.WEEK_OF_YEAR, 1);
         Date endDate = calendar.getTime();
 
-        // Format startDate and endDate to 'yyyy-MM-dd' format
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String formattedStartDate = dateFormat.format(startDate);
         String formattedEndDate = dateFormat.format(endDate);
 
-        // Query the database to get the weekly amount filtered by cashorId
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(CASE " +
+                "SELECT SUM(TotalSumTTC) FROM (" +
+                        "SELECT SUM(CASE " +
                         "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
                         "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
                         "ELSE 0 END) AS TotalSumTTC " +
                         "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
                         "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
                         "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
-                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
-                new String[]{formattedStartDate, formattedEndDate, cashorId}
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
+                        "UNION ALL " +
+                        "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME_ARCHIVE + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')" +
+                        ")",
+                new String[]{formattedStartDate, formattedEndDate, cashorId, formattedStartDate, formattedEndDate, cashorId}
         );
 
-
         double amount = 0.0;
-
         if (cursor.moveToFirst()) {
             amount = cursor.getDouble(0);
         }
 
         cursor.close();
-
         return amount;
     }
+
     private double getMonthlyAmountpercashior(Date date, String cashorId) {
         // Calculate the start and end date of the current month
         Calendar calendar = Calendar.getInstance();
@@ -1027,19 +1066,29 @@ public class SalesReportActivity extends AppCompatActivity {
         String formattedStartDate = dateFormat.format(startDate);
         String formattedEndDate = dateFormat.format(endDate);
 
-        // Query the database to get the monthly amount filtered by cashorId
+        // Query the database including archive table
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(CASE " +
+                "SELECT SUM(TotalSumTTC) FROM (" +
+                        "SELECT SUM(CASE " +
                         "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
                         "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
                         "ELSE 0 END) AS TotalSumTTC " +
                         "FROM " + TRANSACTION_HEADER_TABLE_NAME + " " +
                         "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
                         "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
-                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')",
-                new String[]{formattedStartDate, formattedEndDate, cashorId}
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN') " +
+                        "UNION ALL " +
+                        "SELECT SUM(CASE " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'Completed' THEN " + TRANSACTION_TOTAL_TTC + " " +
+                        "WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN -" + TRANSACTION_TOTAL_TTC + " " +
+                        "ELSE 0 END) AS TotalSumTTC " +
+                        "FROM " + TRANSACTION_HEADER_TABLE_NAME_ARCHIVE + " " +
+                        "WHERE " + TRANSACTION_DATE_CREATED + " >= ? AND " + TRANSACTION_DATE_CREATED + " < ? " +
+                        "AND " + TRANSACTION_CASHIER_CODE + " = ? " +
+                        "AND (" + TRANSACTION_STATUS + " = 'Completed' OR " + TRANSACTION_STATUS + " = 'CRN')" +
+                        ")",
+                new String[]{formattedStartDate, formattedEndDate, cashorId, formattedStartDate, formattedEndDate, cashorId}
         );
-
 
         double amount = 0.0;
 
@@ -1048,9 +1097,9 @@ public class SalesReportActivity extends AppCompatActivity {
         }
 
         cursor.close();
-
         return amount;
     }
+
 
     private String formatAmount(double amount) {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
@@ -1184,31 +1233,81 @@ public class SalesReportActivity extends AppCompatActivity {
         return totalAmount;
     }
 
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                ContextCompat.getSystemService(this, ConnectivityManager.class);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
 
-
-    private void logout() {
+    public void logout() {
         MssqlDataSync mssqlDataSync = new MssqlDataSync();
-        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
-        mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
-        mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
-        mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
-        // Perform any necessary cleanup or logout actions here
-        // For example, you can clear session data, close database connections, etc.
-        // Create an editor to modify the preferences
-        SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        // Clear all the stored values
-        editor.clear();
+        try {
+            if (isNetworkAvailable()) {
+                SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
 
-        // Apply the changes
-        editor.apply();
+                // Retrieve values from SharedPreferences (or use defaults if not set)
+                String _user = preferences.getString("_user", null);
+                String _pass = preferences.getString("_pass", null);
+                String _DB = preferences.getString("_DB", null);
+                String _server = preferences.getString("_server", null);
 
-        // Redirect to the login activity
+                // Run server check asynchronously
+                mDatabaseHelper.isServerReachableAsync(_server, isReachable -> {
+                    try {
+                        if (!isReachable) {
+                            Toast.makeText(this, "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("LogoutSyncok", "Database  logout");
+                            // Perform sync operations
+                            mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
+                        }
+                    } catch (SQLException e) {
+                        Log.e("LogoutSyncError", "Database error during logout", e);
+                        Toast.makeText(this, "Database error. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e("LogoutSyncError", "Unexpected error during logout", e);
+                        Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        // Ensure logout happens after sync or error handling
+                        clearSharedPreferences();
+                        navigateToLogin();
+                    }
+                });
+
+            } else {
+                Toast.makeText(this, "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                clearSharedPreferences();
+                navigateToLogin();
+            }
+        } catch (Exception e) {
+            Log.e("LogoutError", "Unexpected error during logout", e);
+            Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+            clearSharedPreferences();
+            navigateToLogin();
+        }
+    }
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
+        SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+    }
+
+    private void navigateToLogin() {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
-        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+        finish();
     }
     private void setToolbarTitle(String title) {
         toolbar.setTitle(title);

@@ -637,8 +637,12 @@ String transactionIdInProgress;
         builder.setPositiveButton("Transfer", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                int table1cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableNum);
+                int table2cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableToTransfer);
+
+                int totalcovers = table1cover + table2cover;
                 // Handle transfer action here
-                transferTable(selectedTableNum, roomId);
+                transferTable(selectedTableNum, roomId,totalcovers);
             }
         });
 
@@ -646,7 +650,7 @@ String transactionIdInProgress;
         builder.show();
     }
 
-    private void transferTable(final String selectedTableNum,String roomId) {
+    private void transferTable(final String selectedTableNum,String roomId,int totalcovers) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Select a Table to Transfer");
 
@@ -662,7 +666,7 @@ String transactionIdInProgress;
             public void onClick(DialogInterface dialog, int which) {
                 selectedTableToTransfer = tableArray[which].toString();  // Store the selected table to merge
 
-                transfer(selectedTableNum, selectedTableToTransfer,roomId);
+                transfer(selectedTableNum, selectedTableToTransfer,roomId,totalcovers);
                 // Call the interface method to notify the MainActivity about the table click
 
             }
@@ -785,7 +789,7 @@ String transactionIdInProgress;
         return tables;
     }
 
-    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId) {
+    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId,int totalcover) {
         // Perform the transfer operation by updating the database
         // For example, update the table number of the selected table with the new table number
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
@@ -798,7 +802,7 @@ String transactionIdInProgress;
         if (latesttransId != null) {
             //  Log.d("transactionIdInProgress", transactionIdInProgress);
             mDatabaseHelper.updateTableNumber(latesttransId,selectedTableNum, selectedTableToTransfer, roomId);
-            mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId,latesttransId);
+            mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId,latesttransId,totalcover);
             if (selectedTableNum.startsWith("T T")) {
                 selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
                 unmergeTable(selectedTableNum);

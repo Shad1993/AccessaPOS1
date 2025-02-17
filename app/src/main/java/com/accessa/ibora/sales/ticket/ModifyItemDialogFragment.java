@@ -632,11 +632,27 @@ EditText pinEditText;
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
-                String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
-                int distinctitemcount= mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
 
-                if(distinctitemcount==1){
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                SharedPreferences sharedPreference = requireContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+
+                String cashierLevel = sharedPreference.getString("cashorlevel", null);
+
+                int levelNumber = Integer.parseInt(cashierLevel); // Get the user level
+                // Permission checks
+
+                boolean canHigherAccessvoiditem = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, "voiditem_", levelNumber);
+
+
+                boolean candovoiditem = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, "voiditem_", levelNumber);
+
+                String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
+                String latesttransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
+                int distinctitemcount = mDatabaseHelper.getDistinctItemCountByTransactionId(latesttransId);
+                if (canHigherAccessvoiditem) {
+                    showPinDialog("voiditem_", () -> {
+                if (distinctitemcount == 1) {
 // Show a pop-up dialog
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Confirm Action")
@@ -644,7 +660,7 @@ EditText pinEditText;
                             .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    deleteItem(Unique_ITEM_ID,latesttransId);
+                                    deleteItem(Unique_ITEM_ID, latesttransId);
                                     // Perform the delete operation here
                                     if (Xdatabasemanager != null) {
                                         Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
@@ -669,7 +685,7 @@ EditText pinEditText;
                             .setCancelable(false)
                             .show();
 
-                }else{
+                } else {
                     new AlertDialog.Builder(getActivity())
                             .setTitle("Confirm Action")
                             .setMessage("Do you want to void this Item?")
@@ -701,6 +717,78 @@ EditText pinEditText;
                             })
                             .show();
 
+
+                }
+                    });
+                }else if(!canHigherAccessvoiditem && candovoiditem) {
+                    if (distinctitemcount == 1) {
+// Show a pop-up dialog
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Confirm Action")
+                                .setMessage("There is only one item left in this transaction. Do you want to void the item or clear the entire transaction?")
+                                .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        deleteItem(Unique_ITEM_ID, latesttransId);
+                                        // Perform the delete operation here
+                                        if (Xdatabasemanager != null) {
+                                            Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
+                                            if (itemclearedListener != null) {
+                                                itemclearedListener.onItemDeleted();
+                                            }
+
+                                            refreshTicketFragment();
+                                            dismiss(); // Close the dialog after deleting the item
+
+                                        }
+                                    }
+                                })
+                                .setNegativeButton("Clear Transaction", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
+                                        clearTransact();
+                                        returnHome();
+                                    }
+                                })
+                                .setCancelable(false)
+                                .show();
+
+                    } else {
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Confirm Action")
+                                .setMessage("Do you want to void this Item?")
+                                .setPositiveButton("Void Item", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        deleteItem(Unique_ITEM_ID, latesttransId);
+                                        // Perform the delete operation here
+                                        if (Xdatabasemanager != null) {
+                                            Xdatabasemanager.flagTransactionItemAsVoid(Unique_ITEM_ID, latesttransId);
+                                            if (itemclearedListener != null) {
+                                                itemclearedListener.onItemDeleted();
+                                            }
+
+                                            refreshTicketFragment();
+
+                                            if (itemclearedListener != null) {
+                                                itemclearedListener.onAmountModified();
+                                                dismiss(); // Close the dialog after deleting the item
+                                            }
+                                        }
+                                    }
+                                })
+                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss(); // Close the dialog without doing anything
+                                    }
+                                })
+                                .show();
+
+                    }
+                }else {
+                    showPermissionDeniedDialog(); // Method to show a message to the user
                 }
 
             }
@@ -892,20 +980,117 @@ EditText pinEditText;
         return sdf.format(new Date());
     }
     private void deleteItem(String uniqueitemId,String transactionid) {
+
+
+        // Handle the user's selection here
+
+
+
+
+                    if (Xdatabasemanager != null) {
+                        boolean deleted = Xdatabasemanager.flagTransactionItemAsVoid(uniqueitemId,transactionid);
+                        if (itemclearedListener != null) {
+                            itemclearedListener.onItemDeleted();
+                        }
+                        if (deleted) {
+                            //returnHome();
+                            refreshTicketFragment();
+                            if (itemAddedListener != null) {
+                                itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+                            }
+                        } else {
+                        }
+                    }
+
+
+
         // Perform the delete operation here
-        if (Xdatabasemanager != null) {
-            boolean deleted = Xdatabasemanager.flagTransactionItemAsVoid(uniqueitemId,transactionid);
-            if (itemclearedListener != null) {
-                itemclearedListener.onItemDeleted();
-            }
-            if (deleted) {
-                //returnHome();
-                refreshTicketFragment();
-                if (itemAddedListener != null) {
-                    itemAddedListener.onItemAdded(String.valueOf(roomid),tableid);
+
+    }
+
+    private void showPinDialog(String activity, Runnable onSuccessAction) {
+        // Inflate the PIN dialog layout
+        LayoutInflater inflater = getLayoutInflater();
+        View pinDialogView = inflater.inflate(R.layout.pin_dialog, null);
+        EditText pinEditText = pinDialogView.findViewById(R.id.editTextPIN);
+
+        // Find buttons
+        Button buttonClear = pinDialogView.findViewById(R.id.buttonClear);
+        Button buttonLogin = pinDialogView.findViewById(R.id.buttonLogin);
+
+        // Set up button click listeners
+        setPinButtonClickListeners(pinDialogView, pinEditText);
+
+        // Create the PIN dialog
+        androidx.appcompat.app.AlertDialog.Builder pinBuilder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
+        pinBuilder.setTitle("Enter PIN")
+                .setView(pinDialogView);
+        androidx.appcompat.app.AlertDialog pinDialog = pinBuilder.create();
+        pinDialog.show();
+
+        // Clear button functionality
+        buttonClear.setOnClickListener(v -> onpinClearButtonClick(pinEditText));
+
+        // Login button functionality
+        buttonLogin.setOnClickListener(v -> {
+            String enteredPIN = pinEditText.getText().toString();
+            int cashorLevel = validatePIN(enteredPIN);
+
+            if (cashorLevel != -1) { // PIN is valid
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+
+                // Check if the user has permission
+                boolean accessAllowed = mDatabaseHelper.getPermissionWithDefault(sharedPreferences, activity, cashorLevel);
+                if (accessAllowed) {
+                    String cashorName =mDatabaseHelper.getCashorNameByPin(enteredPIN);
+                    int cashorId =mDatabaseHelper.getCashorIdByPin(enteredPIN);
+                    mDatabaseHelper.logUserActivity(cashorId, cashorName, cashorLevel, activity);
+                    onSuccessAction.run(); // Execute the provided action on success
+                    pinDialog.dismiss(); // Dismiss the PIN dialog after successful login
+                } else {
+                    showPermissionDeniedDialog(); // Show a permission denied dialog
                 }
             } else {
+                Toast.makeText(getActivity(), "Invalid PIN", Toast.LENGTH_SHORT).show();
             }
+        });
+    }
+
+    public void onpinClearButtonClick(EditText ReceivedEditText) {
+
+        onclearButtonClicks(ReceivedEditText);
+        onPinclearButtonClick(ReceivedEditText);
+
+
+    }
+
+    private void showPermissionDeniedDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                .setTitle("Permission Denied")
+                .setMessage("You do not have permission to access this feature.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+    private void onclearButtonClicks(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+            // ReceivedEditText.setText("");
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void onPinclearButtonClick(EditText ReceivedEditText) {
+
+        if (ReceivedEditText != null) {
+            // Insert the letter into the EditText
+            ReceivedEditText.setText("");
+
+        } else {
+            // Show a toast message if EditText is null
+            Toast.makeText(getContext(), "Please select an input field first", Toast.LENGTH_SHORT).show();
         }
     }
     private void showDiscountDialog(int cashorLevel,String unique_ITEM_ID) {

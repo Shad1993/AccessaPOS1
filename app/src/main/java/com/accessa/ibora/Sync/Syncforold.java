@@ -167,9 +167,9 @@ public class Syncforold extends IntentService {
             getAndInsertSupplementData(conn);
             getAndInsertDiscountAndCouponData(conn);
             //getAndInsertCostData(conn);
-            getRoomsAndTablesFromMssql(conn);
+           // getRoomsAndTablesFromMssql(conn);
             getItemsFromMssql(conn, Integer.parseInt(_zoneid));
-            //getAndInsertStdAccessData(conn);
+          //  getAndInsertStdAccessData(conn);
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }
@@ -185,7 +185,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from Buyer_Table
-            String selectBuyerQuery = "SELECT * FROM Buyer_Table";
+            String selectBuyerQuery = "SELECT * FROM iBoraPOS_Buyer_Table";
             resultSet = statement.executeQuery(selectBuyerQuery);
 
             // Process each buyer entry
@@ -342,7 +342,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from Discount table
-            String selectDiscountQuery = "SELECT * FROM Discount";
+            String selectDiscountQuery = "SELECT * FROM iBoraPOS_Discount";
             resultSet = statement.executeQuery(selectDiscountQuery);
 
             // Process each discount entry
@@ -409,7 +409,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from SupplementTable
-            String selectSupplementTableQuery = "SELECT * FROM SupplementTable";
+            String selectSupplementTableQuery = "SELECT * FROM iBoraPOS_SupplementTable";
             resultSet = statement.executeQuery(selectSupplementTableQuery);
 
             // Process each supplement entry
@@ -430,7 +430,7 @@ public class Syncforold extends IntentService {
             resultSet.close();
 
             // Select all data from SupplementTableName
-            String selectSupplementTableNameQuery = "SELECT * FROM SupplementTableName";
+            String selectSupplementTableNameQuery = "SELECT * FROM iBoraPOS_SupplementTableName";
             resultSet = statement.executeQuery(selectSupplementTableNameQuery);
 
             // Process each supplement option entry
@@ -471,12 +471,12 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from OptionTable
-            String selectOptionTableQuery = "SELECT * FROM OptionTable";
+            String selectOptionTableQuery = "SELECT * FROM iBoraPOS_OptionTable";
             resultSet = statement.executeQuery(selectOptionTableQuery);
 
             // Process each option entry
             while (resultSet.next()) {
-                int id = resultSet.getInt("id");
+                int id = resultSet.getInt("_id");
                 String optionName = resultSet.getString("optionName").trim();
 
                 // Insert the trimmed data into the local database
@@ -487,7 +487,7 @@ public class Syncforold extends IntentService {
             resultSet.close();
 
             // Select all data from Options
-            String selectOptionsQuery = "SELECT * FROM Options";
+            String selectOptionsQuery = "SELECT * FROM iBoraPOS_Options";
             resultSet = statement.executeQuery(selectOptionsQuery);
 
             // Process each options entry
@@ -496,7 +496,7 @@ public class Syncforold extends IntentService {
                 int id = resultSet.getInt("id");
                 int variantItemId = resultSet.getInt("variantItemId");
                 String barcode = resultSet.getString("barcode").trim();
-                String desc = resultSet.getString("Desc").trim();
+                String desc = resultSet.getString("Description").trim();
                 BigDecimal price = resultSet.getBigDecimal("Price");
 
                 // Insert the trimmed data into the local database
@@ -529,7 +529,7 @@ public class Syncforold extends IntentService {
 
         try {
             dbManager.open();
-            String selectQuery = "SELECT * FROM SubCategory";
+            String selectQuery = "SELECT * FROM iBoraPOS_SubCategory";
             statement = conn.prepareStatement(selectQuery);
             resultSet = statement.executeQuery();
 
@@ -573,7 +573,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the SubDepartment table
-            String selectQuery = "SELECT * FROM SubDepartment";
+            String selectQuery = "SELECT * FROM iBoraPOS_SubDepartment";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each sub-department entry
@@ -621,7 +621,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();  // Create MSSQL statement
 
             // Query to get data from MSSQL Category table
-            String selectQuery = "SELECT * FROM Category";
+            String selectQuery = "SELECT * FROM iBoraPOS_Category";
             resultSet = statement.executeQuery(selectQuery);
 
             Log.d("CategoryQuery", selectQuery);
@@ -666,7 +666,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the Department table
-            String selectQuery = "SELECT * FROM Department";
+            String selectQuery = "SELECT * FROM iBoraPOS_Department";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each department entry
@@ -715,7 +715,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Get total rooms
-            String selectQuery = "SELECT COUNT(*) as totalrooms FROM rooms";
+            String selectQuery = "SELECT COUNT(*) as totalrooms FROM iBoraPOS_Rooms";
             resultSet = statement.executeQuery(selectQuery);
             if (resultSet.next()) {
                 int totalItems = resultSet.getInt("totalrooms");
@@ -723,7 +723,7 @@ public class Syncforold extends IntentService {
                     showToast("Total Rooms in MSSQL database: " + totalItems);
 
                     // Get tables data
-                    String tablesQuery = "SELECT * FROM tables";
+                    String tablesQuery = "SELECT * FROM iBoraPOS_Tables";
                     tablestatement = conn.prepareStatement(tablesQuery);
                     tablesResultSet = tablestatement.executeQuery();
 
@@ -738,22 +738,21 @@ public class Syncforold extends IntentService {
                         String status = tablesResultSet.getString(STATUS);
                         String merged = tablesResultSet.getString(MERGED);
                         String mergeSetid = tablesResultSet.getString(MERGED_SET_ID);
-                        int RoomNum = tablesResultSet.getInt("RoomNum");
-                        int TableNum = tablesResultSet.getInt("TillNum");
+
 
                         // Insert or update data into the local database
-                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid, RoomNum, TableNum);
+                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid);
 
                         // Process rooms data
-                        String query = "SELECT * FROM rooms";
+                        String query = "SELECT * FROM iBoraPOS_Rooms";
                         resultSet = statement.executeQuery(query);
                         Log.d("rooms", query);
                         while (resultSet.next()) {
                             int _id = resultSet.getInt(ID);
                             String roomname = resultSet.getString(ROOM_NAME);
                             String tablecount = resultSet.getString(TABLE_COUNT);
-                            RoomNum = resultSet.getInt("RoomNum");
-                            TableNum = resultSet.getInt("TillNum");
+                           int RoomNum = resultSet.getInt("RoomNum");
+                            int TableNum = resultSet.getInt("TillNum");
 
                             databaseHelper.insertroomsDatas(_id, roomname, tablecount, RoomNum, TableNum);
                         }
@@ -788,7 +787,7 @@ public class Syncforold extends IntentService {
 
     private void getItemsFromMssql(Connection conn,int tillZoneId) {
         try {
-            String selectQuery = "SELECT COUNT(*) as totalItems FROM Items";
+            String selectQuery = "SELECT COUNT(*) as totalItems FROM iBoraPOS_Items";
             Statement statement = conn.createStatement();
             DBManager dbManager = new DBManager(this);
             dbManager.open();
@@ -802,19 +801,19 @@ public class Syncforold extends IntentService {
                     showToast("Total Items in MSSQL database: " + totalItems);
                     // Execute your SQL query
 
-                    String usersQuery = "SELECT * FROM Users ";
+                    String usersQuery = "SELECT * FROM iBoraPOS_Users WHERE ZoneId =?";
                     PreparedStatement usersStatement = conn.prepareStatement(usersQuery);
-
+                    usersStatement.setInt(1, tillZoneId); // Bind the ZoneId to the parameter
                     ResultSet usersResultSet = usersStatement.executeQuery();
-                    Log.d("user", usersQuery);
+                    Log.d("userqu", usersQuery);
                     while (usersResultSet.next()) {
                         // Retrieve data from the users table
-                        int cashorId = usersResultSet.getInt(COLUMN_CASHOR_id);
-                        String pin = usersResultSet.getString(COLUMN_PIN);
-                        int cashorLevel = usersResultSet.getInt(COLUMN_CASHOR_LEVEL);
-                        String cashorName = usersResultSet.getString(COLUMN_CASHOR_NAME);
+                        int cashorId = usersResultSet.getInt("CashierID");
+                        String pin = usersResultSet.getString("Pin");
+                        int cashorLevel = usersResultSet.getInt("CashierLevel");
+                        String cashorName = usersResultSet.getString("CashierName");
                         String cashorShop = usersResultSet.getString(COLUMN_CASHOR_Shop);
-                        String cashorDepartment = usersResultSet.getString(COLUMN_CASHOR_DEPARTMENT);
+                        String cashorDepartment = usersResultSet.getString("CashierDepartment");
                         String dateCreatedUsers = usersResultSet.getString(DateCreated);
                         String lastModifiedUsers = usersResultSet.getString(LastModified);
 
@@ -825,10 +824,10 @@ public class Syncforold extends IntentService {
 
                     String itemsQuery =
                             "SELECT i.* " +
-                                    "FROM Items i " +
+                                    "FROM iBoraPOS_Items i " +
                                     "INNER JOIN iBoraPOS_ItemPerZone z " +
                                     "ON i.Barcode = z.Item_Barcode " +
-                                    "WHERE z.Zone_ID = ?";
+                                    "WHERE z.ZoneID = ?";
                     PreparedStatement preparedStatement = conn.prepareStatement(itemsQuery);
                     preparedStatement.setInt(1, tillZoneId); // Bind the ZoneID of the till
                     resultSets = preparedStatement.executeQuery();
@@ -909,8 +908,8 @@ public class Syncforold extends IntentService {
                             HasSupplements="false";
                         }
                         //relatedSupplements
-                        String RelatedSupplements = resultSets.getString(relatedSupplements);
-                        Log.e("dRelatedSupplements",RelatedSupplements);
+                        int RelatedSupplements = resultSets.getInt(relatedSupplements);
+
                         int ShopNums = resultSets.getInt(ShopNum);
                         int TillNums = resultSets.getInt(TillNum);
 
@@ -949,7 +948,7 @@ public class Syncforold extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from std_access table
-            String selectStdAccessQuery = "SELECT * FROM std_access";
+            String selectStdAccessQuery = "SELECT * FROM iBoraPOS_std_access";
             resultSet = statement.executeQuery(selectStdAccessQuery);
 
             // Process each std_access entry

@@ -211,6 +211,7 @@ private  EditText searchEditText;
                         Switch switchItems = dialogView.findViewById(R.id.switchItems);
 
 
+                        Switch switchvoiditem = dialogView.findViewById(R.id.switchvoiditem);
 
                         Switch switchproforma = dialogView.findViewById(R.id.switchProformat);
                         Switch switchdebitnote = dialogView.findViewById(R.id.switchdebitnote);
@@ -293,6 +294,7 @@ private  EditText searchEditText;
                         switchShift.setChecked(sharedPreferences.getBoolean("shift_" + levelNumber, false));
                         switchItems.setChecked(sharedPreferences.getBoolean("Items_" + levelNumber, false));
 
+                        switchvoiditem.setChecked(sharedPreferences.getBoolean("voiditem_" + levelNumber, true));
 
                         switchproforma.setChecked(sharedPreferences.getBoolean("proforma_" + levelNumber, false));
                         switchdebitnote.setChecked(sharedPreferences.getBoolean("debitnote_" + levelNumber, false));
@@ -381,6 +383,7 @@ private  EditText searchEditText;
                                     editor.putBoolean("Receipts_" + levelNumber, switchReceipts.isChecked());
                                     editor.putBoolean("shift_" + levelNumber, switchShift.isChecked());
                                     editor.putBoolean("Items_" + levelNumber, switchItems.isChecked());
+                                    editor.putBoolean("voiditem_" + levelNumber, switchvoiditem.isChecked());
                                     editor.putBoolean("proforma_" + levelNumber, switchproforma.isChecked());
                                     editor.putBoolean("debitnote_" + levelNumber, switchdebitnote.isChecked());
                                     editor.putBoolean("creditnote_" + levelNumber, switchcreditnote.isChecked());

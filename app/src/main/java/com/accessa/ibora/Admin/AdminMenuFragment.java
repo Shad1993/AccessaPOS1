@@ -97,7 +97,7 @@ public class AdminMenuFragment extends Fragment {
                 getString(R.string.Rights),
                 getString(R.string.HigherLevelAccess),
                 getString(R.string.CompanyInfo),
-                getString(R.string.sync),
+              //  getString(R.string.sync),
                 getString(R.string.POSINFO)
         };
         icons = new int[]{
@@ -105,7 +105,7 @@ public class AdminMenuFragment extends Fragment {
                 R.drawable.key,
                 R.drawable.higherlevelblue,
                 R.drawable.companyicon,
-                R.drawable.sync,
+              //  R.drawable.sync,
                 R.drawable.pos
         };
 
@@ -297,6 +297,88 @@ public class AdminMenuFragment extends Fragment {
                         break;
 
                     case 4:
+                        if (canHigherAccessPOSNumber) {
+                            showPinDialog("posNumber_", () -> {
+                                // Create and show POS number dialog
+                                // Create and show POS number dialog
+                                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                                builder.setView(R.layout.popup_insert_pos_access);
+
+                                AlertDialog dialog = builder.create();
+                                dialog.show();
+
+                                SharedPreferences sharedPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                                PosNum = sharedPreference.getString(POSNumber, null);
+
+                                EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
+                                if (editTerminalNo != null) {
+                                    editTerminalNo.setText(PosNum);
+                                }
+
+                                Button btnInsert = dialog.findViewById(R.id.btnInsert);
+                                if (btnInsert != null) {
+                                    btnInsert.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            String terminalNo = editTerminalNo.getText().toString();
+                                            String shopName = ShopName;
+                                            String cashOrId = cashorId;
+
+                                            // Use regex to validate terminalNo input
+                                            if (validateData(terminalNo)) {
+                                                insertOrUpdatePosAccess(terminalNo, shopName, cashOrId);
+                                                dialog.dismiss(); // Close the dialog after inserting/updating
+                                            } else {
+                                                // Show error message if validation fails
+                                                editTerminalNo.setError("Invalid input. Only numbers are allowed.");
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        else if (!canHigherAccessPOSNumber && canAccessPOSNumber) {
+                            // Create and show POS number dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setView(R.layout.popup_insert_pos_access);
+
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
+
+                            sharedPreferences = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
+                            PosNum = sharedPreferences.getString(POSNumber, null);
+
+                            EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
+                            if (editTerminalNo != null) {
+                                editTerminalNo.setText(PosNum);
+                            }
+
+                            Button btnInsert = dialog.findViewById(R.id.btnInsert);
+                            if (btnInsert != null) {
+                                btnInsert.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String terminalNo = editTerminalNo.getText().toString();
+                                        String shopName = ShopName;
+                                        String cashOrId = cashorId;
+
+                                        // Use regex to validate terminalNo input
+                                        if (validateData(terminalNo)) {
+                                            insertOrUpdatePosAccess(terminalNo, shopName, cashOrId);
+                                            dialog.dismiss(); // Close the dialog after inserting/updating
+                                        } else {
+                                            // Show error message if validation fails
+                                            editTerminalNo.setError("Invalid input. Only numbers are allowed.");
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            showPermissionDeniedDialog();
+                        }
+                        break;
+
+                    case 5:
                         if (canHigherAccessSyncDatabase) {
                             showPinDialog("syncDatabase_", () -> {
                                 // Create and show sync dialog
@@ -344,7 +426,7 @@ public class AdminMenuFragment extends Fragment {
                                     });
                                 }
                             });
-                            }else
+                        }else
                         if (!canHigherAccessSyncDatabase && canAccessSyncDatabase) {
                             // Create and show sync dialog
                             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -385,88 +467,6 @@ public class AdminMenuFragment extends Fragment {
                                         }
 
                                         dialog.dismiss(); // Close the dialog after synchronization
-                                    }
-                                });
-                            }
-                        } else {
-                            showPermissionDeniedDialog();
-                        }
-                        break;
-
-                    case 5:
-                        if (canHigherAccessPOSNumber) {
-                            showPinDialog("posNumber_", () -> {
-                                // Create and show POS number dialog
-                                // Create and show POS number dialog
-                                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                                builder.setView(R.layout.popup_insert_pos_access);
-
-                                AlertDialog dialog = builder.create();
-                                dialog.show();
-
-                                SharedPreferences sharedPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-                                PosNum = sharedPreference.getString(POSNumber, null);
-
-                                EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
-                                if (editTerminalNo != null) {
-                                    editTerminalNo.setText(PosNum);
-                                }
-
-                                Button btnInsert = dialog.findViewById(R.id.btnInsert);
-                                if (btnInsert != null) {
-                                    btnInsert.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            String terminalNo = editTerminalNo.getText().toString();
-                                            String shopName = ShopName;
-                                            String cashOrId = cashorId;
-
-                                            // Use regex to validate terminalNo input
-                                            if (validateData(terminalNo)) {
-                                                insertOrUpdatePosAccess(terminalNo, shopName, cashOrId);
-                                                dialog.dismiss(); // Close the dialog after inserting/updating
-                                            } else {
-                                                // Show error message if validation fails
-                                                editTerminalNo.setError("Invalid input. Only numbers are allowed.");
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                            }
-                        else if (!canHigherAccessPOSNumber && canAccessPOSNumber) {
-                            // Create and show POS number dialog
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                            builder.setView(R.layout.popup_insert_pos_access);
-
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
-
-                            sharedPreferences = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
-                            PosNum = sharedPreferences.getString(POSNumber, null);
-
-                            EditText editTerminalNo = dialog.findViewById(R.id.editTerminalNo);
-                            if (editTerminalNo != null) {
-                                editTerminalNo.setText(PosNum);
-                            }
-
-                            Button btnInsert = dialog.findViewById(R.id.btnInsert);
-                            if (btnInsert != null) {
-                                btnInsert.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        String terminalNo = editTerminalNo.getText().toString();
-                                        String shopName = ShopName;
-                                        String cashOrId = cashorId;
-
-                                        // Use regex to validate terminalNo input
-                                        if (validateData(terminalNo)) {
-                                            insertOrUpdatePosAccess(terminalNo, shopName, cashOrId);
-                                            dialog.dismiss(); // Close the dialog after inserting/updating
-                                        } else {
-                                            // Show error message if validation fails
-                                            editTerminalNo.setError("Invalid input. Only numbers are allowed.");
-                                        }
                                     }
                                 });
                             }

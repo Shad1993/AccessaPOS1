@@ -67,6 +67,7 @@ public class login extends AppCompatActivity {
     //sharedpreferences
 
     private SharedPreferences sharedPreferences;
+    private SharedPreferences sharedTransacprefPreferences;
 
 
     @Override
@@ -78,6 +79,7 @@ public class login extends AppCompatActivity {
 
 
         sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
+        sharedTransacprefPreferences = getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
         // Create or open the SharedPreferences file
         SharedPreferences sharedPreferences = getSharedPreferences("pricelevel", Context.MODE_PRIVATE);
         String deviceType = getDeviceType();
@@ -175,6 +177,23 @@ public class login extends AppCompatActivity {
 
             SQLiteDatabase db = mDatabaseHelper.getReadableDatabase(); // Assume dbHelper is an instance of your SQLiteOpenHelper
             String shopNumber = mDatabaseHelper.getShopNumber(db);
+
+
+            String TransactionPrefsName = "TransactionPrefs"; // Replace with your preferences name
+            if (doesSharedPreferencesFileExist(this, TransactionPrefsName)) {
+                // The SharedPreferences file exists
+                System.out.println("TransactionPrefs file exists.");
+            } else {
+
+                SharedPreferences.Editor editor = sharedTransacprefPreferences.edit();
+                editor.putInt("transaction_counter_CDN", 0); // Store cashor's name
+                editor.putInt("transaction_counter_DBN", 0); // Store cashor's name
+                editor.putInt("transaction_counter_Proforma", 0); // Store cashor's name
+                editor.putInt("transaction_counter_TRN", 0); // Store cashor's name
+
+                editor.apply();
+            }
+
             String prefsName = "PrinterSetupPrefs"; // Replace with your preferences name
 
             if (doesSharedPreferencesFileExist(this, prefsName)) {
@@ -208,6 +227,7 @@ public class login extends AppCompatActivity {
 
             // Remove the buyer info from shared preferences
             clearBuyerInfoFromPrefs();
+          clearsESSIONPrefs();
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("cashorName", cashorName); // Store cashor's name
             editor.putString("cashorId", cashorId); // Store cashor's ID
@@ -372,6 +392,12 @@ public class login extends AppCompatActivity {
     }
     private void clearBuyerInfoFromPrefs() {
         SharedPreferences sharedPrefs = this.getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.clear();
+        editor.apply();
+    }
+    private void clearsESSIONPrefs() {
+        SharedPreferences sharedPrefs = this.getSharedPreferences("AppSessionPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.clear();
         editor.apply();

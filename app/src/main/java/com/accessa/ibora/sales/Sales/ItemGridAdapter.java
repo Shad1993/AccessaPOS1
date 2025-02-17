@@ -30,6 +30,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 
 import com.accessa.ibora.product.items.Item;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -267,19 +268,39 @@ public class ItemGridAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             // Load image based on its source (web or local)
             if (isWebLink(productImageName)) {
+                // Load web image using Glide
                 Glide.with(mContext)
-                        .load(new File(productImageName))
+                        .load(productImageName) // Load the web link directly
                         .override(100, 100) // Set desired dimensions
-                        .placeholder(R.drawable.emptybasket)
-                        .error(R.drawable.emptybasket)
-                        .into(itemHolder.productImage);
+                        .skipMemoryCache(true) // Avoid using memory cache
+                        .diskCacheStrategy(DiskCacheStrategy.NONE) // Avoid disk caching
+                        .into(itemHolder.productImage); // Directly load the image
             } else {
+                // Check permissions for reading external storage
                 if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                    ActivityCompat.requestPermissions(
+                            (Activity) mContext,
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            PERMISSION_REQUEST_CODE
+                    );
                 } else {
-                    loadLocalImage(itemHolder.productImage, productImageName);
+                    if (productImageName != null && !productImageName.isEmpty()) {
+                        File imageFile = new File(productImageName);
+                        if (imageFile.exists()) {
+                            // Load the local image
+                            loadLocalImage(itemHolder.productImage, productImageName);
+                        } else {
+                            // Set the default vector drawable if the file doesn't exist
+                            itemHolder.productImage.setImageResource(R.drawable.testimage); // Use your vector drawable resource
+                        }
+                    } else {
+                        // Set the default vector drawable for null or empty productImageName
+                        itemHolder.productImage.setImageResource(R.drawable.testimage); // Use your vector drawable resource
+                    }
                 }
             }
+
+
 
             // Set item click listener
             itemHolder.itemView.setOnClickListener(v -> {
@@ -329,7 +350,7 @@ public class ItemGridAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
                 // Calculate the desired sample size to scale down the image
-                options.inSampleSize = calculateInSampleSize(options, 100, 100); // Replace desiredWidth and desiredHeight with the desired dimensions
+                options.inSampleSize = calculateInSampleSize(options, 100, 100); // Replace 100, 100 with your desired dimensions
 
                 // Set options to load the scaled-down version of the image
                 options.inJustDecodeBounds = false;
@@ -337,14 +358,27 @@ public class ItemGridAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
                 // Load the image with the updated options
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
-                imageView.setImageBitmap(bitmap);
+
+                // Set the bitmap to the ImageView
+                if (bitmap != null) {
+                    imageView.setImageBitmap(bitmap);
+                } else {
+                    // Clear the ImageView to display nothing
+                    imageView.setImageResource(R.drawable.testimage); // Replace 'resto' with the actual name of your vector drawable resource
+
+                }
             } else {
-                imageView.setImageResource(R.drawable.emptybasket);
+                // Clear the ImageView to display nothing
+                imageView.setImageResource(R.drawable.testimage); // Replace 'resto' with the actual name of your vector drawable resource
+
             }
         } else {
-            imageView.setImageResource(R.drawable.emptybasket);
+            // Clear the ImageView to display nothing
+            imageView.setImageResource(R.drawable.testimage); // Replace 'resto' with the actual name of your vector drawable resource
+
         }
     }
+
 
     private static int calculateInSampleSize(BitmapFactory.Options options, int desiredWidth, int desiredHeight) {
         final int imageWidth = options.outWidth;

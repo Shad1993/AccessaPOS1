@@ -34,6 +34,7 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.Checkout.SettlementItem;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
+import com.jakewharton.processphoenix.ProcessPhoenix;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;
@@ -191,12 +192,12 @@ public class printerSetupforPRF extends AppCompatActivity {
 
                                 if( printerpartname.equals("Logo") && printable) {
 
-                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+                                    printLogoAndReceipt(service, LogoPath, 600, 300);
 
                                 }
                             }
 
-                            if (invoicetype.equals("PRF")) {
+                            if (invoicetype.equals("PRF") || invoicetype.equals("OLDPRF")) {
                                 TransactionTypename = "Proforma";
                             } else if (invoicetype.equals("CRN")) {
                                 TransactionTypename = "Credit Note";
@@ -526,7 +527,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
 
-                        if (!"PRF".equals(invoicetype) && !"CRN".equals(invoicetype) && !"DRN".equals(invoicetype)) {
+                        if (!"OLDPRF".equals(invoicetype) &&!"PRF".equals(invoicetype) && !"CRN".equals(invoicetype) && !"DRN".equals(invoicetype)) {
     if (settlementItems != null) {
         // Use the settlementItems as needed
         // You can iterate over the list and access the payment name and settlement amount for each item
@@ -575,16 +576,17 @@ public class printerSetupforPRF extends AppCompatActivity {
                             service.setFontSize(24, null);
 
 
-                            // Decode Base64 string to byte array
+
+// Decode Base64 string to byte array
                             byte[] imageBytes;
                             try {
+                                Log.d("Base64String", mraqr);  // Log the Base64 string
                                 imageBytes = android.util.Base64.decode(mraqr, android.util.Base64.DEFAULT);
                             } catch (IllegalArgumentException e) {
                                 // Handle decoding errors
                                 e.printStackTrace();
                                 return;
                             }
-
                             // Log the decoded byte array for debugging
                             Log.d("QR_DEBUG", "Decoded byte array length: " + imageBytes.length);
 
@@ -715,7 +717,7 @@ public class printerSetupforPRF extends AppCompatActivity {
                         // Update the transaction status for all in-progress transactions to "Completed"
 
 
-                        if(!"PRF".equals(invoicetype)) {
+                        if(!"PRF".equals(invoicetype) || !"OLDPRF".equals(invoicetype)) {
                             mDatabaseHelper.updateCoverCount(0,tableid, Integer.parseInt(roomid));
 
                             updateTransactionStatus();
@@ -731,8 +733,8 @@ public class printerSetupforPRF extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Intent intent = new Intent(printerSetupforPRF.this, MainActivity.class);
-                                startActivity(intent);
+
+                                restartApp(getApplicationContext(),cashReturn);
                             }
                         });
                     } catch (RemoteException e) {
@@ -741,6 +743,8 @@ public class printerSetupforPRF extends AppCompatActivity {
                 }
             });
         }
+
+
         private List<String> extractTableIds(String newTableId) {
             List<String> tableIds = new ArrayList<>();
 
@@ -766,7 +770,12 @@ public class printerSetupforPRF extends AppCompatActivity {
             });
         }
     };
-
+    public static void restartApp(Context context, double cashReturn) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("cash_return_key", cashReturn);
+        ProcessPhoenix.triggerRebirth(context, intent);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

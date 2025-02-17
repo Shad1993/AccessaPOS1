@@ -635,7 +635,7 @@ public class SettingsMenuFragment extends Fragment {
                 SharedPreferences sharedPreferences2 = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
                 String buyerName = sharedPreferences2.getString("BuyerName", null);
 
-                if (transactionIdInProgress != null || !transactionIdInProgress.isEmpty()) {
+                if (transactionIdInProgress != null ) {
                     if (buyerName == null || buyerName.isEmpty()) {
                         // Both conditions are met (no transaction in progress and no selected buyer), so allow changing price level.
 

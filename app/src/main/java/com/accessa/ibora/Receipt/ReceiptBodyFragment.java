@@ -53,7 +53,7 @@ public class ReceiptBodyFragment extends Fragment {
     private View separationline;
     private String cashierName,cashierId;
     private String cashorlevel,ShopName,LogoPath;
-    private double totalAmount,TaxtotalAmount;
+    private double totalAmount,TaxtotalAmount,TotalAmountWOVAT;
     private  String DateCreated,timeCreated,TenderAmount,CashReturn,PosNum,TransactionType, TransactionQr;
     private  int CashiorId;
     private ReceiptAdapter receiptAdapter;
@@ -95,6 +95,7 @@ public class ReceiptBodyFragment extends Fragment {
         TextView transactionDateTextView = view.findViewById(R.id.transaction_date_text_view);
         TextView transactionTypeTextView = view.findViewById(R.id.transacType_text_view);
         TextView totalPriceTextView = view.findViewById(R.id.total_price_text_view);
+        TextView totalAmountWoVATTextView = view.findViewById(R.id.wovatamount_price_text_view);
         TextView companyTextView = view.findViewById(R.id.companyName_text_view);
         TextView compAdressTextView = view.findViewById(R.id.compaddr1n2_text_view);
         TextView compAdress3TextView = view.findViewById(R.id.compaddr3_text_view);
@@ -241,7 +242,7 @@ public class ReceiptBodyFragment extends Fragment {
         if (cursor1 != null && cursor1.moveToFirst()) {
             int columnIndexTotalAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
             int columnIndexTransactType = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_STATUS);
-            int columnIndexTotalTaxAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+            int columnIndexTotalAmountWithoutTaxAmount = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_HT_A);
             int columnIndexTimeCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
             int columnIndexDateCreated = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
             int CashiorIdindex = cursor1.getColumnIndex(DatabaseHelper.TRANSACTION_CASHIER_CODE);
@@ -268,11 +269,12 @@ public class ReceiptBodyFragment extends Fragment {
             TransactionType=cursor1.getString(columnIndexTransactType);
             TransactionQr=cursor1.getString(QrCodeindex);
             totalAmount = cursor1.getDouble(columnIndexTotalAmount);
-            TaxtotalAmount = cursor1.getDouble(columnIndexTotalTaxAmount);
+            TotalAmountWOVAT = cursor1.getDouble(columnIndexTotalAmountWithoutTaxAmount);
             DateCreated = cursor1.getString(columnIndexDateCreated);
             timeCreated = cursor1.getString(columnIndexTimeCreated);
             TenderAmount = cursor1.getString(TotalTenderindex);
             CashReturn=cursor1.getString(CashReturnindex);
+            TaxtotalAmount= totalAmount - TotalAmountWOVAT;
 if(!TransactionType.equals("InProgress") ) {
 
     if (TransactionQr == null) {
@@ -308,13 +310,14 @@ if(!TransactionType.equals("InProgress") ) {
     }
 }
     String formattedTotalAmount = String.format("%.2f", totalAmount);
+    String formattedTotalAmountwoTAXAmount = String.format("%.2f", TotalAmountWOVAT);
     String formattedTotalTAXAmount = String.format("%.2f", TaxtotalAmount);
 
     String Total = getString(R.string.Total);
     String TVA = getString(R.string.Vat);
 
     String TotalValue = "Rs " + formattedTotalAmount;
-    String TotalVAT = "Rs " + formattedTotalTAXAmount;
+    String TotalAmountWOVAT = "Rs " + formattedTotalAmountwoTAXAmount;
     if (TransactionType.equals("PRF")) {
         transactionTypeTextView.setText("Proforma");
     } else if (TransactionType.equals("CRN")) {
@@ -330,9 +333,9 @@ if(!TransactionType.equals("InProgress") ) {
     }else if (TransactionType.equals("OLDPRF")) {
         transactionTypeTextView.setText("Proforma");
     }
-
+            totalAmountWoVATTextView.setText(formattedTotalAmountwoTAXAmount);
             totalPriceTextView.setText(TotalValue);
-            VatAMount.setText(TotalVAT);
+            VatAMount.setText(formattedTotalTAXAmount);
             TenderTextview.setText("Rs " + TenderAmount);
 
 

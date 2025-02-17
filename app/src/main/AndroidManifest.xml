@@ -36,7 +36,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:hardwareAccelerated="true"
+
 
     android:allowBackup="true"
         android:screenOrientation="landscape"
@@ -75,6 +75,9 @@
         <activity android:name=".Admin.SelectAdminOptions"  />
         <activity android:name=".Admin.People.ModifyPeopleActivity"  />
         <activity android:name=".product.Cost.ModifyCostActivity" />
+        <activity android:name=".LoadingActivity"
+            android:theme="@style/TransparentTheme"/>
+
         <activity android:name=".product.Discount.AddDiscontActivity"/>
         <activity android:name=".product.Discount.ModifyDiscountActivity"/>
         <activity android:name=".product.items.FirstFragment" android:theme="@style/Widget.AppCompat.Spinner" />

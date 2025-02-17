@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.Display;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -43,6 +44,8 @@ public class SplashActivity extends Activity {
     private MediaPlayer mediaPlayer;
     private int progress = 0; // Current progress value for the loading bar
     private DatabaseHelper mDatabaseHelper;
+    private static final String PREFS_NAME = "AppSessionPrefs";
+    private static final String KEY_SAME_SESSION = "IsSameSession";
     private static IWoyouService woyouService;
     private ServiceConnection connService = new ServiceConnection() {
 
@@ -64,24 +67,27 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
+
+        // Initialize UI and animations only if not the same session
         setContentView(R.layout.splashfile);
         showSecondaryScreen();
+
         logoImageView = findViewById(R.id.logoImageView);
         loadingBar = findViewById(R.id.loadingBar);
+        mDatabaseHelper = new DatabaseHelper(this);
 
         Intent intent1 = new Intent();
         intent1.setPackage("woyou.aidlservice.jiuiv5");
         intent1.setAction("woyou.aidlservice.jiuiv5.IWoyouService");
         bindService(intent1, connService, Context.BIND_AUTO_CREATE);
 
-        mDatabaseHelper = new DatabaseHelper(this);
-
         // Apply bouncing animation to the logo image
         Animation bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.bounce_animation);
         bounceAnimation.setInterpolator(new BounceInterpolator());
         logoImageView.startAnimation(bounceAnimation);
 
-        // Load and play the splash sound
+        // Load and play the splash sound if it's a new session
         mediaPlayer = MediaPlayer.create(this, R.raw.splash_sound);
         mediaPlayer.start();
 
@@ -175,8 +181,17 @@ public class SplashActivity extends Activity {
         // Load and apply the language preference
         String languageCode = loadLanguagePreference();
         Locale locale = new Locale(languageCode);
-        openNewActivity(locale);
+        SharedPreferences sharedPreferences = this.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean isSameSession = sharedPreferences.getBoolean(KEY_SAME_SESSION, false);
+       // if (!isSameSession) {
+            openNewActivity(locale);
+      //  }
+
+            // If the session is not the same, proceed with the normal flow
+
+
     }
+
 
     private void initializeLanguagePreference() {
         SharedPreferences prefs = getSharedPreferences("Settings", Context.MODE_PRIVATE);

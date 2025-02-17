@@ -76,7 +76,7 @@ public class PrintDuplicata extends AppCompatActivity {
     private DatabaseHelper mDatabaseHelper;
     private String   itemLine, itemLine1;
     private String cashierName,cashierId;
-    private double totalAmount,TaxtotalAmount;
+    private double totalAmount,TaxtotalAmount,WOTaxtotalAmount;
     private  String DateCreated,timeCreated,TransactionType,MRAQR;
     private double TenderAmount,CashReturn;
     private String cashorlevel,ShopName,LogoPath;
@@ -202,7 +202,7 @@ public class PrintDuplicata extends AppCompatActivity {
 
                                     if( printerpartname.equals("Logo") && printable) {
 
-                                        printLogoAndReceipt(service, LogoPath, 100, 100);
+                                        printLogoAndReceipt(service, LogoPath, 600, 300);
 
                                     }
                                 }
@@ -309,10 +309,10 @@ public class PrintDuplicata extends AppCompatActivity {
                                String status=mDatabaseHelper.getOrderTypeByTransactionTicketNo(transactionIdInProgress);
                                 int covers=mDatabaseHelper.getNumberOfCovers(transactionIdInProgress);
                                 String relatedtransid= mDatabaseHelper.getRelatedTransactionId(transactionIdInProgress);
-                                String RelTrID= "Related Trans Id: " + relatedtransid ;
-                                String cashiename = "Cashier Name: " + Cashiername;
-                                String cashierid = "Cashier Id: " + Cashierid;
-                                String Posnum = "POS Number: " + TerminalNum;
+                                String RelTrID= "Related Trans Id: " + relatedtransid + "\n";
+                                String cashiename = "Cashier Name: " + Cashiername+ "\n";
+                                String cashierid = "Cashier Id: " + Cashierid+ "\n";
+                                String Posnum = "POS Number: " + TerminalNum+ "\n";
                                 String room= "Room Number: " + roomnumber + "\n";
                                 String table= "Table Number: " + tablenumber +"\n";
                                 String Printed= "Copy Printed: " + newactualcopyprinted +"\n";
@@ -480,7 +480,8 @@ public class PrintDuplicata extends AppCompatActivity {
 
                         if (cursor11 != null && cursor11.moveToFirst()) {
                             int columnIndexTotalAmount = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TTC);
-                            int columnIndexTotalTaxAmount = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_TX_1);
+
+                            int columnIndexTotalAmountWOTaxAmount = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_HT_A);
                             int columnIndexTimeCreated = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_TIME_CREATED);
                             int columnIndexDateCreated = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_DATE_CREATED);
                             int TotalTenderindex = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_PAID);
@@ -488,7 +489,9 @@ public class PrintDuplicata extends AppCompatActivity {
                             int QrCodeindex = cursor11.getColumnIndex(DatabaseHelper.TRANSACTION_MRA_QR);
 
                             totalAmount = cursor11.getDouble(columnIndexTotalAmount);
-                            TaxtotalAmount = cursor11.getDouble(columnIndexTotalTaxAmount);
+                            WOTaxtotalAmount=cursor11.getDouble(columnIndexTotalAmountWOTaxAmount);
+                            TaxtotalAmount = totalAmount -WOTaxtotalAmount;
+
                             DateCreated = cursor11.getString(columnIndexDateCreated);
                             timeCreated = cursor11.getString(columnIndexTimeCreated);
                             TenderAmount = cursor11.getDouble(TotalTenderindex);
@@ -502,7 +505,7 @@ public class PrintDuplicata extends AppCompatActivity {
                             String AmountWitoutVat= "Amount Excluding Vat  " ;
                             String Total= getString(R.string.Total);
                             String TVA= getString(R.string.Vat);
-                            double amountwvat= totalAmount - TaxtotalAmount;
+                            double amountwvat= WOTaxtotalAmount;
                             String formattedamountwvat = String.format("%.2f", amountwvat);
                             String TotalValue= "Rs " + formattedTotalAmount;
                             String TotalVAT= "Rs " + formattedTotalTAXAmount;
@@ -576,84 +579,46 @@ public class PrintDuplicata extends AppCompatActivity {
                         int TenderTypesPaddingpop = lineWidths - formattedtenderpop.length() - TenderTotalAmount.length();
                         service.printText(singlelineSeparator + "\n", null);
 
-                        // Enable bold text and set font size to 30
-                        byte[] boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
-                        service.sendRAWData(boldOnBytes, null);
-                        service.setFontSize(28, null);
-                        // Retrieve the total amount and total tax amount from the transactionheader table
+// Retrieve the total amount and total tax amount from the transactionheader table
                         Cursor cursorsetlement = mDatabaseHelper.getTransactionSettlementById(transactionIdInProgress);
+                        Log.d("transactionIdInProgress10", transactionIdInProgress);
 
-                        if (cursor != null && cursor.moveToFirst()) {
-                            int columnIndexPaymentName = cursorsetlement.getColumnIndex(DatabaseHelper.SETTLEMENT_PAYMENT_NAME);
-                            int columnIndexPaymentAmount = cursorsetlement.getColumnIndex(DatabaseHelper.SETTLEMENT_AMOUNT);
+                        if (cursorsetlement != null && cursorsetlement.moveToFirst()) {
+                            do {
+                                int columnIndexPaymentName = cursorsetlement.getColumnIndex(DatabaseHelper.SETTLEMENT_PAYMENT_NAME);
+                                int columnIndexPaymentAmount = cursorsetlement.getColumnIndex(DatabaseHelper.SETTLEMENT_AMOUNT);
 
-                            if (paymentName != null) {
-                                paymentName = cursorsetlement.getString(columnIndexPaymentName);
-                                settlementAmount = cursorsetlement.getDouble(columnIndexPaymentAmount);
-                                if (paymentName.equals("POP")) {
+                                if (columnIndexPaymentName != -1 && columnIndexPaymentAmount != -1) {
+                                    String paymentName = cursorsetlement.getString(columnIndexPaymentName);
+                                    double settlementAmount = cursorsetlement.getDouble(columnIndexPaymentAmount);
+                                    Log.d("paymentName", paymentName);
 
-                                    String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPaddingpop)) + formattedtenderpop;
-                                    service.printText(TenderTypesLine + "\n", null);
-
-                                }else {
-
-                                    String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
-                                    service.printText(TenderTypesLine + "\n", null);
-                                }
-
-                                // Disable bold text and reset font size
-                                byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
-                                service.sendRAWData(boldOffBytes, null);
-                                service.setFontSize(24, null);
-
-
-
-
-                                if (paymentName.equals("POP")) {
-                                    paymentName = "POP";
-                                    settlementAmount = totalAmount;
                                     String formattedSettlementAmount = String.format("%.2f", settlementAmount);
-                                    String TenderAmount= "Amount Paid with  " + paymentName ;
-                                    String formatteditemtender= "Rs "  + formattedSettlementAmount;
+                                    String TenderAmount = "Amount Paid in " + paymentName;
+                                    String formatteditemtender = "Rs " + formattedSettlementAmount;
                                     int settlementTypesPadding = lineWidth - formatteditemtender.length() - TenderAmount.length();
                                     String TenderItemsTypesLine = TenderAmount + " ".repeat(Math.max(0, settlementTypesPadding)) + formatteditemtender;
+
                                     service.printText(TenderItemsTypesLine + "\n", null);
-                                    // Update the table with settlement details
 
-                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                                    String transactionDate = dateFormat.format(new Date()); // Replace 'new Date()' with your actual transaction date
-                                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
-                                    String currentTime = timeFormat.format(new Date());
-                                    boolean updated = mDatabaseHelper.insertSettlementAmount(paymentName,settlementAmount, transactionIdInProgress, PosNum,transactionDate,currentTime, String.valueOf(roomid),tableid);
-
-
-                                    if (updated) {
-
-                                        //   Toast.makeText(getApplicationContext(), "Settlement amount insert for " + paymentName, Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        //  Toast.makeText(getApplicationContext(), "Failed to insert settlement amount for " + paymentName, Toast.LENGTH_SHORT).show();
+                                    // Additional logic for specific payment names (e.g., "POP")
+                                    if (paymentName.equals("POP")) {
+                                        // Additional printing or processing for "POP" payment
+                                        // This block is just an example of customization
+                                        service.printText("Processed POP Payment\n", null);
                                     }
                                 }
-
-
-
-
-                            } else {
-                                String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
-                                service.printText(TenderTypesLine + "\n", null);
-                                // Disable bold text and reset font size
-                                byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
-                                service.sendRAWData(boldOffBytes, null);
-                                service.setFontSize(24, null);
-                            }
-
-
-
-                        } else{
+                            } while (cursorsetlement.moveToNext()); // Move to the next row in the Cursor
+                        } else {
                             String TenderTypesLine = TenderTotalAmount + " ".repeat(Math.max(0, TenderTypesPadding)) + formattedtender;
                             service.printText(TenderTypesLine + "\n", null);
-
                         }
+
+// Close the Cursor to release resources
+                        if (cursorsetlement != null) {
+                            cursorsetlement.close();
+                        }
+
 
 
 
@@ -760,9 +725,7 @@ public class PrintDuplicata extends AppCompatActivity {
                                     do {
                                         int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
                                         String vatType = DrawerCursor.getString(columnIndexDrawer);
-                                        if (CashReturn > 0 || "true".equals(vatType)) {
-                                            service.openDrawer(null);
-                                        }
+
                                         vatTypesBuilder.append(vatType).append(", ");
                                     } while (DrawerCursor.moveToNext());
                                     DrawerCursor.close();
@@ -785,15 +748,6 @@ public class PrintDuplicata extends AppCompatActivity {
                         // Cut the paper
                         service.cutPaper(null);
 
-                        // Open the cash drawer
-                        byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
-                        service.sendRAWData(openDrawerBytes, null);
-                        // Open the cash drawer
-
-                        if(CashReturn > 0) {
-                            service.openDrawer(null);
-
-                        }
 
 
                         MainActivity mainActivity = MainActivity.getInstance();

@@ -21,6 +21,10 @@
         <item name="android:textSize">16sp</item>
         <!-- Add more attributes as per your requirement -->
     </style>
+    <style name="TransparentTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" >
         <item name="colorControlNormal">@color/white</item>

@@ -80,7 +80,7 @@ public class RoomsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_roomstable, container, false);
         // Get the current locale
-// Initialize SharedPreferences
+        // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
         // Use the modified getAllRooms() method to fetch rooms
         roomid = sharedPreferences.getInt("room_id", 0);
@@ -287,7 +287,7 @@ public class RoomsFragment extends Fragment {
                             sharedPreferences.edit().putInt("room_id", roomid).apply();
                         }
 
-// Here, you can dynamically update your UI based on the clicked item
+                        // Here, you can dynamically update your UI based on the clicked item
                         updateUIForClickedItem(id);
                     }
 

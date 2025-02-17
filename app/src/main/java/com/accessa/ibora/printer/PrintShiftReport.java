@@ -228,12 +228,16 @@ public class PrintShiftReport extends AppCompatActivity {
                             int covernumber= mDatabaseHelper.getSumNumberOfCoversbyreporttype(reportType);
                             String numberofcovers = "Number Of covers: " + covernumber;
                             String lastshift = "******: "+"Shift Number: " + shiftnumber+"******";
+                            // Get the current date and time
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String currentDateTime = dateFormat.format(new Date());
+                            String datetime = "Date/Time: " + currentDateTime;
 
                             String cashiename = "Cashier Name: " + Cashiername;
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
                             service.printText(lastshift + "\n\n", null);
-
+                            service.printText(datetime + "\n\n", null);
                             for (PrinterSetupPrefs setup : printerSetups) {
                                 printerpartname = setup.getName();
                                 printable = setup.isDrawerOpens();

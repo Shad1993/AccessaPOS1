@@ -147,7 +147,7 @@ public class PrintDailyReport extends AppCompatActivity {
 
                                 if( printerpartname.equals("Logo") && printable) {
 
-                                    printLogoAndReceipt(service, LogoPath, 100, 100);
+                                    printLogoAndReceipt(service, LogoPath, 600, 300);
 
                                 }
                             }
@@ -240,6 +240,7 @@ public class PrintDailyReport extends AppCompatActivity {
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
 
+
                             for (PrinterSetupPrefs setup : printerSetups) {
                                 printerpartname = setup.getName();
                                 printable = setup.isDrawerOpens();
@@ -275,8 +276,11 @@ public class PrintDailyReport extends AppCompatActivity {
                                 }
                             }
                         }
-
-
+                        // Get the current date and time
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String currentDateTime = dateFormat.format(new Date());
+                        String datetime = "Date/Time: " + currentDateTime;
+                        service.printText(datetime + "\n\n", null);
                             // Print a line separator
                             String lineSeparator = "=".repeat(lineWidth);
 
@@ -315,55 +319,56 @@ public class PrintDailyReport extends AppCompatActivity {
                         newDataList = fetchDataBasedOnReportType(reportType);
                         // Initialize the paymentAdapter
 
-                        int lineWidths= 48;
+                        int lineWidths = 48;
+
                         for (DataModel item : newDataList) {
                             String paymentName = item.getLongDescription();
                             double totalAmount = item.getTotalPrice();
                             String transactionid = item.getTransactionid();
                             String comment = item.getComment();
-                            int quantity= item.getQuantity();
-                            if (transactionid != null && transactionid.startsWith("CRN")) {
-                                // Transaction ID starts with "CRN"
-                                totalAmount=-totalAmount;
-                                // Implement your logic here
-                            } else {
-                                // Transaction ID does not start with "CRN"
-                                totalAmount=totalAmount;
+                            int quantity = item.getQuantity();
+
+                            // Check if paymentName is "----- CRN Transactions -----"
+                            if ("----- CRN Transactions -----".equals(paymentName)) {
+                                // Print refund header and skip further processing for this item
+                                service.printText("****Refund****\n", null);
+                                continue; // Skip to the next item
                             }
+
+                            // Check if transaction ID starts with "CRN"
+                            if (transactionid != null && transactionid.startsWith("CRN")) {
+                                totalAmount = -totalAmount; // Negate the total amount
+                                paymentName = "*" + paymentName; // Add "*" to the payment name
+                            }
+
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
+                            String formattedPaymentInfo = paymentName + " X " + quantity;
+                            String formattedAmount = " Rs " + formattedTotalAmount;
 
-
-                            String formattedPaymentInfo =  paymentName + " X " + quantity ;
-                            String formattedam=" Rs " + formattedTotalAmount;
-
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+                            int remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedAmount.length();
+                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
+
+                            // Special case for EVENTS
                             if ("EVENTS".equals(paymentName) && comment != null) {
+                                String commentsName = item.getComment();
+                                double totalAmounts = item.getTotalPrice();
+                                int quantitys = item.getQuantity();
+                                formattedTotalAmount = String.format("%.2f", totalAmounts);
 
+                                formattedPaymentInfo = "--->" + commentsName + " X " + quantitys;
+                                formattedAmount = "(" + " Rs " + formattedTotalAmount + ")";
 
+                                remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedAmount.length();
+                                paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
 
-                                    String commentsname = item.getComment();
-                                    double totalAmounts = item.getTotalPrice();
-                                    int quantitys= item.getQuantity();
-                                    formattedTotalAmount = String.format("%.2f", totalAmounts);
-
-
-                                    formattedPaymentInfo =  commentsname + " X " + quantitys ;
-                                    formattedam="("+" Rs " + formattedTotalAmount+ ")";
-                                    formattedPaymentInfo = "--->" + formattedPaymentInfo;
-                                    remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                                    paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
-
-                                    // Print the payment information for the current item
-                                    service.printText(paddedPaymentInfo + "\n", null);
-
+                                // Print the payment information for the current item
+                                service.printText(paddedPaymentInfo + "\n", null);
                             }
                         }
+
                         service.printText(lineSeparator + "\n", null);
 
 
@@ -390,38 +395,46 @@ public class PrintDailyReport extends AppCompatActivity {
                         for (CatDataModel item : CatDataList) {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
-                            int quantity= item.getTotalQuantity();
+                            int quantity = item.getTotalQuantity();
                             String transactionid = item.getTransactionid();
 
-                            if (transactionid != null && transactionid.startsWith("CRN")) {
-                                // Transaction ID starts with "CRN"
-                                totalAmount=-totalAmount;
-                                // Implement your logic here
+                            // Check if the category code is for a separator
+                            if ("---- Separator ----".equals(categorycode)) {
+                                // If it's the separator, print a line of dashes
+                                service.printText("*************Refund*************\n", null);
                             } else {
-                                // Transaction ID does not start with "CRN"
-                                totalAmount=totalAmount;
+                                // Normal processing for other categories
+                                if (transactionid != null && transactionid.startsWith("CRN")) {
+                                    // Transaction ID starts with "CRN", negate the total amount
+                                    totalAmount = -totalAmount;
+                                }
+
+                                Log.d("categorycode", categorycode);
+                                Log.d("quantity", String.valueOf(quantity));
+                                String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
+
+                                if (categorycode.equals("0")) {
+                                    CategoryName = "Menu Repas";
+                                }
+
+                                // Format the total amount to 2 decimal places
+                                String formattedTotalAmount = String.format("%.2f", totalAmount);
+
+                                // Format the payment information string
+                                String formattedPaymentInfo = CategoryName + " X " + quantity;
+                                String formattedam = " Rs " + formattedTotalAmount;
+
+                                // Calculate remaining space for padding
+                                int remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedam.length();
+
+                                // Pad the formatted payment information
+                                String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+
+                                // Print the payment information for the current item
+                                service.printText(paddedPaymentInfo + "\n", null);
                             }
-                            Log.d("categorycode" , String.valueOf(categorycode));
-                            Log.d("quantity" , String.valueOf(quantity));
-                            String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
-
-                            if (categorycode.equals("0")){
-
-                                CategoryName="Menu Repas";
-                            }
-                            String formattedTotalAmount = String.format("%.2f", totalAmount);
-
-
-                            String formattedPaymentInfo =  CategoryName + " X " + quantity ;
-                            String formattedam=" Rs " + formattedTotalAmount;
-
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
-
-                            // Print the payment information for the current item
-                            service.printText(paddedPaymentInfo + "\n", null);
                         }
+
                         service.printText(lineSeparator + "\n", null);
                         String TotalSettlement = "Sellers(Encaissement) ";
                         boldOnBytes = new byte[]{0x1B, 0x45, 0x01};
@@ -457,16 +470,32 @@ public class PrintDailyReport extends AppCompatActivity {
                                String formattedTotalAmount = String.format("%.2f", totalAmount);
 
                                 String formattedPaymentInfo = paymentName + " X " + quantity;
+
                                 String formattedAmount = " Rs " + formattedTotalAmount;
+
 
                                 int remainingSpace = lineWidth - formattedPaymentInfo.length() - formattedAmount.length();
 
                                 String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
 
+
                                 // Print the payment information for the current item
+
+
                                 service.printText(paddedPaymentInfo + "\n", null);
                             }
+                            double cashret = mDatabaseHelper.getSumCashReturn(reportType, Integer.parseInt(cashierId));
+                            if(cashret != 0 ) {
+                                String formattedCashAmount = String.format("%.2f", cashret);
 
+                                String formattedCashReturnInfo = "Change Returned";
+                                String formattedChangeAmount = " Rs- " + formattedCashAmount;
+                                int remainingSpacechange = lineWidth - formattedCashReturnInfo.length() - formattedChangeAmount.length();
+
+                                String paddedChangetInfo = formattedCashReturnInfo + " ".repeat(Math.max(0, remainingSpacechange)) + formattedChangeAmount;
+
+                                service.printText(paddedChangetInfo + "\n", null);
+                            }
 
                         }
 

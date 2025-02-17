@@ -207,8 +207,59 @@ public class FunctionFragment extends Fragment {
         CardView buttonsearchTable = view.findViewById(R.id.buttonSearchTable);
         CardView buttonShiftNumber = view.findViewById(R.id.btnSetShiftNumber);
         CardView selecttabletNumber = view.findViewById(R.id.btnselectroomtable);
+        CardView selecttakeaway = view.findViewById(R.id.btnselecttakeaway);
 
         boolean hasInProgressOrPRF=mDatabaseHelper.hasInProgressOrPRF();
+
+        selecttakeaway.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int levelNumber = Integer.parseInt(cashierLevel);
+                String Activity="selectTable_";
+                String tablenum="-2";
+                String roomnum="-2";
+                boolean canHigherAccessReceipt = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                boolean canAccessReceipt = mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber);
+                if (canHigherAccessReceipt ) {
+                    showPinDialog(Activity, () -> {
+                        showroomTablesPopup(v);
+                        saveDiningStatusToPreferences("Take Away");
+                        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("table_id", tablenum);
+
+                        editor.putInt("roomnum", Integer.parseInt(roomnum));
+                        editor.putInt("room_id", Integer.parseInt(roomnum));
+
+                        Log.d("roomtables", roomnum + " " + tablenum);
+                        editor.apply();
+                        notifyTableClicked(tablenum, roomnum);
+                        refreshsales(roomnum, tablenum);
+
+                        showNumberOfCoversDialogtakeaway(tablenum, roomnum);
+
+                    });
+                }
+                // Check permission for Receipts
+                else if (!canHigherAccessReceipt && canAccessReceipt) {
+                    SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", getActivity().MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("table_id", tablenum);
+
+                    editor.putInt("roomnum", Integer.parseInt(roomnum));
+                    editor.putInt("room_id", Integer.parseInt(roomnum));
+
+                    Log.d("roomtables", roomnum + " " + tablenum);
+                    editor.apply();
+                    notifyTableClicked(tablenum, roomnum);
+                    refreshsales(roomnum, tablenum);
+                    showNumberOfCoversDialogtakeaway(tablenum, roomnum);
+                } else {
+                    Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
         selecttabletNumber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -356,7 +407,9 @@ public class FunctionFragment extends Fragment {
                                 totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                                 totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                                 totalAmount = totalAmountwithoutvat + totalTax;
-
+                                Log.d("totalTax", String.valueOf(totalTax));
+                                Log.d("totalAmountwithoutvat", String.valueOf(totalAmountwithoutvat));
+                                Log.d("totalAmount", String.valueOf(totalAmount));
 
                                 // Format totalTax and totalAmount to display only two decimal places
                                 formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
@@ -400,7 +453,9 @@ public class FunctionFragment extends Fragment {
                                 double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                                 double totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                                 double totalAmount = totalAmountwithoutvat + totalTax;
-
+                                Log.d("totalTax", String.valueOf(totalTax));
+                                Log.d("totalAmountwithoutvat", String.valueOf(totalAmountwithoutvat));
+                                Log.d("totalAmount", String.valueOf(totalAmount));
                                 // Update TextViews
                                 TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
                                 TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
@@ -473,6 +528,7 @@ public class FunctionFragment extends Fragment {
                                 startActivity(intent);
                             }
                         });
+
                         MssqlDataSync mssqlDataSync = new MssqlDataSync();
                         mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
                         mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
@@ -598,7 +654,9 @@ public class FunctionFragment extends Fragment {
                             totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                             totalAmount = totalAmountwithoutvat + totalTax;
 
-
+                            Log.d("totalTax", String.valueOf(totalTax));
+                            Log.d("totalAmountwithoutvat", String.valueOf(totalAmountwithoutvat));
+                            Log.d("totalAmount", String.valueOf(totalAmount));
                             // Format totalTax and totalAmount to display only two decimal places
                             formattedTotalTax[0] = String.format(Locale.getDefault(), "%.2f", totalTax);
                             formattedTotalAmount[0] = String.format(Locale.getDefault(), "%.2f", totalAmount);
@@ -641,7 +699,9 @@ public class FunctionFragment extends Fragment {
                             double totalTax = mDatabaseHelper.getTotalTaxBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                             double totalAmountwithoutvat = mDatabaseHelper.getTotalAmountBasedOnReportTypeAndShift(selectedReportType[0], Integer.parseInt(selectedshift[0]));
                             double totalAmount = totalAmountwithoutvat + totalTax;
-
+                            Log.d("totalTax", String.valueOf(totalTax));
+                            Log.d("totalAmountwithoutvat", String.valueOf(totalAmountwithoutvat));
+                            Log.d("totalAmount", String.valueOf(totalAmount));
                             // Update TextViews
                             TextView textViewTotalTax = dialogView.findViewById(R.id.textViewTotalTax);
                             TextView textViewTotalAmount = dialogView.findViewById(R.id.totalAmounttextview);
@@ -759,6 +819,8 @@ public class FunctionFragment extends Fragment {
                 if (level >= 5) {
 
                     try {
+                        Log.d("drawer1", String.valueOf(level));
+
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
@@ -908,6 +970,7 @@ public class FunctionFragment extends Fragment {
                 if (level >= 5) {
 
                     try {
+                        Log.d("drawer2", "drawer2");
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
@@ -1048,6 +1111,7 @@ public class FunctionFragment extends Fragment {
                 if (canHigherAccessReceipt ) {
                     showPinDialog(Activity, () -> {
                         try {
+                            Log.d("drawer3", "drawer3");
                             woyouService.openDrawer(null);
                         } catch (RemoteException e) {
                             throw new RuntimeException(e);
@@ -1177,6 +1241,7 @@ public class FunctionFragment extends Fragment {
                 // Check permission for Receipts
                 else if (!canHigherAccessReceipt && canAccessReceipt) {
                     try {
+                        Log.d("drawer4", "drawer4");
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
@@ -1319,6 +1384,7 @@ public class FunctionFragment extends Fragment {
                 if (canHigherAccessReceipt ) {
                     showPinDialog(Activity, () -> {
                         try {
+                            Log.d("drawer5", "drawer5");
                             woyouService.openDrawer(null);
                         } catch (RemoteException e) {
                             throw new RuntimeException(e);
@@ -1328,6 +1394,7 @@ public class FunctionFragment extends Fragment {
                 // Check permission for Receipts
                 else if (!canHigherAccessReceipt && canAccessReceipt) {
                     try {
+                        Log.d("drawer6", "drawer6");
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
@@ -1823,7 +1890,12 @@ public class FunctionFragment extends Fragment {
                                 if (latesttransId == null) {
                                     notifyTableClicked(tableNum, roomnum);
                                     refreshsales(roomnum, tableNum);
-                                    showSalesTypePopup(tableNum, roomnum,dialog);
+                                 //   showSalesTypePopup(tableNum, roomnum,dialog);
+                                    saveDiningStatusToPreferences("Dine In");
+
+                                    // Close the dialog and proceed to the next step
+                                    dialog.dismiss();
+                                    showNumberOfCoversDialog(tableNum, roomnum, dialog);
                                     mRoomAdapter.setSelectedTableId(id, tableNum);
                                     mDatabaseHelper.setItemsUnselected(roomnum, tableNum);
 
@@ -1985,8 +2057,8 @@ public class FunctionFragment extends Fragment {
                 String oldTransactionId=mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId),selectedTableNum,oldstatusType1);
                 int totalcovers=0;
 
-                    int table1cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(Integer.parseInt(selectedTableNum));
-                    int table2cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(Integer.parseInt(selectedTableToMerge));
+                    int table1cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableNum);
+                    int table2cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableToMerge);
 
                     totalcovers = table1cover + table2cover;
 
@@ -2002,6 +2074,8 @@ public class FunctionFragment extends Fragment {
         builder.setPositiveButton("Transfer", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
+
                 // Handle transfer action here
                 transferTable(selectedTableNum, roomId);
             }
@@ -2046,8 +2120,14 @@ public class FunctionFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 selectedTableToTransfer = tableArray[which].toString();  // Store the selected table to merge
-
-                transfer(selectedTableNum, selectedTableToTransfer,roomId);
+                int table1cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableNum);
+                int table2cover = mDatabaseHelper.getSumOfCoverCountByTableNumber(selectedTableToTransfer);
+                Log.d("table1cover", String.valueOf(table1cover));
+                Log.d("table2cover", String.valueOf(table2cover));
+                Log.d("selectedTableNum", String.valueOf(selectedTableNum));
+                Log.d("selectedTableToTransfer", String.valueOf(selectedTableToTransfer));
+                int totalcovers = table1cover + table2cover;
+                transfer(selectedTableNum, selectedTableToTransfer,roomId,totalcovers);
                 // Call the interface method to notify the MainActivity about the table click
 
             }
@@ -2056,11 +2136,12 @@ public class FunctionFragment extends Fragment {
 
         builder.show();
     }
-    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId) {
+    private void transfer(String selectedTableNum, String selectedTableToTransfer, String roomId,int totalcover) {
         // Perform the transfer operation by updating the database
         // For example, update the table number of the selected table with the new table number
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
         Log.d("selectedTableNum", selectedTableNum);
+        Log.d("totalcover", String.valueOf(totalcover));
         Log.d("selectedTableToTransfer", selectedTableToTransfer);
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomId),selectedTableToTransfer);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId),selectedTableToTransfer,statusType);
@@ -2069,7 +2150,10 @@ public class FunctionFragment extends Fragment {
         if (latesttransId != null) {
             //  Log.d("transactionIdInProgress", transactionIdInProgress);
             mDatabaseHelper.updateTableNumber(latesttransId,selectedTableNum, selectedTableToTransfer, roomId);
-            mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId,latesttransId);
+            mDatabaseHelper.updateTransactionTableNumber(selectedTableNum, selectedTableToTransfer, roomId,latesttransId,totalcover);
+            mDatabaseHelper.updateCoverCount(totalcover, selectedTableToTransfer, Integer.parseInt(roomId));
+            mDatabaseHelper.updateCoverCount(0, selectedTableNum, Integer.parseInt(roomId));
+
             if (selectedTableNum.startsWith("T T")) {
                 selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
                 unmergeTable(selectedTableNum);
@@ -2079,6 +2163,9 @@ public class FunctionFragment extends Fragment {
             // Handle the case where latesttransId is null (optional)
             mDatabaseHelper.updateTableNumberfornew(selectedTableNum, selectedTableToTransfer, roomId);
             mDatabaseHelper.updateTransactionTableNumberFornew(selectedTableNum, selectedTableToTransfer, roomId);
+            mDatabaseHelper.updateCoverCount(totalcover, selectedTableToTransfer, Integer.parseInt(roomId));
+            mDatabaseHelper.updateCoverCount(0, selectedTableNum, Integer.parseInt(roomId));
+
             if (selectedTableNum.startsWith("T T")) {
                 selectedTableNum = selectedTableNum.replaceFirst("T", ""); // Remove first "T " from the beginning
                 unmergeTable(selectedTableNum);
@@ -2370,6 +2457,7 @@ public class FunctionFragment extends Fragment {
             transactionBuilder.create().show();
         }
     }
+
     private void showNumberOfCoversDialog(String tablenum,String roomnum,AlertDialog dialogs) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -2463,6 +2551,101 @@ public class FunctionFragment extends Fragment {
         // Show the dialog
         builder.create().show();
     }
+    private void showNumberOfCoversDialogtakeaway(String tablenum,String roomnum) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+
+        // Inflate the custom layout
+        View dialogView = inflater.inflate(R.layout.number_of_covers_dialog, null);
+        builder.setView(dialogView);
+
+        notifyTableClicked(tablenum, roomnum);
+        refreshsales(roomnum, tablenum);
+        // Get references to the EditText and buttons
+        final EditText numberEditText = dialogView.findViewById(R.id.numberEditText);
+        Button button0 = dialogView.findViewById(R.id.button0);
+        Button button1 = dialogView.findViewById(R.id.button1);
+        Button button2 = dialogView.findViewById(R.id.button2);
+        Button button3 = dialogView.findViewById(R.id.button3);
+        Button button4 = dialogView.findViewById(R.id.button4);
+        Button button5 = dialogView.findViewById(R.id.button5);
+        Button button6 = dialogView.findViewById(R.id.button6);
+        Button button7 = dialogView.findViewById(R.id.button7);
+        Button button8 = dialogView.findViewById(R.id.button8);
+        Button button9 = dialogView.findViewById(R.id.button9);
+        Button buttonClear = dialogView.findViewById(R.id.buttonClear);
+        Button buttonDelete= dialogView.findViewById(R.id.buttonDelete);
+
+        // Set button click listeners to append number to the EditText
+        View.OnClickListener numberClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Button button = (Button) v;
+                String currentText = numberEditText.getText().toString();
+                numberEditText.setText(currentText + button.getText().toString());
+            }
+        };
+
+        button0.setOnClickListener(numberClickListener);
+        button1.setOnClickListener(numberClickListener);
+        button2.setOnClickListener(numberClickListener);
+        button3.setOnClickListener(numberClickListener);
+        button4.setOnClickListener(numberClickListener);
+        button5.setOnClickListener(numberClickListener);
+        button6.setOnClickListener(numberClickListener);
+        button7.setOnClickListener(numberClickListener);
+        button8.setOnClickListener(numberClickListener);
+        button9.setOnClickListener(numberClickListener);
+
+
+
+        // Set the same listener for all other buttons...
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                numberEditText.setText("");
+            }
+        });
+
+        buttonDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String currentText = numberEditText.getText().toString();
+                if (!currentText.isEmpty()) {
+                    numberEditText.setText(currentText.substring(0, currentText.length() - 1));
+                }
+            }
+        });
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String numberOfCoversStr = numberEditText.getText().toString().trim();
+                if (!numberOfCoversStr.isEmpty()) {
+                    try {
+                        int numberOfCovers = Integer.parseInt(numberOfCoversStr);
+                        processNumberOfCoverstakeaway( numberOfCovers,roomnum,tablenum);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Number of covers cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        // Show the dialog
+        builder.create().show();
+    }
     private void processNumberOfCovers(int numberOfCovers,String roomnum, String tableNum,AlertDialog dialogs) {
         // Use the numberOfCovers variable as needed in your code
         // For example, store it as a class member or pass it to another method
@@ -2479,7 +2662,22 @@ public class FunctionFragment extends Fragment {
         mRoomAdapter.swapCursor(filteredCursor);
         dialogs.dismiss();
     }
+    private void processNumberOfCoverstakeaway(int numberOfCovers,String roomnum, String tableNum) {
+        // Use the numberOfCovers variable as needed in your code
+        // For example, store it as a class member or pass it to another method
+        Log.d("NumberOfCoversta", "Number of covers entered: " + numberOfCovers);
 
+        // Continue with your application logic after setting numberOfCovers
+        // Update the room ID in SharedPreferences
+
+
+        mDatabaseHelper.updateCoverCount(numberOfCovers,tableNum,Integer.parseInt(roomnum));
+        mRoomAdapter.notifyDataSetChanged();
+        Cursor  filteredCursor = mDatabaseHelper.getTablesFilteredByMerged(String.valueOf(roomid));
+
+        mRoomAdapter.swapCursor(filteredCursor);
+
+    }
     public void showSecondaryScreen(List<String> data) {
         // Obtain a real secondary screen
         Display presentationDisplay = getPresentationDisplay();

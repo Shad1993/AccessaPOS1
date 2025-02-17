@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -296,6 +297,8 @@ public class PrintCoupon extends AppCompatActivity {
                                         int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
                                         String vatType = DrawerCursor.getString(columnIndexDrawer);
                                         if (CashReturn > 0 || "true".equals(vatType)) {
+                                            Log.d("drawer12", "drawer12");
+
                                             service.openDrawer(null);
                                         }
                                         vatTypesBuilder.append(vatType).append(", ");
@@ -320,6 +323,8 @@ public class PrintCoupon extends AppCompatActivity {
                         // Open the cash drawer
 
                         if(CashReturn > 0) {
+                            Log.d("drawer13", "drawer13");
+
                             service.openDrawer(null);
 
                         }

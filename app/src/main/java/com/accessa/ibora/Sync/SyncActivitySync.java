@@ -57,6 +57,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.Related_ITEM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.SEAT_COUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.SKU;
 import static com.accessa.ibora.product.items.DatabaseHelper.STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.ShopNum;
 import static com.accessa.ibora.product.items.DatabaseHelper.SoldBy;
 import static com.accessa.ibora.product.items.DatabaseHelper.SubCategory;
 import static com.accessa.ibora.product.items.DatabaseHelper.SubDepartment;
@@ -65,6 +66,7 @@ import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_COUNT;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.TABLE_NUMBER;
 import static com.accessa.ibora.product.items.DatabaseHelper.TaxCode;
+import static com.accessa.ibora.product.items.DatabaseHelper.TillNum;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount2;
 import static com.accessa.ibora.product.items.DatabaseHelper.TotalDiscount3;
@@ -186,8 +188,10 @@ public class SyncActivitySync extends IntentService {
 
         try {
             // Step 1: Fetch data from the local SQLite database
+            SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
             mDatabaseHelper = new DatabaseHelper(this);
             Cursor localCursor = mDatabaseHelper.getAllItems();
+            String _zoneid = preferences.getString("_zone", null);
 
             getdataFromMssql(conn);
             getCategoriesFromMssql(conn);
@@ -200,7 +204,7 @@ public class SyncActivitySync extends IntentService {
             getAndInsertDiscountAndCouponData(conn);
              getAndInsertCostData(conn);
             getRoomsAndTablesFromMssql(conn);
-            getItemsFromMssql(conn);
+            getItemsFromMssql(conn, Integer.parseInt(_zoneid));
             getAndInsertStdAccessData(conn);
             getAndInsertBuyerData(conn);
         } catch (Exception e) {
@@ -218,7 +222,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from Buyer_Table
-            String selectBuyerQuery = "SELECT * FROM Buyer_Table";
+            String selectBuyerQuery = "SELECT * FROM iBoraPOS_Buyer_Table";
             resultSet = statement.executeQuery(selectBuyerQuery);
 
             // Process each buyer entry
@@ -271,7 +275,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from Cost table
-            String selectCostQuery = "SELECT * FROM Cost";
+            String selectCostQuery = "SELECT * FROM iBoraPOS_Cost";
             resultSet = statement.executeQuery(selectCostQuery);
 
             // Process each cost entry
@@ -316,7 +320,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the Vendor table
-            String selectQuery = "SELECT * FROM Vendor_pos";
+            String selectQuery = "SELECT * FROM iBoraPOS_Vendor_pos";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each vendor entry
@@ -375,7 +379,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from Discount table
-            String selectDiscountQuery = "SELECT * FROM Discount";
+            String selectDiscountQuery = "SELECT * FROM iBoraPOS_Discount";
             resultSet = statement.executeQuery(selectDiscountQuery);
 
             // Process each discount entry
@@ -442,7 +446,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from SupplementTable
-            String selectSupplementTableQuery = "SELECT * FROM SupplementTable";
+            String selectSupplementTableQuery = "SELECT * FROM iBoraPOS_SupplementTable";
             resultSet = statement.executeQuery(selectSupplementTableQuery);
 
             // Process each supplement entry
@@ -463,7 +467,7 @@ public class SyncActivitySync extends IntentService {
             resultSet.close();
 
             // Select all data from SupplementTableName
-            String selectSupplementTableNameQuery = "SELECT * FROM SupplementTableName";
+            String selectSupplementTableNameQuery = "SELECT * FROM iBoraPOS_SupplementTableName";
             resultSet = statement.executeQuery(selectSupplementTableNameQuery);
 
             // Process each supplement option entry
@@ -504,12 +508,12 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from OptionTable
-            String selectOptionTableQuery = "SELECT * FROM OptionTable";
+            String selectOptionTableQuery = "SELECT * FROM iBoraPOS_OptionTable";
             resultSet = statement.executeQuery(selectOptionTableQuery);
 
             // Process each option entry
             while (resultSet.next()) {
-                int id = resultSet.getInt("id");
+                int id = resultSet.getInt("_id");
                 String optionName = resultSet.getString("optionName").trim();
 
                 // Insert the trimmed data into the local database
@@ -520,7 +524,7 @@ public class SyncActivitySync extends IntentService {
             resultSet.close();
 
             // Select all data from Options
-            String selectOptionsQuery = "SELECT * FROM Options";
+            String selectOptionsQuery = "SELECT * FROM iBoraPOS_Options";
             resultSet = statement.executeQuery(selectOptionsQuery);
 
             // Process each options entry
@@ -529,7 +533,7 @@ public class SyncActivitySync extends IntentService {
                 int id = resultSet.getInt("id");
                 int variantItemId = resultSet.getInt("variantItemId");
                 String barcode = resultSet.getString("barcode").trim();
-                String desc = resultSet.getString("Desc").trim();
+                String desc = resultSet.getString("Description").trim();
                 BigDecimal price = resultSet.getBigDecimal("Price");
 
                 // Insert the trimmed data into the local database
@@ -562,7 +566,7 @@ public class SyncActivitySync extends IntentService {
 
         try {
             dbManager.open();
-            String selectQuery = "SELECT * FROM SubCategory";
+            String selectQuery = "SELECT * FROM iBoraPOS_SubCategory";
             statement = conn.prepareStatement(selectQuery);
             resultSet = statement.executeQuery();
 
@@ -606,7 +610,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the SubDepartment table
-            String selectQuery = "SELECT * FROM SubDepartment";
+            String selectQuery = "SELECT * FROM iBoraPOS_SubDepartment";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each sub-department entry
@@ -654,7 +658,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();  // Create MSSQL statement
 
             // Query to get data from MSSQL Category table
-            String selectQuery = "SELECT * FROM Category";
+            String selectQuery = "SELECT * FROM iBoraPOS_Category";
             resultSet = statement.executeQuery(selectQuery);
 
             Log.d("CategoryQuery", selectQuery);
@@ -699,7 +703,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from the Department table
-            String selectQuery = "SELECT * FROM Department";
+            String selectQuery = "SELECT * FROM iBoraPOS_Department";
             resultSet = statement.executeQuery(selectQuery);
 
             // Process each department entry
@@ -748,7 +752,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Get total rooms
-            String selectQuery = "SELECT COUNT(*) as totalrooms FROM rooms";
+            String selectQuery = "SELECT COUNT(*) as totalrooms FROM iBoraPOS_Rooms";
             resultSet = statement.executeQuery(selectQuery);
             if (resultSet.next()) {
                 int totalItems = resultSet.getInt("totalrooms");
@@ -756,7 +760,7 @@ public class SyncActivitySync extends IntentService {
                     showToast("Total Rooms in MSSQL database: " + totalItems);
 
                     // Get tables data
-                    String tablesQuery = "SELECT * FROM tables";
+                    String tablesQuery = "SELECT * FROM iBoraPOS_Tables";
                     tablestatement = conn.prepareStatement(tablesQuery);
                     tablesResultSet = tablestatement.executeQuery();
 
@@ -771,11 +775,10 @@ public class SyncActivitySync extends IntentService {
                         String status = tablesResultSet.getString(STATUS);
                         String merged = tablesResultSet.getString(MERGED);
                         String mergeSetid = tablesResultSet.getString(MERGED_SET_ID);
-                        int RoomNum = tablesResultSet.getInt("RoomNum");
-                        int TableNum = tablesResultSet.getInt("TillNum");
+
 
                         // Insert or update data into the local database
-                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid, RoomNum, TableNum);
+                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid);
 
                         // Process rooms data
                         String query = "SELECT * FROM rooms";
@@ -785,8 +788,8 @@ public class SyncActivitySync extends IntentService {
                             int _id = resultSet.getInt(ID);
                             String roomname = resultSet.getString(ROOM_NAME);
                             String tablecount = resultSet.getString(TABLE_COUNT);
-                            RoomNum = resultSet.getInt("RoomNum");
-                            TableNum = resultSet.getInt("TillNum");
+                           int RoomNum = resultSet.getInt("RoomNum");
+                            int TableNum = resultSet.getInt("TillNum");
 
                             databaseHelper.insertroomsDatas(_id, roomname, tablecount, RoomNum, TableNum);
                         }
@@ -819,10 +822,9 @@ public class SyncActivitySync extends IntentService {
     }
 
 
-    private void getItemsFromMssql(Connection conn) {
-
+    private void getItemsFromMssql(Connection conn,int tillZoneId) {
         try {
-            String selectQuery = "SELECT COUNT(*) as totalItems FROM Items";
+            String selectQuery = "SELECT COUNT(*) as totalItems FROM iBoraPOS_Items";
             Statement statement = conn.createStatement();
             DBManager dbManager = new DBManager(this);
             dbManager.open();
@@ -836,7 +838,7 @@ public class SyncActivitySync extends IntentService {
                     showToast("Total Items in MSSQL database: " + totalItems);
                     // Execute your SQL query
 
-                    String usersQuery = "SELECT * FROM Users ";
+                    String usersQuery = "SELECT * FROM iBoraPOS_Users ";
                     PreparedStatement usersStatement = conn.prepareStatement(usersQuery);
 
                     ResultSet usersResultSet = usersStatement.executeQuery();
@@ -857,18 +859,29 @@ public class SyncActivitySync extends IntentService {
                         databaseHelper.insertUserDatas(cashorId, pin, cashorLevel, cashorName, cashorShop, cashorDepartment, dateCreatedUsers, lastModifiedUsers);
                     }
 
-                    String query = "SELECT * FROM Items";
-                    resultSets = statement.executeQuery(query);
-                    Log.d("items", query);
+                    String itemsQuery =
+                            "SELECT i.* " +
+                                    "FROM iBoraPOS_Items i " +
+                                    "INNER JOIN iBoraPOS_ItemPerZone z " +
+                                    "ON i.Barcode = z.Item_Barcode " +
+                                    "WHERE z.ZoneID = ?";
+                    PreparedStatement preparedStatement = conn.prepareStatement(itemsQuery);
+                    preparedStatement.setInt(1, tillZoneId); // Bind the ZoneID of the till
+                    resultSets = preparedStatement.executeQuery();
+
+
+
                     while (resultSets.next()) {
                         // Process each row of data here
                         String _id= resultSets.getString(_ID);
                         String barcode = resultSets.getString(Barcode);
                         String relateditemid = resultSets.getString(Related_ITEM_ID);
+
                         String itemname = resultSets.getString(Name);
                         String desc = resultSets.getString(DESC);
                         String category = resultSets.getString(Category);
                         String subcategory = resultSets.getString(SubCategory);
+
                         String quantity = resultSets.getString(Quantity);
                         String department = resultSets.getString(Department);
                         String longDescription = resultSets.getString(LongDescription);
@@ -907,6 +920,9 @@ public class SyncActivitySync extends IntentService {
                         String totalDiscount2 = resultSets.getString(TotalDiscount2);
                         String totalDiscount3 = resultSets.getString(TotalDiscount3);
                         String Hasoptions = resultSets.getString(hasoptions);
+                        Log.e("Hasoptions1",Hasoptions);
+
+
                         if(Hasoptions.equals("True") || Hasoptions.equals("1")){
                             Hasoptions="true";
                         } else if (Hasoptions.equals("0") || Hasoptions.equals("False")) {
@@ -921,34 +937,27 @@ public class SyncActivitySync extends IntentService {
                         String Related_item5 = resultSets.getString(related_item5);
                         //hasSupplements
                         String HasSupplements = resultSets.getString(hasSupplements);
+                        Log.e("Related_item1",Related_item);
+                        Log.e("HasSupplements1",HasSupplements);
                         if(HasSupplements.equals("True") || HasSupplements.equals("1")){
                             HasSupplements="true";
                         } else if (HasSupplements.equals("0") || HasSupplements.equals("False")) {
                             HasSupplements="false";
                         }
                         //relatedSupplements
-                        String RelatedSupplements = resultSets.getString(relatedSupplements);
-                        // int ShopNums = resultSets.getInt(ShopNum);
-                        //int TillNums = resultSets.getInt(TillNum);
+                        int RelatedSupplements = resultSets.getInt(relatedSupplements);
 
-                        Log.e("Hasoptions",Hasoptions);
-                        Log.e("Related_item",Related_item);
+                        int ShopNums = resultSets.getInt(ShopNum);
+                        int TillNums = resultSets.getInt(TillNum);
 
-                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, relateditemid,category, subcategory,barcode, Float.parseFloat(weight), department,
+                        databaseHelper.insertItemsDatas(_id,itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount,relateditemid, category,subcategory, barcode, Float.parseFloat(weight), department,
                                 subDepartment, longDescription, quantity, expiryDate, vAT,
                                 availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
                                 nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
 
-
-                        // dbManager.insertwithnewbarcode(itemname,Comment,RelatedSupplements, desc, price,price2,price3,rateDiscount,amountDiscount, category, barcode, Float.parseFloat(weight), department,
-                        //             subDepartment, longDescription, quantity, expiryDate, vAT,
-                        //           availableForSale, soldBy, image, variant, sku, cost, userId, dateCreated, lastModified,Hasoptions,
-                        //          nature, currency, itemCode, taxCode, totalDiscount,totalDiscount2,totalDiscount3, Double.parseDouble(priceAfterDiscount),Double.parseDouble(priceAfterDiscount2),Double.parseDouble(priceAfterDiscount3),Related_item,Related_item2,Related_item3,Related_item4,Related_item5,HasSupplements, syncStatus);
-
                         // Redirect to the Product activity
-                        Intent intent = new Intent(SyncActivitySync.this, login.class);
-
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        Intent intent = new Intent(SyncActivitySync.this, Product.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     }
 
@@ -957,7 +966,6 @@ public class SyncActivitySync extends IntentService {
                 }
             }
             resultSets.close();
-
             statement.close();
             dbManager.close();
         } catch (SQLException se) {
@@ -977,7 +985,7 @@ public class SyncActivitySync extends IntentService {
             statement = conn.createStatement();
 
             // Select all data from std_access table
-            String selectStdAccessQuery = "SELECT * FROM std_access";
+            String selectStdAccessQuery = "SELECT * FROM iBoraPOS_std_access";
             resultSet = statement.executeQuery(selectStdAccessQuery);
 
             // Process each std_access entry
@@ -1080,7 +1088,7 @@ public class SyncActivitySync extends IntentService {
     private void getdataFromMssql(Connection conn) {
 
         try {
-            String selectQuery = "SELECT COUNT(*) as totalItems FROM std_access";
+            String selectQuery = "SELECT COUNT(*) as totalItems FROM iBoraPOS_std_access";
             Statement statement = conn.createStatement();
             DBManager dbManager = new DBManager(this);
             dbManager.open();
@@ -1095,7 +1103,7 @@ public class SyncActivitySync extends IntentService {
 
 
 
-                            String stdAccessQuery =  "SELECT * FROM std_access ";
+                            String stdAccessQuery =  "SELECT * FROM iBoraPOS_std_access ";
                             PreparedStatement stdAccessStatement = conn.prepareStatement(stdAccessQuery);
 
                             ResultSet stdAccessResultSet = stdAccessStatement.executeQuery();

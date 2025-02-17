@@ -186,7 +186,7 @@ private List<ItemData> selectedItems;
                         // Now, you can use selectedTransactionIds in your loop
                         for (String transactionId : selectedTransactionIds) {
                             // Retrieve the total amount and total tax amount from the transactionheader table
-                            Cursor cursor = mDatabaseHelper.getTransactionHeaderids(transactionId);
+                            Cursor cursor = mDatabaseHelper.getTransactionHeaderIds(transactionId);
                             int currentCounter = 1; // Default value if no data is present in the table
 
                             if (cursor != null && cursor.moveToFirst()) {

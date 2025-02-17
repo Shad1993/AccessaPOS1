@@ -73,7 +73,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         public TextView PriceTextView;
         public TextView QuantityTextView;
         private TextView ItemIdTextView,CommentTextView;
-        public ImageView relatedOptionIcon, commenticon; // Add this line
+        public ImageView relatedOptionIcon, commenticon,discountcon; // Add this line
 
         CheckBox checkBox;
 
@@ -132,6 +132,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
         String price = mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TOTAL_PRICE));
         String comment=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_COMMENT));
         String senttoKitchen=mCursor.getString(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_SentToKitchen));
+        double totaldisc = mCursor.getDouble(mCursor.getColumnIndex(DatabaseHelper.TRANSACTION_TOTAL_DISCOUNT));
         String famille= mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(uniques));
          String CatName=mDatabaseHelper.getCatNameById(famille);
         // Limit the description length to a certain number of characters
@@ -198,6 +199,20 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.ItemViewHo
             params.leftMargin = 0; // Reset the left margin if there's no relatedOptionId or description starts with "SUP"
             holder.itemView.setLayoutParams(params);
         }
+
+    /*    if (totaldisc >0 ) {
+            holder.relatedOptionIcon.setVisibility(View.VISIBLE);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+            params.leftMargin = 50; // Adjust the left margin as needed
+            holder.itemView.setLayoutParams(params);
+        } else {
+            holder.relatedOptionIcon.setVisibility(View.GONE);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+            params.leftMargin = 0; // Reset the left margin if there's no relatedOptionId or description starts with "SUP"
+            holder.itemView.setLayoutParams(params);
+        }
+
+     */
     }
     public void uncheckAllCheckboxes() {
         // Clear the list of checked items

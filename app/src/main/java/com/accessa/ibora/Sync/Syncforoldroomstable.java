@@ -192,11 +192,10 @@ public class Syncforoldroomstable extends IntentService {
                         String status = tablesResultSet.getString(STATUS);
                         String merged = tablesResultSet.getString(MERGED);
                         String mergeSetid = tablesResultSet.getString(MERGED_SET_ID);
-                        int RoomNum = tablesResultSet.getInt("RoomNum");
-                        int TableNum = tablesResultSet.getInt("TillNum");
+
 
                         // Insert or update data into the local database
-                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid, RoomNum, TableNum);
+                        databaseHelper.inserttablesDatas(tableId, roomids, TableNumber, seatCount, waiterName, status, merged, mergeSetid);
 
                         // Process rooms data
                         String query = "SELECT * FROM rooms";
@@ -206,8 +205,8 @@ public class Syncforoldroomstable extends IntentService {
                             int _id = resultSet.getInt(ID);
                             String roomname = resultSet.getString(ROOM_NAME);
                             String tablecount = resultSet.getString(TABLE_COUNT);
-                            RoomNum = resultSet.getInt("RoomNum");
-                            TableNum = resultSet.getInt("TillNum");
+                         int   RoomNum = resultSet.getInt("RoomNum");
+                          int  TableNum = resultSet.getInt("TillNum");
 
                             databaseHelper.insertroomsDatas(_id, roomname, tablecount, RoomNum, TableNum);
                         }

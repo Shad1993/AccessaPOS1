@@ -17,6 +17,8 @@ import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_CashRetur
 import static com.accessa.ibora.product.items.DatabaseHelper.FINANCIAL_TABLE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.SETTLEMENT_SHOP_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_SHIFT_NUMBER;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 import static com.accessa.ibora.product.items.DatabaseHelper.getCurrentDateTime;
 
 import android.app.AlertDialog;
@@ -128,6 +130,7 @@ public class validateticketDialogFragment extends DialogFragment  {
     private EditText clickedEditText;
     private SalesFragment.ItemAddedListener itemAddedListener;
     private String roomid;
+    private String name;
     private DBManager Xdatabasemanager;
     private RecyclerView mRecyclerView;
 
@@ -329,7 +332,7 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                  id = idTextView.getText().toString();
                 String qrCode = qrTextView.getText().toString();
-                String name = nameTextView.getText().toString();
+                 name = nameTextView.getText().toString();
                 double amountReceived = 0.0;
                 if (!amountReceivedEditText.getText().toString().isEmpty()) {
                     amountReceived = Double.parseDouble(amountReceivedEditText.getText().toString());
@@ -339,17 +342,41 @@ public class validateticketDialogFragment extends DialogFragment  {
 
                 // Get DisplayPhoneNumber for a specific payment method ID
                 String displayPhoneNumber = mDatabaseHelper.getDisplayPhoneNumberByPaymentMethodId(id); // Replace "1" with actual ID
-                if ((name.equals("Cash") || name.equals("Cheque")) && amountReceived!=0){
 
+                Cursor drawerCursor = null;
+                try {
+                    // Fetch the drawer configuration from the database
+                    drawerCursor = mDatabaseHelper.getDistinctDrawerconfig(name);
 
-
-                    try {
-                        woyouService.openDrawer(null);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
+                    if (drawerCursor != null && drawerCursor.moveToFirst()) {
+                        int columnIndexDrawer = drawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
+                        if (columnIndexDrawer != -1) { // Ensure column index is valid
+                            String drawerOpen = drawerCursor.getString(columnIndexDrawer);
+                            if ("true".equals(drawerOpen) && amountReceived != 0) {
+                                try {
+                                    woyouService.openDrawer(null);
+                                } catch (RemoteException e) {
+                                    Log.e("DrawerError", "Failed to open drawer: " + e.getMessage());
+                                }
+                            }
+                        } else {
+                            Log.e("DrawerConfig", "Column OpenDrawer not found in Cursor.");
+                        }
+                    } else {
+                        Log.e("DrawerConfig", "Cursor is null or empty.");
+                    }
+                } catch (Exception e) {
+                    Log.e("DrawerConfigError", "Error retrieving drawer config: " + e.getMessage());
+                } finally {
+                    if (drawerCursor != null) {
+                        drawerCursor.close(); // Close the Cursor to prevent memory leaks
                     }
                 }
-                                if (!isPaymentSplitted()) {
+
+
+
+
+                if (!isPaymentSplitted()) {
                     // Full payment: Take the total amount as the value
                     gridLayout.setVisibility(View.GONE);
                     gifImageView.setVisibility(View.VISIBLE);
@@ -1010,7 +1037,15 @@ if(isAtLeastOneItemSelected){
                 intent.putExtra("selectedBuyerprofile", BuyProfile);
                 intent.putExtra("roomid", roomid);
                 intent.putExtra("tableid", tableid);
+                Log.d("cashmethod6", "= " + name);
+                Log.d("cashReturndada1", String.valueOf(cashReturn));
 
+
+                intent.putExtra("paymentname", name);
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("paymentname", name);
+                editor.apply(); // Apply changes asynchronously
 
                 if (cashReturn > 0.0) {
 
@@ -1377,6 +1412,9 @@ if(isAtLeastOneItemSelected){
         }
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+        if (totalAmount==0){
+            totalAmount= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
+        }
 
         // Iterate over the container layout to get the settlement details
         ArrayList<SettlementItem> settlementItems = new ArrayList<>();
@@ -1564,6 +1602,7 @@ if(isAtLeastOneItemSelected){
                 }else{
                     newamoubt=totalsplit;
                 }
+
                 updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),transactionIdInProgress);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
@@ -1582,6 +1621,18 @@ if(isAtLeastOneItemSelected){
                 intent.putExtra("roomid", roomid);
                 intent.putExtra("tableid", tableid);
                 System.out.println("selectedBuyerTANs: " + BuyTAN);
+                Log.d("cashmethod2", "= " + name);
+                intent.putExtra("paymentname", name);
+                Log.d("cashReturndada2", String.valueOf(cashReturn));
+                double remainingAmount = totalAmount - totalsplit;
+                if(cashReturn != 0){
+                    insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+                }
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("paymentname", name);
+                editor.apply(); // Apply changes asynchronously
                 startActivity(intent);
                 mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
             }
@@ -1601,23 +1652,44 @@ if(isAtLeastOneItemSelected){
                 // Update the transaction ID in the header table for transactions with status "InProgress"
                 SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
-                Intent intent = new Intent(getActivity(), Mra.class);
-                intent.putExtra("amount_received", String.valueOf(totalsplit));
-                intent.putExtra("cash_return", String.valueOf(cashReturn));
-                intent.putExtra("settlement_items", settlementItems);
-                intent.putExtra("id", latesttransId);
-                intent.putExtra("selectedBuyerName", Buyname);
-                intent.putExtra("selectedBuyerTAN", BuyTAN);
-                intent.putExtra("selectedBuyerCompanyName", BuyComp);
-                intent.putExtra("selectedBuyerType", BuyType);
-                intent.putExtra("selectedBuyerBRN", BuyBRN);
-                intent.putExtra("selectedBuyerNIC", BuyNIC);
-                intent.putExtra("selectedBuyerAddresse", BuyAdd);
-                intent.putExtra("selectedBuyerprofile", BuyProfile);
-                intent.putExtra("roomid", roomid);
-                intent.putExtra("tableid", tableid);
+
+
+
                 System.out.println("selectedBuyerTANs: " + BuyTAN);
-                startActivity(intent);
+                if (getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), Mra.class);
+                    intent.putExtra("amount_received", String.valueOf(totalsplit));
+                    intent.putExtra("cash_return", String.valueOf(cashReturn));
+                    intent.putExtra("settlement_items", settlementItems);
+                    intent.putExtra("id", latesttransId);
+                    intent.putExtra("selectedBuyerName", Buyname);
+                    intent.putExtra("selectedBuyerTAN", BuyTAN);
+                    intent.putExtra("selectedBuyerCompanyName", BuyComp);
+                    intent.putExtra("selectedBuyerType", BuyType);
+                    intent.putExtra("selectedBuyerBRN", BuyBRN);
+                    intent.putExtra("selectedBuyerNIC", BuyNIC);
+                    intent.putExtra("selectedBuyerAddresse", BuyAdd);
+                    intent.putExtra("selectedBuyerprofile", BuyProfile);
+                    intent.putExtra("roomid", roomid);
+                    intent.putExtra("tableid", tableid);
+                    intent.putExtra("paymentname", name);
+                    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("paymentname", name);
+                    editor.apply(); // Apply changes asynchronously
+                    Log.d("cashmethod3", "= " + name);
+                    Log.d("cashReturndada3", String.valueOf(cashReturn));
+                    double remainingAmount = totalAmount - totalsplit;
+                    if(cashReturn != 0){
+                        insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+                    }
+
+                    // Set extras
+                    startActivity(intent);
+                } else {
+                    Log.e("Intent Issue", "getActivity() returned null");
+                }
                 mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
             }
         }
@@ -1822,7 +1894,7 @@ if(isAtLeastOneItemSelected){
                 }else{
                      newamoubt=totalsplit;
                 }
-                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),transactionIdInProgress);
+                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),latesttransId);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
                 intent.putExtra("amount_received", String.valueOf(totalsplit));
@@ -1839,6 +1911,17 @@ if(isAtLeastOneItemSelected){
                 intent.putExtra("selectedBuyerprofile", BuyProfile);
                 intent.putExtra("roomid", roomid);
                 intent.putExtra("tableid", tableid);
+                intent.putExtra("paymentname", name);
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("paymentname", name);
+                Log.d("cashReturndada4", String.valueOf(cashReturn));
+                double remainingAmount = totalAmount - totalsplit;
+                if(cashReturn != 0){
+                    insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+                }
+                editor.apply(); // Apply changes asynchronously
                 System.out.println("selectedBuyerTANs: " + BuyTAN);
                 startActivity(intent);
                 mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
@@ -1875,6 +1958,18 @@ if(isAtLeastOneItemSelected){
                 intent.putExtra("roomid", roomid);
                 intent.putExtra("tableid", tableid);
                 System.out.println("selectedBuyerTANs: " + BuyTAN);
+                Log.d("cashmethod4", "= " + name);
+                Log.d("cashReturndada5", String.valueOf(cashReturn));
+                double remainingAmount = totalAmount - totalsplit;
+                if(cashReturn != 0){
+                    insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+                }
+                intent.putExtra("paymentname", name);
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("paymentname", name);
+                editor.apply(); // Apply changes asynchronously
                 startActivity(intent);
                 mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
             }
@@ -1986,7 +2081,8 @@ if(isAtLeastOneItemSelected){
         int lastCounter = sharedPreferences.getInt("counter", 1);
         SharedPreferences sharedPreference = getActivity().getSharedPreferences("Login", Context.MODE_PRIVATE);
         cashierId = sharedPreference.getString("cashorId", null);
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String currentDateTime = dateFormat.format(new Date());
         String ShopName = sharedPreference.getString("ShopName", null);
         // Increment the counter for the next transaction
         int currentCounter = lastCounter + 1;
@@ -2008,7 +2104,7 @@ if(isAtLeastOneItemSelected){
 
         }
         // Generate the transaction ID by combining the three letters and the counter
-        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
+        return currentDateTime +"-" + companyLetters + "-" + posNumberLetters +  "-" + currentCounter;
     }
     private void showTransactionValidationDialog(String id) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -2058,7 +2154,15 @@ if(isAtLeastOneItemSelected){
 if (totalAmount==0){
      totalAmount= mDatabaseHelper.calculateTotalAmounts(roomid,tableid);
 }
+        double headerttc=mDatabaseHelper.getTransactionTotalTTC(latesttransId);
 
+        String newTransactionId= mDatabaseHelper.getRelatedTransactionId(latesttransId);
+
+// Break execution if totalAmount is not equal to headerttc
+        if (totalAmount != headerttc) {
+            Log.e("PaymentError", "Total Amount (" + totalAmount + ") does not match Header TTC (" + headerttc + ")");
+            return; // Exit method early
+        }
         double sumOfAmountAmountpaid = mDatabaseHelper.getSumOfAmount(latesttransId, Integer.parseInt(roomid), tableid);
 
         double remainingAmount = totalAmount - sumOfAmountAmountpaid;
@@ -2218,6 +2322,20 @@ if (totalAmount==0){
             intent.putExtra("roomid", roomid);
             intent.putExtra("tableid", tableid);
             System.out.println("selectedBuyerTANs: " + BuyTAN);
+            Log.d("cashmethod5", "= " + name);
+            Log.d("id", String.valueOf(newtransid));
+            Log.d("cashReturndada6", String.valueOf(cashReturn));
+
+            if(cashReturn != 0){
+                insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+            }
+            intent.putExtra("paymentname", name);
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("paymentname", name);
+            editor.putString("new_transaction_id", newtransid);
+            editor.apply(); // Apply changes asynchronously
             startActivity(intent);
 
         }else{
@@ -2236,6 +2354,18 @@ if (totalAmount==0){
             intent.putExtra("selectedBuyerprofile", BuyProfile);
             intent.putExtra("roomid", roomid);
             intent.putExtra("tableid", tableid);
+            Log.d("cashmethod7", "= " + name);
+            Log.d("cashReturndada7", String.valueOf(cashReturn));
+
+            if(cashReturn != 0){
+                insertCashReturn(String.valueOf(cashReturn), String.valueOf(remainingAmount),qrMra,mrairn,MRAMETHOD);
+
+            }
+            intent.putExtra("paymentname", name);
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("paymentname", name);
+            editor.apply(); // Apply changes asynchronously
             System.out.println("selectedBuyerTANs: " + BuyTAN);
             startActivity(intent);
             mDatabaseHelper.updatePaidStatusForSelectedRowsById(latesttransId);
@@ -2709,9 +2839,73 @@ if (totalAmount==0){
 
 
 public void  insertCashReturn(String cashReturn, String totalAmountinserted, String qrMra, String mrairn, String MRAMETHOD){
-    transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
-    Log.d("tr1", String.valueOf(transactionIdInProgress));
-     mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, transactionIdInProgress,qrMra,mrairn,MRAMETHOD);
+
+    boolean   isAtLeastOneItemSelected = false;
+    boolean    areNOItemsSelected = true;
+    boolean    areAllItemsPaid = false;
+    Cursor cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+    if (cursortrans != null) {
+        int transactionCount = cursortrans.getCount(); // Get the number of rows
+        if (transactionCount > 1) {
+            Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
+
+          String  firstTransactionTicketNo = null;
+            String secondTransactionTicketNo = null;
+
+            if (cursortrans.moveToFirst()) {
+                int index = 0;
+                do {
+                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                    // Assign transaction ticket numbers to variables
+                    if (index == 0) {
+                        firstTransactionTicketNo = ticketNo;
+                    } else if (index == 1) {
+                        secondTransactionTicketNo = ticketNo;
+                    }
+                    index++; // Increment index for tracking rows
+
+                    isAtLeastOneItemSelected = true;
+                       areNOItemsSelected = false;
+                       areAllItemsPaid = false;
+
+                } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+
+                Log.d("tr2", String.valueOf(secondTransactionTicketNo));
+                mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, secondTransactionTicketNo,qrMra,mrairn,MRAMETHOD);
+            }
+
+            // Log the variables for debugging
+            Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+            Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+        } else if (transactionCount == 1) {
+            Log.d("TransactionInfo", "Only one transaction in progress.");
+            cursortrans.moveToFirst(); // Move to the first row
+            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+            Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+               isAtLeastOneItemSelected = false;
+                areNOItemsSelected = true;
+                areAllItemsPaid = false;
+
+            // Save the single transaction ticket number as the first variable
+            String firstTransactionTicketNo = ticketNo;
+            transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+            Log.d("tr1", String.valueOf(transactionIdInProgress));
+            mDatabaseHelper.insertcashReturn(cashReturn,totalAmountinserted, transactionIdInProgress,qrMra,mrairn,MRAMETHOD);
+            Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+        } else {
+            Log.d("TransactionInfo", "No transactions found for the given room and table.");
+        }
+        cursortrans.close();
+    } else {
+        Log.d("TransactionInfo", "No transactions found for the given room and table.");
+    }
+
 
 }
     private ServiceConnection connService = new ServiceConnection() {

@@ -4,6 +4,8 @@ import static android.app.PendingIntent.getActivity;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.PREFERENCE_NAME;
 import static com.accessa.ibora.product.items.DatabaseHelper.STATUS_KEY;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
+import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,6 +18,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -42,9 +45,12 @@ import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 
 import com.accessa.ibora.Admin.AdminActivity;
+import com.accessa.ibora.ForceRestart;
+import com.accessa.ibora.LoadingActivity;
 import com.accessa.ibora.MainActivity;
 import com.accessa.ibora.R;
 import com.accessa.ibora.Receipt.ReceiptActivity;
+import com.accessa.ibora.SplashActivity;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.Item;
 import com.accessa.ibora.product.menu.Product;
@@ -55,10 +61,14 @@ import com.accessa.ibora.sales.ticket.SplittedTicketAdapter;
 import com.accessa.ibora.sales.ticket.Ticket;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.accessa.ibora.sales.ticket.Transaction;
+import com.bumptech.glide.Glide;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.jakewharton.processphoenix.ProcessPhoenix;
+import com.squareup.picasso.LruCache;
+import com.squareup.picasso.Picasso;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;
@@ -82,7 +92,14 @@ public class printerSetup extends AppCompatActivity {
     private static final String TRANSACTION_ID_KEY = "transaction_id";
     private String transactionIdInProgress;
     private String tableid;
+    boolean areAllItemsNotSelectedNotPaid;
+    boolean areNoItemsSelectedNorPaid;
+    boolean isAtLeastOneItemSelected = true;
+    boolean areNOItemsSelected = false;
+    boolean areAllItemsPaid = false;
     private String printerpartname ;
+    private static final String PREFS_NAME = "AppSessionPrefs";
+    private static final String KEY_SAME_SESSION = "IsSameSession";
     private boolean printable ;
     private SharedPreferences sharedPreferences;
     private String roomid;
@@ -97,6 +114,8 @@ public class printerSetup extends AppCompatActivity {
     private TextView textViewVAT,textViewTotal;
     private TicketAdapter adapter;
     private SplittedTicketAdapter mSplittedAdapter;
+    String firstTransactionTicketNo = null;
+    String secondTransactionTicketNo = null;
     private String    OpeningHours;
     private   String      TelNum,compTelNum,compFaxNum;
     private  String  FaxNum;
@@ -106,7 +125,7 @@ public class printerSetup extends AppCompatActivity {
 
 
     private double settlementAmount ;
-    private String mraqr ;
+    private String mraqr,paymentmethod ;
     private double amountReceived,cashReturn;
     private InnerPrinterCallback innerPrinterCallback = new InnerPrinterCallback() {
         @Override
@@ -117,12 +136,12 @@ public class printerSetup extends AppCompatActivity {
                 @Override
                 public void run() {
 
-
-
                     mDatabaseHelper = new DatabaseHelper(getApplicationContext()); // Initialize DatabaseHelper
 
-
-
+                    SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean(KEY_SAME_SESSION, true);
+                    editor.apply(); // Save changes asynchronously
 
                     SharedPreferences sharedPreference = getApplicationContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
                     cashierId = sharedPreference.getString("cashorId", null);
@@ -277,9 +296,17 @@ public class printerSetup extends AppCompatActivity {
                         }
 
                         // Print the custom layout
-
-                        int actualcopyprinted = mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
+                        transactionIdInProgress = mDatabaseHelper.getInProgressTransactionId(roomid,tableid);
+                        Log.d("Debugid", "Transaction ID: " + transactionIdInProgress);
+                        int actualcopyprinted =0;
+                    if(transactionIdInProgress != null){
+                         actualcopyprinted = mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
                         mDatabaseHelper.updateCopyPrinted(transactionIdInProgress, actualcopyprinted);
+                    }else{
+                         actualcopyprinted =1;
+                    }
+
+
                         int newactualcopyprinted = mDatabaseHelper.getCopyPrinted(transactionIdInProgress);
                         int covers = mDatabaseHelper.getNumberOfCovers(transactionIdInProgress);
                         SharedPreferences preferences = getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
@@ -379,8 +406,65 @@ public class printerSetup extends AppCompatActivity {
                             int columnIndexSplitType = cursorsplit.getColumnIndex(DatabaseHelper.TRANSACTION_SPLIT_TYPE);
 
                             String transactionid = mDatabaseHelper.getTransactionTicketNo(roomid, tableid);
-                            Log.e("transactionid", String.valueOf(transactionid));
-                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                            Cursor cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+                            if (cursortrans != null) {
+                                int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                if (transactionCount > 1) {
+                                    Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
+
+                                     firstTransactionTicketNo = null;
+                                     secondTransactionTicketNo = null;
+
+                                    if (cursortrans.moveToFirst()) {
+                                        int index = 0;
+                                        do {
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                            Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                            // Assign transaction ticket numbers to variables
+                                            if (index == 0) {
+                                                firstTransactionTicketNo = ticketNo;
+                                            } else if (index == 1) {
+                                                secondTransactionTicketNo = ticketNo;
+                                            }
+                                            index++; // Increment index for tracking rows
+
+                                            isAtLeastOneItemSelected = true;
+                                            areNOItemsSelected = false;
+                                            areAllItemsPaid = false;
+
+                                        } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+                                    }
+
+                                    // Log the variables for debugging
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+                                } else if (transactionCount == 1) {
+                                    Log.d("TransactionInfo", "Only one transaction in progress.");
+                                    cursortrans.moveToFirst(); // Move to the first row
+                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                    isAtLeastOneItemSelected = false;
+                                    areNOItemsSelected = true;
+                                    areAllItemsPaid = false;
+
+                                    // Save the single transaction ticket number as the first variable
+                                    String firstTransactionTicketNo = ticketNo;
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                } else {
+                                    Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                }
+                                cursortrans.close();
+                            } else {
+                                Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                            }
+
+                            Log.e("newTransactionId", String.valueOf(transactionid));
+                          //  boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionid);
                             Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
                             splittype = cursorsplit.getString(columnIndexSplitType);
                             Log.e("splittype", splittype);
@@ -458,7 +542,7 @@ public class printerSetup extends AppCompatActivity {
                                     double discount = Double.parseDouble(items.getTotalDiscount());
                                     double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
 
-                                    Log.d("discount", String.valueOf(discount));
+                                    Log.d("discount1", String.valueOf(discount));
                                     Log.d("discountvalue", String.valueOf(discountvalue));
                                     Log.d("items.getunique_id()", String.valueOf(newid));
                                     if (discount != 0 && discountvalue != 0) {
@@ -548,7 +632,7 @@ public class printerSetup extends AppCompatActivity {
                                       //  double discount = mDatabaseHelper.getTransactionTotalDiscount(Integer.parseInt(newid), transactionid);
                                         double discount = Double.parseDouble(items.getTotalDiscount());
                                         double discountvalue = mDatabaseHelper.getTransactionDiscount(Integer.parseInt(newid), transactionid);
-                                        Log.d("discount", String.valueOf(discount));
+                                        Log.d("discount2", String.valueOf(discount));
                                         Log.d("discountvalue", String.valueOf(discountvalue));
                                         Log.d("items.getunique_id()", String.valueOf(newid));
                                         if (discount != 0 && discountvalue != 0) {
@@ -626,8 +710,12 @@ public class printerSetup extends AppCompatActivity {
                                     String famille = mDatabaseHelper.getTransactionFamilieById(Integer.parseInt(newid));
                                     Log.d("famille3", String.valueOf(famille));
                                     Log.d("transactionIdInProgress", String.valueOf(transactionIdInProgress));
-                                    String CatName = mDatabaseHelper.getCatNameById(famille);
-                                    Log.d("CatName", String.valueOf(CatName));
+                                    String CatName ="none";
+                                    if(famille != null){
+                                         CatName = mDatabaseHelper.getCatNameById(famille);
+                                        Log.d("CatName", String.valueOf(CatName));
+                                    }
+
 
                                     String comment = mDatabaseHelper.getTransactionCommentById(Integer.parseInt(newid));
                                     Log.d("items.getunique_id()", String.valueOf(newid));
@@ -644,7 +732,7 @@ public class printerSetup extends AppCompatActivity {
                                     double discount = mDatabaseHelper.getTransactionTotalDiscountbyItemId(itemid, transactionIdInProgress);
 
                                     double discountvalue = mDatabaseHelper.getTransactionDiscountByItemId(itemid, transactionIdInProgress);
-                                    Log.d("discount", String.valueOf(discount));
+                                    Log.d("discount3", String.valueOf(discount));
                                     Log.d("discountvalue", String.valueOf(discountvalue));
                                     Log.d("items.getunique_id()", String.valueOf(itemid));
                                     if (discount != 0 && discountvalue != 0) {
@@ -700,20 +788,135 @@ public class printerSetup extends AppCompatActivity {
 
                             Cursor cursor1 = mDatabaseHelper.getSplittedInProgressNotSelectedNotPaidTransactions(transactionid, String.valueOf(roomid), tableid);
                             Cursor cursor2 = mDatabaseHelper.getAllSplittedInProgressTransactions(String.valueOf(roomid), tableid);
+                            Cursor cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+                            if (cursortrans != null) {
+                                int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                if (transactionCount > 1) {
+                                    Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
 
-                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
-                            boolean areAllItemsNotSelectedNotPaid = mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
-                            boolean areNoItemsSelectedNorPaid = mDatabaseHelper.areNoItemsSelectedNorPaid(transactionIdInProgress);
-                            if (areAllItemsNotSelectedNotPaid) {
+
+
+                                    if (cursortrans.moveToFirst()) {
+                                        int index = 0;
+                                        do {
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                            Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                            // Assign transaction ticket numbers to variables
+                                            if (index == 0) {
+                                                firstTransactionTicketNo = ticketNo;
+                                            } else if (index == 1) {
+                                                secondTransactionTicketNo = ticketNo;
+                                            }
+                                            index++; // Increment index for tracking rows
+
+                                            isAtLeastOneItemSelected = true;
+                                            areNOItemsSelected = false;
+                                            areAllItemsPaid = false;
+
+                                        } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+                                    }
+
+                                    // Log the variables for debugging
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+                                } else if (transactionCount == 1) {
+                                    Log.d("TransactionInfo", "Only one transaction in progress.");
+                                    cursortrans.moveToFirst(); // Move to the first row
+                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                    isAtLeastOneItemSelected = false;
+                                    areNOItemsSelected = true;
+                                    areAllItemsPaid = false;
+                                    if(tableid.startsWith("T") ){
+                                        unmergeTable(tableid);
+                                    }
+                                    // Save the single transaction ticket number as the first variable
+                                    String firstTransactionTicketNo = ticketNo;
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                } else {
+                                    Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                }
+                                cursortrans.close();
+                            } else {
+                                Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                            }
+
+
+
+                            //boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                           // boolean areAllItemsNotSelectedNotPaid = mDatabaseHelper.areAllItemsNotSelectedNotPaid(transactionIdInProgress);
+                          //  boolean areNoItemsSelectedNorPaid = mDatabaseHelper.areNoItemsSelectedNorPaid(transactionIdInProgress);
+                            if (isAtLeastOneItemSelected) {
                                 if (cursor1 != null && cursor1.moveToFirst()) {
 
-                                    totalAmount = mDatabaseHelper.calculateTotalAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
-                                    TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(transactionIdInProgress, roomid, tableid);
+
+                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+                                    totalAmount = mDatabaseHelper.calculateTotalAmountBasedOnId(secondTransactionTicketNo, roomid, tableid);
+                                    TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(secondTransactionTicketNo, roomid, tableid);
                                     Log.e("totalAmountpt11", String.valueOf(totalAmount));
+                                    cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+
+                                    if (cursortrans != null) {
+                                        int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                        if (transactionCount > 1) {
+                                            Log.d("TransactionInfosss", "More than one transaction in progress: " + transactionCount);
+
+                                            firstTransactionTicketNo = null;
+                                            secondTransactionTicketNo = null;
+
+                                            if (cursortrans.moveToFirst()) {
+                                                int index = 0;
+                                                do {
+                                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                                    // Assign transaction ticket numbers to variables
+                                                    if (index == 0) {
+                                                        firstTransactionTicketNo = ticketNo;
+                                                    } else if (index == 1) {
+                                                        secondTransactionTicketNo = ticketNo;
+                                                    }
+                                                    index++; // Increment index for tracking rows
+
+
+                                                } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+
+                                            }
+
+
+                                        } else if (transactionCount == 1) {
+                                          cursortrans.moveToFirst(); // Move to the first row
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+
+                                            if(tableid.startsWith("T") ){
+                                                unmergeTable(tableid);
+                                            }
+
+                                            // Save the single transaction ticket number as the first variable
+                                            String firstTransactionTicketNo = ticketNo;
+
+                                        } else {
+                                            Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                        }
+                                        cursortrans.close();
+                                    } else {
+                                        Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                    }
+
+
                                 }
                                 DateCreated = cursor.getString(columnIndexDateCreated);
                                 timeCreated = cursor.getString(columnIndexTimeCreated);
-                            } else if (areNoItemsSelectedNorPaid) {
+
+
+                            } else if (areNOItemsSelected) {
                                 totalAmount = cursor.getDouble(columnIndexTotalAmount);
                                 TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
                                 DateCreated = cursor.getString(columnIndexDateCreated);
@@ -739,6 +942,7 @@ public class printerSetup extends AppCompatActivity {
                                     TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmounts(roomid, tableid);
 
                                     Log.e("totalAmountpt2", String.valueOf(totalAmount));
+
                                 } else {
                                     totalAmount = cursor.getDouble(columnIndexTotalAmount);
                                     TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
@@ -763,6 +967,60 @@ public class printerSetup extends AppCompatActivity {
                                     Log.d("totalAmountpt11", String.valueOf(totalAmount));
                                     DateCreated = cursor.getString(columnIndexDateCreated);
                                     timeCreated = cursor.getString(columnIndexTimeCreated);
+                                    cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+
+                                    if (cursortrans != null) {
+                                        int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                        if (transactionCount > 1) {
+
+                                            Log.d("TransactionInfosss2", "No transactions found for the given room and table.");
+                                            firstTransactionTicketNo = null;
+                                            secondTransactionTicketNo = null;
+
+                                            if (cursortrans.moveToFirst()) {
+                                                int index = 0;
+                                                do {
+                                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+
+
+                                                    // Assign transaction ticket numbers to variables
+                                                    if (index == 0) {
+                                                        firstTransactionTicketNo = ticketNo;
+                                                    } else if (index == 1) {
+                                                        secondTransactionTicketNo = ticketNo;
+                                                    }
+                                                    index++; // Increment index for tracking rows
+
+
+                                                } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+
+                                            }
+
+
+                                        } else if (transactionCount == 1) {
+                                            cursortrans.moveToFirst(); // Move to the first row
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+
+                                            if(tableid.startsWith("T") ){
+                                                unmergeTable(tableid);
+                                            }
+
+                                            // Save the single transaction ticket number as the first variable
+                                            String firstTransactionTicketNo = ticketNo;
+
+                                        } else {
+                                            Log.d("TransactionInfosss2", "No transactions found for the given room and table.");
+                                        }
+                                        cursortrans.close();
+                                    } else {
+                                        Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                    }
+
+
+
+
                                 } else if (areNoItemsSelectedNorPaid) {
                                     Log.d("areNoItemsSelectedNorPaid", String.valueOf(areNoItemsSelectedNorPaid));
                                     totalAmount = cursor.getDouble(columnIndexTotalAmount);
@@ -790,6 +1048,7 @@ public class printerSetup extends AppCompatActivity {
                                         totalAmount = mDatabaseHelper.calculateTotalAmounts(roomid, tableid);
                                         TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmounts(roomid, tableid);
                                         Log.e("totalAmountpt2", String.valueOf(totalAmount));
+
                                     } else {
                                         totalAmount = cursor.getDouble(columnIndexTotalAmount);
                                         TaxtotalAmount = cursor.getDouble(columnIndexTotalTaxAmount);
@@ -885,7 +1144,65 @@ public class printerSetup extends AppCompatActivity {
                         byte[] boldOffBytes = new byte[]{0x1B, 0x45, 0x00};
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
+                        Cursor cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+                        if (cursortrans != null) {
+                            int transactionCount = cursortrans.getCount(); // Get the number of rows
+                            if (transactionCount > 1) {
+                                Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
 
+                                 firstTransactionTicketNo = null;
+                                 secondTransactionTicketNo = null;
+
+                                if (cursortrans.moveToFirst()) {
+                                    int index = 0;
+                                    do {
+                                        String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                        String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                        Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                        // Assign transaction ticket numbers to variables
+                                        if (index == 0) {
+                                            firstTransactionTicketNo = ticketNo;
+                                        } else if (index == 1) {
+                                            secondTransactionTicketNo = ticketNo;
+                                        }
+                                        index++; // Increment index for tracking rows
+
+                                        isAtLeastOneItemSelected = true;
+                                        areNOItemsSelected = false;
+                                        areAllItemsPaid = false;
+
+                                    } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+                                }
+
+                                // Log the variables for debugging
+                                Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+                            } else if (transactionCount == 1) {
+                                Log.d("TransactionInfo", "Only one transaction in progress.");
+                                cursortrans.moveToFirst(); // Move to the first row
+                                String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                isAtLeastOneItemSelected = false;
+                                areNOItemsSelected = true;
+                                areAllItemsPaid = false;
+
+                                // Save the single transaction ticket number as the first variable
+                                String firstTransactionTicketNo = ticketNo;
+                                Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                            } else {
+                                Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                            }
+                            cursortrans.close();
+                        } else {
+                            Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                        }
+                 if(isAtLeastOneItemSelected){
+                    transactionIdInProgress = secondTransactionTicketNo;
+                           }
                         List<SettlementItem> settlementItems = mDatabaseHelper.getSettlementItemsByTransactionId(transactionIdInProgress);
                         if (settlementItems != null) {
                             // Use the settlementItems as needed
@@ -918,14 +1235,16 @@ public class printerSetup extends AppCompatActivity {
 
                                         paymentName = items.getPaymentName();
                                         // Query the transaction table to get distinct VAT types
-                                        Cursor DrawerCursor = mDatabaseHelper.getDistinctDrawerconfig(paymentName);
+                                        Cursor DrawerCursor = mDatabaseHelper.getDistinctDrawerconfig(paymentmethod);
                                         if (DrawerCursor != null && DrawerCursor.moveToFirst()) {
                                             StringBuilder vatTypesBuilder = new StringBuilder();
                                             do {
                                                 int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
                                                 String draweropen = DrawerCursor.getString(columnIndexDrawer);
+                                                Log.d("cashReturndadae", String.valueOf(cashReturn));
                                                 if (cashReturn > 0 || "true".equals(draweropen)) {
-                                                    Log.d("drawer1", cashorlevel);
+                                                    Log.d("drawer22", paymentmethod);
+
                                                     service.openDrawer(null);
 
                                                 }
@@ -946,7 +1265,7 @@ public class printerSetup extends AppCompatActivity {
 
 
 
-                               // service.openDrawer(null);
+
                             }
                         } else if (paymentName.equals("POP")) {
                             paymentName = "POP";
@@ -983,7 +1302,7 @@ public class printerSetup extends AppCompatActivity {
                         String Footer2Text = getString(R.string.Footer_OpenHours);
                         String Openinghours = Footer2Text + OpeningHours;
 
-                        if (mraqr != null && !mraqr.startsWith("Request Failed")) {
+                        if (mraqr != null && (!mraqr.startsWith("Request Failed") && !mraqr.startsWith("Error response code 1: 400"))) {
                             // Log the received QR code string
                             Log.d("QR_DEBUG", "Received QR Code: " + mraqr);
                             String MraFiscalised = "MRA Fiscalised";
@@ -1075,19 +1394,89 @@ public class printerSetup extends AppCompatActivity {
                         // Cut the paper
                         service.cutPaper(null);
 
-                        // Open the cash drawer
-                        byte[] openDrawerBytes = new byte[]{0x1B, 0x70, 0x00, 0x32, 0x32};
-                        service.sendRAWData(openDrawerBytes, null);
-                        // Open the cash drawer
+
+                        //  Clear cache
+                        //    mDatabaseHelper.clearCache(getApplicationContext()); // 'this' refers to the Activity context
+                        //  mDatabaseHelper.clearSQLiteCache();
+                      /*   Glide.get(getApplicationContext()).clearMemory();
+                        new Thread(() -> {
+                            Glide.get(getApplicationContext()).clearDiskCache();
+                        }).start();
+                        Picasso picasso = new Picasso.Builder(getApplicationContext()).memoryCache(new LruCache(0)).build();
 
 
+                       */
                         String transactionType;
                         mDatabaseHelper.updateCoverCount(0,tableid,Integer.parseInt(roomid));
 
-                        mDatabaseHelper.updatePaidStatusForSelectedRowsById(transactionIdInProgress);
+
                         if (cashorlevel.equals("1")) {
+                            cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+
+                            if (cursortrans != null) {
+                                int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                if (transactionCount > 1) {
+                                    Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
+
+                                    firstTransactionTicketNo = null;
+                                    secondTransactionTicketNo = null;
+
+                                    if (cursortrans.moveToFirst()) {
+                                        int index = 0;
+                                        do {
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                            Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                            // Assign transaction ticket numbers to variables
+                                            if (index == 0) {
+                                                firstTransactionTicketNo = ticketNo;
+                                            } else if (index == 1) {
+                                                secondTransactionTicketNo = ticketNo;
+                                            }
+                                            index++; // Increment index for tracking rows
+
+                                            isAtLeastOneItemSelected = true;
+                                            areNOItemsSelected = false;
+                                            areAllItemsPaid = false;
+
+                                        } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+                                        mDatabaseHelper.updatePaidStatusForSelectedRowsById(secondTransactionTicketNo);
+                                    }
+
+                                    // Log the variables for debugging
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+                                } else if (transactionCount == 1) {
+                                    Log.d("TransactionInfo", "Only one transaction in progress.");
+                                    cursortrans.moveToFirst(); // Move to the first row
+                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                    isAtLeastOneItemSelected = false;
+                                    areNOItemsSelected = true;
+                                    areAllItemsPaid = false;
+
+                                    // Save the single transaction ticket number as the first variable
+                                    String firstTransactionTicketNo = ticketNo;
+                                    mDatabaseHelper.updatePaidStatusForSelectedRowsById(transactionIdInProgress);
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                } else {
+                                    Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                }
+                                cursortrans.close();
+                            } else {
+                                Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                            }
 
 
+
+
+
+                            SharedPreferences sharedPreferences2 = getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+                            transactionIdInProgress= sharedPreferences2.getString("new_transaction_id", null);
                             boolean areAllItemsPaid = mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
                             Log.e("areAllItemsPaid", String.valueOf(areAllItemsPaid));
                             boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
@@ -1117,7 +1506,24 @@ public class printerSetup extends AppCompatActivity {
 
                                     }else{
                                         mDatabaseHelper.updateAllTransactionsHeaderStatus(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, String.valueOf(roomid), tableid);
+                                     String oldrealid=   mDatabaseHelper.getRelatedTransactionId(relatedtransid);
+                                        Log.d("transactionIdInProgress" , transactionIdInProgress );
+                                        Log.d("oldrealid" , oldrealid );
+                                        Log.d("rlatesttransIde" , latesttransId );
+                                        Log.d("newTransactionIde" , relatedtransid );
+                                      /*  if (latesttransId.contains("-PRF-")) {
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
 
+                                        }
+
+                                       */
                                     }
 
                                 }
@@ -1127,11 +1533,73 @@ public class printerSetup extends AppCompatActivity {
                         } else {
 
 
-                            boolean areAllItemsPaid = mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
+
+                             cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
+
+                            if (cursortrans != null) {
+                                int transactionCount = cursortrans.getCount(); // Get the number of rows
+                                if (transactionCount > 1) {
+                                    Log.d("TransactionInfo", "More than one transaction in progress: " + transactionCount);
+
+                                     firstTransactionTicketNo = null;
+                                     secondTransactionTicketNo = null;
+
+                                    if (cursortrans.moveToFirst()) {
+                                        int index = 0;
+                                        do {
+                                            String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                            String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                            Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                            // Assign transaction ticket numbers to variables
+                                            if (index == 0) {
+                                                firstTransactionTicketNo = ticketNo;
+                                            } else if (index == 1) {
+                                                secondTransactionTicketNo = ticketNo;
+                                            }
+                                            index++; // Increment index for tracking rows
+
+                                            isAtLeastOneItemSelected = true;
+                                            areNOItemsSelected = false;
+                                            areAllItemsPaid = false;
+
+                                        } while (cursortrans.moveToNext() && index < 2); // Exit after two transactions
+                                    }
+
+                                    // Log the variables for debugging
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+
+                                } else if (transactionCount == 1) {
+                                    Log.d("TransactionInfo", "Only one transaction in progress.");
+                                    cursortrans.moveToFirst(); // Move to the first row
+                                    String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
+                                    String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
+                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+
+                                    isAtLeastOneItemSelected = false;
+                                    areNOItemsSelected = true;
+                                    areAllItemsPaid = false;
+
+                                    // Save the single transaction ticket number as the first variable
+                                    String firstTransactionTicketNo = ticketNo;
+                                    Log.d("TransactionInfo", "First Transaction Ticket No: " + firstTransactionTicketNo);
+                                } else {
+                                    Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                                }
+                                cursortrans.close();
+                            } else {
+                                Log.d("TransactionInfo", "No transactions found for the given room and table.");
+                            }
+
+
+
+
+                            // boolean areAllItemsPaid = mDatabaseHelper.areAllItemsPaid(transactionIdInProgress);
                             Log.e("areAllItemsPaid", String.valueOf(areAllItemsPaid));
-                            boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
+                          //  boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
                             Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
-                            boolean isAtLeastOneItemSelected = mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
+                           // boolean isAtLeastOneItemSelected = mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
                             Log.e("isAtLeastOneItemSelected", String.valueOf(isAtLeastOneItemSelected));
 
                             if (areNOItemsSelected) {
@@ -1142,7 +1610,21 @@ public class printerSetup extends AppCompatActivity {
                                 }else{
                                     mDatabaseHelper.updatePaidStatusForNotSelectedRows(transactionIdInProgress);
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    String oldrealid=   mDatabaseHelper.getRelatedTransactionId(transactionIdInProgress);
 
+                                      /*  if (latesttransId.contains("-PRF-")) {
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+
+                                        }
+
+                                       */
                                 }
 
                             }
@@ -1154,19 +1636,47 @@ public class printerSetup extends AppCompatActivity {
                                 }else{
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
                                     mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
+                                    Log.d("rlatesttransIde1" , latesttransId );
+                                    Log.d("newTransactionIde1" , relatedtransid );
+                                      /*  if (latesttransId.contains("-PRF-")) {
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
 
+                                        }
+
+                                       */
                                 }
 
 
                             } else if (isAtLeastOneItemSelected) {
                                 if(cashorlevel.equals("0")) {
-                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
-                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(secondTransactionTicketNo, roomid, tableid);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, secondTransactionTicketNo, roomid, tableid);
 
                                 }else{
-                                    mDatabaseHelper.updatePaidStatusForSelectedRows(transactionIdInProgress, roomid, tableid);
-                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    mDatabaseHelper.updatePaidStatusForSelectedRows(secondTransactionTicketNo, roomid, tableid);
+                                    mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, secondTransactionTicketNo, roomid, tableid);
+                                    Log.d("rlatesttransIde2" , latesttransId );
+                                    Log.d("newTransactionIde2" , relatedtransid );
+                                      /*  if (latesttransId.contains("-PRF-")) {
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
 
+                                        }
+
+                                       */
                                 }
 
 
@@ -1181,6 +1691,20 @@ public class printerSetup extends AppCompatActivity {
 
                                     }else{
                                         mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    //    Log.d("rlatesttransIde21" , latesttransId );
+                                    //    Log.d("newTransactionIde21" , relatedtransid );
+                                    /* if(relatedtransid.contains("-PRF-")){
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(relatedtransid,latesttransId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,relatedtransid);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(relatedtransid,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,relatedtransid, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,relatedtransid, String.valueOf(roomid),tableid);
+
+                                        }           
+*/
 
                                     }
                                 }
@@ -1189,13 +1713,27 @@ public class printerSetup extends AppCompatActivity {
 
                             if (isprf) {
 
-                                Log.d("isprf", String.valueOf(isprf));
+                                Log.d("isprfs", String.valueOf(isprf));
                                 if(cashorlevel.equals("0")) {
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_TRN, transactionIdInProgress, roomid, tableid);
 
                                 }else{
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
+                                    Log.d("rlatesttransIde4" , latesttransId );
+                                    Log.d("newTransactionIde4" , relatedtransid );
+                                      /*  if (latesttransId.contains("-PRF-")) {
+                                            //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
+                                            mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
+                                            mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
+                                            mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+                                        }else{
+                                            mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
+                                            // Update the transaction ID in the header table for transactions with status "InProgress"
+                                            mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
 
+                                        }
+
+                                       */
                                 }
 
 
@@ -1233,9 +1771,12 @@ public class printerSetup extends AppCompatActivity {
                             @Override
                             public void run() {
 
-                                Intent intent = new Intent(printerSetup.this, MainActivity.class);
-                                intent.putExtra("cash_return_key", cashReturn); // Replace cashReturn with your actual cash return value
+                           /*     Intent intent = new Intent(printerSetup.this, MainActivity.class);
+                               intent.putExtra("cash_return_key", cashReturn); // Replace cashReturn with your actual cash return value
                                 startActivity(intent);
+                                */
+
+                                restartApp(getApplicationContext(),cashReturn);
                             }
                         });
 
@@ -1293,9 +1834,10 @@ public class printerSetup extends AppCompatActivity {
          settlementItems = getIntent().getParcelableArrayListExtra("settlement_items");
         mraqr = getIntent().getStringExtra("mraQR");
 
-
-
-
+        SharedPreferences sharedPreferences = getSharedPreferences("PaymentPrefs", Context.MODE_PRIVATE);
+        paymentmethod = sharedPreferences.getString("paymentname", null);
+        Log.d("paymentmethod", paymentmethod);
+        Log.d("Cashreturndada", Cashreturn);
         mDatabaseHelper = new DatabaseHelper(this);
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
@@ -1307,16 +1849,21 @@ if(anReturbed !=null){
 }
         boolean isprf=  startsWithPRF(latesttransId);
         if(isprf) {
-            newtransactionIdInProgress = generateNewTransactionId();
-            Log.d("isprf", String.valueOf(isprf));
+         newtransactionIdInProgress = generateNewTransactionId();
+            Log.d("isprf1", String.valueOf(isprf));
 
-
+            Log.d("newtransactionIdInProgress", String.valueOf(newtransactionIdInProgress));
+            Log.d("latesttransId", String.valueOf(newtransactionIdInProgress));
             mDatabaseHelper.updateSettlementInvoiceId(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             mDatabaseHelper.updateCashReportTransactionId(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             // Update the transaction ID in the transaction table for transactions with status "InProgress"
             mDatabaseHelper.updateTransactionTransactionIdInProgress(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
             // Update the transaction ID in the header table for transactions with status "InProgress"
+            Log.d("updateHeaderTransactionIdInProgress", String.valueOf(newtransactionIdInProgress));
             mDatabaseHelper.updateHeaderTransactionIdInProgress(latesttransId,newtransactionIdInProgress, String.valueOf(roomid),tableid);
+
+
+
 
             transactionIdInProgress=newtransactionIdInProgress;
 
@@ -1385,6 +1932,8 @@ if(anReturbed !=null){
         // Retrieve the last used counter value from shared preferences
         SharedPreferences sharedPreferences = this.getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
         int lastCounter = sharedPreferences.getInt("counter", 1);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String currentDateTime = dateFormat.format(new Date());
 
         // Increment the counter for the next transaction
         int currentCounter = lastCounter + 1;
@@ -1406,19 +1955,71 @@ if(anReturbed !=null){
 
         }
         // Generate the transaction ID by combining the three letters and the counter
-        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
+        return currentDateTime +"-" + companyLetters + "-" + posNumberLetters +  "-" + currentCounter;
     }
     public static boolean startsWithPRF(String str) {
-        // Check if the string is not null and has at least 3 characters
-        if (str != null && str.length() >= 3) {
-            // Extract the first three characters of the string
-            String firstThreeChars = str.substring(0, 3);
-            // Check if the first three characters are "PRF"
-            return firstThreeChars.equals("PRF");
+        if (str != null && str.contains("-PRF-")) {
+            return true;
         }
-        // Return false if the string is null or has less than 3 characters
         return false;
     }
+
+    private String extractNumericPart(String tableString) {
+        // Split the string based on space and return the last part
+        String[] parts = tableString.split(" ");
+        return parts[parts.length - 1];
+    }
+    private void unmergeTable(String selectedTableNum) {
+
+
+        // Extract the numeric part from selectedTableToMerge
+        String numericPart = extractNumericPart(selectedTableNum);
+
+        // Update your database to unmerge the table
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        ContentValues valuesTable2 = new ContentValues();
+        // Update MERGED and MERGED_SET_ID columns
+        values.put(DatabaseHelper.MERGED, 0);
+        values.put(DatabaseHelper.MERGED_SET_ID,"0");
+
+        int rowsUpdated = db.update(DatabaseHelper.TABLES, values, DatabaseHelper.MERGED_SET_ID + " = ?",
+                new String[]{selectedTableNum});
+        valuesTable2.put(DatabaseHelper.MERGED, 0);
+
+        db.update(DatabaseHelper.TABLES, valuesTable2, DatabaseHelper.TABLE_NUMBER + " = ?",
+                new String[]{numericPart});
+        db.close();
+
+        if (rowsUpdated > 0) {
+            // Table unmerged successfully
+            Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
+        } else if (rowsUpdated == 0) {
+            // No rows were updated
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
+        } else {
+            // An error occurred
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
+        }
+
+        // Refresh the UI to reflect the changes
+        // You may need to update your RecyclerView adapter or rerun the database query to fetch updated data
+
+
+        SharedPreferences    sharedPreferences = getApplicationContext().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString("table_id", "0").apply();
+        sharedPreferences.edit().putInt("roomnum", Integer.parseInt(roomid)).apply();
+
+
+    }
+    public static void restartApp(Context context, double cashReturn) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("cash_return_key", cashReturn);
+        ProcessPhoenix.triggerRebirth(context, intent);
+    }
+
+
     private void printLogoAndReceipt(SunmiPrinterService service, String LogoPath, int desiredLogoWidth, int desiredLogoHeight) {
         try {
             // Check if the service is connected
@@ -1514,5 +2115,8 @@ if(anReturbed !=null){
     }
 
 
-
+    public static boolean isSameSession(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_SAME_SESSION, false);
+    }
 }

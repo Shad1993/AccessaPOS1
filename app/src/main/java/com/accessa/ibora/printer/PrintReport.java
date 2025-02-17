@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -151,7 +152,7 @@ public class PrintReport extends AppCompatActivity {
 
                             LogoPath = company.getImage();
 
-                            printLogoAndReceipt(service, LogoPath,100,100);
+                            printLogoAndReceipt(service, LogoPath,600,300);
 
 
                             // Create the formatted company name line
@@ -216,9 +217,16 @@ public class PrintReport extends AppCompatActivity {
                             String cashiename = "Cashier Name: " + Cashiername;
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + Till_id;
+
+                            // Get the current date and time
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String currentDateTime = dateFormat.format(new Date());
+                            String datetime = "Date/Time: " + currentDateTime;
+
                             service.printText(cashiename + "\n", null);
                             service.printText(cashierid + "\n", null);
                             service.printText(Posnum + "\n", null);
+                            service.printText(datetime + "\n\n", null);
                         }
 
 
@@ -468,6 +476,8 @@ public class PrintReport extends AppCompatActivity {
                                         int columnIndexDrawer = DrawerCursor.getColumnIndex(DatabaseHelper.OpenDrawer);
                                         String vatType = DrawerCursor.getString(columnIndexDrawer);
                                         if (CashReturn > 0 || "true".equals(vatType)) {
+                                            Log.d("drawer16", "drawer16");
+
                                             service.openDrawer(null);
                                         }
                                         vatTypesBuilder.append(vatType).append(", ");
@@ -492,6 +502,8 @@ public class PrintReport extends AppCompatActivity {
                         // Open the cash drawer
 
                         if(CashReturn > 0) {
+                            Log.d("drawer17", "drawer17");
+
                             service.openDrawer(null);
 
                         }

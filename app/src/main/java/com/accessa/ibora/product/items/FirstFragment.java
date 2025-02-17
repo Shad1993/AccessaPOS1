@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,6 +38,7 @@ import com.accessa.ibora.DeviceInfo;
 import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.Sync.Syncforold;
+import com.accessa.ibora.login.login;
 import com.bumptech.glide.Glide;
 import com.accessa.ibora.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -322,27 +327,40 @@ private  EditText searchEditText;
         mSyncFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int levelNumber = Integer.parseInt(cashorlevel);
-                SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
-                String Activity="syncDatabase_";
-                SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
-                boolean canHigherAccessSyncDatabase = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
+                try {
+                    if (isNetworkAvailable()) {
+                        SharedPreferences preferences = getContext().getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
 
-                if (canHigherAccessSyncDatabase) {
-                    showPinDialog(Activity, () -> {
+                        // Retrieve values from SharedPreferences (or use defaults if not set)
+                        String _user = preferences.getString("_user", null);
+                        String _pass = preferences.getString("_pass", null);
+                        String _DB = preferences.getString("_DB", null);
+                        String _server = preferences.getString("_server", null);
 
-                        //clear table
-                        // Create an instance of MssqlDataSync
-                        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+                        if (!mDatabaseHelper.isServerReachable(_server)) {
+                            Toast.makeText(getContext(), "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            int levelNumber = Integer.parseInt(cashorlevel);
+                            SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
+                            String Activity = "syncDatabase_";
+                            SharedPreferences usersharedPreferences = getContext().getSharedPreferences("UserLevelConfig", Context.MODE_PRIVATE);
+                            boolean canHigherAccessSyncDatabase = mDatabaseHelper.getAccessPermissionWithDefault(AccessLevelsharedPreferences, Activity, levelNumber);
 
-                        // Call the synchronization method
+                            if (canHigherAccessSyncDatabase) {
+                                showPinDialog(Activity, () -> {
 
-                        //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
-                        //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
-                        // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
-                        //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
-                        //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
-                        //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
+                                    //clear table
+                                    // Create an instance of MssqlDataSync
+                                    MssqlDataSync mssqlDataSync = new MssqlDataSync();
+
+                                    // Call the synchronization method
+
+                                    //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
+                                    //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
+                                    // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
+                                    //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
+                                    //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
+                                    //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
 
         /*        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
                 mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
@@ -352,59 +370,86 @@ private  EditText searchEditText;
                 mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
 
                */
-                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
-                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
-                        mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
-                        mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
-                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
-                      // mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
-                        mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
-                        // dbManager.deleteItemsWithSyncStatusNotOffline();
-                        String androidVersion = DeviceInfo.getAndroidVersion();
-                        Log.d("DeviceInfo", "Android Version: " + androidVersion);
-                        // Trim the strings to avoid any leading or trailing whitespace issues
-                        if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
-                            Log.d("SyncService", "Starting Syncforold");
-                            Syncforold.startSync(requireContext());
-                        } else {
-                            Log.d("SyncService", "Starting SyncService");
-                            SyncService.startSync(requireContext());
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.OPTIONS_TABLE_NAME);
+                                    //mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.OPTION_NAME);
+                                    // mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                                    //mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
+                                    // mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUPPLEMENTS_TABLE_NAME);
+                                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME);
+                                    // dbManager.deleteItemsWithSyncStatusNotOffline();
+                                    String androidVersion = DeviceInfo.getAndroidVersion();
+                                    Log.d("DeviceInfo", "Android Version: " + androidVersion);
+                                    // Trim the strings to avoid any leading or trailing whitespace issues
+                                    if (androidVersion.trim().equals("Android 7.1.1 (API Level 25) - Nougat MR1".trim())) {
+                                        Log.d("SyncService", "Starting Syncforold");
+                                        Syncforold.startSync(requireContext());
+                                    } else {
+                                        Log.d("SyncService", "Starting SyncService");
+                                        SyncService.startSync(requireContext());
+                                    }
+
+                                });
+                            } else if (!canHigherAccessSyncDatabase && mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber)) {
+
+                                //clear table
+                                // Create an instance of MssqlDataSync
+                                MssqlDataSync mssqlDataSync = new MssqlDataSync();
+
+                                // Call the synchronization method
+
+                                //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
+                                //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
+                                // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
+                                //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
+                                //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
+                                //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
+
+        /*        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
+                mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
+                mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
+                mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
+
+               */
+
+
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
+                                // mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
+                                // mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
+                                //  mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUPPLEMENTS_TABLE_NAME);
+                                mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUPPLEMENTS_OPTIONS_TABLE_NAME);
+                                // dbManager.deleteItemsWithSyncStatusNotOffline();
+
+
+                            } else {
+                                Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
+
+                            }
+
                         }
 
-                    });
-                } else if (!canHigherAccessSyncDatabase && mDatabaseHelper.getPermissionWithDefault(usersharedPreferences, Activity, levelNumber)) {
-
-                    //clear table
-                    // Create an instance of MssqlDataSync
-                    MssqlDataSync mssqlDataSync = new MssqlDataSync();
-
-                    // Call the synchronization method
-
-                    //mssqlDataSync.syncAllDataFromSQLiteToMSSQL(requireContext());
-                    //mssqlDataSync.syncDataOptionsFromSQLiteToMSSQL(requireContext());
-                    // mssqlDataSync.syncCostDataFromSQLiteToMSSQL(requireContext());
-                    //  mssqlDataSync.syncSupplementsOptionsFromSQLiteToMSSQL(requireContext());
-                    //  mssqlDataSync.syncTablesFromSQLiteToMSSQL(requireContext());
-                    //  mssqlDataSync.syncRoomsFromSQLiteToMSSQL(requireContext());
-
-        /*        mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(requireContext());
-                mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(requireContext());
-                mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(requireContext());
-                mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(requireContext());
-                mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(requireContext());
-                mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(requireContext());
-
-               */
-
-
-                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME);
-                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.COST_TABLE_NAME);
-                    mDatabaseHelper.deleteAllDataFromTableTable(DatabaseHelper.TABLES);
-                    mDatabaseHelper.deleteAllDataFromRoomsTable(DatabaseHelper.ROOMS);
-                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.CAT_TABLE_NAME);
-                  //  mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.TABLE_NAME_STD_ACCESS);
-                    mDatabaseHelper.deleteAllDataFromTable(DatabaseHelper.SUB_CAT_TABLE_NAME);
-                    // dbManager.deleteItemsWithSyncStatusNotOffline();
+                    } else {
+                        Toast.makeText(getContext(), "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (SQLException e) {
+                    Log.e("LogoutSyncError", "Database error during Sync", e);
+                    Toast.makeText(getContext(), "Database error. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Log.e("LogoutSyncError", "Unexpected error during Sync", e);
+                    Toast.makeText(getContext(), "Unexpected error occurred. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                } finally {
+                    // Clear shared preferences and navigate to login
+                    clearSharedPreferences();
                     String androidVersion = DeviceInfo.getAndroidVersion();
                     Log.d("DeviceInfo", "Android Version: " + androidVersion);
                     // Trim the strings to avoid any leading or trailing whitespace issues
@@ -415,18 +460,21 @@ private  EditText searchEditText;
                         Log.d("SyncService", "Starting SyncService");
                         SyncService.startSync(requireContext());
                     }
-
-                } else{
-                    Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
-
                 }
-
             }
         });
 
 
         return view;
     }
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+    }
+
 
     private void showPinDialog(String activity, Runnable onSuccessAction) {
         // Inflate the PIN dialog layout
@@ -601,6 +649,14 @@ private  EditText searchEditText;
         startActivity(intent);
     }
 
-
+                public boolean isNetworkAvailable() {
+                    ConnectivityManager connectivityManager =
+                            ContextCompat.getSystemService(getContext(), ConnectivityManager.class);
+                    if (connectivityManager != null) {
+                        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+                        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+                    }
+                    return false;
+                }
 
 }

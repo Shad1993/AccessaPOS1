@@ -225,6 +225,12 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                             String cashierid = "Cashier Id: " + Cashierid;
                             String Posnum = "POS Number: " + PosNum;
                             String SellerInfo = "** Seller Info *** " ;
+
+                            // Get the current date and time
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String currentDateTime = dateFormat.format(new Date());
+                            String datetime = "Date/Time: " + currentDateTime;
+
                             String SellerID = "Seller ID: " + Cashior;
                            String cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();
                            int covernumber= mDatabaseHelper.getSumNumberOfCovers(reportType,Cashior);
@@ -269,6 +275,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                             service.printText(SellerInfo + "\n", null);
                             service.printText(SellerID + "\n", null);
                             service.printText(SellerName + "\n", null);
+                            service.printText(datetime + "\n\n", null);
 
                         }
 
@@ -310,57 +317,55 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         newDataList = fetchDataBasedOnReportTypeAndCashier(reportType,Cashior);
                         // Initialize the paymentAdapter
 
-                        int lineWidths= 48;
+                        int lineWidths = 48;
+
                         for (DataModel item : newDataList) {
                             String paymentName = item.getLongDescription();
                             String transactionid = item.getTransactionid();
+                            String comment = item.getComment();
+                            double totalAmount = item.getTotalPrice();
+                            int quantity = item.getQuantity();
 
-                                String comment=item.getComment();
-                                double totalAmount = item.getTotalPrice();
-                            int quantity= item.getQuantity();
+                            // Check if paymentName is "----- CRN Transactions -----"
+                            if ("----- CRN Transactions -----".equals(paymentName)) {
+                                // Print the refund header
+                                service.printText("*************Refund*************\n", null);
+                                continue; // Skip further processing for this separator
+                            }
+
+                            // Check if transaction ID starts with "CRN"
                             if (transactionid != null && transactionid.startsWith("CRN")) {
-                                // Transaction ID starts with "CRN"
-                                totalAmount=-totalAmount;
-                                // Implement your logic here
-                            } else {
-                                // Transaction ID does not start with "CRN"
-                                totalAmount=totalAmount;
+                                totalAmount = -totalAmount;
                             }
 
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
+                            String formattedPaymentInfo = paymentName + " X " + quantity;
+                            String formattedAmount = " Rs " + formattedTotalAmount;
 
-
-                            String formattedPaymentInfo =  paymentName + " X " + quantity ;
-                            String formattedam=" Rs " + formattedTotalAmount;
-
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+                            int remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedAmount.length();
+                            String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
+
+                            // Special case for EVENTS
                             if ("EVENTS".equals(paymentName) && comment != null) {
-
-
-
-                                String commentsname = item.getComment();
+                                String commentsName = item.getComment();
                                 double totalAmounts = item.getTotalPrice();
-                                int quantitys= item.getQuantity();
+                                int quantitys = item.getQuantity();
                                 formattedTotalAmount = String.format("%.2f", totalAmounts);
 
+                                formattedPaymentInfo = "--->" + commentsName + " X " + quantitys;
+                                formattedAmount = "(" + " Rs " + formattedTotalAmount + ")";
 
-                                formattedPaymentInfo =  commentsname + " X " + quantitys ;
-                                formattedam="("+" Rs " + formattedTotalAmount+ ")";
-                                formattedPaymentInfo = "--->" + formattedPaymentInfo;
-                                remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
-                                paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
+                                remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedAmount.length();
+                                paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedAmount;
 
                                 // Print the payment information for the current item
                                 service.printText(paddedPaymentInfo + "\n", null);
-
                             }
                         }
+
                         service.printText(lineSeparator + "\n", null);
 
 
@@ -383,42 +388,43 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         CatDataList = fetchCatDataBasedOnReportType(reportType,Cashior);
                         // Initialize the paymentAdapter
 
-                         lineWidths= 48;
+                        lineWidths = 48;
                         for (CatDataModel item : CatDataList) {
                             String categorycode = item.getCategorycode();
                             double totalAmount = item.getTotalPrice();
-                            int quantity= item.getTotalQuantity();
+                            int quantity = item.getTotalQuantity();
                             String transactionid = item.getTransactionid();
 
                             if (transactionid != null && transactionid.startsWith("CRN")) {
                                 // Transaction ID starts with "CRN"
-                                totalAmount=-totalAmount;
-                                // Implement your logic here
-                            } else {
-                                // Transaction ID does not start with "CRN"
-                                totalAmount=totalAmount;
+                                totalAmount = -totalAmount;
                             }
-                            Log.d("categorycode" , String.valueOf(categorycode));
-                            Log.d("quantity" , String.valueOf(quantity));
+
+                            // Check for separator and print refund message
+                            if ("---- Separator ----".equals(categorycode)) {
+                                service.printText("************* Refund *************\n", null);
+                                continue; // Skip further processing for separator
+                            }
+
+                            Log.d("categorycode", String.valueOf(categorycode));
+                            Log.d("quantity", String.valueOf(quantity));
+
                             String CategoryName = mDatabaseHelper.getCatNameById(categorycode);
-
-                            if (categorycode.equals("0")){
-
-                                CategoryName="Menu Repas";
+                            if (categorycode.equals("0")) {
+                                CategoryName = "Menu Repas";
                             }
+
                             String formattedTotalAmount = String.format("%.2f", totalAmount);
+                            String formattedPaymentInfo = CategoryName + " X " + quantity;
+                            String formattedam = " Rs " + formattedTotalAmount;
 
-
-                            String formattedPaymentInfo =  CategoryName + " X " + quantity ;
-                            String formattedam=" Rs " + formattedTotalAmount;
-
-                            int remainingSpace = lineWidths - formattedPaymentInfo.length()- formattedam.length();
-
+                            int remainingSpace = lineWidths - formattedPaymentInfo.length() - formattedam.length();
                             String paddedPaymentInfo = formattedPaymentInfo + " ".repeat(Math.max(0, remainingSpace)) + formattedam;
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
                         }
+
                         service.printText(lineSeparator + "\n", null);
 
                         String TotalSettlement= "Sellers(Encaissement) "  ;
@@ -443,7 +449,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         service.setFontSize(24, null);
 
 
-                        service.printText(totalLine + "\n", null);
+                     //   service.printText(totalLine + "\n", null);
                         String cashiorname= mDatabaseHelper.getCashierNameById(Cashior).toString();
                         String SellerName = "Seller Name: " + cashiorname;
                         service.printText(SellerName + "\n", null);
@@ -467,6 +473,18 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
 
                             // Print the payment information for the current item
                             service.printText(paddedPaymentInfo + "\n", null);
+                        }
+                        double cashret = mDatabaseHelper.getSumCashReturn(reportType, Cashior);
+                        if(cashret != 0 ) {
+                            String formattedCashAmount = String.format("%.2f", cashret);
+
+                            String formattedCashReturnInfo = "Change Returned";
+                            String formattedChangeAmount = " Rs- " + formattedCashAmount;
+                            int remainingSpacechange = lineWidth - formattedCashReturnInfo.length() - formattedChangeAmount.length();
+
+                            String paddedChangetInfo = formattedCashReturnInfo + " ".repeat(Math.max(0, remainingSpacechange)) + formattedChangeAmount;
+
+                            service.printText(paddedChangetInfo + "\n", null);
                         }
                         service.printText(lineSeparator + "\n", null);
 
@@ -516,7 +534,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
                         service.sendRAWData(boldOffBytes, null);
                         service.setFontSize(24, null);
 
-                        double cashret = mDatabaseHelper.getSumCashReturn(reportType, Cashior);
+                         cashret = mDatabaseHelper.getSumCashReturn(reportType, Cashior);
                         double tenderval = mDatabaseHelper.getSumOfTotalForCashTransactionsByReportTypeAndCashierId(reportType, Cashior);
                         double cashbackval = 0.0;
                         double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
@@ -834,9 +852,12 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
     private List<DataModel> fetchDataBasedOnReportTypeAndCashier(String reportType, int cashierId) {
         // Implement the logic to fetch data based on the report type and cashier ID
         List<DataModel> dummyDataList = new ArrayList<>();
-        dummyDataList = mDatabaseHelper.getDataForReportTypeAndCashier(reportType, cashierId);
+        dummyDataList = mDatabaseHelper.getDataBasedOnReportTypePerId(reportType, cashierId);
         return dummyDataList;
     }
+
+
+
 
     private List<CatDataModel> fetchCatDataBasedOnReportType(String reportType,int cashierId) {
         // Implement your logic to fetch data based on the selected report type
@@ -845,7 +866,7 @@ public class PrintDailyReportPerCashior extends AppCompatActivity {
 
         // Assuming you have a method in YourDatabaseHelper to fetch data based on report type
         // Replace the method and parameters with your actual database queries
-        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamilleAndCashierId(reportType,cashierId);
+        dummyDataList = mDatabaseHelper.getDataBasedOnTransactionFamillePerId(reportType,cashierId);
 
         return dummyDataList;
     }

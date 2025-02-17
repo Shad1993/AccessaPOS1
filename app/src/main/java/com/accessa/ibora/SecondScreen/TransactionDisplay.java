@@ -1,11 +1,17 @@
 package com.accessa.ibora.SecondScreen;
 
 
+import static com.accessa.ibora.sales.Sales.ItemGridAdapter.PERMISSION_REQUEST_CODE;
+
+import android.Manifest;
+import android.app.Activity;
 import android.app.Presentation;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +26,8 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,6 +36,8 @@ import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.sales.ticket.TicketAdapter;
 import com.bumptech.glide.Glide;
 import com.squareup.picasso.Picasso;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -87,15 +97,39 @@ public class TransactionDisplay extends Presentation {
         // Start updating the time display
         startUpdatingTime();
         AppCompatImageView imageView = findViewById(R.id.empty_image_view);
+        SharedPreferences sharedPreference = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
 
-        Glide.with(getContext())
-                .asGif()
-                .load(R.drawable.ads)
-                .into(imageView);
+        String ShopName = sharedPreference.getString("ShopName", null);
+        Log.d("ShopName", ShopName);
+        // Retrieve the total amount and total tax amount from the transactionheader table
+        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
+
+        if (cursorCompany != null && cursorCompany.moveToFirst()) {
+            int columnLogoPathIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_Logo);
+
+            if (columnLogoPathIndex != -1) {
+                String logoPath = cursorCompany.getString(columnLogoPathIndex);
+
+                // Ensure the logo path is not null or empty
 
 
+                    if (logoPath != null && !logoPath.isEmpty()) {
+                        // Load image from web link
+                        Glide.with(getContext())
+                                .load(logoPath)
+                                .placeholder(R.drawable.logobonibora) // Placeholder image while loading
+                                .error(R.drawable.logobonibora)
+                                .into(imageView);
+                        imageView.setVisibility(View.VISIBLE);
+                    } else {
+                        // Load image from local storage
 
+                            loadLocalImage(imageView, String.valueOf(logoPath));
 
+                    }
+
+            }
+        }
 
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -188,5 +222,50 @@ public class TransactionDisplay extends Presentation {
         super.onStop();
         // Stop updating the time when the presentation is stopped
         handler.removeCallbacks(timeRunnable);
+    }
+    public static void loadLocalImage(ImageView imageView, String imageLocation) {
+        if (imageLocation != null && !imageLocation.isEmpty()) {
+            File imageFile = new File(imageLocation);
+            if (imageFile.exists()) {
+                // Calculate the image's dimensions without loading it into memory
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+
+                // Calculate the desired sample size to scale down the image
+                options.inSampleSize = calculateInSampleSize(options, 100, 100); // Replace desiredWidth and desiredHeight with the desired dimensions
+
+                // Set options to load the scaled-down version of the image
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565; // Adjust this based on your requirements
+
+                // Load the image with the updated options
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+                imageView.setImageBitmap(bitmap);
+            } else {
+                imageView.setImageResource(R.drawable.logobonibora);
+            }
+        } else {
+            imageView.setImageResource(R.drawable.logobonibora);
+        }
+    }
+
+    private static int calculateInSampleSize(BitmapFactory.Options options, int desiredWidth, int desiredHeight) {
+        final int imageWidth = options.outWidth;
+        final int imageHeight = options.outHeight;
+        int inSampleSize = 1;
+
+        if (imageHeight > desiredHeight || imageWidth > desiredWidth) {
+            final int halfHeight = imageHeight / 2;
+            final int halfWidth = imageWidth / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // the width and height larger than the desired dimensions.
+            while ((halfHeight / inSampleSize) >= desiredHeight && (halfWidth / inSampleSize) >= desiredWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
     }
 }

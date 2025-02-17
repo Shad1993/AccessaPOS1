@@ -213,30 +213,31 @@ public class DBManager {
             lastDepartmentCode = cursor.getString(0); // Get the last department code from the cursor
         }
 
-
-
         // Increment the department code
         String nextDepartmentCode = ""; // Initialize with an empty string
 
         if (lastDepartmentCode != null && !lastDepartmentCode.isEmpty()) {
-            String numericPart = lastDepartmentCode.substring(1); // Extract the numeric part of the department code
+            // Extract the numeric part from the department code using a regex
+            String numericPart = lastDepartmentCode.replaceAll("[^\\d]", ""); // Remove all non-digit characters
             if (!numericPart.isEmpty()) {
-                int numericValue = Integer.parseInt(numericPart);
-                int nextNumericValue = numericValue + 1;
-                nextDepartmentCode = lastDepartmentCode.charAt(0) + String.valueOf(nextNumericValue); // Reconstruct the department code
+                int numericValue = Integer.parseInt(numericPart); // Convert the numeric part to an integer
+                int nextNumericValue = numericValue + 1; // Increment the numeric value
+                // Reconstruct the department code with the prefix
+                String prefix = lastDepartmentCode.replaceAll("\\d", ""); // Extract the prefix (non-numeric part)
+                nextDepartmentCode = prefix + nextNumericValue;
             } else {
-                nextDepartmentCode = lastDepartmentCode; // Keep the same department code if the numeric part is empty
+                // If no numeric part exists, default to a starting value
+                nextDepartmentCode = lastDepartmentCode + "1";
             }
         } else {
-            lastDepartmentCode = "D0"; // Default department code if there is no previous code
-            nextDepartmentCode = lastDepartmentCode;
+            // Default department code if no previous code exists
+            nextDepartmentCode = "D1";
         }
 
         if (cursor != null) {
             cursor.close();
         }
         return nextDepartmentCode;
-
     }
 
     public Cursor Registor(String enteredPIN, String cashorlevel, String cashorname, String cashordepartment,String DateCreated,String LastModified) {

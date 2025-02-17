@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -37,6 +41,7 @@ import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.Sync.SyncServiceroomstable;
 import com.accessa.ibora.Sync.Syncforold;
 import com.accessa.ibora.Sync.Syncforoldroomstable;
+import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.items.DBManager;
 import com.accessa.ibora.product.items.DatabaseHelper;
 import com.accessa.ibora.product.items.RecyclerItemClickListener;
@@ -417,6 +422,19 @@ public class RoomsFragment extends Fragment {
         mSyncFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try {
+                    if (isNetworkAvailable()) {
+                        SharedPreferences preferences = getContext().getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+                        // Retrieve values from SharedPreferences (or use defaults if not set)
+                        String _user = preferences.getString("_user", null);
+                        String _pass = preferences.getString("_pass", null);
+                        String _DB = preferences.getString("_DB", null);
+                        String _server = preferences.getString("_server", null);
+
+                        if (!mDatabaseHelper.isServerReachable(_server)) {
+                            Toast.makeText(getContext(), "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
                 int levelNumber = Integer.parseInt(cashorlevel);
                 SharedPreferences AccessLevelsharedPreferences = getContext().getSharedPreferences("HigherLevelConfig", Context.MODE_PRIVATE);
                 String Activity="SyncRoomsAndTables_";
@@ -459,6 +477,21 @@ public class RoomsFragment extends Fragment {
                     Toast.makeText(getContext(), getText(R.string.Notallowed), Toast.LENGTH_SHORT).show();
 
                 }
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (SQLException e) {
+                    Log.e("LogoutSyncError", "Database error during Sync", e);
+                    Toast.makeText(getContext(), "Database error. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Log.e("LogoutSyncError", "Unexpected error during logout", e);
+                    Toast.makeText(getContext(), "Unexpected error occurred. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                } finally {
+                    // Clear shared preferences and navigate to login
+                    clearSharedPreferences();
+                   // navigateToLogin();
+                }
 
             }
 
@@ -466,6 +499,24 @@ public class RoomsFragment extends Fragment {
         });
         return view;
     }
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                ContextCompat.getSystemService(getContext(), ConnectivityManager.class);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+    }
+
+
     private void showPinDialog(String activity, Runnable onSuccessAction) {
         // Inflate the PIN dialog layout
         LayoutInflater inflater = getLayoutInflater();

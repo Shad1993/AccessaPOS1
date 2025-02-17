@@ -570,6 +570,8 @@
     <string name="select_icon">Select Image</string>
     <string name="display_qr">Display Qr</string>
     <string name="display_phone">Display Phone Number</string>
+    <string name="voidItem">Void Item</string>
+    <string name="takeaway">Take Away</string>
     <string-array name="buyer_types">
         <item>VATR</item>
         <item>NVTR</item>

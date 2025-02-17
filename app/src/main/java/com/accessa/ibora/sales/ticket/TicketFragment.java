@@ -484,6 +484,8 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
             if (canHigherAccessReceipt ) {
                 showPinDialog(Activity, () -> {
                     try {
+                                            Log.d("drawer26", "drawer26");
+
                         woyouService.openDrawer(null);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
@@ -493,6 +495,8 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
             // Check permission for Receipts
             else if (!canHigherAccessReceipt && canAccessReceipt) {
                 try {
+                                        Log.d("drawer27", "drawer27");
+
                     woyouService.openDrawer(null);
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
@@ -569,9 +573,8 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                             cashierAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                             cashiorspinnerReportType.setAdapter(cashierAdapter);
                             // Set up RecyclerViews and their adapters
-                            setUpRecyclerViews(dialogView);
-                            // Variable to hold the selected report type
-                            // Variable to hold the selected report type
+                            setUpRecyclerViews(dialogView,1);
+
                             // Variables to hold the selected report type, formatted total tax, and formatted total amount
                             final String[] selectedReportType = new String[1];
                             final int[] selectedCashierId = new int[1];
@@ -664,7 +667,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
                                 @Override
                                 public void onNothingSelected(AdapterView<?> parentView) {
-                                    // Do nothing here
+                                    // Do nothing hereF
                                 }
                             });
 
@@ -720,7 +723,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                 cashierAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 cashiorspinnerReportType.setAdapter(cashierAdapter);
                 // Set up RecyclerViews and their adapters
-                setUpRecyclerViews(dialogView);
+                setUpRecyclerViews(dialogView,1);
                 // Variable to hold the selected report type
                 // Variable to hold the selected report type
                 // Variables to hold the selected report type, formatted total tax, and formatted total amount
@@ -878,7 +881,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                     spinnerReportType.setAdapter(adapter);
 
                     // Set up RecyclerViews and their adapters
-                    setUpRecyclerViews(dialogView);
+                    setUpRecyclerViews(dialogView,1);
 
                     // Variables to hold the selected report type, formatted total tax, and formatted total amount
                     final String[] selectedReportType = new String[1];
@@ -970,7 +973,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                 spinnerReportType.setAdapter(adapter);
 
                 // Set up RecyclerViews and their adapters
-                setUpRecyclerViews(dialogView);
+                setUpRecyclerViews(dialogView,1);
 
                 // Variables to hold the selected report type, formatted total tax, and formatted total amount
                 final String[] selectedReportType = new String[1];
@@ -1054,11 +1057,15 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
             boolean isalreadysplitted=false;
 
             if (roomid.get() != 0 && tableid.get() != null && !"0".equals(tableid) && !tableid.get().isEmpty()) {
-                // Fetch the transaction ID in progress
                 String transactionIdInProgress1 = mDatabaseHelper.getInProgressTransactionId(String.valueOf(roomid.get()), tableid.get());
 
-                // Check if the transaction is already split
-                isalreadysplitted = mDatabaseHelper.isTransactionSplitted(transactionIdInProgress1);
+                if (transactionIdInProgress1 != null && !transactionIdInProgress1.isEmpty()) {
+                    isalreadysplitted = mDatabaseHelper.isTransactionSplitted(transactionIdInProgress1);
+                } else {
+                    Toast.makeText(getContext(), "Transaction ID is invalid or not found.", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+
             } else {
                 // Show a Toast message if roomid or tableid is invalid
                 Toast.makeText(getContext(), "Please select both room and table.", Toast.LENGTH_LONG).show();
@@ -2832,9 +2839,10 @@ if(Type.equals("DRN")) {
                         latestTransactionDBNCounter++;
                         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
                         PosNum = shardPreference.getString(POSNumber, null);
-
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                        String currentDateTime = dateFormat.format(new Date());
                         // Generate the transaction ID
-                        String newTransactionId = Type + "-" + PosNum + "-" + latestTransactionDBNCounter;
+                        String newTransactionId = currentDateTime + "-" + Type + "-" + PosNum +"-" +  latestTransactionDBNCounter;
 
                         // Update the transaction ID in the transaction table
                         mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId, newTransactionId, String.valueOf(roomid), tableid, 2);
@@ -2854,7 +2862,7 @@ if(Type.equals("DRN")) {
                         mDatabaseHelper.updateReasonStatus(newTransactionId, creditNoteReason);
 
                         updateTransactionStatus();
-
+                        decrementTransactionCounter();
                         // Start the activity with the selected receipt data
                         startNewActivity(Type, newTransactionId, name, String.valueOf(roomid), tableid, creditNoteReason);
                         getActivity().finish();
@@ -2901,9 +2909,10 @@ if(Type.equals("DRN")) {
 
     // Increment the transaction counter
     latestTransactionProformaCounter++;
-
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    String currentDateTime = dateFormat.format(new Date());
     // Generate the transaction ID with the format "MEMO-integer"
-    String newTransactionId = Type + "-" +PosNum + "-" + latestTransactionProformaCounter;
+    String newTransactionId = currentDateTime + "-" +Type +"-" +PosNum +  "-" + latestTransactionProformaCounter;
     // Update the transaction ID in the transaction table for transactions with status "InProgress"
     //mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
 
@@ -2911,12 +2920,16 @@ if(Type.equals("DRN")) {
     //Log.d("latesttransId", latesttransId);
     //Log.d("newTransactionId", newTransactionId);
 
-    Log.d("rlatesttransId" , latesttransId );
-    if(latesttransId.startsWith("PRF")){
+    Log.d("rlatesttransIdz" , latesttransId );
+    Log.d("newTransactionIdz" , newTransactionId );
+
+        if (newTransactionId.contains("-PRF-")) {
           //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
         mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
         mDatabaseHelper.duplicateTransactionLines(latesttransId,newTransactionId);
-        mDatabaseHelper.updateTransactionStatusoldprf(latesttransId,"OLDPRF");
+        mDatabaseHelper.updateTransactionStatusoldprf(newTransactionId,"OLDPRF");
+
+            latesttransId=newTransactionId;
     }else{
             mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
             // Update the transaction ID in the header table for transactions with status "InProgress"
@@ -2933,12 +2946,12 @@ if(Type.equals("DRN")) {
     editor.apply();
                     String MRAMETHOD="Single";
     // Update the transaction status for all in-progress transactions to "saved"
-    mDatabaseHelper.updateTransactionStatusByTransactionId(Type,MRAMETHOD,null, newTransactionId);
+    mDatabaseHelper.updateTransactionStatusByTransactionId("OLDPRF",MRAMETHOD,null, newTransactionId);
   //  updateTransactionStatus();
 
                     // Start the activity with the selected receipt data
 
-    startNewActivity(Type, newTransactionId, null, String.valueOf(roomid),tableid,null);
+    startNewActivity("OLDPRF", newTransactionId, null, String.valueOf(roomid),tableid,null);
                     getActivity().finish();
 
 
@@ -2965,6 +2978,7 @@ if(Type.equals("DRN")) {
             // Get the latest transaction counter value from SharedPreferences
             SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
             int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
+            Log.d("latestTransactionCDNCounter" , String.valueOf(latestTransactionCDNCounter));
             // Initialize SharedPreferences
             SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
             roomid = preferences.getInt("roomnum", 0);
@@ -2987,8 +3001,11 @@ if(Type.equals("DRN")) {
             // Increment the transaction counter
             latestTransactionCDNCounter++;
 
+            SimpleDateFormat dateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
+            String currentDateTime = dateFormat1.format(new Date());
+
             // Generate the transaction ID with the format "MEMO-integer"
-            String newTransactionId = Type + "-" +PosNum + "-" +latestTransactionCDNCounter;
+            String newTransactionId = currentDateTime + "-" + Type + "-" +PosNum +"-" +latestTransactionCDNCounter;
             // Update the transaction ID in the transaction table for transactions with status "InProgress"
             mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId,newTransactionId, String.valueOf(roomid),tableid,3);
             // Update the transaction ID in the header table for transactions with status "InProgress"
@@ -3014,7 +3031,7 @@ if(Type.equals("DRN")) {
             getActivity().finish();
 
 
-            // Dismiss the dialog when the "Cancel" button is clicked
+            // Dismiss the dialog when the "Cancel" button is clFicked
             alertDialog.dismiss();
         }
     });
@@ -3055,6 +3072,7 @@ if(Type.equals("DRN")) {
                         // Proceed with transaction updates and status changes
                         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("TransactionPrefs", Context.MODE_PRIVATE);
                         int latestTransactionCDNCounter = sharedPreferences.getInt("transaction_counter_CDN", 0);
+                        Log.d("latestTransactionCDNCounter" , String.valueOf(latestTransactionCDNCounter));
 
                         // Retrieve other data like roomid, tableid, etc.
                         SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
@@ -3074,8 +3092,10 @@ if(Type.equals("DRN")) {
                         String currentTime = timeFormat.format(new Date());
                         SharedPreferences shardPreference = getContext().getSharedPreferences("POSNum", Context.MODE_PRIVATE);
                         PosNum = shardPreference.getString(POSNumber, null);
+                        SimpleDateFormat dateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
+                        String currentDateTime = dateFormat1.format(new Date());
 
-                        String newTransactionId = Type + "-" + PosNum + "-" + latestTransactionCDNCounter;
+                        String newTransactionId = currentDateTime + "-" + Type + "-" + PosNum +"-"  + latestTransactionCDNCounter;
 
                         // Update transaction details in the database
                         mDatabaseHelper.updateOnresetTransactionTransactionIdInProgress(latesttransId, newTransactionId, String.valueOf(roomid), tableid, 4);
@@ -3088,10 +3108,12 @@ if(Type.equals("DRN")) {
 
                         double totalPriceSum = mDatabaseHelper.getTotalAmount(newTransactionId, String.valueOf(roomid), tableid);
                         mDatabaseHelper.insertSettlementAmount("Refund", -totalPriceSum, newTransactionId, PosNum, currentDate, currentTime, String.valueOf(roomid), tableid);
-
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("transaction_counter_CDN", latestTransactionCDNCounter);
+                        editor.apply();
                         // Launch the next activity with the creditNoteReason
                         startNewActivity(Type, newTransactionId, name, String.valueOf(roomid), tableid, creditNoteReason);
-
+                        decrementTransactionCounter();
                         getActivity().finish();
                     });
 
@@ -3147,14 +3169,14 @@ if(Type.equals("DRN")) {
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
-        mDatabaseHelper.clearData(roomid,Integer.parseInt(tableid),latesttransId);
+        mDatabaseHelper.clearData(roomid,tableid,latesttransId);
         mDatabaseHelper.clearLinesByTransId(latesttransId);
         mDatabaseHelper.clearLinesByDateAndNullShift();
         double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
         double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
         // Optionally, you can notify the user or perform any other actions after clearing the transaction
 // Notify the listener that an item is added
-
+        mDatabaseHelper.deleteTenderAmountByTransactionId(latesttransId);
         // Refresh the data in the RecyclerView
         refreshData(totalAmount, TaxtotalAmount,"movetobottom");
 
@@ -3234,34 +3256,46 @@ if(Type.equals("DRN")) {
         Display presentationDisplay = getPresentationDisplay();
 
         if (presentationDisplay != null) {
-            // Create an instance of SeconScreenDisplay using the obtained display
+            // Create an instance of SecondaryScreenDisplay using the obtained display
             TransactionDisplay secondaryDisplay = new TransactionDisplay(getActivity(), presentationDisplay);
 
-                // Show the secondary display
-                secondaryDisplay.show();
+            // Run on the UI thread to prevent freezing
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Show the secondary display
+                    try {
+                        // Show the secondary display
+                        secondaryDisplay.show();
+                        // Update RecyclerView data on the secondary screen
+                        secondaryDisplay.updateRecyclerViewData(data);
+                    } catch (Exception e) {
+                        Log.e("SecondaryScreenError", "Error showing secondary display", e);
+                    }
+                }
+            });
 
-            // Update the RecyclerView data on the secondary screen
-            secondaryDisplay.updateRecyclerViewData(data);
         } else {
-            // Secondary screen not found or not supportedF
+            // Secondary screen not found or not supported
             displayOnLCD();
         }
     }
 
+
     private Display getPresentationDisplay() {
-        if (isAdded()) {  // Check if the Fragment is attached to an Activity
+        if (isAdded()) {  // Ensure the Fragment is attached to an Activity
             DisplayManager displayManager = (DisplayManager) requireContext().getSystemService(Context.DISPLAY_SERVICE);
-            Display[] displays = displayManager.getDisplays();
-            for (Display display : displays) {
-                if ((display.getFlags() & Display.FLAG_SECURE) != 0
-                        && (display.getFlags() & Display.FLAG_SUPPORTS_PROTECTED_BUFFERS) != 0
-                        && (display.getFlags() & Display.FLAG_PRESENTATION) != 0) {
-                    return display;
+            if (displayManager != null) {
+                // Retrieve only displays suitable for presentations
+                Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
+                if (displays.length > 0) {
+                    return displays[0]; // Return the first available presentation display
                 }
             }
         }
-        return null;
+        return null; // No suitable display found
     }
+
 
 
 
@@ -3745,15 +3779,7 @@ if(!movetobottom.equals("Notmovetobottom")){
         TextView cashreturn=getView().findViewById(R.id.textViewCashReturn);
         FooterLayout = getView().findViewById(R.id.footer_layout); // Initialize the container layout
         validate=getView().findViewById(R.id.val_layout);
-        if(latesttransId ==null){
-            latesttransId = generateNewTransactionId(); // Generate a new transaction ID for "InProgress" status
-            // Store the transaction ID in SharedPreferences
-            SharedPreferences sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(TRANSACTION_ID_KEY, latesttransId);
-            editor.apply();
-        }
         List<DatabaseHelper.SettlementSummary> summaries = mDatabaseHelper.getSettlementSummaries(latesttransId, Integer.parseInt(roonum), tableid);
 
         // Calculate the subtotal and display payment methods
@@ -3893,9 +3919,9 @@ if(!movetobottom.equals("Notmovetobottom")){
 
 
 
-    private void setUpRecyclerViews(View view) {
+    private void setUpRecyclerViews(View view,int cashiorid) {
         // Set up RecyclerView and its adapter for Transaction Details
-        List<DataModel> transactionDataList = fetchDataBasedOnReportType("Daily");
+        List<DataModel> transactionDataList = fetchDataBasedOnReportTypeAndCashier("Daily",cashiorid);
         reportAdapter = new SalesReportAdapter(transactionDataList);
         recyclerViewReports.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerViewReports.setAdapter(reportAdapter);
@@ -3927,6 +3953,8 @@ if(transactionIdInProgress != null) {
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
+            String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomId), tableid);
+            String transactionIdInProgress = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomId), tableid, statusType);
             int newNumberOfCovers = Integer.parseInt(input.getText().toString());
             mDatabaseHelper.updateNumberOfCovers(transactionIdInProgress, newNumberOfCovers);
             mDatabaseHelper.updateCoverCount(newNumberOfCovers, tableid, roomid);
@@ -3984,6 +4012,22 @@ if(transactionIdInProgress != null) {
 }
 
     }
+    public void decrementTransactionCounter() {
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
+        int lastCounter = sharedPreferences.getInt("counter", 1);
+
+        // Ensure the counter does not go below 1
+        if (lastCounter > 1) {
+            lastCounter--; // Decrement the counter
+        }
+
+        // Save the updated counter value in shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("counter", lastCounter);
+        editor.apply();
+
+        Log.d("TransactionCounter", "Counter decremented: " + lastCounter);
+    }
 
     private List<PaymentMethodDataModel> fetchPaymentMethodDataBasedOnReportType(String reportType) {
         // Implement logic to fetch data based on the selected report type for payment method
@@ -4026,7 +4070,7 @@ if(transactionIdInProgress != null) {
 
         // Assuming you have a method in YourDatabaseHelper to fetch payment method data based on report type
         // Replace the method and parameters with your actual database queries
-        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataForReportTypeAndCashier(reportType, cashierId);
+        paymentMethodDataList = mDatabaseHelper.getPaymentMethodDataBasedOnReportTypeAndCashierId(reportType, cashierId);
        // Log.d("ReportPopupDialog", "Payment Method Data: " + paymentMethodDataList.toString());
 
         return paymentMethodDataList;
@@ -4329,33 +4373,7 @@ if(transactionIdInProgress != null) {
         // Handle the cancel button click
         cancelButton.setOnClickListener(v -> reasonDialog.dismiss());
     }
-    public String generateNewTransactionId() {
-        // Retrieve the last used counter value from shared preferences
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("TransactionCounter", Context.MODE_PRIVATE);
-        int lastCounter = sharedPreferences.getInt("counter", 1);
 
-        // Increment the counter for the next transaction
-        int currentCounter = lastCounter + 1;
-
-        // Save the updated counter value in shared preferences
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("counter", currentCounter);
-        editor.apply();
-
-        // Extract the first three letters from companyName
-        String companyLetters = shopname.substring(0, Math.min(shopname.length(), 3)).toUpperCase();
-
-        String posNumberLetters = null;
-        Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(shopname);
-        if (cursorCompany != null && cursorCompany.moveToFirst()) {
-            int columnCompanyNameIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_POS_Num);
-            PosNum= cursorCompany.getString(columnCompanyNameIndex);
-            posNumberLetters = PosNum.substring(0, Math.min(PosNum.length(), 3)).toUpperCase();
-
-        }
-        // Generate the transaction ID by combining the three letters and the counter
-        return companyLetters + "-" + posNumberLetters + "-" + currentCounter;
-    }
     private void showPermissionDeniedDialog() {
         new AlertDialog.Builder(getContext())
                 .setTitle("Permission Denied")

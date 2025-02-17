@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,6 +18,8 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.hardware.display.DisplayManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +27,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,6 +45,7 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -60,6 +65,7 @@ import com.accessa.ibora.Report.SalesReportActivity;
 import com.accessa.ibora.SecondScreen.SeconScreenDisplay;
 import com.accessa.ibora.SecondScreen.TransactionDisplay;
 import com.accessa.ibora.Settings.SettingsDashboard;
+import com.accessa.ibora.Sync.MasterSync.MssqlDataSync;
 import com.accessa.ibora.Sync.SyncService;
 import com.accessa.ibora.login.login;
 import com.accessa.ibora.product.category.CategoryFragment;
@@ -277,6 +283,7 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("drawer9", "drawer9");
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
@@ -627,23 +634,81 @@ public class MainActivityMobile extends AppCompatActivity  implements SalesFragm
     public static MainActivityMobile getInstance() {
         return instance;
     }
+     public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                ContextCompat.getSystemService(this, ConnectivityManager.class);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+
     public void logout() {
-        // Perform any necessary cleanup or logout actions here
-        // For example, you can clear session data, close database connections, etc.
-        // Create an editor to modify the preferences
+        MssqlDataSync mssqlDataSync = new MssqlDataSync();
+
+        try {
+            if (isNetworkAvailable()) {
+                SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
+
+                // Retrieve values from SharedPreferences (or use defaults if not set)
+                String _user = preferences.getString("_user", null);
+                String _pass = preferences.getString("_pass", null);
+                String _DB = preferences.getString("_DB", null);
+                String _server = preferences.getString("_server", null);
+
+                // Run server check asynchronously
+                mDatabaseHelper.isServerReachableAsync(_server, isReachable -> {
+                    try {
+                        if (!isReachable) {
+                            Toast.makeText(this, "Server is offline. Sync skipped.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("LogoutSyncok", "Database  logout");
+                            // Perform sync operations
+                            mssqlDataSync.syncTransactionsFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncTransactionHeaderFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncInvoiceSettlementFromMSSQLToSQLite(this);
+                            mssqlDataSync.syncCountingReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncCashReportDataFromSQLiteToMSSQL(this);
+                            mssqlDataSync.syncFinancialReportDataFromSQLiteToMSSQL(this);
+                        }
+                    } catch (SQLException e) {
+                        Log.e("LogoutSyncError", "Database error during logout", e);
+                        Toast.makeText(this, "Database error. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e("LogoutSyncError", "Unexpected error during logout", e);
+                        Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        // Ensure logout happens after sync or error handling
+                        clearSharedPreferences();
+                        navigateToLogin();
+                    }
+                });
+
+            } else {
+                Toast.makeText(this, "No network connection. Sync skipped.", Toast.LENGTH_SHORT).show();
+                clearSharedPreferences();
+                navigateToLogin();
+            }
+        } catch (Exception e) {
+            Log.e("LogoutError", "Unexpected error during logout", e);
+            Toast.makeText(this, "Unexpected error occurred. Proceeding with logout.", Toast.LENGTH_SHORT).show();
+            clearSharedPreferences();
+            navigateToLogin();
+        }
+    }
+    private void clearSharedPreferences() {
+        SharedPreferences sharedPrefs = getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
+        sharedPrefs.edit().clear().apply();
+
         SharedPreferences sharedPreferences = getSharedPreferences("Login", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        sharedPreferences.edit().clear().apply();
+    }
 
-        // Clear all the stored values
-        editor.clear();
-
-        // Apply the changes
-        editor.apply();
-
-        // Redirect to the login activity
+    private void navigateToLogin() {
         Intent intent = new Intent(this, login.class);
         startActivity(intent);
-        finish(); // Optional: Finish the current activity to prevent navigating back to it using the back button
+        finish();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
