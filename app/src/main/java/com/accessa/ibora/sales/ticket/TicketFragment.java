@@ -373,7 +373,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
 
 
 
-                        showEditNumberOfCoversDialog(String.valueOf(roomid),tableid);
+                        showEditNumberOfCoversDialog(String.valueOf(roomId),tableid);
 
 
                     }
@@ -998,7 +998,6 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                         reportAdapter.updateData(newDataList);
                         paymentMethodAdapter.updateData(newDataLists);
 
-                        // Assuming you have a method to fetch total tax and total amount based on report type
                         // Assuming you have a method to fetch total tax and total amount based on report type
                         double totalamountwithoutTax = mDatabaseHelper.getSumOfTransactionTotalHTAWithoutShift(selectedReportType[0]);
                         double totalAmount = mDatabaseHelper.getSumOfTransactionTotalTTCWithoutShift(selectedReportType[0]);
@@ -3171,7 +3170,7 @@ if(Type.equals("DRN")) {
 
         mDatabaseHelper.clearData(roomid,tableid,latesttransId);
         mDatabaseHelper.clearLinesByTransId(latesttransId);
-        mDatabaseHelper.clearLinesByDateAndNullShift();
+        mDatabaseHelper.adjustFinancialRecordsByTransactionId(latesttransId);
         double totalAmount = mDatabaseHelper.calculateTotalAmount(String.valueOf(roomid), tableid);
         double TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmount(String.valueOf(roomid), tableid);
         // Optionally, you can notify the user or perform any other actions after clearing the transaction

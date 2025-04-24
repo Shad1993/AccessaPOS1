@@ -564,8 +564,11 @@ public class PrintDailyReport extends AppCompatActivity {
                             double loans = mDatabaseHelper.getSumOfTotalForLoanTransactionsByReportType(reportType);
                             double pickupval = mDatabaseHelper.getSumOfTotalForPickupTransactionsByReportType(reportType);
                             double cashinval = mDatabaseHelper.getSumOfTotalForCashInTransactionsByReportType(reportType);
-                            double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval);
-                            double cashnetval = tenderval - cashret;
+                        double creditnotetotal= mDatabaseHelper.getSumOfTransactionTotalTTCForCRN(reportType);
+
+                        double amountindrawerval = (tenderval + cashinval + loans + pickupval) - (cashret + cashbackval) -creditnotetotal;
+
+                        double cashnetval = tenderval - cashret;
 
 // Format values to 2 decimal places
                             String formattedCashret = String.format("%.2f", cashret);

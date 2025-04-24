@@ -61,6 +61,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.fragment.app.FragmentResultListener;
 public class SalesFragment extends Fragment implements FragmentResultListener {
@@ -468,7 +470,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                             String Catnum = String.valueOf(catId);
                                             Log.d("insertTransaction1", "insertTransaction1");
                                             // Insert a new transaction with IS_PAID as 0
-                                            mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+                                                mDatabaseHelper.insertTransaction(null,itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, newTotalPrice, Double.parseDouble(vat), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
 
                                         }
@@ -516,7 +519,8 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                                     String Catnum = String.valueOf(catId);
                                                     Log.d("insertTransaction2", "insertTransaction2");
                                                     // Insert a new transaction with IS_PAID as 0
-                                                    mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
+                                                        mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
 
 
                                                 }
@@ -541,6 +545,7 @@ public class SalesFragment extends Fragment implements FragmentResultListener {
                                                     Log.d("insertTransaction3", "insertTransaction3");
                                                     // Insert a new transaction with IS_PAID as 0
                                                     mDatabaseHelper.insertTransaction(null, itemId, Barcode, Weight, taxbeforediscount, currentpriceWithoutVat, CompanyShopNumber, Catnum, transactionId, transactionDate, 1, UnitPrice, calculateTax(), longDescription, unitprice, Double.parseDouble(priceWithoutVat), VatType, PosNum, Nature, ItemCode, Currency, TaxCode, priceAfterDiscount, TotalDiscount, String.valueOf(roomid), tableid, 0);
+
 
 
                                                 }

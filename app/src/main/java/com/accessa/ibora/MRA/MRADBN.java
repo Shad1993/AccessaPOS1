@@ -216,11 +216,22 @@ public class MRADBN extends AppCompatActivity {
                         JSONObject jsondetailedtransacs = new JSONObject();
                         if(SelectedBuyerProfile.equals("")) {
 
-                            if (cashorlevel.equals("0")) {
+                            if ("0".equals(cashorlevel)) {  // Avoid null pointer exception
                                 transactionType = "TRN";
-                            } else {
+                            }
+                            else if ("CRN".equals(TransactionType) || "CRN".equals(transactionType)) {
+                                transactionType = "CRN";
+                            }
+                            else if ("DRN".equals(TransactionType) || "DRN".equals(transactionType)) {
+                                transactionType = "DRN";
+                            }
+                            else if ("OLDPRF".equals(TransactionType) || "OLDPRF".equals(transactionType)) {
+                                transactionType = "PRF";
+                            }
+                            else {
                                 transactionType = TransactionType;
                             }
+
                             Cursor cursorCompany = mDatabaseHelper.getCompanyInfo(ShopName);
                             if (cursorCompany != null && cursorCompany.moveToFirst()) {
                                 int columnCompanyBRNIndex = cursorCompany.getColumnIndex(DatabaseHelper.COLUMN_BRN_NO);
@@ -247,7 +258,10 @@ public class MRADBN extends AppCompatActivity {
                         else {
                                 if (cashorlevel.equals("0")) {
                                     transactionType = "TRN";
-                                } else {
+                                } else if(TransactionType.equals("OLDPRF") || transactionType.equals("OLDPRF") ) {
+                                    transactionType = "PRF";
+
+                                }else {
                                     transactionType = TransactionType;
                                 }
                                 jsondetailedtransacs.put("invoiceCounter", String.valueOf(newCounter)); // Convert to String for JSON
@@ -442,6 +456,9 @@ public class MRADBN extends AppCompatActivity {
                         intent.putExtra("roomid", roomid);
                         intent.putExtra("tableid", tableid);
                         Log.d("transactionType", TransactionType);
+                        if ("OLDPRF".equals(TransactionType)) {
+                          TransactionType ="PRF";
+                        }
                         if (!"PRF".equals(TransactionType)) {
                             unmergeTable(tableid);
                         }
@@ -511,7 +528,9 @@ public class MRADBN extends AppCompatActivity {
         }
 
         mDatabaseHelper = new DatabaseHelper(this);
-
+        if(TransactionType=="OLDPRF"){
+            TransactionType="PRF";
+        }
 
        // Log.e("test1", roomid);
 
@@ -750,6 +769,7 @@ public class MRADBN extends AppCompatActivity {
 
         // Replace the following with your actual database query logic
         // Replace the following with your actual database query logic
+
         Cursor cursor = mDatabaseHelper.getTransactionsByStatusAndId(TransactionType, newtransactionid);
 
 

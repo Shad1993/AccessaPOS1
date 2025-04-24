@@ -718,7 +718,7 @@ public class printerSetupforPRF extends AppCompatActivity {
 
 
                         if(!"PRF".equals(invoicetype) || !"OLDPRF".equals(invoicetype)) {
-                            mDatabaseHelper.updateCoverCount(0,tableid, Integer.parseInt(roomid));
+                           // mDatabaseHelper.updateCoverCount(0,tableid, Integer.parseInt(roomid));
 
                             updateTransactionStatus();
                         }
@@ -733,6 +733,9 @@ public class printerSetupforPRF extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                            // Intent intent = new Intent(printerSetupforPRF.this, MainActivity.class);
+
+                               // startActivity(intent);
 
                                 restartApp(getApplicationContext(),cashReturn);
                             }

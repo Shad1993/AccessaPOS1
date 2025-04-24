@@ -5,6 +5,8 @@ package com.accessa.ibora.product.items;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 import android.content.Context;
+import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteStatement;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import androidx.core.content.ContextCompat;
@@ -878,7 +880,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TRANSACTION_MRA_QR + " TEXT, " +
             TRANSACTION_MRA_IRN + " TEXT, " +
             TRANSACTION_MRA_Invoice_Counter + " TEXT, " +
-
+            TRANSACTION_MRA_Method + " TEXT," +
             "FOREIGN KEY (" + ROOM_ID + ") REFERENCES " + ROOMS + "(" + ID + ")," +
             "FOREIGN KEY (" + TABLE_ID + ") REFERENCES " + TABLES + "(" + TABLE_ID + "), " +
             "FOREIGN KEY (" + TRANSACTION_TICKET_NO + ") REFERENCES " +
@@ -1323,53 +1325,75 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         boolean success = true;
 
+        Log.d("DB_UPDATE", "Updating room details for Room ID: " + roomId);
+
         // Update room details in the ROOMS table
         ContentValues roomValues = new ContentValues();
         roomValues.put(ROOM_NAME, newRoomName);
         roomValues.put(TABLE_COUNT, newTableCount);
 
         int rowsAffected = db.update(ROOMS, roomValues, ID + " = ?", new String[]{String.valueOf(roomId)});
+        Log.d("DB_UPDATE", "Rows affected in ROOMS table: " + rowsAffected);
+
         if (rowsAffected <= 0) {
             success = false;
+            Log.e("DB_UPDATE", "Failed to update room details.");
         }
 
         // Adjust the tables in the TABLES table based on the new table count
         if (success) {
+            Log.d("DB_UPDATE", "Fetching current table count for Room ID: " + roomId);
+
             // Get the current table count for the room
             Cursor cursor = db.query(TABLES, new String[]{"COUNT(*)"}, "room_id = ?", new String[]{String.valueOf(roomId)}, null, null, null);
-            cursor.moveToFirst();
-            int currentTableCount = cursor.getInt(0);
-            cursor.close();
+            if (cursor.moveToFirst()) {
+                int currentTableCount = cursor.getInt(0);
+                cursor.close();
+                Log.d("DB_UPDATE", "Current table count: " + currentTableCount);
 
-            // Add new tables if the new table count is greater
-            if (newTableCount > currentTableCount) {
-                for (int i = currentTableCount + 1; i <= newTableCount; i++) {
-                    ContentValues tableValues = new ContentValues();
-                    tableValues.put("room_id", roomId);
-                    tableValues.put("table_number", i);  // Adjust this if necessary
-                    tableValues.put("seat_count", 0);    // Adjust as needed
-                    tableValues.put("waiter_name", "");  // Adjust as needed
+                // Add new tables if the new table count is greater
+                if (newTableCount > currentTableCount) {
+                    Log.d("DB_UPDATE", "Adding new tables from " + (currentTableCount + 1) + " to " + newTableCount);
+                    for (int i = currentTableCount + 1; i <= newTableCount; i++) {
+                        ContentValues tableValues = new ContentValues();
+                        tableValues.put("room_id", roomId);
+                        tableValues.put("table_number", i);  // Adjust this if necessary
+                        tableValues.put("seat_count", 0);    // Adjust as needed
+                        tableValues.put("waiter_name", "");  // Adjust as needed
 
-                    long result = db.insert(TABLES, null, tableValues);
-                    if (result == -1) {
-                        success = false;
-                        break;
+                        long result = db.insert(TABLES, null, tableValues);
+                        Log.d("DB_UPDATE", "Inserted table " + i + " for Room ID: " + roomId + ", Result: " + result);
+                        if (result == -1) {
+                            success = false;
+                            Log.e("DB_UPDATE", "Failed to insert table " + i);
+                            break;
+                        }
                     }
                 }
-            }
 
-            // Remove excess tables if the new table count is less
-            if (newTableCount < currentTableCount) {
-                int rowsDeleted = db.delete(TABLES, "room_id = ? AND table_number > ?", new String[]{String.valueOf(roomId), String.valueOf(newTableCount)});
-                if (rowsDeleted < (currentTableCount - newTableCount)) {
-                    success = false;
+                // Remove excess tables if the new table count is less
+                if (newTableCount < currentTableCount) {
+                    Log.d("DB_UPDATE", "Removing tables with table_number > " + newTableCount);
+                    int rowsDeleted = db.delete(TABLES, "room_id = ? AND table_number > ?", new String[]{String.valueOf(roomId), String.valueOf(newTableCount)});
+                    Log.d("DB_UPDATE", "Rows deleted from TABLES: " + rowsDeleted);
+
+                    if (rowsDeleted < (currentTableCount - newTableCount)) {
+                        success = false;
+                        Log.e("DB_UPDATE", "Not all excess tables were deleted.");
+                    }
                 }
+            } else {
+                Log.e("DB_UPDATE", "Failed to fetch current table count.");
+                cursor.close();
+                success = false;
             }
         }
 
         db.close();
+        Log.d("DB_UPDATE", "Update process completed. Success: " + success);
         return success;
     }
+
 
 
     public String getOrderTypeByTransactionTicketNo(String transactionTicketNo) {
@@ -1670,48 +1694,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Optionally, you can check the number of rows affected
         if (rowsAffected > 0) {
             Log.d("updateTransactionTableNumber", "Transaction table number and transaction ID updated successfully.");
+
         } else {
             Log.d("updateTransactionTableNumber", "Failed to update transaction table number and transaction ID.");
         }
-removeDuplicateTransactions(db,newTransactionId);
+        ;
         // Close the database connection
+        countItemsPerDistinctBarcode(db,newTransactionId);
+        removeDuplicateTransactions(db,newTransactionId);
         db.close();
     }
 
 
-
-    public void updateTableNumber(String newTransactionId,String currentTableId, String newTableId, String roomId) {
+    public void updateTableNumber(String newTransactionId, String currentTableId, String newTableId, String roomId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String statusType= getLatestTransactionStatus(String.valueOf(roomId),newTableId);
-        String latesttransId= getLatestTransactionId(String.valueOf(roomId),newTableId,statusType);
-
 
         ContentValues values = new ContentValues();
         values.put(TABLE_ID, newTableId);
-        values.put(TRANSACTION_ID, latesttransId); // Assuming TRANSACTION_ID is the column name for the transaction ID
+        values.put(TRANSACTION_ID, newTransactionId);
 
+        // Ensure only rows where the corresponding transaction status in header is 'InProgress' are updated
+        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ?) " +
+                "AND " + TRANSACTION_ID + " IN (SELECT " + TRANSACTION_ID + " FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + TRANSACTION_STATUS + " = 'InProgress')";
 
-        // Define the WHERE clause to identify the row(s) to be updated
-        String whereClause = TABLE_ID + " = ? AND " + ROOM_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ?)";
         String[] whereArgs = {currentTableId, roomId, "0", "3"};
 
-        // Update the table with the new table ID and transaction ID if IS_PAID is 0
+        // Perform the update
         int rowsAffected = db.update(TRANSACTION_TABLE_NAME, values, whereClause, whereArgs);
 
-        // Optionally, you can check the number of rows affected
         if (rowsAffected > 0) {
-            Log.d("transfer", "Table number and transaction ID updated successfully."+ "roomId "+ roomId+ " " + newTransactionId);
+            Log.d("transfer", "✔ Successfully updated transaction ID for items with 'InProgress' status. Room ID: " + roomId + ", New Transaction ID: " + newTransactionId);
+            deleteTransactionsByConditions(db, roomId, currentTableId, newTransactionId);
         } else {
-            Log.d("transfer", "Failed to update table number and transaction ID. The table may be paid or not found."+ "roomId "+ roomId+ " newTransactionId" + newTransactionId);
+            Log.e("transfer", "❌ No updates made. Possible reasons: No matching transactions with 'InProgress' status, table is paid, or conditions not met. Room ID: " + roomId + ", New Transaction ID: " + newTransactionId);
         }
 
-        // Now perform the deletion if the update was successful
-        if (rowsAffected > 0) {
-            deleteTransactionsByConditions(db, roomId, currentTableId, newTransactionId);
-        }
-        // Close the database connection
         db.close();
     }
+
+
+
+
 
     public void updateTransactionTableNumberFornew(String currentTableId, String newTableId, String roomId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -2163,6 +2187,32 @@ removeDuplicateTransactions(db,newTransactionId);
 
         return sum;
     }
+    public double getSumOfTransactionTotalTTCForCRN(String reportType) {
+        double sum = 0.0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get the date filter based on the report type
+        String dateFilter = getDateFilterForFinancialTableBasedOnReportType2(reportType);
+
+        // Construct the SQL query
+        String query = "SELECT SUM(CASE WHEN " + TRANSACTION_STATUS + " = 'CRN' THEN " + TRANSACTION_TOTAL_TTC + " ELSE 0 END) AS TotalSum " +
+                "FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                " WHERE " + dateFilter;
+
+        // Log the SQL query for debugging
+        Log.d("FinancialQuery", "SQL Query: " + query);
+
+        // Execute the query
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor.moveToFirst()) {
+            sum = cursor.getDouble(cursor.getColumnIndex("TotalSum"));
+        }
+
+        cursor.close();
+        db.close();
+
+        return sum;
+    }
 
     public double getSumOfTransactionTotalTTCForCRN(String reportType, int shiftNumber) {
         double sum = 0.0;
@@ -2572,13 +2622,61 @@ removeDuplicateTransactions(db,newTransactionId);
         cursor.close();
         return sum;
     }
+    public Map<String, Integer> countItemsPerDistinctBarcode(SQLiteDatabase db, String transactionId) {
+        Map<String, Integer> itemCountMap = new HashMap<>();
+
+        // Step 1: Get all distinct barcodes from the transaction
+        String barcodeQuery = "SELECT DISTINCT " + TRANSACTION_BARCODE +
+                " FROM " + TRANSACTION_TABLE_NAME +
+                " WHERE " + TRANSACTION_ID + " = ?";
+
+        Cursor barcodeCursor = db.rawQuery(barcodeQuery, new String[]{transactionId});
+
+        Log.d("TransactionCount", "Verifying items for Transaction ID: " + transactionId);
+
+        // Step 2: For each barcode, count total quantity
+        while (barcodeCursor.moveToNext()) {
+            String barcode = barcodeCursor.getString(0); // Get barcode
+
+            if (barcode != null && !barcode.isEmpty()) {
+                // Step 3: Count total quantity of that barcode in the same transaction
+                String countQuery = "SELECT SUM(" + QUANTITY + ") FROM " + TRANSACTION_TABLE_NAME +
+                        " WHERE " + TRANSACTION_ID + " = ? AND " + TRANSACTION_BARCODE + " = ?";
+
+                Cursor countCursor = db.rawQuery(countQuery, new String[]{transactionId, barcode});
+
+                if (countCursor.moveToFirst()) {
+                    int totalQuantity = countCursor.getInt(0);
+                    itemCountMap.put(barcode, totalQuantity);
+                    Log.d("TransactionCount", "✔ Matched: Barcode: " + barcode + ", Total Quantity: " + totalQuantity);
+                }
+
+                countCursor.close();
+            } else {
+                Log.w("TransactionCount", "⚠ Warning: Found an empty or null barcode for Transaction ID: " + transactionId);
+            }
+        }
+
+        barcodeCursor.close();
+
+        // Step 4: Log if no matching items found
+        if (itemCountMap.isEmpty()) {
+            Log.e("TransactionCount", "❌ No matching items found for Transaction ID: " + transactionId);
+        }
+
+        return itemCountMap;
+    }
+
 
     public void removeDuplicateTransactions(SQLiteDatabase db, String transactionId) {
-        String query = "SELECT " + TRANSACTION_BARCODE +
-                " FROM " + TRANSACTION_TABLE_NAME +
-                " WHERE " + TRANSACTION_ID + " = ?" +
-                " GROUP BY " + TRANSACTION_BARCODE +
+        String query = "SELECT t." + TRANSACTION_BARCODE +
+                " FROM " + TRANSACTION_TABLE_NAME + " t" +
+                " INNER JOIN " + TRANSACTION_HEADER_TABLE_NAME + " h" +
+                " ON t." + TRANSACTION_ID + " = h." + TRANSACTION_TICKET_NO +
+                " WHERE t." + TRANSACTION_ID + " = ? AND h." + TRANSACTION_STATUS + " = 'InProgress'" +
+                " GROUP BY t." + TRANSACTION_BARCODE +
                 " HAVING COUNT(*) > 1";
+
 
         Cursor cursor = db.rawQuery(query, new String[]{transactionId});
 
@@ -2607,6 +2705,7 @@ removeDuplicateTransactions(db,newTransactionId);
 
             // Calculate sum of quantities and other fields for the rows to consolidate
             while (rowsToConsolidate.moveToNext()) {
+                int id = rowsToConsolidate.getInt(rowsToConsolidate.getColumnIndex(_ID));
                 int quantity = rowsToConsolidate.getInt(rowsToConsolidate.getColumnIndex(QUANTITY));
                 BigDecimal unitPrice = BigDecimal.valueOf(rowsToConsolidate.getDouble(rowsToConsolidate.getColumnIndex(TRANSACTION_UNIT_PRICE)));
                 BigDecimal sellingPrice = BigDecimal.valueOf(rowsToConsolidate.getDouble(rowsToConsolidate.getColumnIndex(PriceAfterDiscount)));
@@ -2616,8 +2715,17 @@ removeDuplicateTransactions(db,newTransactionId);
                 BigDecimal unitVatBeforeDisc = BigDecimal.valueOf(rowsToConsolidate.getDouble(rowsToConsolidate.getColumnIndex(TRANSACTION_VAT_BEFORE_DISC)));
                 BigDecimal unitVatAfterDisc = BigDecimal.valueOf(rowsToConsolidate.getDouble(rowsToConsolidate.getColumnIndex(TRANSACTION_VAT_AFTER_DISC)));
                 BigDecimal unitDiscount = BigDecimal.valueOf(rowsToConsolidate.getDouble(rowsToConsolidate.getColumnIndex(TRANSACTION_TOTAL_DISCOUNT)));
-
+                String transactionid= String.valueOf(rowsToConsolidate.getColumnIndex(TRANSACTION_ID));
                 totalQuantity += quantity;
+                Log.d("id", String.valueOf(id));
+                Log.d("transactionid", String.valueOf(transactionid));
+                Log.d("unitPrice", String.valueOf(unitPrice));
+
+                Log.d("quantityupate", String.valueOf(quantity));
+                Log.d("totalQuantity", String.valueOf(totalQuantity));
+
+
+
                 totalPrice = sellingPrice.multiply(BigDecimal.valueOf(totalQuantity));
                 totalTtc = unitTtc.multiply(BigDecimal.valueOf(totalQuantity));
                 vat = unitVat.multiply(BigDecimal.valueOf(totalQuantity));
@@ -2662,7 +2770,6 @@ removeDuplicateTransactions(db,newTransactionId);
 
         cursor.close();
     }
-
 
 
 
@@ -2950,11 +3057,14 @@ removeDuplicateTransactions(db,newTransactionId);
                 valuesTransactionsLoop.put(TRANSACTION_ID, latesttransId);
                 Log.d("TRANSACTION_ID", "TRANSACTION_ID ID: " + latesttransId);
 
-                // Define the WHERE clause to include TABLE_ID, IS_PAID (0 or 3 or NULL), and STATUS
-                String whereClauseTransactionsLoop = TABLE_ID + " = ? AND (" + IS_PAID + " = ? OR " + IS_PAID + " = ? OR " + IS_PAID + " IS NULL) AND " + TRANSACTION_STATUS + " = ?";
-                String[] whereArgsTransactionsLoop = {tableId, "0", "3", "VALID"};
+                // Define the WHERE clause to check TABLE_ID, TRANSACTION_STATUS,
+                // and ensure the transaction status in the header table is 'InProgress'
+                String whereClauseTransactionsLoop = TABLE_ID + " = ? AND " + TRANSACTION_STATUS + " = ? " +
+                        "AND EXISTS (SELECT 1 FROM " + TRANSACTION_HEADER_TABLE_NAME +
+                        " WHERE " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_ID + " = " + TRANSACTION_TABLE_NAME + "." + TRANSACTION_ID +
+                        " AND " + TRANSACTION_HEADER_TABLE_NAME + "." + TRANSACTION_STATUS + " = ?)";
 
-
+                String[] whereArgsTransactionsLoop = {tableId, "VALID", "InProgress"};
 
                 Log.d("updateTransactionTableIds", "Where Clause: " + whereClauseTransactionsLoop);
                 Log.d("updateTransactionTableIds", "Where Args: " + Arrays.toString(whereArgsTransactionsLoop));
@@ -2964,10 +3074,14 @@ removeDuplicateTransactions(db,newTransactionId);
 
                 // Log the number of rows updated
                 Log.d("updateTransactionTableIds", "Rows Updated in TRANSACTIONS for table " + tableId + ": " + rowsUpdatedTransactionsLoop);
-                deleteTransactionsByConditions(db,roomid,tableId,latesttransId);
 
-
+                // Proceed with deletion only if updates were made
+                if (rowsUpdatedTransactionsLoop > 0) {
+                    deleteTransactionsByConditions(db, roomid, tableId, latesttransId);
+                }
             }
+
+
 
 
             if (latesttransId == null) {
@@ -4245,6 +4359,27 @@ removeDuplicateTransactions(db,newTransactionId);
         db.close(); // Close the database connection
 
         return coverCount; // Return the retrieved CoverCount
+    }
+
+
+    public void deleteInvalidTables() {
+        SQLiteDatabase db = this.getWritableDatabase(); // Get writable database
+
+        // Define the WHERE clause to match tables starting with 'T' or having ROOM_ID = -2
+        String whereClause = TABLE_NAME + " LIKE ? OR " + ROOM_ID + " = ?";
+        String[] whereArgs = new String[]{"T%", "-2"};
+
+        // Execute the delete operation
+        int rowsDeleted = db.delete(TABLES, whereClause, whereArgs);
+
+        // Log the result
+        if (rowsDeleted > 0) {
+            Log.d("Database Delete", rowsDeleted + " invalid table(s) deleted successfully.");
+        } else {
+            Log.d("Database Delete", "No invalid tables found to delete.");
+        }
+
+        db.close(); // Close the database connection
     }
 
     public void updateCoverCount(int newCoverCount, String tableNumber, int roomId) {
@@ -8088,7 +8223,8 @@ removeDuplicateTransactions(db,newTransactionId);
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT * FROM " + TABLES +
                 " WHERE " + ROOM_ID + " = ? " +
-                " AND (" + MERGED + " <> 1 OR " + MERGED_SET_ID + " <> 0)";
+                " AND (" + MERGED + " <> 1 OR " + MERGED_SET_ID + " <> 0)" +
+                " AND NOT (" + TABLE_NUMBER + " = -2 AND " + ROOM_ID + " = -2)";
 
         return db.rawQuery(query, new String[]{roomId});
     }
@@ -8903,6 +9039,50 @@ removeDuplicateTransactions(db,newTransactionId);
         String sortOrder = PAYMENT_METHOD_COLUMN_NAME + " ASC";
         return db.query(PAYMENT_METHOD_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
     }
+
+    public void adjustFinancialRecordsByTransactionId(String transactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction(); // Start a transaction
+        try {
+            // Step 1: Retrieve the total payment amount and count of settlements for the transaction
+            double totalPaid = 0;
+            int settlementCount = 0;
+
+            String query = "SELECT SUM(" + SETTLEMENT_AMOUNT + "), COUNT(*) FROM " + INVOICE_SETTLEMENT_TABLE_NAME +
+                    " WHERE " + SETTLEMENT_INVOICE_ID + " = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{transactionId});
+            if (cursor.moveToFirst()) {
+                totalPaid = cursor.getDouble(0);  // Get the sum of settlement amounts
+                settlementCount = cursor.getInt(1); // Get the number of settlements
+            }
+            cursor.close();
+
+            // Step 2: Subtract values from FINANCIAL_TABLE_NAME
+            String updateQuery = "UPDATE " + FINANCIAL_TABLE_NAME +
+                    " SET " + FINANCIAL_COLUMN_TOTAL + " = " + FINANCIAL_COLUMN_TOTAL + " - ?, " +
+                    FINANCIAL_COLUMN_QUANTITY + " = " + FINANCIAL_COLUMN_QUANTITY + " - ?" +
+                    " WHERE " + TRANSACTION_SHIFT_NUMBER + " IS NULL " +
+                    " AND " + FINANCIAL_COLUMN_ID + " = ?";
+
+            SQLiteStatement stmt = db.compileStatement(updateQuery);
+            stmt.bindDouble(1, totalPaid); // Subtract total paid amount
+            stmt.bindLong(2, settlementCount); // Subtract number of settlements from quantity
+            stmt.bindString(3, transactionId); // Apply update for the transaction ID
+            int affectedRows = stmt.executeUpdateDelete();
+
+            Log.d("DB_UPDATE", "Updated rows: " + affectedRows);
+
+            db.setTransactionSuccessful(); // Mark transaction as successful
+        } catch (Exception e) {
+            Log.e("DB_ERROR", "Error adjusting financial records", e);
+        } finally {
+            db.endTransaction(); // End transaction
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
+    }
+
     public void clearLinesByDateAndNullShift() {
         SQLiteDatabase db = this.getWritableDatabase(); // Get writable database
         try {
@@ -8910,8 +9090,10 @@ removeDuplicateTransactions(db,newTransactionId);
             String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
             // Define the where clause and arguments
-            String whereClause = FINANCIAL_COLUMN_DATETIME + " = ? AND " + TRANSACTION_SHIFT_NUMBER + " IS NULL";
-            String[] whereArgs = { todayDate };
+            String whereClause = FINANCIAL_COLUMN_DATETIME + " = ? AND "
+                    + TRANSACTION_SHIFT_NUMBER + " IS NULL AND "
+                    + FINANCIAL_COLUMN_TRANSACTION_CODE + " != ?";
+            String[] whereArgs = { todayDate, "Loan" };
 
             // Perform the delete operation
             int deletedRows = db.delete(FINANCIAL_TABLE_NAME, whereClause, whereArgs);
@@ -8929,6 +9111,7 @@ removeDuplicateTransactions(db,newTransactionId);
             }
         }
     }
+
 
     // Method to delete data based on roomId, tableId, and transactionId
     public void clearData(int roomId, String tableId, String transactionId) {

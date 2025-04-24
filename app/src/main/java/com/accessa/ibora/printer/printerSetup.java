@@ -3,6 +3,7 @@ package com.accessa.ibora.printer;
 import static android.app.PendingIntent.getActivity;
 
 import static com.accessa.ibora.product.items.DatabaseHelper.PREFERENCE_NAME;
+import static com.accessa.ibora.product.items.DatabaseHelper.ROOM_ID;
 import static com.accessa.ibora.product.items.DatabaseHelper.STATUS_KEY;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_STATUS;
 import static com.accessa.ibora.product.items.DatabaseHelper.TRANSACTION_TICKET_NO;
@@ -834,6 +835,8 @@ public class printerSetup extends AppCompatActivity {
                                     areAllItemsPaid = false;
                                     if(tableid.startsWith("T") ){
                                         unmergeTable(tableid);
+
+
                                     }
                                     // Save the single transaction ticket number as the first variable
                                     String firstTransactionTicketNo = ticketNo;
@@ -855,16 +858,16 @@ public class printerSetup extends AppCompatActivity {
                                 if (cursor1 != null && cursor1.moveToFirst()) {
 
 
-                                    Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
+                                   // Log.d("TransactionInfo", "Second Transaction Ticket No: " + secondTransactionTicketNo);
                                     totalAmount = mDatabaseHelper.calculateTotalAmountBasedOnId(secondTransactionTicketNo, roomid, tableid);
                                     TaxtotalAmount = mDatabaseHelper.calculateTotalTaxAmountsNotSelectedNotPaid(secondTransactionTicketNo, roomid, tableid);
-                                    Log.e("totalAmountpt11", String.valueOf(totalAmount));
+                                  //  Log.e("totalAmountpt11", String.valueOf(totalAmount));
                                     cursortrans = mDatabaseHelper.getInProgressTransactions(Integer.parseInt(roomid), tableid);
 
                                     if (cursortrans != null) {
                                         int transactionCount = cursortrans.getCount(); // Get the number of rows
                                         if (transactionCount > 1) {
-                                            Log.d("TransactionInfosss", "More than one transaction in progress: " + transactionCount);
+                                           // Log.d("TransactionInfosss", "More than one transaction in progress: " + transactionCount);
 
                                             firstTransactionTicketNo = null;
                                             secondTransactionTicketNo = null;
@@ -874,7 +877,7 @@ public class printerSetup extends AppCompatActivity {
                                                 do {
                                                     String ticketNo = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_TICKET_NO));
                                                     String statustrans = cursortrans.getString(cursortrans.getColumnIndexOrThrow(TRANSACTION_STATUS));
-                                                    Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
+                                                  //  Log.d("TransactionInfo", "Ticket No: " + ticketNo + ", Status: " + statustrans);
 
                                                     // Assign transaction ticket numbers to variables
                                                     if (index == 0) {
@@ -897,6 +900,8 @@ public class printerSetup extends AppCompatActivity {
 
                                             if(tableid.startsWith("T") ){
                                                 unmergeTable(tableid);
+
+
                                             }
 
                                             // Save the single transaction ticket number as the first variable
@@ -1005,6 +1010,7 @@ public class printerSetup extends AppCompatActivity {
 
                                             if(tableid.startsWith("T") ){
                                                 unmergeTable(tableid);
+
                                             }
 
                                             // Save the single transaction ticket number as the first variable
@@ -1600,7 +1606,7 @@ public class printerSetup extends AppCompatActivity {
                           //  boolean areNOItemsSelected = mDatabaseHelper.areAllItemsNotSelected(transactionIdInProgress);
                             Log.e("areNOItemsSelected", String.valueOf(areNOItemsSelected));
                            // boolean isAtLeastOneItemSelected = mDatabaseHelper.isAtLeastOneItemSelected(transactionIdInProgress);
-                            Log.e("isAtLeastOneItemSelected", String.valueOf(isAtLeastOneItemSelected));
+                            Log.e("isAtLeastOneItemSelected1", String.valueOf(isAtLeastOneItemSelected));
 
                             if (areNOItemsSelected) {
                                 if(cashorlevel.equals("0")) {
@@ -1662,8 +1668,8 @@ public class printerSetup extends AppCompatActivity {
                                 }else{
                                     mDatabaseHelper.updatePaidStatusForSelectedRows(secondTransactionTicketNo, roomid, tableid);
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, secondTransactionTicketNo, roomid, tableid);
-                                    Log.d("rlatesttransIde2" , latesttransId );
-                                    Log.d("newTransactionIde2" , relatedtransid );
+                                   // Log.d("rlatesttransIde2" , latesttransId );
+                                    //Log.d("newTransactionIde2" , relatedtransid );
                                       /*  if (latesttransId.contains("-PRF-")) {
                                             //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
                                             mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
@@ -1719,8 +1725,8 @@ public class printerSetup extends AppCompatActivity {
 
                                 }else{
                                     mDatabaseHelper.updateTransactionHeaderStatusfornew(DatabaseHelper.TRANSACTION_STATUS_COMPLETED, transactionIdInProgress, roomid, tableid);
-                                    Log.d("rlatesttransIde4" , latesttransId );
-                                    Log.d("newTransactionIde4" , relatedtransid );
+                                  //  Log.d("rlatesttransIde4" , latesttransId );
+                                   // Log.d("newTransactionIde4" , relatedtransid );
                                       /*  if (latesttransId.contains("-PRF-")) {
                                             //  mDatabaseHelper.duplicateTransactionAndHeaderData(Type,latesttransId,newTransactionId, String.valueOf(roomid),tableid,0);
                                             mDatabaseHelper.duplicateHeaderTransactionData(latesttransId,newTransactionId, String.valueOf(roomid),tableid);
@@ -1771,12 +1777,13 @@ public class printerSetup extends AppCompatActivity {
                             @Override
                             public void run() {
 
-                           /*     Intent intent = new Intent(printerSetup.this, MainActivity.class);
+                                Intent intent = new Intent(printerSetup.this, MainActivity.class);
                                intent.putExtra("cash_return_key", cashReturn); // Replace cashReturn with your actual cash return value
                                 startActivity(intent);
-                                */
 
-                                restartApp(getApplicationContext(),cashReturn);
+                                deleteInvalidTables();
+
+                                //restartApp(getApplicationContext(),cashReturn);
                             }
                         });
 
@@ -1969,6 +1976,25 @@ if(anReturbed !=null){
         String[] parts = tableString.split(" ");
         return parts[parts.length - 1];
     }
+    public void deleteInvalidTables() {
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase(); // Get writable database
+
+        // Define the WHERE clause to match tables starting with 'T' or having ROOM_ID = -2
+        String whereClause = DatabaseHelper.TABLE_NAME + " LIKE ? OR " + DatabaseHelper.ROOM_ID + " = ?";
+        String[] whereArgs = new String[]{"T%", "-2"};
+
+        // Execute the delete operation
+        int rowsDeleted = db.delete(DatabaseHelper.TABLES, whereClause, whereArgs);
+
+        // Log the result
+        if (rowsDeleted > 0) {
+            Log.d("Database Delete", rowsDeleted + " invalid table(s) deleted successfully.");
+        } else {
+            Log.d("Database Delete", "No invalid tables found to delete.");
+        }
+
+        db.close(); // Close the database connection
+    }
     private void unmergeTable(String selectedTableNum) {
 
 
@@ -2013,6 +2039,7 @@ if(anReturbed !=null){
 
     }
     public static void restartApp(Context context, double cashReturn) {
+
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.putExtra("cash_return_key", cashReturn);

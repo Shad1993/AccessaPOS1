@@ -174,24 +174,24 @@ public class SyncService extends IntentService {
 
     private void performBidirectionalSync(Connection conn) {
         try {
-            // Step 1: Fetch data from the local SQLite database
+            // Get SharedPreferences where the DB parameters are stored
             SharedPreferences preferences = getSharedPreferences("DatabasePrefs", Context.MODE_PRIVATE);
-            String _zoneid = preferences.getString("_zone", null);
 
-            //  Cursor localCursor = mDatabaseHelper.getAllItems();
-           getAndInsertBuyerData(conn);
+            String _zoneid = preferences.getString("_zone", null);
+            // Step 1: Fetch data from the local SQLite database
+            getAndInsertBuyerData(conn);
             getCategoriesFromMssql(conn);
             getSubCategoryFromMssql(conn);
-           getDepartmentFromMssql(conn);
+            getDepartmentFromMssql(conn);
             getAndInsertSubDepartmentData(conn);
-           // getAndInsertVendorData(conn);
+            // getAndInsertVendorData(conn);
             getAndInsertOptionData(conn);
             getAndInsertSupplementData(conn);
             getAndInsertDiscountAndCouponData(conn);
             //getAndInsertCostData(conn);
-          // getRoomsAndTablesFromMssql(conn);
+            // getRoomsAndTablesFromMssql(conn);
             getItemsFromMssql(conn, Integer.parseInt(_zoneid));
-            getAndInsertStdAccessData(conn);
+             getAndInsertStdAccessData(conn);
         } catch (Exception e) {
             Log.e("SYNC_ERROR", e.getMessage());
         }

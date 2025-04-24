@@ -1582,28 +1582,32 @@ if(isAtLeastOneItemSelected){
 
         if(isAtLeastOneItemSelected) {
             cashReturn= sum - totalsplit;
-
+           double realtotal=mDatabaseHelper.calculateTotalAmountbyid(roomid,tableid,transactionIdInProgress);
             Log.d("total", "= " + totalsplit);
             Log.d("sum", "= " + sum);
             Log.d("totalAmountinserted", "= " + totalAmountinserted);
+            Log.d("totalAmount", "= " + totalAmount);
+            Log.d("realtotal", "= " + realtotal);
             Log.d(" " +
                     "", "= " + cashReturn);
-
+            totalAmount= realtotal;
             if( cashReturn>=0){
                 String newtransid=  generateNewTransactionId();
                 Log.d("latesttransIditemsel", String.valueOf(latesttransId));
                 Log.d("newtransiditemsel", String.valueOf(newtransid));
                 mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
                 // Update the transaction ID in the header table for transactions with status "InProgress"
+                Log.d("SendToHeader", String.valueOf(totalsplit) +" "+ latesttransId);
                 SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalsplit,"VAT 15%"),newtransid);
                 double newamoubt;
                 if(totalAmount != 0) {
                     newamoubt = totalAmount - totalsplit;
+                    Log.d("newamoubt", String.valueOf(newamoubt));
                 }else{
                     newamoubt=totalsplit;
                 }
-
-                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),transactionIdInProgress);
+                Log.d("totalAmount2", String.valueOf(newamoubt) +" "+ latesttransId);
+                updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),latesttransId);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
                 intent.putExtra("amount_received", String.valueOf(totalsplit));
@@ -1648,7 +1652,7 @@ if(isAtLeastOneItemSelected){
             if( cashReturn>=0){
 
                 Log.d("latesttransIditemsel", String.valueOf(latesttransId));
-
+                Log.d("SendToHeader2", String.valueOf(totalAmount) +" "+ latesttransId);
                 // Update the transaction ID in the header table for transactions with status "InProgress"
                 SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,latesttransId,roomid,tableid);
@@ -1887,6 +1891,8 @@ if(isAtLeastOneItemSelected){
                 Log.d("newtransiditemsel", String.valueOf(newtransid));
                 mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
                 // Update the transaction ID in the header table for transactions with status "InProgress"
+                Log.d("SendToHeader3", String.valueOf(totalsplit) +" "+ newtransid);
+
                 SendToHeader(totalsplit, mDatabaseHelper.calculateTax(totalsplit,"VAT 15%"),newtransid);
                 double newamoubt;
                 if(totalAmount != 0) {
@@ -1894,6 +1900,7 @@ if(isAtLeastOneItemSelected){
                 }else{
                      newamoubt=totalsplit;
                 }
+                Log.d("totalAmount1", String.valueOf(newamoubt) +" "+ latesttransId);
                 updateheader(newamoubt,mDatabaseHelper.calculateTax(newamoubt,"VAT 15%"),latesttransId);
                 mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);
                 Intent intent = new Intent(getActivity(), Mra.class);
@@ -1938,6 +1945,7 @@ if(isAtLeastOneItemSelected){
             if( cashReturn>=0){
 
                 Log.d("latesttransIditemsel", String.valueOf(latesttransId));
+                Log.d("SendToHeader4", String.valueOf(totalAmount) +" "+ latesttransId);
 
                 // Update the transaction ID in the header table for transactions with status "InProgress"
                 SendToHeader(totalAmount, mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
@@ -1977,7 +1985,7 @@ if(isAtLeastOneItemSelected){
 
     }
     public void updateheader(double totalAmount, double TaxtotalAmount,String transactionid) {
-
+        Log.d("totalAmountuh", String.valueOf(totalAmount) +" "+ transactionid);
         // Get the current date and time
         String currentDate = mDatabaseHelper.getCurrentDate();
         String currentTime = mDatabaseHelper.getCurrentTime();
@@ -2159,10 +2167,7 @@ if (totalAmount==0){
         String newTransactionId= mDatabaseHelper.getRelatedTransactionId(latesttransId);
 
 // Break execution if totalAmount is not equal to headerttc
-        if (totalAmount != headerttc) {
-            Log.e("PaymentError", "Total Amount (" + totalAmount + ") does not match Header TTC (" + headerttc + ")");
-            return; // Exit method early
-        }
+
         double sumOfAmountAmountpaid = mDatabaseHelper.getSumOfAmount(latesttransId, Integer.parseInt(roomid), tableid);
 
         double remainingAmount = totalAmount - sumOfAmountAmountpaid;
@@ -2295,12 +2300,15 @@ if (totalAmount==0){
             Log.d("newtransid", String.valueOf(newtransid));
             mDatabaseHelper.updateTransactionIdForSelected(latesttransId,newtransid, String.valueOf(roomid),tableid,0);
             // Update the transaction ID in the header table for transactions with status "InProgress"
+            Log.d("SendToHeader5", String.valueOf(remainingAmount) +" "+ newtransid);
+
             SendToHeader(remainingAmount, mDatabaseHelper.calculateTax(remainingAmount,"VAT 15%"),newtransid);
 
                 totalAmount= mDatabaseHelper.calculateTotalAmountbyid(roomid,tableid,latesttransId);
 
             Log.d("remainingAmount", String.valueOf(remainingAmount));
             Log.d("totalAmount", String.valueOf(totalAmount));
+            Log.d("totalAmount3", String.valueOf(totalAmount) +" "+ latesttransId);
 
             updateheader(totalAmount,mDatabaseHelper.calculateTax(totalAmount,"VAT 15%"),latesttransId);
             mDatabaseHelper.updateSettlementTransactionId(latesttransId,newtransid,roomid,tableid);

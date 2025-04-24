@@ -443,10 +443,10 @@ private  EditText searchEditText;
                     }
                 } catch (SQLException e) {
                     Log.e("LogoutSyncError", "Database error during Sync", e);
-                    Toast.makeText(getContext(), "Database error. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getContext(), "Database error. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Log.e("LogoutSyncError", "Unexpected error during Sync", e);
-                    Toast.makeText(getContext(), "Unexpected error occurred. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(getContext(), "Unexpected error occurred. Proceeding with Sync.", Toast.LENGTH_SHORT).show();
                 } finally {
                     // Clear shared preferences and navigate to login
                     clearSharedPreferences();
@@ -471,8 +471,8 @@ private  EditText searchEditText;
         SharedPreferences sharedPrefs = getContext().getSharedPreferences("BuyerInfo", Context.MODE_PRIVATE);
         sharedPrefs.edit().clear().apply();
 
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
-        sharedPreferences.edit().clear().apply();
+       // SharedPreferences sharedPreferences = getContext().getSharedPreferences("Login", Context.MODE_PRIVATE);
+      //  sharedPreferences.edit().clear().apply();
     }
 
 

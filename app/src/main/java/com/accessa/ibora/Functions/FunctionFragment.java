@@ -2159,7 +2159,12 @@ public class FunctionFragment extends Fragment {
                 unmergeTable(selectedTableNum);
             } else if (selectedTableNum.startsWith("T")) {
                 unmergeTable(selectedTableNum);
-            }        } else {
+            }
+            double realtotal=mDatabaseHelper.calculateTotalAmountbyid(roomId,selectedTableToTransfer,latesttransId);
+
+            updateheader(realtotal,mDatabaseHelper.calculateTax(realtotal,"VAT 15%"),latesttransId);
+
+        } else {
             // Handle the case where latesttransId is null (optional)
             mDatabaseHelper.updateTableNumberfornew(selectedTableNum, selectedTableToTransfer, roomId);
             mDatabaseHelper.updateTransactionTableNumberFornew(selectedTableNum, selectedTableToTransfer, roomId);
@@ -2174,6 +2179,9 @@ public class FunctionFragment extends Fragment {
                 unmergeTable(selectedTableNum);
 
             }
+            double realtotal=mDatabaseHelper.calculateTotalAmountbyid(roomId,selectedTableToTransfer,latesttransId);
+
+            updateheader(realtotal,mDatabaseHelper.calculateTax(realtotal,"VAT 15%"),latesttransId);
 
         }
 
@@ -2287,6 +2295,39 @@ public class FunctionFragment extends Fragment {
         mAdapter.swapCursor(cursor);
         mAdapter.notifyDataSetChanged();
         Toast.makeText(getContext(), getText(R.string.transactioncleared), Toast.LENGTH_SHORT).show();
+
+
+    }
+
+    public void updateheader(double totalAmount, double TaxtotalAmount,String transactionid) {
+        Log.d("totalAmountuh", String.valueOf(totalAmount) +" "+ transactionid);
+        // Get the current date and time
+        String currentDate = mDatabaseHelper.getCurrentDate();
+        String currentTime = mDatabaseHelper.getCurrentTime();
+
+        // Calculate the total HT_A (priceWithoutVat) and total TTC (totalAmount)
+
+        double totalTTC = totalAmount;
+        double totaltax = TaxtotalAmount;
+        double totalHT_A = totalTTC - totaltax;
+
+
+        // Get the total quantity of items in the transaction
+        int quantityItem = mDatabaseHelper.calculateTotalItemQuantity(transactionid);
+
+
+        boolean success = mDatabaseHelper.updateTransactionHeaderWhenPayPerItem(
+                totalAmount,
+                currentDate,
+                currentTime,
+                totalHT_A,
+                totalTTC,
+                quantityItem,
+                totaltax,
+                cashierId,
+                transactionid
+        );
+
 
 
     }
