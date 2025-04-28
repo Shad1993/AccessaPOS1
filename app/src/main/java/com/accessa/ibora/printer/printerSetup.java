@@ -1980,7 +1980,7 @@ if(anReturbed !=null){
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase(); // Get writable database
 
         // Define the WHERE clause to match tables starting with 'T' or having ROOM_ID = -2
-        String whereClause = DatabaseHelper.TABLE_NAME + " LIKE ? OR " + DatabaseHelper.ROOM_ID + " = ?";
+        String whereClause = DatabaseHelper.TABLE_NANE + " LIKE ? OR " + DatabaseHelper.ROOM_ID + " = ?";
         String[] whereArgs = new String[]{"T%", "-2"};
 
         // Execute the delete operation
