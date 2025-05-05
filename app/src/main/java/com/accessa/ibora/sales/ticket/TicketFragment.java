@@ -443,6 +443,7 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                 mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
                 unmergeTable(tableid);
                 clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
+                deleteInvalidTables();
             } else {
                 Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
             }
@@ -4160,6 +4161,26 @@ if(transactionIdInProgress != null) {
             numberOfPeopleEditText.append(number);
         }
     }
+
+    public void deleteInvalidTables() {
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase(); // Get writable database
+
+        // Define the WHERE clause to match tables starting with 'T' or having ROOM_ID = -2
+        String whereClause = DatabaseHelper.TABLE_NUMBER + " LIKE ? OR " + DatabaseHelper.TABLE_NUMBER + " = ?";
+        String[] whereArgs = new String[]{"T%", "-2"};
+
+        // Execute the delete operation
+        int rowsDeleted = db.delete(DatabaseHelper.TABLES, whereClause, whereArgs);
+
+        // Log the result
+        if (rowsDeleted > 0) {
+            Log.d("Database Delete", rowsDeleted + " invalid table(s) deleted successfully.");
+        } else {
+            Log.d("Database Delete", "No invalid tables found to delete.");
+        }
+
+        db.close(); // Close the database connection
+    }
     private void unmergeTable(String selectedTableNum) {
 
 
@@ -4184,13 +4205,13 @@ if(transactionIdInProgress != null) {
 
         if (rowsUpdated > 0) {
             // Table unmerged successfully
-         //   Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
+           Log.d("UnmergeTable", "Table " + selectedTableNum + " has been unmerged.");
         } else if (rowsUpdated == 0) {
             // No rows were updated
-           // Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". No rows were updated.");
         } else {
             // An error occurred
-          //  Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
+            Log.d("UnmergeTable", "Failed to unmerge table " + selectedTableNum + ". Error occurred during update.");
         }
 
         // Refresh the UI to reflect the changes
