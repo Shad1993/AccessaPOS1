@@ -9797,28 +9797,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return latestItemId;
     }
-    public void updateStatusToVoid(String roomid, String tableid) {
+    public void updateStatusToVoid(String transactionId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Update the transaction status to "Void" for the specified room and table
+        // Prepare the new value
         ContentValues values = new ContentValues();
         values.put(TRANSACTION_STATUS, "CancelledOrder");
 
-        // Update rows in TRANSACTION_HEADER_TABLE_NAME where TRANSACTION_STATUS is "InProgress" or "PRF" for the specified room and table
-        int rowsUpdated = db.update(TRANSACTION_HEADER_TABLE_NAME, values,
-                "(" + TRANSACTION_STATUS + " = ? OR " + TRANSACTION_STATUS + " = ?) AND " +
-                        ROOM_ID + " = ? AND " + TABLE_ID + " = ?",
-                new String[]{"InProgress", "PRF", roomid, tableid});
+        // Update only where the status is "InProgress" or "PRF" and the transaction ID matches
+        int rowsUpdated = db.update(
+                TRANSACTION_HEADER_TABLE_NAME,
+                values,
+                TRANSACTION_ID + " = ? AND (" + TRANSACTION_STATUS + " = ? OR " + TRANSACTION_STATUS + " = ?)",
+                new String[]{transactionId, "InProgress", "PRF"}
+        );
 
-        // Optionally, you can check if any rows were updated
+        // Log result
         if (rowsUpdated > 0) {
-            Log.d("DatabaseHelper", "Status updated to Void for " + rowsUpdated + " rows");
+            Log.d("DatabaseHelper", "Status updated to CancelledOrder for " + rowsUpdated + " rows");
         } else {
             Log.d("DatabaseHelper", "No rows updated");
         }
 
         db.close();
     }
+
 
     public void deleteDataByInProgressStatus(String roomid, String tableid) {
         SQLiteDatabase db = this.getWritableDatabase();

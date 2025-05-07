@@ -1346,7 +1346,10 @@ EditText pinEditText;
     public  void clearTransact(){
 
 
-        mDatabaseHelper.updateStatusToVoid(String.valueOf(roomid),tableid);
+        String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
+
+        mDatabaseHelper.updateStatusToVoid(latesttransId);
 
 
         // Optionally, you can notify the user or perform any other actions after clearing the transaction

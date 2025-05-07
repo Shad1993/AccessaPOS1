@@ -3211,7 +3211,7 @@ if(Type.equals("DRN")) {
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
-        mDatabaseHelper.updateStatusToVoid(String.valueOf(roomid),tableid);
+        mDatabaseHelper.updateStatusToVoid(latesttransId);
 
         mDatabaseHelper.updateCoverCount(0,tableid,roomid);
 
