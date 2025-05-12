@@ -134,6 +134,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -439,10 +440,10 @@ private TextView textViewVATs,textViewTotals,textviewpaymentmethod,textviewSubTo
                 tableid = String.valueOf(preferences.getString("table_id", "0"));
                 String statusType = mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid), tableid);
                 String latesttransId = mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid), tableid, statusType);
-
+                clearTransact();
                 mDatabaseHelper.flagTransactionItemsAsCleared(latesttransId);
                 unmergeTable(tableid);
-                clearTransact(); // Call the clearTransact() function on the CustomerLcdFragment
+                // Call the clearTransact() function on the CustomerLcdFragment
                 deleteInvalidTables();
             } else {
                 Toast.makeText(getContext(), R.string.Notallowed, Toast.LENGTH_SHORT).show();
@@ -3207,8 +3208,13 @@ if(Type.equals("DRN")) {
     public  void clearTransact(){
         // Create an instance of the DatabaseHelper class
 // Initialize SharedPreferences
+        SharedPreferences preferences = getActivity().getSharedPreferences("roomandtable", Context.MODE_PRIVATE);
+        roomid = preferences.getInt("roomnum", 0);
+        tableid = String.valueOf(preferences.getString("table_id", "0"));
 
         String statusType= mDatabaseHelper.getLatestTransactionStatus(String.valueOf(roomid),tableid);
+        Log.d("statusType", roomid +" " + tableid);
+        Log.d("statusType", statusType);
         String latesttransId= mDatabaseHelper.getLatestTransactionId(String.valueOf(roomid),tableid,statusType);
 
         mDatabaseHelper.updateStatusToVoid(latesttransId);
